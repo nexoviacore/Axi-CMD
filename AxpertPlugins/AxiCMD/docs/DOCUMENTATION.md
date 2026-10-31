@@ -209,6 +209,20 @@ Axi evaluates the command using **Target-First** syntax parser rules, allowing t
 *   **Description:** Fetches and displays the current plugin release version from the local version file.
 *   **Example:** `Version`
 
+### 10. `Install <product|plugin|changerequest> <directory> [version]`
+*   **Description:** Queues the installation of a product, plugin or change request from the configured Git repository. Typing the command offers the directories of the repository, then (when the directory has versions) its versions, `Latest` first. A directory name with spaces is inserted in double quotes (`"My Dir"`). Go closes the palette and opens a progress dialog: checking the repository, resolving the version at the repository commit, queuing the install, installation started. On success the dialog says the installation has started (a notification follows when it finishes) and closes by itself after about 6 seconds (paused while hovered or focused). On a failure the failing step is marked, the API message is shown, and Retry repeats the queue call.
+*   **Examples:** `Install Product "My Dir" Latest`, `Install Plugin Tools` (a directory without versions takes no version).
+*   **Prerequisites:**
+    *   The repository must be set first with `Configure <Product|Plugin|ChangeRequest> <account> <repo>`. Without it the palette shows "Run configure <type> <account> <repo> first" and no directories.
+    *   The user needs build access (`Build`). Install is not offered to other users, and a hand-typed command is refused with a message.
+*   **Rules:** the version is required when the chosen directory has versions and must be one of them; a directory without versions accepts none; extra words are refused.
+*   **Endpoints used (all under the ARM URL, no auth headers):**
+    *   `GET /AxiCMDApi/api/v1/CommandSettings?appname=<app>&category=axicmd&type=<product|plugin|changerequest>` reads the saved account and repo.
+    *   `POST /AxiGit/api/git/listdirectories` with `{account, repo, managerType}` returns `{commitSha, directories: [{name, versions}]}`. Errors are ProblemDetails; the `detail` (else `title`) is shown.
+    *   `POST /ARM_APIs/api/v1/ARMPushToQueue` with `{queuename, queuedata, queuejson, trace}`; the queue is `AxiInstallQueue`. The request counts as queued when the response is OK and contains `QUEUEDATAINSERTEDSUCESSFULLY`. The payload is `{action: "install", type, account, repo, managerType, directory, version, commitSha, appname, username, requestedOn}`.
+*   **Caching:** the directory listing is kept in memory and in `localStorage` under `axi_install_dirs_<type>_<account>_<repo>_v1` (JSON `{t, d}`, 30 minute TTL). The palette Refresh button and a successful `Configure <type>` save clear it.
+*   **Setup:** `axi_command_tables.sql` (PostgreSQL and Oracle) adds command token 10 (`Install`) and its three prompt rows, only when absent. The prompt sources `axi_git_directories` and `axi_git_versions` are markers resolved by the palette, not Axpert Data Sources, and `axi_command_config` needs no rows.
+
 ---
 
 ## ⚙️ Installation & Deployment Steps

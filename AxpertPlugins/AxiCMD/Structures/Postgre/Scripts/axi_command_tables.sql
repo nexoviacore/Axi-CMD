@@ -217,3 +217,29 @@ UPDATE axi_command_prompts SET promptsource = RTRIM(promptsource, ',') || ',Axi_
 <<
 UPDATE axi_command_prompts SET promptvalues = RTRIM(promptvalues, ',') || ',Product,Plugin,ChangeRequest' WHERE cmdtoken = 4 AND wordpos = 2 AND promptvalues NOT LIKE '%ChangeRequest%'
 >>
+
+-- Install: `install <product|plugin|changerequest> <directory> [version]` (build access only). Rows are added only when absent, so a re-run changes nothing.
+-- axi_git_directories and axi_git_versions are NOT axdirectsql rows: the palette resolves them from the AxiGit listdirectories API.
+<<
+INSERT INTO axi_commands
+(cmdtoken, command_group, command, active)
+SELECT 10, 'Install', '', 'T' WHERE NOT EXISTS (SELECT 1 FROM axi_commands WHERE cmdtoken = 10)
+>>
+
+<<
+INSERT INTO axi_command_prompts
+(id, cmdtoken, wordpos, prompt, promptsource, promptparams, promptvalues, props, extraparams, requesturl)
+SELECT '6474ef01-1554-4dd7-be1b-c41c8cdee0f4'::uuid, 10, 2, 'object type', NULL, NULL, 'Product,Plugin,ChangeRequest', NULL, NULL, NULL WHERE NOT EXISTS (SELECT 1 FROM axi_command_prompts WHERE cmdtoken = 10 AND wordpos = 2)
+>>
+
+<<
+INSERT INTO axi_command_prompts
+(id, cmdtoken, wordpos, prompt, promptsource, promptparams, promptvalues, props, extraparams, requesturl)
+SELECT 'eb7dce54-c332-404c-984d-c37aef8fb1eb'::uuid, 10, 3, 'directory', 'axi_git_directories', NULL, NULL, NULL, NULL, NULL WHERE NOT EXISTS (SELECT 1 FROM axi_command_prompts WHERE cmdtoken = 10 AND wordpos = 3)
+>>
+
+<<
+INSERT INTO axi_command_prompts
+(id, cmdtoken, wordpos, prompt, promptsource, promptparams, promptvalues, props, extraparams, requesturl)
+SELECT 'b3b2fea1-e894-496a-8f68-37fdcd76dde8'::uuid, 10, 4, 'version', 'axi_git_versions', NULL, NULL, NULL, NULL, NULL WHERE NOT EXISTS (SELECT 1 FROM axi_command_prompts WHERE cmdtoken = 10 AND wordpos = 4)
+>>

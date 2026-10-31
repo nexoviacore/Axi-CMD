@@ -308,6 +308,7 @@ if (typeof document !== "undefined") {
             "editprompt": "edit",
             "analyze": "analytics",
             "help": "help_outline",
+            "install": "cloud_download",
             "version": "info"
         }
     };
@@ -5170,6 +5171,11 @@ if (typeof document !== "undefined") {
 
         const groupKey = cleanString(tokens[0]);
 
+        // Install <type> <directory> [version]: the directory and version lists come from the AxiGit API, not the ADS
+        if (groupKey.toLowerCase() === "install" && getCommandConfig("install") && getInstallWords(inputText).length >= 3) {
+            return getInstallSuggestions(inputText);
+        }
+
         const subCmdFull = tokens.slice(1).map(t => cleanString(t)).join(" ").toLowerCase().trim();
         const subCmdFirst = tokens[1] ? cleanString(tokens[1]).toLowerCase().trim() : "";
         const isResponsibilityCmd = subCmdFirst === "responsibility" || subCmdFirst === "responsibilities" || subCmdFirst === "responsibility listing" || subCmdFull === "responsibility listing" || subCmdFull === "responsibilities" || subCmdFull.startsWith("responsibility");
@@ -7516,7 +7522,10 @@ if (typeof document !== "undefined") {
         const keepStructName = isStructRow
             && getTargetEntityMatches(foundObj.caption).filter(d => areTypesMatching(d.stype || d.STYPE, foundObj.stype)).length > 1;
 
-        if (suggestion.includes("(") && suggestion.includes(")") && !isAdsValue && !isValueToken && !keepStructName) {
+        // old code
+        // if (suggestion.includes("(") && suggestion.includes(")") && !isAdsValue && !isValueToken && !keepStructName) {
+        // new code: install directory and version names keep their brackets
+        if (suggestion.includes("(") && suggestion.includes(")") && !isAdsValue && !isValueToken && !keepStructName && commandGroup !== "install") {
             const lastBracketIndex = suggestion.lastIndexOf("(");
 
 
@@ -7533,7 +7542,10 @@ if (typeof document !== "undefined") {
 
         }
 
-        if (displayName.includes("[") && displayName.includes("]") && !isAdsValue) {
+        // old code
+        // if (displayName.includes("[") && displayName.includes("]") && !isAdsValue) {
+        // new code: install directory and version names keep their brackets
+        if (displayName.includes("[") && displayName.includes("]") && !isAdsValue && commandGroup !== "install") {
             const lastBracketIndex = suggestion.lastIndexOf("[");
             const text = suggestion.substring(0, lastBracketIndex).trim();
 
@@ -8922,6 +8934,7 @@ if (typeof document !== "undefined") {
                     tstructList = null;
                     adsList = null;
                     axDatasourceObj = {};
+                    clearInstallCaches();
                     activeFetches.clear();
                     failedFetches.clear();
                     // paging / search bookkeeping belongs to the data that was just discarded
@@ -9932,6 +9945,18 @@ if (typeof document !== "undefined") {
         }
         if (groupNameNormalized === "sdk" && !accessPermissions.buildAccess) {
             showToast(`User '${window.mainUserName}' has no access for command: ${text}`);
+            return;
+        }
+
+        // Install has its own handler (build access only): the directory / version prompts are not configured options
+        if (groupNameNormalized === "install") {
+            if (!accessPermissions.buildAccess) {
+                showToast(`User '${window.mainUserName}' has no access for command: ${text}`);
+                return;
+            }
+            handleInstallCommand(text);
+            hide();
+            if (!isNavigating) saveToHistory(text);
             return;
         }
 
@@ -11875,6 +11900,7 @@ if (typeof document !== "undefined") {
             const wasText = (prev.accountname || prev.reponame) ? `${prev.accountname}/${prev.reponame}` : "not set";
 
             delete commandSettingSavedCache[propertyType];
+            clearInstallCaches(propertyType);
             savedOk = true;
             showToast(`${label} repository set to ${newAccount}/${newRepo} (was ${wasText})`, 5000, true);
         } catch (err) {
@@ -11891,6 +11917,923 @@ if (typeof document !== "undefined") {
             if (abortTimer) clearTimeout(abortTimer);
             endCommandSettingSaving(savedOk);
         }
+    }
+
+    // ---------------------------------------------------------------------------------------------------------
+    // Install Product / Plugin / ChangeRequest:  install <product|plugin|changerequest> <directory> [version]
+    // Account / repo come from the CommandSettings API (set with "configure <type> <account> <repo>"), the
+    // directories and versions from the AxiGit listdirectories API, and Go pushes the request to the ARM queue.
+    // axi_git_directories / axi_git_versions in the prompt rows are markers resolved here, never sent to the ADS.
+    // The pure helpers (tokenizer, validation, cache, payload) are mirrored in tests/axi-install-command.test.js.
+    // ---------------------------------------------------------------------------------------------------------
+    const AXI_INSTALL_QUEUE_NAME = "AxiInstallQueue";
+    const AXI_INSTALL_QUEUE_OK = "QUEUEDATAINSERTEDSUCESSFULLY";
+    const INSTALL_TYPES = { product: "product", plugin: "plugin", changerequest: "changerequest" };
+    const INSTALL_CACHE_TTL_MS = 30 * 60 * 1000;
+    const INSTALL_REQUEST_TIMEOUT_MS = 30000;
+    const INSTALL_RETRY_MS = 30000;
+    const INSTALL_AUTOCLOSE_MS = 6000;
+    const INSTALL_STEP_MIN_MS = 250;   // each modal step stays visible at least this long
+    const installDirsCache = {};     // cache key -> { t, d } ; d = whole listdirectories response
+    const installDirsPending = {};   // cache key -> Promise while a listdirectories call runs
+    const installDirsError = {};     // cache key -> { t, message } of the last failed call
+    const installRepoCache = {};     // type -> { t, v } ; v = { account, repo } or null (not configured / GET failed)
+    const installRepoPending = {};   // type -> Promise while the CommandSettings GET runs (shared by every caller)
+    let installModal = null;         // the open progress modal, if any
+
+    /**
+     * Splits an install command into words. A double-quoted text is one word and the quotes are removed,
+     * so  install product "My Dir" Latest  gives [install, product, My Dir, Latest]. Only the install command uses it.
+     * @param {string} str - Raw command text.
+     * @returns {string[]} Words without quotes.
+     */
+    function tokenizeInstallCommand(str) {
+        const words = [];
+        if (!str || typeof str !== "string") return words;
+        const re = /"([^"]*)"?|([^\s"]+)/g;
+        let m;
+        while ((m = re.exec(str)) !== null) {
+            words.push(m[1] !== undefined ? m[1] : m[2]);
+        }
+        return words;
+    }
+
+    /**
+     * Words of the install command as the palette needs them while typing: an empty last word is added when the
+     * text ends with a space (outside an open quote), so the word being typed is always the last one.
+     * @param {string} str - Raw command text.
+     * @returns {string[]} Words without quotes.
+     */
+    function getInstallWords(str) {
+        const words = tokenizeInstallCommand(str);
+        const text = typeof str === "string" ? str : "";
+        const quoteCount = (text.match(/"/g) || []).length;
+        if (/\s$/.test(text) && quoteCount % 2 === 0) words.push("");
+        return words;
+    }
+
+    /**
+     * Maps the typed type word to the managerType the AxiGit API expects.
+     * @param {string} typeWord - Typed word (Product, ChangeRequest, "change request" ...).
+     * @returns {string} product / plugin / changerequest, or "" when it is not a type.
+     */
+    function getInstallManagerType(typeWord) {
+        const key = String(typeWord == null ? "" : typeWord).replace(/["\s]/g, "").toLowerCase();
+        return INSTALL_TYPES[key] || "";
+    }
+
+    /**
+     * Checks a typed install command against the directories of the repository.
+     * A directory with versions needs one of them; a directory without versions takes none; extra words are refused.
+     * @param {string[]} words - Words of the command (install, type, directory, version).
+     * @param {Array<{name: string, versions: string[]}>} directories - Directories from listdirectories.
+     * @returns {{ok: boolean, message: string, directory: string, version: string}} Result with the exact names.
+     */
+    function validateInstallArgs(words, directories) {
+        const fail = (message) => ({ ok: false, message, directory: "", version: "" });
+        const list = Array.isArray(directories) ? directories : [];
+        if (!words || words.length < 2 || !getInstallManagerType(words[1])) return fail("Install expects product, plugin or changerequest");
+        const dirWord = words[2] === undefined || words[2] === null ? "" : String(words[2]).trim();
+        if (!dirWord) return fail("Directory is required");
+        const dir = list.find(d => String(d.name).toLowerCase() === dirWord.toLowerCase());
+        if (!dir) return fail(`Directory '${dirWord}' was not found in the repository`);
+        const versions = Array.isArray(dir.versions) ? dir.versions : [];
+        const extra = words.slice(versions.length > 0 ? 4 : 3).filter(w => String(w).trim() !== "");
+        if (extra.length > 0) {
+            return fail(versions.length > 0
+                ? "Only a directory and a version are expected after the type"
+                : `'${dir.name}' has no versions, only the directory is expected after the type`);
+        }
+        if (versions.length === 0) return { ok: true, message: "", directory: dir.name, version: "" };
+        const verWord = words[3] === undefined || words[3] === null ? "" : String(words[3]).trim();
+        if (!verWord) return fail(`Version is required for '${dir.name}'`);
+        const ver = versions.find(v => String(v).toLowerCase() === verWord.toLowerCase());
+        if (!ver) return fail(`Version '${verWord}' was not found for '${dir.name}'`);
+        return { ok: true, message: "", directory: dir.name, version: ver };
+    }
+
+    /**
+     * Cache key (localStorage and memory) of a repository's directory listing.
+     * @param {string} type - product / plugin / changerequest.
+     * @param {string} account - Account name.
+     * @param {string} repo - Repo name.
+     * @returns {string} Key.
+     */
+    function buildInstallCacheKey(type, account, repo) {
+        return `axi_install_dirs_${type}_${account}_${repo}_v1`;
+    }
+
+    /**
+     * Reads a stored cache entry ({t, d} JSON) and returns it when it is still within the 30 minute TTL.
+     * @param {string|null} raw - Stored text.
+     * @param {number} now - Current time in ms.
+     * @returns {{t: number, d: object}|null} The entry or null.
+     */
+    function readInstallCacheEntry(raw, now) {
+        if (!raw) return null;
+        try {
+            const entry = JSON.parse(raw);
+            if (entry && typeof entry.t === "number" && entry.d && (now - entry.t) < INSTALL_CACHE_TTL_MS) return entry;
+        } catch (e) { }
+        return null;
+    }
+
+    /**
+     * Message of a failed AxiGit call: the ProblemDetails detail or title, else the plain text, else the HTTP status.
+     * @param {number} status - HTTP status.
+     * @param {string} text - Response body.
+     * @returns {string} Message.
+     */
+    function getInstallProblemMessage(status, text) {
+        let obj = null;
+        try { obj = JSON.parse(text); } catch (e) { }
+        const msg = obj && typeof obj === "object" ? (obj.detail || obj.title || obj.message || "") : "";
+        return String(msg || (obj === null ? text : "") || "").trim() || `Request failed (HTTP ${status})`;
+    }
+
+    /**
+     * Id of one install request (the consumer can dedupe on it): crypto.randomUUID, or a random v4-shaped id when it is missing.
+     * @returns {string} Id.
+     */
+    function generateInstallRequestId() {
+        try {
+            if (typeof crypto !== "undefined" && crypto && typeof crypto.randomUUID === "function") return crypto.randomUUID();
+        } catch (e) { }
+        return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
+            const r = Math.floor(Math.random() * 16);
+            return (c === "x" ? r : ((r % 4) + 8)).toString(16);
+        });
+    }
+
+    /**
+     * Payload of the install request that goes to the queue.
+     * @param {object} p - Values (type, account, repo, directory, version, commitSha, appname, username, now).
+     * @returns {object} Payload.
+     */
+    function buildInstallPayload(p) {
+        return {
+            action: "install",
+            requestId: p.requestId || "",
+            type: p.type,
+            account: p.account,
+            repo: p.repo,
+            managerType: p.type,
+            directory: p.directory,
+            version: p.version || "",
+            commitSha: p.commitSha || "",
+            appname: p.appname,
+            username: p.username,
+            requestedOn: p.requestedOn || (p.now instanceof Date ? p.now : new Date()).toISOString()
+        };
+    }
+
+    /**
+     * Body of ARMPushToQueue for a payload.
+     * @param {object} payload - Install payload.
+     * @returns {object} Request body.
+     */
+    function buildInstallQueueBody(payload) {
+        return { queuename: AXI_INSTALL_QUEUE_NAME, queuedata: JSON.stringify(payload), queuejson: payload, trace: false };
+    }
+
+    /**
+     * Reads the ARMPushToQueue answer. Success is an ok status and the success word in the body, which may be plain text or JSON-wrapped.
+     * @param {boolean} ok - HTTP ok flag.
+     * @param {number} status - HTTP status.
+     * @param {string} text - Response body.
+     * @returns {{success: boolean, message: string}} Result.
+     */
+    function parseInstallQueueResult(ok, status, text) {
+        const body = typeof text === "string" ? text : "";
+        if (ok && body.indexOf(AXI_INSTALL_QUEUE_OK) !== -1) return { success: true, message: "" };
+        let obj = null;
+        try { obj = JSON.parse(body); } catch (e) { }
+        let msg = "";
+        if (obj && typeof obj === "object") msg = obj.message || obj.Message || obj.error || obj.detail || obj.title || "";
+        else if (typeof obj === "string") msg = obj;
+        else msg = body;
+        msg = String(msg || "").trim();
+        if (!msg) msg = ok ? "The queue did not confirm the request" : `Request failed (HTTP ${status})`;
+        return { success: false, message: msg };
+    }
+
+    /**
+     * Forgets the install caches of one type (memory and localStorage): after a configure save, or on Refresh (type omitted = all).
+     * @param {string} [type] - product / plugin / changerequest.
+     * @returns {void}
+     */
+    function clearInstallCaches(type) {
+        const prefix = type ? `axi_install_dirs_${type}_` : "axi_install_dirs_";
+        Object.keys(installDirsCache).forEach(k => { if (k.indexOf(prefix) === 0) delete installDirsCache[k]; });
+        Object.keys(installDirsError).forEach(k => { if (k.indexOf(prefix) === 0) delete installDirsError[k]; });
+        if (type) delete installRepoCache[type]; else Object.keys(installRepoCache).forEach(k => delete installRepoCache[k]);
+        try {
+            const drop = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                if (k && k.indexOf(prefix) === 0) drop.push(k);
+            }
+            drop.forEach(k => localStorage.removeItem(k));
+        } catch (e) { }
+    }
+
+    /**
+     * Redraws the suggestions when the palette still shows an install command (after a background load finished).
+     * @returns {void}
+     */
+    function refreshInstallSuggestions() {
+        try {
+            if (installModal) return;
+            if (!megaDropdown || getComputedStyle(megaDropdown).display === "none") return;
+            if (input && (tokenizeInstallCommand(input.value)[0] || "").toLowerCase() === "install") handleInput();
+        } catch (e) { }
+    }
+
+    /**
+     * Account / repo saved for a type. Returns the cached value, or starts the GET (once) and says it is loading.
+     * @param {string} type - product / plugin / changerequest.
+     * @returns {{loading: boolean, value: {account: string, repo: string}|null}} State.
+     */
+    function getInstallRepoState(type) {
+        const cached = installRepoCache[type];
+        if (cached && (cached.v || (Date.now() - cached.t) < INSTALL_RETRY_MS)) return { loading: false, value: cached.v };
+        if (!installRepoPending[type]) loadInstallRepo(type).then(refreshInstallSuggestions);
+        return { loading: true, value: null };
+    }
+
+    /**
+     * Reads the saved account / repo of a type through the CommandSettings GET.
+     * @async
+     * @param {string} type - product / plugin / changerequest.
+     * @returns {Promise<{account: string, repo: string}|null>} Value, or null when not configured / not reachable.
+     */
+    function loadInstallRepo(type) {
+        const cached = installRepoCache[type];
+        if (cached && (cached.v || (Date.now() - cached.t) < INSTALL_RETRY_MS)) return Promise.resolve(cached.v);
+        if (installRepoPending[type]) return installRepoPending[type];
+        const appname = getProjectName() || "";
+        if (!axiCommandSettingsUrl || !appname) { installRepoCache[type] = { t: Date.now(), v: null }; return Promise.resolve(null); }
+        installRepoPending[type] = (async () => {
+            let value = null;
+            try {
+                const res = await fetch(`${axiCommandSettingsUrl}?appname=${encodeURIComponent(appname)}&category=axicmd&type=${encodeURIComponent(type)}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    const props = readCommandSettingProps(data && (data.properties || data.Properties));
+                    if (props.accountname && props.reponame) value = { account: props.accountname, repo: props.reponame };
+                }
+            } catch (e) { value = null; }
+            delete installRepoPending[type];
+            installRepoCache[type] = { t: Date.now(), v: value };
+            return value;
+        })();
+        return installRepoPending[type];
+    }
+
+    /**
+     * Directory listing of a repository: memory, then localStorage (30 minutes), then POST listdirectories.
+     * @async
+     * @param {string} type - product / plugin / changerequest (the managerType).
+     * @param {string} account - Account name.
+     * @param {string} repo - Repo name.
+     * @param {boolean} [force=false] - Skip the caches and ask the API (the cache is then updated with the answer).
+     * @returns {Promise<object>} The listdirectories response. Rejects with an Error whose message is shown to the user.
+     */
+    function fetchInstallDirectories(type, account, repo, force = false) {
+        const key = buildInstallCacheKey(type, account, repo);
+        const mem = installDirsCache[key];
+        if (!force && mem && (Date.now() - mem.t) < INSTALL_CACHE_TTL_MS) return Promise.resolve(mem.d);
+        if (!force) {
+            try {
+                const stored = readInstallCacheEntry(localStorage.getItem(key), Date.now());
+                if (stored) { installDirsCache[key] = stored; return Promise.resolve(stored.d); }
+            } catch (e) { }
+        }
+        if (installDirsPending[key]) return installDirsPending[key];
+
+        installDirsPending[key] = (async () => {
+            const abortCtrl = (typeof AbortController !== "undefined") ? new AbortController() : null;
+            const abortTimer = abortCtrl ? setTimeout(() => abortCtrl.abort(), INSTALL_REQUEST_TIMEOUT_MS) : null;
+            try {
+                const res = await fetch(`${AxiArmUrl}/AxiGit/api/git/listdirectories`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    signal: abortCtrl ? abortCtrl.signal : undefined,
+                    body: JSON.stringify({ account: account, repo: repo, managerType: type })
+                });
+                const text = await res.text();
+                if (!res.ok) throw new Error(getInstallProblemMessage(res.status, text));
+                let data = null;
+                try { data = JSON.parse(text); } catch (e) { }
+                if (!data || typeof data !== "object") throw new Error("The directory list could not be read");
+                if (!Array.isArray(data.directories)) data.directories = [];
+                const entry = { t: Date.now(), d: data };
+                installDirsCache[key] = entry;
+                delete installDirsError[key];
+                try { localStorage.setItem(key, JSON.stringify(entry)); } catch (e) { }
+                return data;
+            } catch (err) {
+                const message = (err && err.name === "AbortError") ? "Loading the directories took too long. Please try again." : (err && err.message) || String(err);
+                installDirsError[key] = { t: Date.now(), message };
+                throw new Error(message);
+            } finally {
+                if (abortTimer) clearTimeout(abortTimer);
+                delete installDirsPending[key];
+            }
+        })();
+        return installDirsPending[key];
+    }
+
+    /**
+     * State of the directory listing for the suggestions: the data, or loading (call started), or the last error (kept 30 s, no call loop).
+     * @param {string} type - product / plugin / changerequest.
+     * @param {string} account - Account name.
+     * @param {string} repo - Repo name.
+     * @returns {{loading: boolean, error: string, data: object|null}} State.
+     */
+    function getInstallDirsState(type, account, repo) {
+        const key = buildInstallCacheKey(type, account, repo);
+        const mem = installDirsCache[key];
+        if (mem && (Date.now() - mem.t) < INSTALL_CACHE_TTL_MS) return { loading: false, error: "", data: mem.d };
+        const err = installDirsError[key];
+        if (err && (Date.now() - err.t) < INSTALL_RETRY_MS) return { loading: false, error: err.message, data: null };
+        if (!installDirsPending[key]) {
+            fetchInstallDirectories(type, account, repo).then(refreshInstallSuggestions, (e) => {
+                showToast(e.message || "Could not load the directories");
+                refreshInstallSuggestions();
+            });
+        }
+        // a stored copy answers at once, without waiting for the promise
+        const filled = installDirsCache[key];
+        if (filled) return { loading: false, error: "", data: filled.d };
+        return { loading: true, error: "", data: null };
+    }
+
+    /**
+     * Suggestions for "install <type> <directory> [version]" from the third word on: directories, versions or Go.
+     * @param {string} text - Raw input text.
+     * @returns {Array} Suggestion list (strings and goOption); filteredObjects is set to match.
+     */
+    function getInstallSuggestions(text) {
+        const words = getInstallWords(text);
+        const type = getInstallManagerType(words[1]);
+        filteredObjects = [];
+        updateDynamicHintFromPrompt(null);
+        if (!type || !getAccessPermissions().buildAccess) return [];
+
+        const repoState = getInstallRepoState(type);
+        if (repoState.loading) return ["Fetching repository settings..."];
+        if (!repoState.value) return [`Run configure ${type} <account> <repo> first`];
+        const { account, repo } = repoState.value;
+
+        const dirsState = getInstallDirsState(type, account, repo);
+        if (dirsState.loading) return ["Fetching directories..."];
+        if (dirsState.error) return [`Error: ${dirsState.error}`];
+        const dirs = (dirsState.data && dirsState.data.directories) || [];
+        if (dirs.length === 0) return [`No directories found in ${account}/${repo}`];
+
+        const asObjects = (names) => names.map(n => ({ name: n, displaydata: n }));
+
+        if (words.length === 3) {
+            updateDynamicHintFromPrompt({ prompt: "directory" });
+            const partial = words[2].toLowerCase();
+            const names = dirs.map(d => d.name).filter(n => String(n).toLowerCase().includes(partial));
+            names.sort((a, b) => (String(b).toLowerCase().startsWith(partial) ? 1 : 0) - (String(a).toLowerCase().startsWith(partial) ? 1 : 0));
+            filteredObjects = asObjects(names);
+            return names;
+        }
+
+        const dir = dirs.find(d => String(d.name).toLowerCase() === String(words[2]).trim().toLowerCase());
+        if (!dir) return [];
+        const versions = Array.isArray(dir.versions) ? dir.versions : [];
+
+        if (versions.length === 0) {
+            // no versions: Go right after the directory, anything else typed is an extra word
+            if (words.length === 4 && words[3] === "") { filteredObjects = [goOption]; return [goOption]; }
+            return [];
+        }
+        if (words.length === 4) {
+            updateDynamicHintFromPrompt({ prompt: "version" });
+            const partial = words[3].toLowerCase();
+            const names = versions.filter(v => String(v).toLowerCase().startsWith(partial));
+            if (partial && versions.some(v => String(v).toLowerCase() === partial)) {
+                // exact match: Go first, the other versions starting with the typed text stay in the list
+                filteredObjects = [goOption, ...asObjects(names)];
+                return [goOption, ...names];
+            }
+            filteredObjects = asObjects(names);
+            return names;
+        }
+        if (words.length === 5 && words[4] === "" && validateInstallArgs(words.slice(0, 4), dirs).ok) {
+            filteredObjects = [goOption];
+            return [goOption];
+        }
+        return [];
+    }
+
+    /**
+     * Runs "install <type> <directory> [version]": checks it against the repository, then opens the progress modal.
+     * @async
+     * @param {string} text - Typed command.
+     * @returns {Promise<void>}
+     */
+    async function handleInstallCommand(text) {
+        const words = tokenizeInstallCommand(text);
+        const type = getInstallManagerType(words[1]);
+        if (!getAccessPermissions().buildAccess) {
+            showToast(`User '${window.mainUserName}' has no access for command: ${text}`);
+            return;
+        }
+        if (!type) { showToast("Install expects product, plugin or changerequest"); reopenPaletteForCommandSetting(); return; }
+
+        const appname = getProjectName() || "";
+        const username = getCommandSettingUser();
+        if (!appname) { showToast("Application session is not available. App name is required."); return; }
+        if (!username) { showToast("User session is not available. Username is required."); return; }
+
+        const repoInfo = await loadInstallRepo(type);
+        if (!repoInfo) { showToast(`Run configure ${type} <account> <repo> first`); reopenPaletteForCommandSetting(); return; }
+
+        let data;
+        try {
+            data = await fetchInstallDirectories(type, repoInfo.account, repoInfo.repo);
+        } catch (err) {
+            showToast(err.message || "Could not load the directories");
+            reopenPaletteForCommandSetting();
+            return;
+        }
+        const checked = validateInstallArgs(words, data.directories);
+        if (!checked.ok) { showToast(checked.message); reopenPaletteForCommandSetting(); return; }
+
+        openInstallModal({
+            type: type,
+            directory: checked.directory,
+            version: checked.version,
+            account: repoInfo.account,
+            repo: repoInfo.repo,
+            commitSha: data.commitSha || "",
+            appname: appname,
+            username: username
+        });
+    }
+
+    /**
+     * Pushes the install request to the ARM queue (no auth headers, 30 s timeout).
+     * @async
+     * @param {object} payload - Install payload.
+     * @returns {Promise<{success: boolean, message: string}>} Result.
+     */
+    async function pushInstallToQueue(payload) {
+        const abortCtrl = (typeof AbortController !== "undefined") ? new AbortController() : null;
+        const abortTimer = abortCtrl ? setTimeout(() => abortCtrl.abort(), INSTALL_REQUEST_TIMEOUT_MS) : null;
+        try {
+            const res = await fetch(`${AxiArmUrl}/ARM_APIs/api/v1/ARMPushToQueue`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                signal: abortCtrl ? abortCtrl.signal : undefined,
+                body: JSON.stringify(buildInstallQueueBody(payload))
+            });
+            const text = await res.text();
+            return parseInstallQueueResult(res.ok, res.status, text);
+        } catch (err) {
+            if (err && err.name === "AbortError") return { success: false, message: "The request took too long. Please try again." };
+            return { success: false, message: (err && err.message) || String(err) };
+        } finally {
+            if (abortTimer) clearTimeout(abortTimer);
+        }
+    }
+
+    // ---- Install progress modal -------------------------------------------------------------------------------
+    const INSTALL_MODAL_CSS = `
+.axi-install-root{--ai-surface:#ffffff;--ai-ink:#1d2547;--ai-muted:#5b6482;--ai-rule:#dde1eb;--ai-paper:#f4f5f9;--ai-signal:#3f51c2;--ai-signal-tint:#eceffc;--ai-ok:#177a4a;--ai-ok-tint:#e4f4ea;--ai-err:#a3261a;--ai-err-tint:#fcefed;--ai-shadow:0 24px 60px -12px rgba(29,37,71,.35),0 4px 14px rgba(29,37,71,.12);position:fixed;inset:0;z-index:100001;display:flex;align-items:center;justify-content:center;padding:16px;font-family:"Segoe UI",system-ui,-apple-system,"Noto Sans Arabic",sans-serif;color:var(--ai-ink);line-height:1.4}
+:is(html.dark,html.dark-theme,body.dark,body.dark-theme,[data-bs-theme="dark"]) .axi-install-root{--ai-surface:#1e2230;--ai-ink:#e8ebf7;--ai-muted:#9aa3c4;--ai-rule:#2f3652;--ai-paper:#171a26;--ai-signal:#8d9bff;--ai-signal-tint:#262c4d;--ai-ok:#4cc38a;--ai-ok-tint:#16302a;--ai-err:#ff8f80;--ai-err-tint:#3a2224;--ai-shadow:0 24px 60px -12px rgba(0,0,0,.65),0 4px 14px rgba(0,0,0,.4)}
+.axi-install-root *{box-sizing:border-box}
+.axi-install-backdrop{position:absolute;inset:0;background:rgba(19,24,48,.48);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);animation:axi-install-fade .2s ease-out both}
+.axi-install-dialog{position:relative;width:min(440px,100%);max-height:calc(100vh - 32px);overflow:auto;background:var(--ai-surface);border:1px solid var(--ai-rule);border-radius:16px;box-shadow:var(--ai-shadow);outline:none;animation:axi-install-rise .28s cubic-bezier(.2,.8,.2,1) both}
+.axi-install-root.axi-install-leaving .axi-install-backdrop{animation:axi-install-fade .16s ease-in reverse both}
+.axi-install-root.axi-install-leaving .axi-install-dialog{animation:axi-install-rise .16s ease-in reverse both}
+.axi-install-head{display:flex;align-items:center;gap:14px;padding:22px 24px 14px}
+.axi-install-badge{flex:none;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:var(--ai-signal-tint);color:var(--ai-signal)}
+.axi-install-badge svg{width:24px;height:24px}
+.axi-install-titles{min-width:0}
+.axi-install-title{margin:0;font-size:17px;font-weight:600;letter-spacing:-.01em}
+.axi-install-sub{margin:2px 0 0;font-size:13px;color:var(--ai-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.axi-install-body{padding:6px 24px 8px}
+.axi-install-steps{list-style:none;margin:0;padding:0;display:grid;transition:opacity .2s ease}
+.axi-install-step{position:relative;display:grid;grid-template-columns:24px 1fr;gap:12px;align-items:center;min-height:42px}
+.axi-install-step:not(:last-child)::before{content:"";position:absolute;left:11px;top:31px;bottom:-7px;width:2px;border-radius:2px;background:var(--ai-rule)}
+.axi-install-step:not(:last-child)::after{content:"";position:absolute;left:11px;top:31px;bottom:-7px;width:2px;border-radius:2px;background:var(--ai-ok);transform:scaleY(0);transform-origin:top;transition:transform .35s ease}
+.axi-install-step[data-state="done"]:not(:last-child)::after{transform:scaleY(1)}
+.axi-install-marker{position:relative;width:24px;height:24px;border-radius:50%;border:2px solid var(--ai-rule);background:var(--ai-surface);display:grid;place-items:center;transition:background-color .25s ease,border-color .25s ease}
+.axi-install-marker svg{position:absolute;width:14px;height:14px;opacity:0;transform:scale(.5);transition:opacity .2s ease,transform .25s cubic-bezier(.2,1.4,.4,1)}
+.axi-install-spin{position:absolute;inset:-2px;border-radius:50%;border:2px solid transparent;opacity:0}
+.axi-install-step[data-state="active"] .axi-install-marker{border-color:var(--ai-signal-tint)}
+.axi-install-step[data-state="active"] .axi-install-spin{opacity:1;border-top-color:var(--ai-signal);border-right-color:var(--ai-signal);animation:axi-install-spin .8s linear infinite}
+.axi-install-step[data-state="done"] .axi-install-marker{background:var(--ai-ok);border-color:var(--ai-ok);color:#fff}
+.axi-install-step[data-state="done"] .axi-install-ico-ok,.axi-install-step[data-state="error"] .axi-install-ico-err{opacity:1;transform:scale(1)}
+.axi-install-step[data-state="error"] .axi-install-marker{background:var(--ai-err);border-color:var(--ai-err);color:#fff}
+.axi-install-label{font-size:14px;color:var(--ai-muted);transition:color .2s ease}
+.axi-install-step[data-state="active"] .axi-install-label{color:var(--ai-ink);font-weight:600}
+.axi-install-step[data-state="done"] .axi-install-label{color:var(--ai-ink)}
+.axi-install-step[data-state="error"] .axi-install-label{color:var(--ai-err);font-weight:600}
+.axi-install-collapse{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s ease}
+.axi-install-collapse>div{min-height:0;overflow:hidden}
+.axi-install-error{margin-top:10px;padding:12px 14px;border-radius:10px;background:var(--ai-err-tint);color:var(--ai-err);font-size:13px;word-break:break-word}
+.axi-install-error strong{display:block;margin-bottom:2px}
+.axi-install-success{text-align:center;padding:4px 0 6px}
+.axi-install-check{position:relative;width:64px;height:64px;margin:6px auto 12px}
+.axi-install-check::before{content:"";position:absolute;inset:0;border-radius:50%;background:var(--ai-ok-tint);animation:axi-install-halo .9s ease-out both}
+.axi-install-check svg{position:relative;width:64px;height:64px}
+.axi-install-check circle{fill:none;stroke:var(--ai-ok);stroke-width:3;stroke-dasharray:176;stroke-dashoffset:176;animation:axi-install-draw .55s .05s ease-out forwards}
+.axi-install-check path{fill:none;stroke:var(--ai-ok);stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:40;stroke-dashoffset:40;animation:axi-install-draw .35s .5s ease-out forwards}
+.axi-install-ok-title{margin:0;font-size:18px;font-weight:600;letter-spacing:-.01em}
+.axi-install-ok-text{margin:4px 0 14px;font-size:13.5px;color:var(--ai-muted)}
+.axi-install-card{margin:0;padding:12px 14px;border-radius:12px;background:var(--ai-paper);border:1px solid var(--ai-rule);display:grid;grid-template-columns:auto 1fr;gap:6px 14px;text-align:start;font-size:13px}
+.axi-install-card dt{color:var(--ai-muted)}
+.axi-install-card dd{margin:0;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.axi-install-card .axi-install-mono{font-family:Consolas,"Cascadia Mono","Courier New",monospace;font-weight:500}
+.axi-install-foot{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:14px 24px 20px;min-height:68px}
+.axi-install-note{margin-inline-end:auto;font-size:12.5px;color:var(--ai-muted)}
+.axi-install-btn{appearance:none;border:1px solid var(--ai-rule);background:var(--ai-surface);color:var(--ai-ink);font:inherit;font-size:14px;font-weight:600;padding:8px 18px;border-radius:9px;cursor:pointer;transition:background-color .15s ease,border-color .15s ease,transform .1s ease}
+.axi-install-btn:hover{background:var(--ai-paper)}
+.axi-install-btn:active{transform:translateY(1px)}
+.axi-install-btn:focus-visible{outline:2px solid var(--ai-signal);outline-offset:2px}
+.axi-install-btn-primary{background:var(--ai-signal);border-color:var(--ai-signal);color:#fff}
+.axi-install-btn-primary:hover{background:var(--ai-signal);filter:brightness(1.08)}
+:is(html.dark,html.dark-theme,body.dark,body.dark-theme,[data-bs-theme="dark"]) .axi-install-btn-primary{color:#10142a}
+.axi-install-bar{position:absolute;left:0;right:0;bottom:0;height:3px;background:transparent;overflow:hidden}
+.axi-install-bar>i{display:block;height:100%;background:var(--ai-ok);transform-origin:left;transform:scaleX(1)}
+.axi-install-root [hidden]{display:none!important}
+.axi-install-root.axi-install--success .axi-install-steps{display:none}
+.axi-install-root.axi-install--error .axi-install-note,.axi-install-root.axi-install--success .axi-install-note{display:none}
+.axi-install-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);border:0;white-space:nowrap}
+@keyframes axi-install-fade{from{opacity:0}to{opacity:1}}
+@keyframes axi-install-rise{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes axi-install-spin{to{transform:rotate(360deg)}}
+@keyframes axi-install-draw{to{stroke-dashoffset:0}}
+@keyframes axi-install-halo{from{transform:scale(.6);opacity:0}60%{opacity:1}to{transform:scale(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){
+.axi-install-root *,.axi-install-root *::before,.axi-install-root *::after{animation-duration:.001s!important;animation-delay:0s!important;transition-duration:.001s!important}
+.axi-install-step[data-state="active"] .axi-install-spin{animation:none;border-color:var(--ai-signal)}
+}
+`;
+
+    const INSTALL_ICON_PACKAGE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/><path d="M3.3 7.5L12 12l8.7-4.5"/><path d="M12 12v9"/></svg>';
+    const INSTALL_ICON_OK = '<svg class="axi-install-ico-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+    const INSTALL_ICON_ERR = '<svg class="axi-install-ico-err" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>';
+    const INSTALL_ICON_BIG_CHECK = '<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="28"/><path d="M20 33l8 8 16-17"/></svg>';
+
+    /**
+     * Adds the modal's single scoped <style> once.
+     * @returns {void}
+     */
+    function ensureInstallStyles() {
+        if (document.getElementById("axi-install-styles")) return;
+        const style = document.createElement("style");
+        style.id = "axi-install-styles";
+        style.textContent = INSTALL_MODAL_CSS;
+        document.head.appendChild(style);
+    }
+
+    /**
+     * Closes the install modal that is open, if any.
+     * @param {boolean} [immediate=false] - Skip the leave animation.
+     * @returns {void}
+     */
+    function closeInstallModal(immediate = false) {
+        if (installModal) installModal.close(immediate);
+    }
+
+    /**
+     * Opens the install progress modal and runs the steps: checking the repository and resolving the version come from the
+     * cached listing (short staged delays), queuing is the real ARMPushToQueue call, then the success or error state shows.
+     * @param {object} ctx - type, directory, version, account, repo, commitSha, appname, username.
+     * @returns {void}
+     */
+    function openInstallModal(ctx) {
+        closeInstallModal(true);
+        ensureInstallStyles();
+
+        const label = getCommandSettingLabel(ctx.type);
+        const sha7 = ctx.commitSha ? String(ctx.commitSha).slice(0, 7) : "";
+        const stepLabels = [
+            "Checking repository",
+            sha7 ? `Resolving version @ ${sha7}` : "Resolving version",
+            "Queuing install",
+            "Installation started"
+        ];
+        const prevFocus = document.activeElement;
+        // one id and one timestamp per install: Retry sends the same ones, so the consumer can dedupe
+        const m = {
+            inflight: false, closed: false, hover: false, kbdFocus: false, timer: null, remaining: INSTALL_AUTOCLOSE_MS,
+            requestId: generateInstallRequestId(), requestedOn: new Date().toISOString(), resumeFrom: 0, fresh: null
+        };
+
+        const mk = (tag, cls, text) => {
+            const node = document.createElement(tag);
+            if (cls) node.className = cls;
+            if (text !== undefined) node.textContent = text;
+            return node;
+        };
+
+        const titleId = "axi-install-title-" + Date.now();
+        const root = mk("div", "axi-install-root axi-install--running");
+        const backdrop = mk("div", "axi-install-backdrop");
+        const dialog = mk("div", "axi-install-dialog");
+        dialog.setAttribute("role", "dialog");
+        dialog.setAttribute("aria-modal", "true");
+        dialog.setAttribute("aria-labelledby", titleId);
+        dialog.tabIndex = -1;
+
+        // header
+        const head = mk("div", "axi-install-head");
+        const badge = mk("div", "axi-install-badge");
+        badge.innerHTML = INSTALL_ICON_PACKAGE;
+        const titles = mk("div", "axi-install-titles");
+        const title = mk("h2", "axi-install-title", `Installing ${label}`);
+        title.id = titleId;
+        const sub = mk("p", "axi-install-sub", `${ctx.directory} · ${ctx.version || "no version"}`);
+        sub.title = sub.textContent;
+        titles.appendChild(title);
+        titles.appendChild(sub);
+        head.appendChild(badge);
+        head.appendChild(titles);
+
+        // body: stepper, error, success
+        const body = mk("div", "axi-install-body");
+        const live = mk("div", "axi-install-sr");
+        live.setAttribute("aria-live", "polite");
+        live.setAttribute("role", "status");
+        const steps = mk("ol", "axi-install-steps");
+        const labelEls = [];
+        const stepEls = stepLabels.map((text) => {
+            const li = mk("li", "axi-install-step");
+            li.dataset.state = "pending";
+            const marker = mk("span", "axi-install-marker");
+            marker.appendChild(mk("span", "axi-install-spin"));
+            marker.insertAdjacentHTML("beforeend", INSTALL_ICON_OK + INSTALL_ICON_ERR);
+            li.appendChild(marker);
+            const labelEl = mk("span", "axi-install-label", text);
+            labelEls.push(labelEl);
+            li.appendChild(labelEl);
+            steps.appendChild(li);
+            return li;
+        });
+
+        const errorBox = mk("div", "axi-install-error");
+        errorBox.hidden = true;
+        errorBox.setAttribute("role", "alert");
+        const errorHead = mk("strong", "", "Installation could not be started");
+        const errorMsg = mk("span", "", "");
+        errorBox.appendChild(errorHead);
+        errorBox.appendChild(errorMsg);
+
+        const success = mk("div", "axi-install-success");
+        success.hidden = true;
+        const check = mk("div", "axi-install-check");
+        check.innerHTML = INSTALL_ICON_BIG_CHECK;
+        const okTitle = mk("h3", "axi-install-ok-title", "Your installation has started");
+        const okText = mk("p", "axi-install-ok-text", "You'll get a notification when it finishes.");
+        const card = mk("dl", "axi-install-card");
+        const addRow = (k, v, mono) => {
+            const dt = mk("dt", "", k);
+            card.appendChild(dt);
+            const dd = mk("dd", mono ? "axi-install-mono" : "", v);
+            dd.title = v;
+            card.appendChild(dd);
+            return { dt, dd };
+        };
+        addRow("Type", label);
+        addRow("Directory", ctx.directory);
+        addRow("Version", ctx.version || "no version");
+        addRow("Repository", `${ctx.account}/${ctx.repo}`);
+        const commitRow = addRow("Commit", sha7, true);
+        commitRow.dt.hidden = commitRow.dd.hidden = !sha7;
+        success.appendChild(check);
+        success.appendChild(okTitle);
+        success.appendChild(okText);
+        success.appendChild(card);
+
+        body.appendChild(live);
+        body.appendChild(steps);
+        body.appendChild(errorBox);
+        body.appendChild(success);
+
+        // footer
+        const foot = mk("div", "axi-install-foot");
+        const note = mk("span", "axi-install-note", "This only takes a moment.");
+        const countdown = mk("span", "axi-install-note", "");
+        countdown.hidden = true;
+        const retryBtn = mk("button", "axi-install-btn axi-install-btn-primary", "Retry");
+        retryBtn.type = "button";
+        retryBtn.hidden = true;
+        const closeBtn = mk("button", "axi-install-btn", "Close");
+        closeBtn.type = "button";
+        closeBtn.hidden = true;
+        const doneBtn = mk("button", "axi-install-btn axi-install-btn-primary", "Done");
+        doneBtn.type = "button";
+        doneBtn.hidden = true;
+        [note, countdown, closeBtn, retryBtn, doneBtn].forEach(n => foot.appendChild(n));
+
+        const bar = mk("div", "axi-install-bar");
+        const barFill = document.createElement("i");
+        bar.appendChild(barFill);
+        bar.hidden = true;
+
+        dialog.appendChild(head);
+        dialog.appendChild(body);
+        dialog.appendChild(foot);
+        dialog.appendChild(bar);
+        root.appendChild(backdrop);
+        root.appendChild(dialog);
+
+        const setStep = (i, state) => {
+            stepEls[i].dataset.state = state;
+            if (state === "active") live.textContent = `Step ${i + 1} of ${stepLabels.length}: ${stepLabels[i]}`;
+            if (state === "error") live.textContent = `Failed at step ${i + 1}: ${stepLabels[i]}`;
+        };
+        const setMode = (mode) => {
+            root.classList.remove("axi-install--running", "axi-install--error", "axi-install--success");
+            root.classList.add("axi-install--" + mode);
+            note.hidden = mode !== "running";
+        };
+
+        m.close = (immediate) => {
+            if (m.closed) return;
+            m.closed = true;
+            if (m.timer) clearInterval(m.timer);
+            document.removeEventListener("keydown", onDocKey, true);
+            if (installModal === m) installModal = null;
+            const remove = () => { if (root.parentNode) root.parentNode.removeChild(root); };
+            if (immediate) remove();
+            else { root.classList.add("axi-install-leaving"); setTimeout(remove, 180); }
+            try {
+                if (prevFocus && prevFocus !== input && prevFocus !== document.body && document.contains(prevFocus) && typeof prevFocus.focus === "function") prevFocus.focus();
+            } catch (e) { }
+        };
+
+        const onDocKey = (e) => {
+            if (e.key === "Escape") {
+                e.stopPropagation();
+                e.preventDefault();
+                if (!m.inflight) m.close(false);
+                return;
+            }
+            if (e.key !== "Tab") return;
+            m.kbdFocus = true;
+            const focusables = Array.from(dialog.querySelectorAll("button")).filter(b => !b.hidden && !b.disabled);
+            if (focusables.length === 0) { e.preventDefault(); dialog.focus(); return; }
+            const first = focusables[0];
+            const last = focusables[focusables.length - 1];
+            const active = document.activeElement;
+            if (!dialog.contains(active) || active === dialog) { e.preventDefault(); (e.shiftKey ? last : first).focus(); }
+            else if (e.shiftKey && active === first) { e.preventDefault(); last.focus(); }
+            else if (!e.shiftKey && active === last) { e.preventDefault(); first.focus(); }
+        };
+        document.addEventListener("keydown", onDocKey, true);
+
+        backdrop.addEventListener("mousedown", () => { if (!m.inflight) m.close(false); });
+        closeBtn.addEventListener("click", () => m.close(false));
+        doneBtn.addEventListener("click", () => m.close(false));
+        dialog.addEventListener("mouseenter", () => { m.hover = true; });
+        dialog.addEventListener("mouseleave", () => { m.hover = false; });
+        dialog.addEventListener("focusout", (e) => { if (!e.relatedTarget || !dialog.contains(e.relatedTarget)) m.kbdFocus = false; });
+
+        const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+        const showSuccess = () => {
+            setMode("success");
+            success.hidden = false;
+            errorBox.hidden = true;
+            retryBtn.hidden = true;
+            closeBtn.hidden = true;
+            doneBtn.hidden = false;
+            countdown.hidden = false;
+            bar.hidden = false;
+            live.textContent = "Your installation has started. You'll get a notification when it finishes.";
+            doneBtn.focus();
+            m.remaining = INSTALL_AUTOCLOSE_MS;
+            let last = Date.now();
+            const paint = () => {
+                barFill.style.transform = `scaleX(${Math.max(0, m.remaining / INSTALL_AUTOCLOSE_MS)})`;
+                countdown.textContent = `Closing in ${Math.max(1, Math.ceil(m.remaining / 1000))}s`;
+            };
+            paint();
+            m.timer = setInterval(() => {
+                const now = Date.now();
+                const dt = now - last;
+                last = now;
+                if (m.hover || m.kbdFocus) return;
+                m.remaining -= dt;
+                if (m.remaining <= 0) { m.close(false); return; }
+                paint();
+            }, 100);
+        };
+
+        const showError = (message) => {
+            setMode("error");
+            errorMsg.textContent = message;
+            errorBox.hidden = false;
+            retryBtn.hidden = false;
+            closeBtn.hidden = false;
+            doneBtn.hidden = true;
+            retryBtn.focus();
+        };
+
+        // the commit of the fresh listing replaces the one seen when the command was typed
+        const setSha = (sha) => {
+            ctx.commitSha = sha || "";
+            const short = ctx.commitSha.slice(0, 7);
+            stepLabels[1] = short ? `Resolving version @ ${short}` : "Resolving version";
+            labelEls[1].textContent = stepLabels[1];
+            commitRow.dd.textContent = short;
+            commitRow.dd.title = short;
+            commitRow.dt.hidden = commitRow.dd.hidden = !short;
+        };
+        const waitAtLeast = (promise, ms) => Promise.all([promise, delay(ms)]).then(r => r[0]);
+        const failStep = (i, message, resumeFrom) => {
+            m.resumeFrom = resumeFrom;
+            setStep(i, "error");
+            showError(message);
+        };
+
+        // Steps: 1 fresh listdirectories (cache updated), 2 resolve the commit and re-check directory / version, 3 queue call, 4 started
+        const run = async (from) => {
+            if (from <= 0) {
+                setStep(0, "active");
+                let fresh;
+                try {
+                    fresh = await waitAtLeast(fetchInstallDirectories(ctx.type, ctx.account, ctx.repo, true), INSTALL_STEP_MIN_MS);
+                } catch (err) {
+                    if (m.closed) return;
+                    failStep(0, (err && err.message) || "Could not check the repository", 0);
+                    return;
+                }
+                if (m.closed) return;
+                m.fresh = fresh;
+                setStep(0, "done");
+            }
+            if (from <= 1) {
+                setStep(1, "active");
+                const words = ["install", ctx.type, ctx.directory];
+                if (ctx.version) words.push(ctx.version);
+                const checked = validateInstallArgs(words, m.fresh && m.fresh.directories);
+                await delay(INSTALL_STEP_MIN_MS);
+                if (m.closed) return;
+                if (!checked.ok) {
+                    failStep(1, `The repository changed since the command was typed. ${checked.message}`, 0);
+                    return;
+                }
+                setSha(m.fresh.commitSha);
+                setStep(1, "done");
+            }
+            setStep(2, "active");
+            setStep(3, "pending");
+            m.inflight = true;
+            const result = await waitAtLeast(pushInstallToQueue(buildInstallPayload({
+                requestId: m.requestId,
+                type: ctx.type,
+                account: ctx.account,
+                repo: ctx.repo,
+                directory: ctx.directory,
+                version: ctx.version,
+                commitSha: ctx.commitSha,
+                appname: ctx.appname,
+                username: ctx.username,
+                requestedOn: m.requestedOn
+            })), INSTALL_STEP_MIN_MS);
+            m.inflight = false;
+            if (m.closed) return;
+            if (!result.success) {
+                failStep(2, result.message, 2);
+                return;
+            }
+            setStep(2, "done");
+            setStep(3, "active");
+            await delay(INSTALL_STEP_MIN_MS);
+            if (m.closed) return;
+            setStep(3, "done");
+            await delay(300);
+            if (m.closed) return;
+            showSuccess();
+        };
+
+        retryBtn.addEventListener("click", () => {
+            if (m.inflight) return;
+            const from = m.resumeFrom;
+            for (let i = from; i < stepEls.length; i++) setStep(i, "pending");
+            setMode("running");
+            errorBox.hidden = true;
+            retryBtn.hidden = true;
+            closeBtn.hidden = true;
+            dialog.focus();
+            run(from);
+        });
+
+        installModal = m;
+        document.body.appendChild(root);
+        dialog.focus();
+        run(0);
     }
 
     // function getType(axDatasourceKey, text, paramValuesCsv, tokens, commandConfig) {
@@ -14096,6 +15039,8 @@ if (typeof document !== "undefined") {
             text.startsWith("Searching") ||
             text.startsWith("Type at least") ||
             text.startsWith("No matching") ||
+            text.startsWith("Run configure ") ||
+            text.startsWith("No directories") ||
             text === "No Data" ||
             text === "Please type the value..." ||
             text === "Please type Valid date using / (ex: DD / MM / YYYY)" ||
@@ -17582,6 +18527,7 @@ if (typeof document !== "undefined") {
                     case 'buildAccess':
                         delete commandsFromDb['SDK'];
                         delete commandsFromDb['Source'];
+                        delete commandsFromDb['Install'];
                         break;
 
                     default:

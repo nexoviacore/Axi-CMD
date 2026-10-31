@@ -180,3 +180,23 @@ UPDATE AXI_COMMAND_PROMPTS SET promptsource = RTRIM(promptsource, ',') || ',Axi_
 <<
 UPDATE AXI_COMMAND_PROMPTS SET promptvalues = RTRIM(promptvalues, ',') || ',Product,Plugin,ChangeRequest' WHERE cmdtoken = 4 AND wordpos = 2 AND promptvalues NOT LIKE '%ChangeRequest%'
 >>
+
+-- Install: `install <product|plugin|changerequest> <directory> [version]` (build access only). Rows are added only when absent, so a re-run changes nothing.
+-- axi_git_directories and axi_git_versions are NOT axdirectsql rows: the palette resolves them from the AxiGit listdirectories API.
+<<
+INSERT INTO axi_commands
+(cmdtoken, command_group, command, active)
+SELECT 10, 'Install', ' ', 'T' FROM dual WHERE NOT EXISTS (SELECT 1 FROM axi_commands WHERE cmdtoken = 10)
+>>
+
+<<
+INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) SELECT HEXTORAW('6474EF0115544DD7BE1BC41C8CDEE0F4'), 10, 2, 'object type', NULL, NULL, 'Product,Plugin,ChangeRequest', NULL, NULL, NULL FROM dual WHERE NOT EXISTS (SELECT 1 FROM AXI_COMMAND_PROMPTS WHERE cmdtoken = 10 AND wordpos = 2)
+>>
+
+<<
+INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) SELECT HEXTORAW('EB7DCE54C332404C984DC37AEF8FB1EB'), 10, 3, 'directory', 'axi_git_directories', NULL, NULL, NULL, NULL, NULL FROM dual WHERE NOT EXISTS (SELECT 1 FROM AXI_COMMAND_PROMPTS WHERE cmdtoken = 10 AND wordpos = 3)
+>>
+
+<<
+INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) SELECT HEXTORAW('B3B2FEA1E894496A8F6837FDCD76DDE8'), 10, 4, 'version', 'axi_git_versions', NULL, NULL, NULL, NULL, NULL FROM dual WHERE NOT EXISTS (SELECT 1 FROM AXI_COMMAND_PROMPTS WHERE cmdtoken = 10 AND wordpos = 4)
+>>
