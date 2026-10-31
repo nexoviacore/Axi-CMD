@@ -459,6 +459,9 @@ if (typeof document !== "undefined") {
     let isEditing = false;
     let isProgrammaticExecution = false;
     let suppressFocusSuggestions = false;
+    // new code: option label ("Product") while a configure product / plugin / changerequest save runs, null otherwise.
+    // hide(), render() and executeCommandsV2() read it, so it is declared here, before any of them can run.
+    let commandSettingSaving = null;
     let isInitialLoad = true;
 
     const goOption = AxiCmdConfig.SHORTCUT_OPTIONS.GO;
@@ -6828,6 +6831,12 @@ if (typeof document !== "undefined") {
      */
     function render() {
 
+        // new code: while a configure product / plugin / changerequest save runs, the loader replaces the suggestions
+        if (commandSettingSaving) {
+            drawCommandSettingSavingRow();
+            return;
+        }
+
         // console.log("Render called");
         // Emptying the list resets its scroll position. Background requests (commands, favourites, the next
         // page ...) finish while the user is scrolling and trigger a re-render, which threw the user back to
@@ -6943,16 +6952,20 @@ if (typeof document !== "undefined") {
         if (validItems.length === 0 && isAnyFetchActive) {
             if (!showInitialWrapper) {
                 list.innerHTML = "";
-                const li = document.createElement("li");
-                li.className = "axi-suggestion-loading d-flex align-items-center justify-content-center py-3 px-4 text-muted gap-2";
-                li.style.fontSize = "13px";
-                li.style.textAlign = "center";
+                // old code
+                // const li = document.createElement("li");
+                // li.className = "axi-suggestion-loading d-flex align-items-center justify-content-center py-3 px-4 text-muted gap-2";
+                // li.style.fontSize = "13px";
+                // li.style.textAlign = "center";
+                // const loadingText = items.find(it => typeof it === "string" && (it.startsWith("Searching") || it.startsWith("Fetching"))) || (isSearchPending() ? "Searching..." : "Loading options...");
+                // li.innerHTML = `
+                //     <span class="spinner-border h-15px w-15px align-middle text-gray-400" role="status" aria-hidden="true" style="border-width: 2px; margin-inline-end: 6px;"></span>
+                //     <span><bdi>${loadingText}</bdi></span>
+                // `;
+                // list.appendChild(li);
+                // new code: same row, built by the shared helper (also used by the configure product / plugin / changerequest save)
                 const loadingText = items.find(it => typeof it === "string" && (it.startsWith("Searching") || it.startsWith("Fetching"))) || (isSearchPending() ? "Searching..." : "Loading options...");
-                li.innerHTML = `
-                    <span class="spinner-border h-15px w-15px align-middle text-gray-400" role="status" aria-hidden="true" style="border-width: 2px; margin-inline-end: 6px;"></span>
-                    <span><bdi>${loadingText}</bdi></span>
-                `;
-                list.appendChild(li);
+                list.appendChild(createSuggestionLoadingRow(loadingText));
                 list.style.display = "block";
                 return;
             }
@@ -7178,6 +7191,8 @@ if (typeof document !== "undefined") {
      * @returns {void}
      */
     function hide() {
+        // new code: keep the "Saving ... repository..." loader on screen until the save ends (endCommandSettingSaving hides it)
+        if (commandSettingSaving) return;
         if (megaDropdown) {
             megaDropdown.style.setProperty("display", "none", "important");
             megaDropdown.classList.remove("show", "menu-dropdown");
@@ -9778,6 +9793,10 @@ if (typeof document !== "undefined") {
         if (!axicmdenabled) {
             return;
         }
+        // new code: a configure product / plugin / changerequest save is running; Enter on the read-only input does nothing
+        if (commandSettingSaving) {
+            return;
+        }
         if (document.querySelector(".AXI-Sec")?.classList.contains("axi-tour-active")) {
             return;
         }
@@ -11524,6 +11543,85 @@ if (typeof document !== "undefined") {
     const commandSettingSavedCache = {};   // type -> { t, v } ; v = { accountname, reponame } or null when the GET failed
     const commandSettingPending = {};      // type -> true while a GET is running
     const COMMAND_SETTING_RETRY_MS = 30000;
+    // new code: loader while a save runs; the state (commandSettingSaving) is declared at the top with the other palette state
+    const COMMAND_SETTING_SAVE_TIMEOUT_MS = 30000;
+
+    /**
+     * Builds the spinner row the palette shows while something loads (same markup as "Searching...").
+     * @param {string} text - Text next to the spinner.
+     * @returns {HTMLLIElement}
+     */
+    function createSuggestionLoadingRow(text) {
+        const li = document.createElement("li");
+        li.className = "axi-suggestion-loading d-flex align-items-center justify-content-center py-3 px-4 text-muted gap-2";
+        li.style.fontSize = "13px";
+        li.style.textAlign = "center";
+        li.innerHTML = `
+                    <span class="spinner-border h-15px w-15px align-middle text-gray-400" role="status" aria-hidden="true" style="border-width: 2px; margin-inline-end: 6px;"></span>
+                    <span><bdi></bdi></span>
+                `;
+        li.querySelector("bdi").textContent = text;
+        return li;
+    }
+
+    /**
+     * Draws the "Saving ... repository..." row in the palette. render() calls it instead of the suggestions while a save runs.
+     * @returns {void}
+     */
+    function drawCommandSettingSavingRow() {
+        if (!list) return;
+        list.innerHTML = "";
+        list.classList.remove("My-Command-Wrapper");
+        if (favouritesCard) favouritesCard.style.display = "none";
+        if (commandHeader) commandHeader.style.display = "none";
+        list.appendChild(createSuggestionLoadingRow(`Saving ${commandSettingSaving} repository...`));
+        list.style.display = "block";
+        if (megaDropdown) megaDropdown.style.display = "flex";
+    }
+
+    /**
+     * Starts the save loader: palette stays open with the command, input is read-only so it cannot run twice.
+     * @param {string} label - Option label (Product / Plugin / Change Request).
+     * @returns {void}
+     */
+    function startCommandSettingSaving(label) {
+        commandSettingSaving = label;
+        if (input) input.readOnly = true;
+        drawCommandSettingSavingRow();
+    }
+
+    /**
+     * Ends the save loader. On success the palette closes; otherwise it reopens with the typed command so it can be fixed.
+     * @param {boolean} success - True when the save went through.
+     * @returns {void}
+     */
+    function endCommandSettingSaving(success) {
+        commandSettingSaving = null;
+        if (input) input.readOnly = false;
+        if (success) {
+            hide();
+            return;
+        }
+        reopenPaletteForCommandSetting();
+    }
+
+    /**
+     * Shows the palette again with the typed command (cursor at the end) after a failed or refused save.
+     * Deferred, because the command runner calls hide() right after the handler returns.
+     * @returns {void}
+     */
+    function reopenPaletteForCommandSetting() {
+        setTimeout(() => {
+            try {
+                if (!input) return;
+                suppressFocusSuggestions = true; // the focus listener then skips its own handleInput
+                input.focus();
+                suppressFocusSuggestions = false; // in case the input already had focus and no focus event fired
+                input.setSelectionRange(input.value.length, input.value.length);
+                handleInput();
+            } catch (e) { }
+        }, 0);
+    }
 
     /**
      * Validates an account / repository name token for the commandsetting options.
@@ -11703,6 +11801,9 @@ if (typeof document !== "undefined") {
      * @returns {Promise<void>}
      */
     async function handleCommandSetting({ tokens, commandConfig, configRow }) {
+        // new code: a save is already running (loader on screen), so ignore a second Go / Enter
+        if (commandSettingSaving) return;
+
         const propertyType = getCommandSettingType(configRow, tokens[1]);
         const label = getCommandSettingLabel(propertyType);
 
@@ -11712,22 +11813,38 @@ if (typeof document !== "undefined") {
             return;
         }
 
+        // old code
+        // const account = validateCommandSettingName(tokens[2]);
+        // if (!account.ok) { showToast(`Account name: ${account.message}`); return; }
+        // const repo = validateCommandSettingName(tokens[3]);
+        // if (!repo.ok) { showToast(`Repo name: ${repo.message}`); return; }
+        // // new code: account and repo names cannot contain spaces, so extra words are an error, not ignored
+        // if (hasCommandSettingExtraWords(tokens)) { showToast(`Only an account name and a repo name are expected after '${label}'`); return; }
+        // new code: on a refused name the palette reopens with the command, so it can be corrected
         const account = validateCommandSettingName(tokens[2]);
-        if (!account.ok) { showToast(`Account name: ${account.message}`); return; }
+        if (!account.ok) { showToast(`Account name: ${account.message}`); reopenPaletteForCommandSetting(); return; }
         const repo = validateCommandSettingName(tokens[3]);
-        if (!repo.ok) { showToast(`Repo name: ${repo.message}`); return; }
-        // new code: account and repo names cannot contain spaces, so extra words are an error, not ignored
-        if (hasCommandSettingExtraWords(tokens)) { showToast(`Only an account name and a repo name are expected after '${label}'`); return; }
+        if (!repo.ok) { showToast(`Repo name: ${repo.message}`); reopenPaletteForCommandSetting(); return; }
+        // account and repo names cannot contain spaces, so extra words are an error, not ignored
+        if (hasCommandSettingExtraWords(tokens)) { showToast(`Only an account name and a repo name are expected after '${label}'`); reopenPaletteForCommandSetting(); return; }
 
         const appname = getProjectName() || "";
         const username = getCommandSettingUser();
         if (!appname) { showToast("Application session is not available. App name is required."); return; }
         if (!username) { showToast("User session is not available. Username is required."); return; }
 
+        // new code: loader in the palette until the API answers; set before the first await, so the hide() the
+        // command runner calls after this handler returns keeps the palette open
+        startCommandSettingSaving(label);
+        let savedOk = false;
+        const abortCtrl = (typeof AbortController !== "undefined") ? new AbortController() : null;
+        const abortTimer = abortCtrl ? setTimeout(() => abortCtrl.abort(), COMMAND_SETTING_SAVE_TIMEOUT_MS) : null;
+
         try {
             const res = await fetch(`${axiCommandSettingsUrl}?appname=${encodeURIComponent(appname)}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
+                signal: abortCtrl ? abortCtrl.signal : undefined,
                 body: JSON.stringify({
                     username: username,
                     propertyCategory: "axicmd",
@@ -11758,9 +11875,21 @@ if (typeof document !== "undefined") {
             const wasText = (prev.accountname || prev.reponame) ? `${prev.accountname}/${prev.reponame}` : "not set";
 
             delete commandSettingSavedCache[propertyType];
+            savedOk = true;
             showToast(`${label} repository set to ${newAccount}/${newRepo} (was ${wasText})`, 5000, true);
         } catch (err) {
-            showToast(`Error: ${err.message || err}`);
+            // old code
+            // showToast(`Error: ${err.message || err}`);
+            // new code: say so when the save was stopped by the timeout
+            if (err && err.name === "AbortError") {
+                showToast(`Error: saving the ${label} repository took too long. Please try again.`);
+            } else {
+                showToast(`Error: ${err.message || err}`);
+            }
+        } finally {
+            // new code: loader off; palette closes on success, reopens with the command on failure
+            if (abortTimer) clearTimeout(abortTimer);
+            endCommandSettingSaving(savedOk);
         }
     }
 
