@@ -261,14 +261,16 @@ Execute the appropriate scripts based on your target database:
     2.  `axi_command_tables.sql`
     3.  `axi_command_config.sql`
     4.  `axi_dependent_tables.sql`
-    5.  `axi_functions.sql`
+    5.  `axi_command_settings.sql`
+    6.  `axi_functions.sql`
 
 *   **Oracle:** Run the scripts inside [Structures/Oracle/Scripts/](../Structures/Oracle/Scripts/):
     1.  `axi_axdirectsql_tables.sql`
     2.  `axi_command_tables.sql`
     3.  `axi_command_config.sql`
     4.  `axi_dependent_tables.sql`
-    5.  `axi_functions.sql`
+    5.  `axi_command_settings.sql`
+    6.  `axi_functions.sql`
 
 > [!NOTE]
 > The Oracle `axi_functions.sql` script drops functions before the types they use (for example `fn_axi_getstructures_meta` before `AXI_GETSTRUCTURES_META_tbl`), so it can be re-run safely. If a re-run still fails with `ORA-02303: cannot drop or replace a type with type or table dependents`, find what depends on the type with `SELECT name, type, referenced_name FROM user_dependencies WHERE referenced_name IN (...)`, drop those objects first, and run the script again.
