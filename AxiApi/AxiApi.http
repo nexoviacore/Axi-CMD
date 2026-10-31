@@ -4,3 +4,28 @@ GET {{AxiApi_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+
+POST {{AxiApi_HostAddress}}/api/v1/CommandSettings?appname=axpert
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "propertyCategory": "axicmd",
+  "propertyType": "product",
+  "properties": {
+    "accountname": "nexoviacore",
+    "reponame": "axpertweb"
+  }
+}
+
+###
+
+GET {{AxiApi_HostAddress}}/api/v1/CommandSettings?appname=axpert&category=axicmd&type=product
+Accept: application/json
+
+###
+
+GET {{AxiApi_HostAddress}}/api/v1/CommandSettings?appname=axpert&category=axicmd
+Accept: application/json
+
+###

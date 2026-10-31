@@ -451,6 +451,7 @@ if (typeof document !== "undefined") {
     let commandFavorites = [];
     let axiFavoritesUrl = "";
     let axiKeyfieldUrl = "";
+    let axiCommandSettingsUrl = "";
     let axiSettingsUrl = "";
     const MAX_FAVORITES = AxiCmdConfig.MAX_FAVORITES;
     let commandRoutes = [];
@@ -1014,6 +1015,7 @@ if (typeof document !== "undefined") {
         axiCommandConfigUrl = `${AxiArmUrl}/AxiCMDApi/api/v1/Axi/command-config`;
         axiKeyfieldUrl = `${AxiArmUrl}/AxiCMDApi/api/v1/Axi/setkeyfield`;
         axiSettingsUrl = `${AxiArmUrl}/AxiCMDApi/api/v1/Axi/user-settings`;
+        axiCommandSettingsUrl = `${AxiArmUrl}/AxiCMDApi/api/v1/CommandSettings`;
 
 
         input = document.getElementById("Axi-Searchinp");
@@ -2171,6 +2173,12 @@ if (typeof document !== "undefined") {
 
         if (optType === "action") {
             handleKeyfield({ tokens, commandConfig });
+            return true;
+        }
+
+        // Configure Product / Plugin / ChangeRequest: saves "<account> <repo>" through the CommandSettings API
+        if (optType === "commandsetting") {
+            handleCommandSetting({ tokens, commandConfig, configRow });
             return true;
         }
 
@@ -5268,6 +5276,11 @@ if (typeof document !== "undefined") {
 
             return processRunCommands(tokens, targetIndex, structType);
         }
+        // Configure Product / Plugin / ChangeRequest: hints + saved value, no list fetch
+        if (groupKey.toLowerCase() === "configure" && tokens.length > 2 && isCommandSettingOption(tokens[1])) {
+            return getCommandSettingSuggestions(tokens);
+        }
+
         const promptInfo = getActivePromptInfo(commandConfig, tokens, targetIndex);
         // console.log("Resolved Param" + JSON.stringify(resolvedParams)); 
         // console.log("ResolvedParamType = " + JSON.stringify(resolvedParamType)); 
@@ -5344,6 +5357,12 @@ if (typeof document !== "undefined") {
             }
 
             else if (groupKey.toLowerCase() === "configure" && tokens.length > 2) {
+                // new code
+                if (isCommandSettingOption(tokens[1])) {
+                    const csOptions = shouldOfferCommandSettingGo(tokens) ? [goOption] : [];
+                    filteredObjects = csOptions;
+                    return csOptions;
+                }
                 if (cleanCommandToken(tokens[1]).toLowerCase() === "keyfield") {
                     filteredObjects = [goOption];
                     return [goOption];
@@ -5378,6 +5397,17 @@ if (typeof document !== "undefined") {
         const partialTyped = cleanString(tokens[targetIndex]);
 
         //We return go/pop up for configure when tokens length is greater than 3(Below we have another check it will work but realsource is finded so here itself we returning it for configure)
+        // old code
+        // if (groupKey.toLowerCase() === "configure" && tokens.length > 3 && tokens[1].toLowerCase() != "keyfield") {
+        //     filteredObjects = [goOption, popOption];
+        //     return [goOption, popOption]
+        // }
+        // new code
+        if (groupKey.toLowerCase() === "configure" && tokens.length > 3 && isCommandSettingOption(tokens[1])) {
+            const csOptions = shouldOfferCommandSettingGo(tokens) ? [goOption] : [];
+            filteredObjects = csOptions;
+            return csOptions;
+        }
         if (groupKey.toLowerCase() === "configure" && tokens.length > 3 && tokens[1].toLowerCase() != "keyfield") {
             filteredObjects = [goOption, popOption];
             return [goOption, popOption]
@@ -11487,6 +11517,253 @@ if (typeof document !== "undefined") {
         }
     }
 
+    // ---------------------------------------------------------------------------------------------------------
+    // Configure Product / Plugin / ChangeRequest (prompt_option_type 'commandsetting')
+    // ---------------------------------------------------------------------------------------------------------
+    const COMMAND_SETTING_LABELS = { product: "Product", plugin: "Plugin", changerequest: "Change Request" };
+    const commandSettingSavedCache = {};   // type -> { t, v } ; v = { accountname, reponame } or null when the GET failed
+    const commandSettingPending = {};      // type -> true while a GET is running
+    const COMMAND_SETTING_RETRY_MS = 30000;
+
+    /**
+     * Validates an account / repository name token for the commandsetting options.
+     * @param {string} raw - Raw token.
+     * @returns {{ok: boolean, value: string, message: string}} Result with the cleaned value.
+     */
+    function validateCommandSettingName(raw) {
+        const value = cleanCommandToken(raw == null ? "" : String(raw));
+        if (!value) return { ok: false, value: "", message: "Name is required" };
+        if (value.length > 100) return { ok: false, value, message: "Name must be 100 characters or fewer" };
+        if (!/^[A-Za-z0-9._-]+$/.test(value)) return { ok: false, value, message: "Name can contain only letters, numbers, dot, underscore and hyphen" };
+        return { ok: true, value, message: "" };
+    }
+
+    /**
+     * Returns the configure row of a typed option when that option is a commandsetting one.
+     * @param {string} tokenName - Typed option token (tokens[1]).
+     * @returns {object|null} Configure row or null.
+     */
+    function getCommandSettingRow(tokenName) {
+        const opt = cleanCommandToken(tokenName || "");
+        if (!opt) return null;
+        const row = getCommandConfigRow("Configure", opt);
+        if (!row) return null;
+        const optType = (row.promptOptionType || row.prompt_option_type || row.PromptOptionType || "").toLowerCase();
+        return optType === "commandsetting" ? row : null;
+    }
+
+    /**
+     * True when the typed configure option is a commandsetting option (Product, Plugin, ChangeRequest).
+     * @param {string} tokenName - Typed option token (tokens[1]).
+     * @returns {boolean}
+     */
+    function isCommandSettingOption(tokenName) {
+        return !!getCommandSettingRow(tokenName);
+    }
+
+    /**
+     * Go is offered only once both the account and the repo name are present and valid.
+     * @param {string[]} tokens - Command tokens.
+     * @returns {boolean}
+     */
+    function shouldOfferCommandSettingGo(tokens) {
+        // old code
+        // return !!tokens && tokens.length > 3 && validateCommandSettingName(tokens[2]).ok && validateCommandSettingName(tokens[3]).ok;
+        // new code: words after the repo name mean a name with a space was typed, so no Go
+        return !!tokens && tokens.length > 3 && !hasCommandSettingExtraWords(tokens)
+            && validateCommandSettingName(tokens[2]).ok && validateCommandSettingName(tokens[3]).ok;
+    }
+
+    /**
+     * True when anything other than blanks follows the repo name (configure product <account> <repo> ...).
+     * @param {string[]} tokens - Command tokens.
+     * @returns {boolean}
+     */
+    function hasCommandSettingExtraWords(tokens) {
+        return !!tokens && tokens.slice(4).some(t => cleanCommandToken(t || "").trim() !== "");
+    }
+
+    /**
+     * Property type (product / plugin / changerequest) of a commandsetting row.
+     * @param {object} row - Configure row.
+     * @param {string} tokenName - Typed option, used when the row has no prompt id.
+     * @returns {string} Lower-case property type.
+     */
+    function getCommandSettingType(row, tokenName) {
+        const id = row ? (row.promptId || row.prompt_id || row.PromptId || "") : "";
+        return (id || cleanCommandToken(tokenName || "")).toString().trim().toLowerCase();
+    }
+
+    /**
+     * Human label for a property type.
+     * @param {string} type - Property type.
+     * @returns {string} Label.
+     */
+    function getCommandSettingLabel(type) {
+        return COMMAND_SETTING_LABELS[(type || "").toLowerCase()] || type;
+    }
+
+    /**
+     * Reads accountname / reponame from a response properties object, tolerating casing.
+     * @param {object} props - Properties object.
+     * @returns {{accountname: string, reponame: string}} Values ("" when missing).
+     */
+    function readCommandSettingProps(props) {
+        const p = props || {};
+        const pick = (...keys) => {
+            for (const k of keys) { if (p[k] !== undefined && p[k] !== null) return String(p[k]); }
+            return "";
+        };
+        return { accountname: pick("accountname", "accountName", "AccountName", "Accountname"), reponame: pick("reponame", "repoName", "RepoName", "Reponame") };
+    }
+
+    /**
+     * Gets username from the shell session.
+     * @returns {string} Username.
+     */
+    function getCommandSettingUser() {
+        return window.mainUserName ||
+            (typeof callParentNew === "function" && callParentNew("mainUserName")) ||
+            (typeof parent !== "undefined" && parent.mainUserName) ||
+            (typeof top !== "undefined" && top.mainUserName) ||
+            "";
+    }
+
+    /**
+     * Loads the currently saved value of a commandsetting type once (cached for the palette session) and
+     * redraws the suggestions when it arrives. A failed GET shows no suggestion and is retried after a while.
+     * @param {string} type - Property type.
+     * @returns {void}
+     */
+    function loadSavedCommandSetting(type) {
+        if (!type || !axiCommandSettingsUrl || commandSettingPending[type]) return;
+        const cached = commandSettingSavedCache[type];
+        if (cached && (cached.v || (Date.now() - cached.t) < COMMAND_SETTING_RETRY_MS)) return;
+        const appname = getProjectName() || "";
+        if (!appname) return;
+        commandSettingPending[type] = true;
+        fetch(`${axiCommandSettingsUrl}?appname=${encodeURIComponent(appname)}&category=axicmd&type=${encodeURIComponent(type)}`)
+            .then(res => res.ok ? res.json() : Promise.reject(new Error("HTTP " + res.status)))
+            .then(data => {
+                const props = data && (data.properties || data.Properties);
+                commandSettingSavedCache[type] = { t: Date.now(), v: readCommandSettingProps(props) };
+            })
+            .catch(() => { commandSettingSavedCache[type] = { t: Date.now(), v: null }; })
+            .finally(() => {
+                delete commandSettingPending[type];
+                try {
+                    const cur = getTokens(input.value);
+                    if (cur.length > 2 && cleanCommandToken(cur[0]).toLowerCase() === "configure" && getCommandSettingType(getCommandSettingRow(cur[1]), cur[1]) === type && commandSettingSavedCache[type].v) {
+                        handleInput();
+                    }
+                } catch (e) { }
+            });
+    }
+
+    /**
+     * Suggestions for "configure <product|plugin|changerequest> <account> <repo>": hint plus the saved value.
+     * @param {string[]} tokens - Command tokens.
+     * @returns {Array} Suggestion list (may include goOption).
+     */
+    function getCommandSettingSuggestions(tokens) {
+        const row = getCommandSettingRow(tokens[1]);
+        const type = getCommandSettingType(row, tokens[1]);
+        const wordNo = tokens.length;
+        let list = [];
+        filteredObjects = [];
+
+        if (wordNo === 3) updateDynamicHintFromPrompt({ prompt: "account name" });
+        else if (wordNo === 4) updateDynamicHintFromPrompt({ prompt: "repo name" });
+        else updateDynamicHintFromPrompt(null);
+
+        if (wordNo === 3 || wordNo === 4) {
+            loadSavedCommandSetting(type);
+            const saved = commandSettingSavedCache[type] && commandSettingSavedCache[type].v;
+            const savedValue = saved ? (wordNo === 3 ? saved.accountname : saved.reponame) : "";
+            const partial = cleanCommandToken(tokens[wordNo - 1] || "").toLowerCase();
+            if (savedValue && savedValue.toLowerCase().startsWith(partial) && savedValue.toLowerCase() !== partial) {
+                list = [savedValue];
+                filteredObjects = [{ name: savedValue, displaydata: savedValue }];
+            }
+        }
+
+        if (shouldOfferCommandSettingGo(tokens)) {
+            list.unshift(goOption);
+            filteredObjects.unshift(goOption);
+        }
+        return list;
+    }
+
+    /**
+     * Saves the account / repo pair for a commandsetting option through the CommandSettings API.
+     * @async
+     * @param {object} context - Execution context.
+     * @param {string[]} context.tokens - Command tokens.
+     * @param {object} context.configRow - Matching configure row.
+     * @returns {Promise<void>}
+     */
+    async function handleCommandSetting({ tokens, commandConfig, configRow }) {
+        const propertyType = getCommandSettingType(configRow, tokens[1]);
+        const label = getCommandSettingLabel(propertyType);
+
+        const perms = getAccessPermissions();
+        if (!(perms.appMgrAccess && perms.buildAccess)) {
+            showToast(`User '${window.mainUserName}' has no access to configure ${label}`);
+            return;
+        }
+
+        const account = validateCommandSettingName(tokens[2]);
+        if (!account.ok) { showToast(`Account name: ${account.message}`); return; }
+        const repo = validateCommandSettingName(tokens[3]);
+        if (!repo.ok) { showToast(`Repo name: ${repo.message}`); return; }
+        // new code: account and repo names cannot contain spaces, so extra words are an error, not ignored
+        if (hasCommandSettingExtraWords(tokens)) { showToast(`Only an account name and a repo name are expected after '${label}'`); return; }
+
+        const appname = getProjectName() || "";
+        const username = getCommandSettingUser();
+        if (!appname) { showToast("Application session is not available. App name is required."); return; }
+        if (!username) { showToast("User session is not available. Username is required."); return; }
+
+        try {
+            const res = await fetch(`${axiCommandSettingsUrl}?appname=${encodeURIComponent(appname)}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    username: username,
+                    propertyCategory: "axicmd",
+                    propertyType: propertyType,
+                    properties: { accountname: account.value, reponame: repo.value }
+                })
+            });
+
+            // old code
+            // let dataObj = null;
+            // try { dataObj = await res.json(); } catch (e) { }
+            // new code: a 400 from the API is a plain-text message, so read text and parse JSON only when it is JSON
+            let dataObj = null;
+            let bodyText = "";
+            try { bodyText = await res.text(); dataObj = JSON.parse(bodyText); } catch (e) { }
+
+            if (!res.ok || (dataObj && dataObj.success === false)) {
+                const plainMessage = (typeof dataObj === "string" ? dataObj : (!dataObj ? bodyText : "")).trim();
+                const errorMessage = dataObj?.message || dataObj?.Message || dataObj?.error || dataObj?.title || plainMessage || "Failed to save " + label + " repository";
+                showToast(`Error: ${errorMessage}`);
+                return;
+            }
+
+            const saved = readCommandSettingProps(dataObj?.properties || dataObj?.Properties);
+            const prev = readCommandSettingProps(dataObj?.previous || dataObj?.Previous);
+            const newAccount = saved.accountname || account.value;
+            const newRepo = saved.reponame || repo.value;
+            const wasText = (prev.accountname || prev.reponame) ? `${prev.accountname}/${prev.reponame}` : "not set";
+
+            delete commandSettingSavedCache[propertyType];
+            showToast(`${label} repository set to ${newAccount}/${newRepo} (was ${wasText})`, 5000, true);
+        } catch (err) {
+            showToast(`Error: ${err.message || err}`);
+        }
+    }
+
     // function getType(axDatasourceKey, text, paramValuesCsv, tokens, commandConfig) {
     //     const paramList = paramValuesCsv?.split(",").map(v => v.trim().toLowerCase()).filter(Boolean);
     //     const VALID_TYPES = new Set(paramList);
@@ -17265,6 +17542,12 @@ if (typeof document !== "undefined") {
                 const typeRow = getCommandConfigRow("Configure", rawType);
                 if (typeRow && (typeRow.promptOptionType || typeRow.prompt_option_type || typeRow.PromptOptionType || "").toLowerCase() === "shellaction"
                     && accessPermissions.buildAccess === false) {
+                    continue;
+                }
+
+                // Product / Plugin / ChangeRequest need both configure and build access
+                if (typeRow && (typeRow.promptOptionType || typeRow.prompt_option_type || typeRow.PromptOptionType || "").toLowerCase() === "commandsetting"
+                    && !(accessPermissions.appMgrAccess && accessPermissions.buildAccess)) {
                     continue;
                 }
 
