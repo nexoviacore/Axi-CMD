@@ -1,0 +1,24 @@
+services:
+  rabbitmq:
+    build: .
+    image: axpert-rabbitmq:4.2
+    container_name: axpert-rabbitmq
+    hostname: axpert-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"     # AMQP (ARM RMQueuePort)
+      - "15672:15672"   # management UI
+    environment:
+      # Must match RMQueueUser / RMQueuePassword in ARM's AppSettings.ini
+      RABBITMQ_DEFAULT_USER: ${RMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RMQ_PASSWORD:-guest}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  rabbitmq-data:
