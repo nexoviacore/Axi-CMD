@@ -11926,7 +11926,10 @@ if (typeof document !== "undefined") {
     // axi_git_directories / axi_git_versions in the prompt rows are markers resolved here, never sent to the ADS.
     // The pure helpers (tokenizer, validation, cache, payload) are mirrored in tests/axi-install-command.test.js.
     // ---------------------------------------------------------------------------------------------------------
-    const AXI_INSTALL_QUEUE_NAME = "AxiInstallQueue";
+    // old code
+    // const AXI_INSTALL_QUEUE_NAME = "AxiInstallQueue";
+    // new code: queue the AxiInstallConsumerPackage consumer listens on
+    const AXI_INSTALL_QUEUE_NAME = "axiinstallpackagesqueue";
     const AXI_INSTALL_QUEUE_OK = "QUEUEDATAINSERTEDSUCESSFULLY";
     const INSTALL_TYPES = { product: "product", plugin: "plugin", changerequest: "changerequest" };
     const INSTALL_CACHE_TTL_MS = 30 * 60 * 1000;
@@ -12071,6 +12074,22 @@ if (typeof document !== "undefined") {
      * @returns {object} Payload.
      */
     function buildInstallPayload(p) {
+        // old code
+        // return {
+        //     action: "install",
+        //     requestId: p.requestId || "",
+        //     type: p.type,
+        //     account: p.account,
+        //     repo: p.repo,
+        //     managerType: p.type,
+        //     directory: p.directory,
+        //     version: p.version || "",
+        //     commitSha: p.commitSha || "",
+        //     appname: p.appname,
+        //     username: p.username,
+        //     requestedOn: p.requestedOn || (p.now instanceof Date ? p.now : new Date()).toISOString()
+        // };
+        // new code: field names the install consumer reads (appName, packageName, packageVersion, requestedBy, requestId)
         return {
             action: "install",
             requestId: p.requestId || "",
@@ -12078,11 +12097,11 @@ if (typeof document !== "undefined") {
             account: p.account,
             repo: p.repo,
             managerType: p.type,
-            directory: p.directory,
-            version: p.version || "",
+            packageName: p.directory,
+            packageVersion: p.version || "",
             commitSha: p.commitSha || "",
-            appname: p.appname,
-            username: p.username,
+            appName: p.appname,
+            requestedBy: p.username,
             requestedOn: p.requestedOn || (p.now instanceof Date ? p.now : new Date()).toISOString()
         };
     }
@@ -12108,6 +12127,10 @@ if (typeof document !== "undefined") {
         if (ok && body.indexOf(AXI_INSTALL_QUEUE_OK) !== -1) return { success: true, message: "" };
         let obj = null;
         try { obj = JSON.parse(body); } catch (e) { }
+        // new code: ARM's response filter answers {"result":{"message":"queue Inserted Successfully","success":true}}
+        const wrapped = (obj && typeof obj === "object" && obj.result && typeof obj.result === "object") ? obj.result : null;
+        if (ok && ((wrapped && wrapped.success === true) || (obj && typeof obj === "object" && obj.success === true))) return { success: true, message: "" };
+        if (wrapped) obj = wrapped;
         let msg = "";
         if (obj && typeof obj === "object") msg = obj.message || obj.Message || obj.error || obj.detail || obj.title || "";
         else if (typeof obj === "string") msg = obj;

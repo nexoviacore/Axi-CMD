@@ -5,7 +5,7 @@ const test = require('node:test');
 const assert = require('node:assert');
 
 // ---- mirrors of the helpers in axicmdmain.js ----------------------------------------------------------------
-const AXI_INSTALL_QUEUE_NAME = "AxiInstallQueue";
+const AXI_INSTALL_QUEUE_NAME = "axiinstallpackagesqueue";
 const AXI_INSTALL_QUEUE_OK = "QUEUEDATAINSERTEDSUCESSFULLY";
 const INSTALL_TYPES = { product: "product", plugin: "plugin", changerequest: "changerequest" };
 const INSTALL_CACHE_TTL_MS = 30 * 60 * 1000;
@@ -95,11 +95,11 @@ function buildInstallPayload(p) {
         account: p.account,
         repo: p.repo,
         managerType: p.type,
-        directory: p.directory,
-        version: p.version || "",
+        packageName: p.directory,
+        packageVersion: p.version || "",
         commitSha: p.commitSha || "",
-        appname: p.appname,
-        username: p.username,
+        appName: p.appname,
+        requestedBy: p.username,
         requestedOn: p.requestedOn || (p.now instanceof Date ? p.now : new Date()).toISOString()
     };
 }
@@ -113,6 +113,9 @@ function parseInstallQueueResult(ok, status, text) {
     if (ok && body.indexOf(AXI_INSTALL_QUEUE_OK) !== -1) return { success: true, message: "" };
     let obj = null;
     try { obj = JSON.parse(body); } catch (e) { }
+    const wrapped = (obj && typeof obj === "object" && obj.result && typeof obj.result === "object") ? obj.result : null;
+    if (ok && ((wrapped && wrapped.success === true) || (obj && typeof obj === "object" && obj.success === true))) return { success: true, message: "" };
+    if (wrapped) obj = wrapped;
     let msg = "";
     if (obj && typeof obj === "object") msg = obj.message || obj.Message || obj.error || obj.detail || obj.title || "";
     else if (typeof obj === "string") msg = obj;
@@ -216,11 +219,11 @@ test('request id: uuid shaped, unique, and a fallback when crypto.randomUUID is 
 test('queue payload and body', () => {
     const payload = buildInstallPayload({ requestId: 'req-1', type: 'plugin', account: 'acc', repo: 'rep', directory: 'My Dir', version: undefined, commitSha: 'abcdef1234', appname: 'app', username: 'admin', requestedOn: '2026-01-02T03:04:05.000Z' });
     assert.deepStrictEqual(payload, {
-        action: 'install', requestId: 'req-1', type: 'plugin', account: 'acc', repo: 'rep', managerType: 'plugin', directory: 'My Dir', version: '',
-        commitSha: 'abcdef1234', appname: 'app', username: 'admin', requestedOn: '2026-01-02T03:04:05.000Z'
+        action: 'install', requestId: 'req-1', type: 'plugin', account: 'acc', repo: 'rep', managerType: 'plugin', packageName: 'My Dir', packageVersion: '',
+        commitSha: 'abcdef1234', appName: 'app', requestedBy: 'admin', requestedOn: '2026-01-02T03:04:05.000Z'
     });
     const body = buildInstallQueueBody(payload);
-    assert.strictEqual(body.queuename, 'AxiInstallQueue');
+    assert.strictEqual(body.queuename, 'axiinstallpackagesqueue');
     assert.strictEqual(body.trace, false);
     assert.strictEqual(body.queuejson, payload);
     assert.deepStrictEqual(JSON.parse(body.queuedata), payload);
@@ -255,4 +258,7 @@ test('queue answer: plain text, JSON-wrapped, and failures', () => {
     assert.deepStrictEqual(parseInstallQueueResult(false, 400, JSON.stringify({ message: 'bad request' })), { success: false, message: 'bad request' });
     assert.strictEqual(parseInstallQueueResult(false, 503, '').message, 'Request failed (HTTP 503)');
     assert.strictEqual(parseInstallQueueResult(true, 200, '').message, 'The queue did not confirm the request');
+    assert.deepStrictEqual(parseInstallQueueResult(true, 200, JSON.stringify({ result: { message: 'queue Inserted Successfully', success: true } })), { success: true, message: '' });
+    assert.deepStrictEqual(parseInstallQueueResult(true, 200, JSON.stringify({ result: { message: 'Pushing Data to queue failed', success: false } })), { success: false, message: 'Pushing Data to queue failed' });
+    assert.strictEqual(parseInstallQueueResult(false, 400, JSON.stringify({ result: { message: 'x', success: true } })).success, false);
 });
