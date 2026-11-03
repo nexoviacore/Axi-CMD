@@ -1,0 +1,12 @@
+[2026-11-03 15:15:36] Method: Error in InstallPackage
+Message: The AXI Axi_Beta package could not be installed. Please review the installation logs for more details and try again. If the issue persists, contact your administrator.
+StackTrace:    at AxiInstallConsumerPackage.Services.PackageImportService.ProcessPackageImport(String queueData) in D:\Axi-Package-Consumer-main\Axi-Package-Consumer-main\AxiImportPackage\AxiImportPackage\Services\PackageImportService.cs:line 102
+--------------------------------------------------
+[2026-11-03 15:15:48] Method: Error in InstallPackage
+Message: The AXI Axi_Beta package could not be installed. Please review the installation logs for more details and try again. If the issue persists, contact your administrator.
+StackTrace:    at AxiInstallConsumerPackage.Services.PackageImportService.ProcessPackageImport(String queueData) in D:\Axi-Package-Consumer-main\Axi-Package-Consumer-main\AxiImportPackage\AxiImportPackage\Services\PackageImportService.cs:line 102
+--------------------------------------------------
+[2026-11-03 15:21:13] Method: Error in InstallPackage
+Message: The AXI Axi_Beta package could not be installed. Please review the installation logs for more details and try again. If the issue persists, contact your administrator.
+StackTrace:    at AxiInstallConsumerPackage.Services.PackageImportService.ProcessPackageImport(String queueData) in D:\Axi-Package-Consumer-main\Axi-Package-Consumer-main\AxiImportPackage\AxiImportPackage\Services\PackageImportService.cs:line 102
+--------------------------------------------------
