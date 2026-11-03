@@ -5285,7 +5285,7 @@ if (typeof document !== "undefined") {
 
             return processRunCommands(tokens, targetIndex, structType);
         }
-        // Configure Product / Plugin / ChangeRequest: hints + saved value, no list fetch
+        // Configure Product / Plugin / ChangeRequest: hints and Go only, no list fetch
         if (groupKey.toLowerCase() === "configure" && tokens.length > 2 && isCommandSettingOption(tokens[1])) {
             return getCommandSettingSuggestions(tokens);
         }
@@ -11784,7 +11784,7 @@ if (typeof document !== "undefined") {
     }
 
     /**
-     * Suggestions for "configure <product|plugin|changerequest> <account> <repo>": hint plus the saved value.
+     * Suggestions for "configure <product|plugin|changerequest> <account> <repo>": hint and Go only (no saved value).
      * @param {string[]} tokens - Command tokens.
      * @returns {Array} Suggestion list (may include goOption).
      */
@@ -11799,16 +11799,19 @@ if (typeof document !== "undefined") {
         else if (wordNo === 4) updateDynamicHintFromPrompt({ prompt: "repo name" });
         else updateDynamicHintFromPrompt(null);
 
-        if (wordNo === 3 || wordNo === 4) {
-            loadSavedCommandSetting(type);
-            const saved = commandSettingSavedCache[type] && commandSettingSavedCache[type].v;
-            const savedValue = saved ? (wordNo === 3 ? saved.accountname : saved.reponame) : "";
-            const partial = cleanCommandToken(tokens[wordNo - 1] || "").toLowerCase();
-            if (savedValue && savedValue.toLowerCase().startsWith(partial) && savedValue.toLowerCase() !== partial) {
-                list = [savedValue];
-                filteredObjects = [{ name: savedValue, displaydata: savedValue }];
-            }
-        }
+        // old code
+        // if (wordNo === 3 || wordNo === 4) {
+        //     loadSavedCommandSetting(type);
+        //     const saved = commandSettingSavedCache[type] && commandSettingSavedCache[type].v;
+        //     const savedValue = saved ? (wordNo === 3 ? saved.accountname : saved.reponame) : "";
+        //     const partial = cleanCommandToken(tokens[wordNo - 1] || "").toLowerCase();
+        //     if (savedValue && savedValue.toLowerCase().startsWith(partial) && savedValue.toLowerCase() !== partial) {
+        //         list = [savedValue];
+        //         filteredObjects = [{ name: savedValue, displaydata: savedValue }];
+        //     }
+        // }
+        // new code: the saved account / repo from axi_command_settings is no longer offered as a suggestion;
+        // only the account name / repo name hint and Go are shown
 
         if (shouldOfferCommandSettingGo(tokens)) {
             list.unshift(goOption);
