@@ -6,6 +6,7 @@ const assert = require('node:assert');
 
 // ---- mirrors of the helpers in axicmdmain.js ----------------------------------------------------------------
 const AXI_INSTALL_QUEUE_NAME = "axiinstallpackagesqueue";
+const INSTALL_DEFAULT_VERSION = "Latest";
 const AXI_INSTALL_QUEUE_OK = "QUEUEDATAINSERTEDSUCESSFULLY";
 const INSTALL_TYPES = { product: "product", plugin: "plugin", changerequest: "changerequest" };
 const INSTALL_CACHE_TTL_MS = 30 * 60 * 1000;
@@ -49,12 +50,12 @@ function validateInstallArgs(words, directories) {
             ? "Only a directory and a version are expected after the type"
             : `'${dir.name}' has no versions, only the directory is expected after the type`);
     }
-    if (versions.length === 0) return { ok: true, message: "", directory: dir.name, version: "" };
+    if (versions.length === 0) return { ok: true, message: "", directory: dir.name, version: INSTALL_DEFAULT_VERSION, versionDefaulted: true };
     const verWord = words[3] === undefined || words[3] === null ? "" : String(words[3]).trim();
     if (!verWord) return fail(`Version is required for '${dir.name}'`);
     const ver = versions.find(v => String(v).toLowerCase() === verWord.toLowerCase());
     if (!ver) return fail(`Version '${verWord}' was not found for '${dir.name}'`);
-    return { ok: true, message: "", directory: dir.name, version: ver };
+    return { ok: true, message: "", directory: dir.name, version: ver, versionDefaulted: false };
 }
 
 function buildInstallCacheKey(type, account, repo) {
@@ -85,6 +86,18 @@ function generateInstallRequestId() {
         const r = Math.floor(Math.random() * 16);
         return (c === "x" ? r : ((r % 4) + 8)).toString(16);
     });
+}
+
+function getInstallDirsErrorText(type, message, status) {
+    const text = String(message || "Could not load the directories").trim();
+    return status === 404 ? `${text} Run configure ${type} <account> <repo> to change it.` : text;
+}
+
+// verifyCommandSettingRepo's decision, with the listdirectories call replaced by a status
+function classifyRepoCheck(status, message) {
+    if (status === 404 || status === 400) return { blocked: true, warning: "", message };
+    if (status === 200) return { blocked: false, warning: "", message: "" };
+    return { blocked: false, warning: message, message: "" };
 }
 
 function buildInstallPayload(p) {
@@ -160,12 +173,13 @@ test('validation: a directory with versions needs one of them', () => {
     const r = validateInstallArgs(['install', 'product', 'AxpertWeb'], dirs);
     assert.strictEqual(r.ok, false);
     assert.match(r.message, /Version is required/);
-    assert.deepStrictEqual(validateInstallArgs(['install', 'product', 'axpertweb', 'latest'], dirs), { ok: true, message: '', directory: 'AxpertWeb', version: 'Latest' });
+    assert.strictEqual(validateInstallArgs(['install', 'product', 'AxpertWeb', ''], dirs).ok, false);
+    assert.deepStrictEqual(validateInstallArgs(['install', 'product', 'axpertweb', 'latest'], dirs), { ok: true, message: '', directory: 'AxpertWeb', version: 'Latest', versionDefaulted: false });
     assert.strictEqual(validateInstallArgs(['install', 'product', 'AxpertWeb', 'Version9'], dirs).ok, false);
 });
 
-test('validation: a directory without versions takes none', () => {
-    assert.deepStrictEqual(validateInstallArgs(['install', 'plugin', 'Tools'], dirs), { ok: true, message: '', directory: 'Tools', version: '' });
+test('validation: a directory without versions takes none and is sent as Latest', () => {
+    assert.deepStrictEqual(validateInstallArgs(['install', 'plugin', 'Tools'], dirs), { ok: true, message: '', directory: 'Tools', version: 'Latest', versionDefaulted: true });
     const r = validateInstallArgs(['install', 'plugin', 'Tools', 'Latest'], dirs);
     assert.strictEqual(r.ok, false);
     assert.match(r.message, /no versions/);
@@ -173,7 +187,7 @@ test('validation: a directory without versions takes none', () => {
 
 test('validation: quoted directory, unknown directory and extra words', () => {
     const words = tokenizeInstallCommand('install product "My Dir" Version1');
-    assert.deepStrictEqual(validateInstallArgs(words, dirs), { ok: true, message: '', directory: 'My Dir', version: 'Version1' });
+    assert.deepStrictEqual(validateInstallArgs(words, dirs), { ok: true, message: '', directory: 'My Dir', version: 'Version1', versionDefaulted: false });
     assert.strictEqual(validateInstallArgs(['install', 'product', 'Nope'], dirs).ok, false);
     assert.strictEqual(validateInstallArgs(['install', 'product'], dirs).ok, false);
     assert.strictEqual(validateInstallArgs(['install', 'product', 'AxpertWeb', 'Latest', 'extra'], dirs).ok, false);
@@ -246,7 +260,7 @@ test('payload without requestedOn falls back to now; missing requestId is empty'
 test('validation keeps brackets and parentheses in directory and version names', () => {
     const list = [{ name: 'App (beta) [x]', versions: ['Latest', 'Version1 (rc)'] }];
     const words = tokenizeInstallCommand('install product "App (beta) [x]" "Version1 (rc)"');
-    assert.deepStrictEqual(validateInstallArgs(words, list), { ok: true, message: '', directory: 'App (beta) [x]', version: 'Version1 (rc)' });
+    assert.deepStrictEqual(validateInstallArgs(words, list), { ok: true, message: '', directory: 'App (beta) [x]', version: 'Version1 (rc)', versionDefaulted: false });
 });
 
 test('queue answer: plain text, JSON-wrapped, and failures', () => {
@@ -261,4 +275,19 @@ test('queue answer: plain text, JSON-wrapped, and failures', () => {
     assert.deepStrictEqual(parseInstallQueueResult(true, 200, JSON.stringify({ result: { message: 'queue Inserted Successfully', success: true } })), { success: true, message: '' });
     assert.deepStrictEqual(parseInstallQueueResult(true, 200, JSON.stringify({ result: { message: 'Pushing Data to queue failed', success: false } })), { success: false, message: 'Pushing Data to queue failed' });
     assert.strictEqual(parseInstallQueueResult(false, 400, JSON.stringify({ result: { message: 'x', success: true } })).success, false);
+});
+
+test('install error text adds the configure hint only for a 404', () => {
+    const notFound = "Repository 'a/r' or its main branch was not found, or the configured GitHub token cannot access it.";
+    assert.strictEqual(getInstallDirsErrorText('plugin', notFound, 404), notFound + ' Run configure plugin <account> <repo> to change it.');
+    assert.strictEqual(getInstallDirsErrorText('product', 'GitHub could not be reached.', 502), 'GitHub could not be reached.');
+    assert.strictEqual(getInstallDirsErrorText('product', '', 0), 'Could not load the directories');
+});
+
+test('configure repository check: 404 and 400 block, outages only warn', () => {
+    assert.deepStrictEqual(classifyRepoCheck(404, 'not found'), { blocked: true, warning: '', message: 'not found' });
+    assert.strictEqual(classifyRepoCheck(400, 'bad').blocked, true);
+    assert.deepStrictEqual(classifyRepoCheck(502, 'GitHub could not be reached.'), { blocked: false, warning: 'GitHub could not be reached.', message: '' });
+    assert.strictEqual(classifyRepoCheck(0, 'took too long').blocked, false);
+    assert.deepStrictEqual(classifyRepoCheck(200, ''), { blocked: false, warning: '', message: '' });
 });

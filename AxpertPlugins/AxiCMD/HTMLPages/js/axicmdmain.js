@@ -11862,10 +11862,22 @@ if (typeof document !== "undefined") {
         // command runner calls after this handler returns keeps the palette open
         startCommandSettingSaving(label);
         let savedOk = false;
+        // old code
+        // const abortCtrl = (typeof AbortController !== "undefined") ? new AbortController() : null;
+        // const abortTimer = abortCtrl ? setTimeout(() => abortCtrl.abort(), COMMAND_SETTING_SAVE_TIMEOUT_MS) : null;
+        // new code: the save timeout starts after the repository check, which has its own timeout
         const abortCtrl = (typeof AbortController !== "undefined") ? new AbortController() : null;
-        const abortTimer = abortCtrl ? setTimeout(() => abortCtrl.abort(), COMMAND_SETTING_SAVE_TIMEOUT_MS) : null;
+        let abortTimer = null;
 
         try {
+            // new code: a repository GitHub does not know is not saved; when GitHub cannot be asked, save and warn
+            const repoCheck = await verifyCommandSettingRepo(propertyType, account.value, repo.value);
+            if (repoCheck.blocked) {
+                showToast(`Error: ${repoCheck.message} Check the account and repo names.`);
+                return;
+            }
+            abortTimer = abortCtrl ? setTimeout(() => abortCtrl.abort(), COMMAND_SETTING_SAVE_TIMEOUT_MS) : null;
+
             const res = await fetch(`${axiCommandSettingsUrl}?appname=${encodeURIComponent(appname)}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -11902,7 +11914,14 @@ if (typeof document !== "undefined") {
             delete commandSettingSavedCache[propertyType];
             clearInstallCaches(propertyType);
             savedOk = true;
-            showToast(`${label} repository set to ${newAccount}/${newRepo} (was ${wasText})`, 5000, true);
+            // old code
+            // showToast(`${label} repository set to ${newAccount}/${newRepo} (was ${wasText})`, 5000, true);
+            // new code: say when the repository could not be checked
+            if (repoCheck.warning) {
+                showToast(`${label} repository set to ${newAccount}/${newRepo} (was ${wasText}), but it could not be checked on GitHub: ${repoCheck.warning}`, 8000, "warning");
+            } else {
+                showToast(`${label} repository set to ${newAccount}/${newRepo} (was ${wasText})`, 5000, true);
+            }
         } catch (err) {
             // old code
             // showToast(`Error: ${err.message || err}`);
@@ -11931,6 +11950,7 @@ if (typeof document !== "undefined") {
     // new code: queue the AxiInstallConsumerPackage consumer listens on
     const AXI_INSTALL_QUEUE_NAME = "axiinstallpackagesqueue";
     const AXI_INSTALL_QUEUE_OK = "QUEUEDATAINSERTEDSUCESSFULLY";
+    const INSTALL_DEFAULT_VERSION = "Latest";   // sent when the command has no version
     const INSTALL_TYPES = { product: "product", plugin: "plugin", changerequest: "changerequest" };
     const INSTALL_CACHE_TTL_MS = 30 * 60 * 1000;
     const INSTALL_REQUEST_TIMEOUT_MS = 30000;
@@ -12007,12 +12027,22 @@ if (typeof document !== "undefined") {
                 ? "Only a directory and a version are expected after the type"
                 : `'${dir.name}' has no versions, only the directory is expected after the type`);
         }
-        if (versions.length === 0) return { ok: true, message: "", directory: dir.name, version: "" };
+        // old code
+        // if (versions.length === 0) return { ok: true, message: "", directory: dir.name, version: "" };
+        // const verWord = words[3] === undefined || words[3] === null ? "" : String(words[3]).trim();
+        // if (!verWord) return fail(`Version is required for '${dir.name}'`);
+        // const ver = versions.find(v => String(v).toLowerCase() === verWord.toLowerCase());
+        // if (!ver) return fail(`Version '${verWord}' was not found for '${dir.name}'`);
+        // return { ok: true, message: "", directory: dir.name, version: ver };
+        // new code: a directory without versions in the AxiGitAPI answer is installed as Latest (versionDefaulted says so,
+        // the typed command had no version word); a directory with versions needs one of them
+        if (versions.length === 0) return { ok: true, message: "", directory: dir.name, version: INSTALL_DEFAULT_VERSION, versionDefaulted: true };
         const verWord = words[3] === undefined || words[3] === null ? "" : String(words[3]).trim();
+        // if (!verWord) return { ok: true, message: "", directory: dir.name, version: INSTALL_DEFAULT_VERSION, versionDefaulted: true };
         if (!verWord) return fail(`Version is required for '${dir.name}'`);
         const ver = versions.find(v => String(v).toLowerCase() === verWord.toLowerCase());
         if (!ver) return fail(`Version '${verWord}' was not found for '${dir.name}'`);
-        return { ok: true, message: "", directory: dir.name, version: ver };
+        return { ok: true, message: "", directory: dir.name, version: ver, versionDefaulted: false };
     }
 
     /**
@@ -12052,6 +12082,40 @@ if (typeof document !== "undefined") {
         try { obj = JSON.parse(text); } catch (e) { }
         const msg = obj && typeof obj === "object" ? (obj.detail || obj.title || obj.message || "") : "";
         return String(msg || (obj === null ? text : "") || "").trim() || `Request failed (HTTP ${status})`;
+    }
+
+    /**
+     * Message of a failed directory listing as shown by install: a "not found" (404) also says how to change the saved repository.
+     * @param {string} type - product / plugin / changerequest.
+     * @param {string} message - Error message.
+     * @param {number} status - HTTP status of the failure (0 when there was no answer).
+     * @returns {string} Message.
+     */
+    function getInstallDirsErrorText(type, message, status) {
+        const text = String(message || "Could not load the directories").trim();
+        return status === 404 ? `${text} Run configure ${type} <account> <repo> to change it.` : text;
+    }
+
+    /**
+     * Checks a repository before "configure" saves it, through the listdirectories call install uses.
+     * Not found (404) or refused input (400) blocks the save; no answer, GitHub down (502) or a server error only warns,
+     * so an outage does not stop configuring.
+     * @async
+     * @param {string} type - product / plugin / changerequest.
+     * @param {string} account - Account name.
+     * @param {string} repo - Repo name.
+     * @returns {Promise<{blocked: boolean, warning: string, message: string}>} Result.
+     */
+    async function verifyCommandSettingRepo(type, account, repo) {
+        if (!AxiArmUrl) return { blocked: false, warning: "the ARM url is not set", message: "" };
+        try {
+            await fetchInstallDirectories(type, account, repo, true);
+            return { blocked: false, warning: "", message: "" };
+        } catch (err) {
+            const message = (err && err.message) || "Could not check the repository";
+            if (err && (err.status === 404 || err.status === 400)) return { blocked: true, warning: "", message };
+            return { blocked: false, warning: message, message: "" };
+        }
     }
 
     /**
@@ -12248,7 +12312,14 @@ if (typeof document !== "undefined") {
                     body: JSON.stringify({ account: account, repo: repo, managerType: type })
                 });
                 const text = await res.text();
-                if (!res.ok) throw new Error(getInstallProblemMessage(res.status, text));
+                // old code
+                // if (!res.ok) throw new Error(getInstallProblemMessage(res.status, text));
+                // new code: keep the HTTP status, so callers can tell "repository not found" (404) from "GitHub down" (502)
+                if (!res.ok) {
+                    const httpErr = new Error(getInstallProblemMessage(res.status, text));
+                    httpErr.status = res.status;
+                    throw httpErr;
+                }
                 let data = null;
                 try { data = JSON.parse(text); } catch (e) { }
                 if (!data || typeof data !== "object") throw new Error("The directory list could not be read");
@@ -12260,8 +12331,15 @@ if (typeof document !== "undefined") {
                 return data;
             } catch (err) {
                 const message = (err && err.name === "AbortError") ? "Loading the directories took too long. Please try again." : (err && err.message) || String(err);
-                installDirsError[key] = { t: Date.now(), message };
-                throw new Error(message);
+                // old code
+                // installDirsError[key] = { t: Date.now(), message };
+                // throw new Error(message);
+                // new code: the status travels with the error (0 = no HTTP answer: timeout or network)
+                const status = (err && err.status) || 0;
+                installDirsError[key] = { t: Date.now(), message, status };
+                const outErr = new Error(message);
+                outErr.status = status;
+                throw outErr;
             } finally {
                 if (abortTimer) clearTimeout(abortTimer);
                 delete installDirsPending[key];
@@ -12282,10 +12360,19 @@ if (typeof document !== "undefined") {
         const mem = installDirsCache[key];
         if (mem && (Date.now() - mem.t) < INSTALL_CACHE_TTL_MS) return { loading: false, error: "", data: mem.d };
         const err = installDirsError[key];
-        if (err && (Date.now() - err.t) < INSTALL_RETRY_MS) return { loading: false, error: err.message, data: null };
+        // old code
+        // if (err && (Date.now() - err.t) < INSTALL_RETRY_MS) return { loading: false, error: err.message, data: null };
+        // if (!installDirsPending[key]) {
+        //     fetchInstallDirectories(type, account, repo).then(refreshInstallSuggestions, (e) => {
+        //         showToast(e.message || "Could not load the directories");
+        //         refreshInstallSuggestions();
+        //     });
+        // }
+        // new code: a "not found" also says how to change the saved repository
+        if (err && (Date.now() - err.t) < INSTALL_RETRY_MS) return { loading: false, error: getInstallDirsErrorText(type, err.message, err.status), data: null };
         if (!installDirsPending[key]) {
             fetchInstallDirectories(type, account, repo).then(refreshInstallSuggestions, (e) => {
-                showToast(e.message || "Could not load the directories");
+                showToast(getInstallDirsErrorText(type, e && e.message, e && e.status));
                 refreshInstallSuggestions();
             });
         }
@@ -12342,6 +12429,12 @@ if (typeof document !== "undefined") {
             updateDynamicHintFromPrompt({ prompt: "version" });
             const partial = words[3].toLowerCase();
             const names = versions.filter(v => String(v).toLowerCase().startsWith(partial));
+            // old code: the version was optional, so Go was offered before one was typed
+            // if (!partial) {
+            //     filteredObjects = [goOption, ...asObjects(names)];
+            //     return [goOption, ...names];
+            // }
+            // new code: a directory with versions needs one, so only the versions are offered until one is chosen
             if (partial && versions.some(v => String(v).toLowerCase() === partial)) {
                 // exact match: Go first, the other versions starting with the typed text stay in the list
                 filteredObjects = [goOption, ...asObjects(names)];
@@ -12384,7 +12477,10 @@ if (typeof document !== "undefined") {
         try {
             data = await fetchInstallDirectories(type, repoInfo.account, repoInfo.repo);
         } catch (err) {
-            showToast(err.message || "Could not load the directories");
+            // old code
+            // showToast(err.message || "Could not load the directories");
+            // new code
+            showToast(getInstallDirsErrorText(type, err && err.message, err && err.status));
             reopenPaletteForCommandSetting();
             return;
         }
@@ -12395,6 +12491,8 @@ if (typeof document !== "undefined") {
             type: type,
             directory: checked.directory,
             version: checked.version,
+            // new code: the modal re-checks the command as typed, without the Latest added for a missing version
+            versionDefaulted: !!checked.versionDefaulted,
             account: repoInfo.account,
             repo: repoInfo.repo,
             commitSha: data.commitSha || "",
@@ -12620,12 +12718,19 @@ if (typeof document !== "undefined") {
         ensureInstallStyles();
 
         const label = getCommandSettingLabel(ctx.type);
-        const sha7 = ctx.commitSha ? String(ctx.commitSha).slice(0, 7) : "";
+        // old code
+        // const sha7 = ctx.commitSha ? String(ctx.commitSha).slice(0, 7) : "";
+        // const stepLabels = [
+        //     "Checking repository",
+        //     sha7 ? `Resolving version @ ${sha7}` : "Resolving version",
+        //     "Queuing install",
+        //     "Installation started"
+        // ];
+        // new code: three steps; the directory / version re-check is part of "Checking repository"
         const stepLabels = [
             "Checking repository",
-            sha7 ? `Resolving version @ ${sha7}` : "Resolving version",
-            "Queuing install",
-            "Installation started"
+            "Queuing install request",
+            "Installation request queued"
         ];
         const prevFocus = document.activeElement;
         // one id and one timestamp per install: Retry sends the same ones, so the consumer can dedupe
@@ -12674,7 +12779,10 @@ if (typeof document !== "undefined") {
         const subDir = mk("span", "axi-install-dir", ctx.directory);
         subDir.title = ctx.directory;
         sub.appendChild(subDir);
-        sub.appendChild(mk("span", "axi-install-ver", ctx.version || "No version"));
+        // old code
+        // sub.appendChild(mk("span", "axi-install-ver", ctx.version || "No version"));
+        // new code
+        sub.appendChild(mk("span", "axi-install-ver", ctx.version || INSTALL_DEFAULT_VERSION));
         const repoLine = mk("p", "axi-install-repo", `${ctx.account}/${ctx.repo}`);
         titles.appendChild(title);
         titles.appendChild(sub);
@@ -12689,6 +12797,8 @@ if (typeof document !== "undefined") {
         // one meter segment per step: Signal Indigo for the current one, Console Ink when done, Error Red when failed
         const meter = mk("div", "axi-install-meter");
         meter.setAttribute("aria-hidden", "true");
+        // new code: the stylesheet lays out four segments; one column per step instead
+        meter.style.gridTemplateColumns = `repeat(${stepLabels.length},1fr)`;
 
         // body: stepper, error, success
         const body = mk("div", "axi-install-body");
@@ -12773,12 +12883,19 @@ if (typeof document !== "undefined") {
             card.appendChild(row);
             return { row, dt, dd };
         };
-        addRow("Directory", ctx.directory);
-        addRow("Version", ctx.version || "No version", ctx.version ? "axi-install-num" : "");
+        // old code
+        // addRow("Directory", ctx.directory);
+        // addRow("Version", ctx.version || "No version", ctx.version ? "axi-install-num" : "");
+        // addRow("Repository", `${ctx.account}/${ctx.repo}`);
+        // const commitRow = addRow("Commit", sha7, "axi-install-code");
+        // commitRow.row.hidden = !sha7;
+        // addRow("Request", String(m.requestId).slice(0, 8), "axi-install-code");
+        // new code: no Commit and Request rows (both are still sent in the payload)
+        // addRow("Directory", ctx.directory);
+        // the row is named after the manager type (Product / Plugin / Change Request) instead of "Directory"
+        addRow(label, ctx.directory);
+        addRow("Version", ctx.version || INSTALL_DEFAULT_VERSION, "axi-install-num");
         addRow("Repository", `${ctx.account}/${ctx.repo}`);
-        const commitRow = addRow("Commit", sha7, "axi-install-code");
-        commitRow.row.hidden = !sha7;
-        addRow("Request", String(m.requestId).slice(0, 8), "axi-install-code");
         success.appendChild(okText);
         success.appendChild(card);
 
@@ -12886,9 +13003,12 @@ if (typeof document !== "undefined") {
             doneBtn.hidden = false;
             countdown.hidden = false;
             bar.hidden = false;
-            live.textContent = "Your installation has started. You'll get a notification when it finishes.";
-            // new code
-            title.textContent = `${label} installation started`;
+            // old code
+            // live.textContent = "Your installation has started. You'll get a notification when it finishes.";
+            // title.textContent = `${label} installation started`;
+            // new code: the request is queued; the installation itself is reported by the notification
+            live.textContent = "Your installation request is queued. You'll get a notification when it finishes.";
+            title.textContent = `${label} installation request queued`;
             doneBtn.focus();
             m.remaining = INSTALL_AUTOCLOSE_MS;
             let last = Date.now();
@@ -12918,19 +13038,20 @@ if (typeof document !== "undefined") {
             retryBtn.focus();
         };
 
-        // the commit of the fresh listing replaces the one seen when the command was typed
-        const setSha = (sha) => {
-            ctx.commitSha = sha || "";
-            const short = ctx.commitSha.slice(0, 7);
-            stepLabels[1] = short ? `Resolving version @ ${short}` : "Resolving version";
-            labelEls[1].textContent = stepLabels[1];
-            commitRow.dd.textContent = short;
-            commitRow.dd.title = short;
-            // old code
-            // commitRow.dt.hidden = commitRow.dd.hidden = !short;
-            // new code
-            commitRow.row.hidden = !short;
-        };
+        // old code
+        // // the commit of the fresh listing replaces the one seen when the command was typed
+        // const setSha = (sha) => {
+        //     ctx.commitSha = sha || "";
+        //     const short = ctx.commitSha.slice(0, 7);
+        //     stepLabels[1] = short ? `Resolving version @ ${short}` : "Resolving version";
+        //     labelEls[1].textContent = stepLabels[1];
+        //     commitRow.dd.textContent = short;
+        //     commitRow.dd.title = short;
+        //     // old code
+        //     // commitRow.dt.hidden = commitRow.dd.hidden = !short;
+        //     // new code
+        //     commitRow.row.hidden = !short;
+        // };
         const waitAtLeast = (promise, ms) => Promise.all([promise, delay(ms)]).then(r => r[0]);
         const failStep = (i, message, resumeFrom) => {
             m.resumeFrom = resumeFrom;
@@ -12947,29 +13068,48 @@ if (typeof document !== "undefined") {
                     fresh = await waitAtLeast(fetchInstallDirectories(ctx.type, ctx.account, ctx.repo, true), INSTALL_STEP_MIN_MS);
                 } catch (err) {
                     if (m.closed) return;
-                    failStep(0, (err && err.message) || "Could not check the repository", 0);
+                    // old code
+                    // failStep(0, (err && err.message) || "Could not check the repository", 0);
+                    // new code
+                    failStep(0, getInstallDirsErrorText(ctx.type, (err && err.message) || "Could not check the repository", err && err.status), 0);
                     return;
                 }
                 if (m.closed) return;
+                // old code
+                // m.fresh = fresh;
+                // setStep(0, "done");
+                // new code: the directory / version re-check and the fresh commit belong to this step now
                 m.fresh = fresh;
+                const words = ["install", ctx.type, ctx.directory];
+                if (ctx.version && !ctx.versionDefaulted) words.push(ctx.version);
+                const checked = validateInstallArgs(words, m.fresh && m.fresh.directories);
+                if (!checked.ok) {
+                    failStep(0, `The repository changed since the command was typed. ${checked.message}`, 0);
+                    return;
+                }
+                ctx.commitSha = (m.fresh && m.fresh.commitSha) || ctx.commitSha || "";
                 setStep(0, "done");
             }
-            if (from <= 1) {
-                setStep(1, "active");
-                const words = ["install", ctx.type, ctx.directory];
-                if (ctx.version) words.push(ctx.version);
-                const checked = validateInstallArgs(words, m.fresh && m.fresh.directories);
-                await delay(INSTALL_STEP_MIN_MS);
-                if (m.closed) return;
-                if (!checked.ok) {
-                    failStep(1, `The repository changed since the command was typed. ${checked.message}`, 0);
-                    return;
-                }
-                setSha(m.fresh.commitSha);
-                setStep(1, "done");
-            }
-            setStep(2, "active");
-            setStep(3, "pending");
+            // old code
+            // if (from <= 1) {
+            //     setStep(1, "active");
+            //     const words = ["install", ctx.type, ctx.directory];
+            //     if (ctx.version) words.push(ctx.version);
+            //     const checked = validateInstallArgs(words, m.fresh && m.fresh.directories);
+            //     await delay(INSTALL_STEP_MIN_MS);
+            //     if (m.closed) return;
+            //     if (!checked.ok) {
+            //         failStep(1, `The repository changed since the command was typed. ${checked.message}`, 0);
+            //         return;
+            //     }
+            //     setSha(m.fresh.commitSha);
+            //     setStep(1, "done");
+            // }
+            // setStep(2, "active");
+            // setStep(3, "pending");
+            // new code: step 2 is the queue call, step 3 the queued confirmation
+            setStep(1, "active");
+            setStep(2, "pending");
             m.inflight = true;
             xBtn.disabled = true;
             const result = await waitAtLeast(pushInstallToQueue(buildInstallPayload({
@@ -12978,7 +13118,10 @@ if (typeof document !== "undefined") {
                 account: ctx.account,
                 repo: ctx.repo,
                 directory: ctx.directory,
-                version: ctx.version,
+                // old code
+                // version: ctx.version,
+                // new code
+                version: ctx.version || INSTALL_DEFAULT_VERSION,
                 commitSha: ctx.commitSha,
                 appname: ctx.appname,
                 username: ctx.username,
@@ -12987,15 +13130,26 @@ if (typeof document !== "undefined") {
             m.inflight = false;
             xBtn.disabled = false;
             if (m.closed) return;
+            // old code
+            // if (!result.success) {
+            //     failStep(2, result.message, 2);
+            //     return;
+            // }
+            // setStep(2, "done");
+            // setStep(3, "active");
+            // await delay(INSTALL_STEP_MIN_MS);
+            // if (m.closed) return;
+            // setStep(3, "done");
+            // new code
             if (!result.success) {
-                failStep(2, result.message, 2);
+                failStep(1, result.message, 1);
                 return;
             }
-            setStep(2, "done");
-            setStep(3, "active");
+            setStep(1, "done");
+            setStep(2, "active");
             await delay(INSTALL_STEP_MIN_MS);
             if (m.closed) return;
-            setStep(3, "done");
+            setStep(2, "done");
             await delay(300);
             if (m.closed) return;
             showSuccess();
