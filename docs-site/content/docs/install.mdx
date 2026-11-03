@@ -1,0 +1,183 @@
+---
+title: Install
+description: Setting the Git repository with configure, and queuing a product, plugin or change request install.
+---
+
+`install` queues the installation of a product, plugin or change request from a Git repository. Two commands work together:
+
+| Command | What it does |
+| --- | --- |
+| `configure <product\|plugin\|changerequest> <account> <repo>` | Saves the GitHub account and repository for that type (app wide). |
+| `install <product\|plugin\|changerequest> <directory> [version]` | Lists the directories of the saved repository, then queues the chosen one for installation. |
+
+The code is in `axicmdmain.js` (search for `handleCommandSetting` and `handleInstallCommand`).
+
+## Setting the repository
+
+```text
+configure product nexoviacore axpert-products
+```
+
+**Who sees it:** the `Product`, `Plugin` and `ChangeRequest` options of `configure` are shown only to users with both [Configure Access](/docs/glossary#axicmd) and build access.
+
+**While typing:** the third word shows the hint `account name`, the fourth `repo name`. No values are suggested; the saved account and repo are not offered. **Go** appears once both words are valid.
+
+**Rules for the two names:**
+
+- 1 to 100 characters, only letters, digits, `.`, `_` and `-` (GitHub naming).
+- Exactly two words. Extra words are refused with a message.
+
+**On Go:**
+
+1. The palette shows `Saving <type> repository...` and asks AxiGitAPI for the repository's directories, to check that it exists.
+   - **404** (account or repo not found, or not visible to the GitHub token) or **400**: nothing is saved. The palette shows the API message with `Check the account and repo names.` and reopens with the command.
+   - **502, 500, a timeout or no ARM URL**: GitHub could not be asked. The value is saved anyway, with a warning toast.
+2. The value is saved with `POST /AxiCMDApi/api/v1/CommandSettings` (see [AxiApi](/docs/axiapi#commandsettings)). The palette waits up to 30 seconds.
+3. A successful save clears the cached directory list for that type, so the next `install` reads the new repository.
+
+The values are stored in `axi_command_settings` (category `axicmd`, type `product` / `plugin` / `changerequest`, properties `accountname` and `reponame`). There is one value per type for the whole application, not per user.
+
+## Installing
+
+```text
+install product "ERP Test 001" 2.1.0
+install plugin Tools
+```
+
+**Who sees it:** users with build access. A hand-typed `install` from any other user is refused with a message.
+
+**Suggestions, word by word:**
+
+| Word | Suggestions | Source |
+| --- | --- | --- |
+| 2 | `Product`, `Plugin`, `ChangeRequest` | Prompt values in `axi_command_prompts`. |
+| 3 | The directories of the saved repository. A name with spaces is inserted in double quotes. | `axi_git_directories`: a marker the palette resolves from AxiGitAPI, not an ADS. |
+| 4 | The versions of the chosen directory, `Latest` first. | `axi_git_versions`: also a marker. |
+
+**Version rules:**
+
+- When AxiGitAPI lists versions for the directory, a version is **required**. Go is offered only once one is chosen.
+- When the directory has no versions, none is accepted and the request is sent with `Latest`.
+- Extra words are refused.
+
+Without a saved repository the palette shows `Run configure <type> <account> <repo> first` and lists no directories.
+
+### The progress dialog
+
+Go closes the palette and opens a dialog with three steps:
+
+| Step | What happens | On failure |
+| --- | --- | --- |
+| Checking repository | A fresh directory listing (not the cache). The directory and version are checked again against it, and its `commitSha` is taken for the request. | The API message is shown on the step. |
+| Queuing install request | `POST /ARM_APIs/api/v1/ARMPushToQueue`. | The message is shown; **Retry** repeats the queue call. |
+| Installation request queued | The request is in RabbitMQ. | |
+
+On success the dialog says the installation request is queued and a notification follows when it finishes. It shows the directory (labelled **Product**, **Plugin** or **Change Request**), the version and the repository, and closes by itself after about 6 seconds (paused while hovered or focused).
+
+<Callout type="warn" title="Queued is not installed">
+  The dialog's progress is real only up to the queue. What happens after that is done by the consumer, which reports
+  back with a notification. The dialog does not wait for it.
+</Callout>
+
+## The calls
+
+All calls go to the ARM URL (`AxiArmUrl`) and send no auth headers.
+
+### Directory listing
+
+```http
+POST {ARM}/AxiGitAPI/api/git/listdirectories
+Content-Type: application/json
+
+{ "account": "nexoviacore", "repo": "axpert-products", "managerType": "product" }
+```
+
+```json
+{ "commitSha": "4ca9f70…", "directories": [ { "name": "ERP Test 001", "versions": ["2.1.0", "2.0.0"] } ] }
+```
+
+Errors are ProblemDetails; the palette shows `detail`, else `title`.
+
+| Status | Meaning |
+| --- | --- |
+| `400` | Bad input. |
+| `404` | Repository or its main branch not found, or not visible to the configured GitHub token. The palette adds `Run configure <type> <account> <repo> to change it.` |
+| `502` | GitHub could not be reached or refused the token. |
+| `500` | Anything else. |
+
+The listing is cached in memory and in `localStorage` as `axi_install_dirs_<type>_<account>_<repo>_v1` (JSON `{t, d}`, 30-minute TTL). The palette's Refresh button and a successful `configure <type>` save clear it.
+
+### Queue request
+
+```http
+POST {ARM}/ARM_APIs/api/v1/ARMPushToQueue
+Content-Type: application/json
+
+{ "queuename": "axiinstallpackagesqueue", "queuedata": "<payload as a JSON string>", "queuejson": { …payload… }, "trace": false }
+```
+
+`queuedata` is the payload serialised to a string and `queuejson` is the same payload as an object. The payload:
+
+```json
+{
+  "action": "install",
+  "requestId": "…",
+  "type": "product",
+  "account": "nexoviacore",
+  "repo": "axpert-products",
+  "managerType": "product",
+  "packageName": "ERP Test 001",
+  "packageVersion": "2.1.0",
+  "commitSha": "4ca9f70…",
+  "appName": "axpbase",
+  "requestedBy": "admin",
+  "requestedOn": "2026-11-03T10:15:00Z"
+}
+```
+
+The request counts as queued when the response is OK and either contains `QUEUEDATAINSERTEDSUCESSFULLY` or is ARM's wrapped answer:
+
+```json
+{ "result": { "message": "queue Inserted Successfully", "success": true } }
+```
+
+ARM publishes the message through the `<queue>-exchange` exchange (type `x-delayed-message`, so RabbitMQ needs the delayed-message plugin) with routing key `<queue>-route`, into the durable queue `axiinstallpackagesqueue`.
+
+## The consumer
+
+`AxiInstallConsumerPackage` (.NET 8) listens on `axiinstallpackagesqueue`. Published builds are in `consumer/Import-Publish-<n>/` (the highest number is the newest); its source is kept out of this repository. It reads `appName`, `packageName`, `packageVersion`, `requestedBy` and `requestId` from the payload, builds an installer command and calls `AxInstallerRest.dll` (`ApiUrls:axinstallapi_url`), then sends a SignalR notification.
+
+Its settings are in `appsettings.json` next to the exe: `RabbitMQ` (host, port, user, password, queue name), `ConnectionStrings:PostgresDb`, `ApiUrls`, `armbaseurl` and `AxiClientAPI`. Run it from its own folder, because it reads the file from the current directory.
+
+Known behaviour of the consumer today:
+
+- It builds the command as `Install Product "<packageName>"  Version<packageVersion>`: `Product` is fixed whatever the type, and there is no space after `Version`.
+- Errors are logged and the message is still acknowledged, so a failed install is not retried.
+
+## Running RabbitMQ locally
+
+`docker/rabbitmq/` has a Dockerfile and `docker-compose.yml` for a local broker: `rabbitmq:4.2-management` with the `rabbitmq_delayed_message_exchange` plugin, ports `5672` (AMQP) and `15672` (management UI), container `axpert-rabbitmq`.
+
+```bash
+docker compose -f docker/rabbitmq/docker-compose.yml up -d --build
+```
+
+The user and password default to `guest` / `guest` (override with `RMQ_USER` / `RMQ_PASSWORD`). They must match `RMQueueUser` / `RMQueuePassword` in ARM's `AppSettings.ini` and the consumer's `RabbitMQ` settings. The image allows `guest` from outside the container.
+
+## Setup
+
+- `axi_command_tables.sql` (Postgres and Oracle) adds command token 10 (`Install`) and its three prompt rows, and appends `Product,Plugin,ChangeRequest` to the `configure` options. Both steps add rows only when they are missing.
+- `axi_command_config.sql` adds the `cfg_configure_product`, `cfg_configure_plugin` and `cfg_configure_changerequest` rows (type `commandsetting`).
+- `axi_command_settings.sql` creates `axi_command_settings`.
+- `install` needs no `axi_command_config` rows and no ADS rows.
+
+## Troubleshooting
+
+| Symptom | Likely cause and fix |
+| --- | --- |
+| `Run configure <type> <account> <repo> first` | No repository saved for the type. Run `configure`. |
+| Configure says the repository was not found | Wrong account or repo name, or the AxiGitAPI GitHub token cannot see a private repository. |
+| `Installation could not be started` although the consumer got the message | An old script that did not recognise ARM's wrapped answer. Bump `?v=N` and press Ctrl+F5. |
+| The consumer logs a 404 from `AxInstallerRest.dll` | IIS 404.2: the DLL is not allowed under **ISAPI and CGI Restrictions**. An administrator adds it, for example `appcmd set config /section:isapiCgiRestriction /+"[path='<path>\AxInstallerRest.dll',allowed='True',description='AxInstallerRest']"`. |
+| `localhost:15672` does not open | RabbitMQ is not running. Start the Docker broker above. |
+| ARM cannot publish (exchange type error) | The delayed-message plugin is missing on the broker. The Docker image enables it. |

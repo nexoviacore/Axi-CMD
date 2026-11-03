@@ -37,3 +37,10 @@ description: Terms used in AxiCMD and Axpert Web.
 | **View filter** | The condition from `<transid>_filter` in `axvarcore` that limits the records of `view` and `edit`. See [View filters](/docs/view-filters). |
 | **`btextDir-rtl`** | The class the shell puts on `<body>` when the app language is Arabic. The palette's RTL rules are all scoped to it. See [Arabic and RTL](/docs/arabic-rtl). |
 | **`setStatusText`** | The helper in `axicmdmain.js` that writes status messages such as `Searching...` inside `<bdi>`, so their trailing dots stay at the end in RTL. |
+| **Configure Access** | The Axpert "app manager" access (for example the admin user) that makes `configure` available. Separate from build access, which governs `sdk`. |
+| **Config Page Access** | Having both Configure Access and build access. Only such a user is offered the [Config page](/docs/config-page) and may change options. |
+| **Built-in Option** | A `configure` or `sdk` option shipped with AxiCMD (`is_system = 'T'`). Its route cannot be changed; it can only be switched on or off. |
+| **Custom Option** | A `configure` or `sdk` option added on the Config page (`usr_<command>_<slug>`). Fully editable, and removed by switching it off rather than deleting it. |
+| **Command settings** | App-wide values written by commands into `axi_command_settings`, for example the Git account and repo saved by `configure product`. |
+| **AxiGitAPI** | The ARM service that lists the directories and versions of a GitHub repository (`/AxiGitAPI/api/git/listdirectories`). Used by `install` and to check a repository on `configure`. |
+| **Install queue** | The RabbitMQ queue `axiinstallpackagesqueue`. `install` pushes a request onto it through ARM, and `AxiInstallConsumerPackage` takes it off and runs the installer. |

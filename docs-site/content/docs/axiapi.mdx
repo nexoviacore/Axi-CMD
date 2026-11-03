@@ -8,9 +8,10 @@ AxiApi (`AxiApi/`) is an ASP.NET Core (.NET 8) API. In the ARM environment it is
 ## Layers
 
 ```text
-AxiController
+AxiController, CommandSettingsController
   └─ Services      CommandConfigService, UserFavouritesService, UserSettingsService,
-                   KeyfieldService, GrammarService, GrammarBootstrapService
+                   KeyfieldService, GrammarService, GrammarBootstrapService,
+                   CommandSettingsService
        └─ Repositories   (data access through AxExtend and parameterised SQL)
             └─ Database  (PostgreSQL / Oracle)
 ```
@@ -23,7 +24,7 @@ This page is written from the controller, DTOs and services, in the style of a S
 
 | | |
 | --- | --- |
-| **Base path** | `/api/v1/Axi` (route `api/v{version:apiVersion}/[controller]`, API version `1`). |
+| **Base path** | `/api/v1/Axi` (route `api/v{version:apiVersion}/[controller]`, API version `1`). The settings endpoints are on `/api/v1/CommandSettings`. |
 | **Deployed URL** | `{ARM host}/AxiCMDApi/api/v1/Axi/...` - the palette builds it from the ARM URL. |
 | **Local URL** | `http://localhost:5057/api/v1/Axi/...` |
 | **Content type** | `application/json` for request and response bodies. |
@@ -37,12 +38,19 @@ This page is written from the controller, DTOs and services, in the style of a S
 | --- | --- | --- | --- |
 | `GET` | `/command-config` | Command configuration rows for a user | Commands |
 | `GET` | `/axi_get` | The command grammar used for autocomplete | Commands |
+| `GET` | `/command-config/options/page` | One page of Configure or SDK options | Command options |
+| `GET` | `/command-config/options` | Every Configure and SDK option | Command options |
+| `POST` | `/command-config/options/{configId}/active` | Switch an option on or off | Command options |
+| `POST` | `/command-config/options` | Add a Custom Option | Command options |
+| `POST` | `/command-config/options/{configId}` | Edit or rename a Custom Option | Command options |
 | `GET` | `/user-favourites` | List a user's favourites | Favourites |
 | `POST` | `/user-favourites` | Add or remove a favourite | Favourites |
 | `PATCH` | `/user-favourites/{favouritesId}` | Rename a favourite | Favourites |
 | `GET` | `/user-settings` | List a user's settings | Settings |
 | `POST` | `/user-settings/{settingKey}` | Save one setting | Settings |
 | `POST` | `/setkeyfield` | Set the key field of a form | Structures |
+| `GET` | `/api/v1/CommandSettings` | Read app-wide command settings | CommandSettings |
+| `POST` | `/api/v1/CommandSettings` | Save a group of command settings | CommandSettings |
 
 ---
 
@@ -381,6 +389,130 @@ Content-Type: application/json
 
 ---
 
+### Command options
+
+These endpoints serve the [Config page](/docs/config-page). They list every option, active or not.
+
+<Callout type="info" title="Writes need Configure Access and build access">
+  Every write sends `username`, `appMgrAccess` and `buildAccess` in the body. Without a username the answer is `400`
+  (`Username is required in payload.`); unless both flags are `true` it is `403` (`Configure Access and build access
+  are both required to change command options.`). The flags are sent by the client and trusted as sent.
+</Callout>
+
+#### `GET /command-config/options/page`
+
+One page of the options of one command, sorted by name.
+
+**Query parameters**
+
+| Name | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `appname` | string | yes | | Application name. |
+| `command` | string | yes | | `Configure` or `SDK` (not case sensitive). |
+| `search` | string | no | | Name or target contains this, not case sensitive. `%` and `_` match themselves. Cut to 200 characters. |
+| `show` | string | no | `all` | `custom` (Custom Options only) or `inactive` (switched off only). Anything else means all. Also applies to the tab counts. |
+| `focus` | string | no | | A `configId`: answer with the page that holds it (used after a save). |
+| `pageNo` | integer | no | `1` | A page past the end gives the last page. |
+| `pageSize` | integer | no | `25` | At most `100`. |
+
+**Responses**
+
+| Status | Description | Body |
+| --- | --- | --- |
+| `200` | The page. | [`CommandOptionPage`](#commandoptionpage) |
+| `400` | `appname` is missing, or `command` is not Configure or SDK (`command must be Configure or SDK.`). | plain text |
+
+**Example**
+
+```http
+GET /api/v1/Axi/command-config/options/page?appname=axpbase&command=Configure&search=user&show=all&pageNo=1&pageSize=25
+```
+
+Paging uses `OFFSET ... FETCH NEXT` (Postgres, Oracle 12c and later). Not cached.
+
+---
+
+#### `GET /command-config/options`
+
+Every Configure and SDK option, as [`CommandConfigOption[]`](#commandconfigoption). Not cached. `400` when `appname` is missing.
+
+---
+
+#### `POST /command-config/options/{configId}/active`
+
+Switches one option on or off. Works for Built-in and Custom Options.
+
+**Request body**
+
+```json
+{ "username": "admin", "active": false, "appMgrAccess": true, "buildAccess": true }
+```
+
+**Responses**
+
+| Status | Description | Body |
+| --- | --- | --- |
+| `200` | Saved. | `{ "configId": "cfg_configure_user", "active": "F" }` |
+| `400` / `403` | See the callout above. | plain text |
+| `404` | `Command option '<configId>' was not found.` | plain text |
+
+**Behaviour:** clears the saving user's `command_config` Redis key.
+
+---
+
+#### `POST /command-config/options`
+
+Adds a Custom Option.
+
+**Request body** - [`CreateCommandOptionRequest`](#createcommandoptionrequest)
+
+```json
+{
+  "username": "admin", "appMgrAccess": true, "buildAccess": true,
+  "command": "Configure", "name": "my page", "type": "url",
+  "targetUrl": "../aspx/mypage.aspx", "paramField": null, "recordSource": null
+}
+```
+
+**Responses**
+
+| Status | Description | Body |
+| --- | --- | --- |
+| `201` | Created. The id is `usr_<command>_<slug>`. | [`CommandConfigOption`](#commandconfigoption) |
+| `400` | A rule failed, for example `Enter a name for the option.` or `targetUrl is required for a url option.` | plain text |
+| `403` | Access refused. | plain text |
+| `409` | The name already exists in the command (not case sensitive). | plain text |
+
+The rules per field are on the [Config page](/docs/config-page#adding-and-editing). Only the fields of the chosen type are kept.
+
+**Behaviour:** in one transaction, inserts the `axi_command_config` row and appends the name and record source (`Axi_Dummy` for none) to the command's prompt lists. Clears the saving user's `command_config` key and the shared `commands` key.
+
+---
+
+#### `POST /command-config/options/{configId}`
+
+Edits or renames a Custom Option. The command and the id cannot change.
+
+**Request body** - [`UpdateCommandOptionRequest`](#updatecommandoptionrequest)
+
+**Responses**
+
+| Status | Description | Body |
+| --- | --- | --- |
+| `200` | Saved. | [`CommandConfigOption`](#commandconfigoption) |
+| `400` | A rule failed. | plain text |
+| `403` | Access refused, or the option is a Built-in Option (only Active can change). | plain text |
+| `404` | Not found. | plain text |
+| `409` | The new name is taken by another option. | plain text |
+
+**Behaviour:** a rename replaces the name and the record source in place in the prompt lists, so their positions stay paired. Cache clearing as for create.
+
+<Callout type="info" title="POST, not PUT">
+  The updates use `POST` because the IIS WebDAV module answers `PUT` with `405` before the request reaches AxiApi.
+</Callout>
+
+---
+
 ### Structures
 
 #### `POST /setkeyfield`
@@ -421,6 +553,81 @@ Content-Type: application/json
 
 ---
 
+### CommandSettings
+
+App-wide settings written by AxiCMD commands, stored in `axi_command_settings`. Today the only category is `axicmd`, used by `configure product`, `plugin` and `changerequest` (see [Install](/docs/install)). Base path `/api/v1/CommandSettings`, deployed as `{ARM host}/AxiCMDApi/api/v1/CommandSettings`.
+
+#### `GET /api/v1/CommandSettings`
+
+**Query parameters**
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `appname` | string | yes | Application name. |
+| `category` | string | yes | For example `axicmd`. |
+| `type` | string | no | For example `product`. Without it, every type of the category is returned. |
+
+**Responses**
+
+| Status | Description | Body |
+| --- | --- | --- |
+| `200` | The settings. Nothing saved gives empty properties, not `404`. | [`CommandSettings`](#commandsettings-schema) |
+| `400` | `appname` or `category` is missing. | plain text |
+
+**Example**
+
+```http
+GET /api/v1/CommandSettings?appname=axpbase&category=axicmd&type=product
+```
+
+```json
+{
+  "category": "axicmd",
+  "type": "product",
+  "properties": { "accountname": "nexoviacore", "reponame": "axpert-products" },
+  "modifiedOn": "2026-11-03T10:15:00",
+  "username": "admin"
+}
+```
+
+`modifiedOn` and `username` are those of the property changed last.
+
+---
+
+#### `POST /api/v1/CommandSettings`
+
+Saves the properties of one category and type.
+
+**Query parameters:** `appname` (required).
+
+**Request body**
+
+```json
+{
+  "username": "admin",
+  "propertyCategory": "axicmd",
+  "propertyType": "product",
+  "properties": { "accountname": "nexoviacore", "reponame": "axpert-products" }
+}
+```
+
+**Responses**
+
+| Status | Description | Body |
+| --- | --- | --- |
+| `200` | Saved. `previous` holds each property's old value (`null` when it is new). | [`CommandSettingsSaveResult`](#commandsettingssaveresult) |
+| `400` | A rule failed (message below), or `appname` is missing. | plain text |
+
+**Rules:** username, category, type and at least one property are required; names are trimmed and lower-cased, values trimmed; a property name may appear only once. For category `axicmd`:
+
+- `type` must be `product`, `plugin` or `changerequest`.
+- Exactly the properties `accountname` and `reponame`.
+- Each value 1 to 100 characters, only letters, digits, `.`, `_` and `-`.
+
+**Behaviour:** settings are read and written straight to the database; they are not cached in Redis, so a saved repository is used by the next `install` at once. The server does not check who may change them: the palette only offers the command to users with Configure Access and build access.
+
+---
+
 ### Other routes
 
 | Method | Route | Note |
@@ -442,6 +649,52 @@ Content-Type: application/json
 | `targetUrl` | string \| null | Page to open. |
 | `extraParams` | string \| null | Query string added to the target. |
 | `active` | string | `T` or `F` (default `T`). |
+
+### CommandConfigOption
+
+A [`CommandConfig`](#commandconfig) plus:
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `isSystem` | string | `T` for a Built-in Option, `F` for a Custom Option. |
+| `recordSource` | string | Data source that lists the option's records; empty when none. |
+
+### CommandOptionPage
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `items` | [`CommandConfigOption[]`](#commandconfigoption) | The rows of the page. |
+| `totalCount` | integer | Options of the command that match the search and filter. |
+| `pageNo` | integer | The page returned. |
+| `pageSize` | integer | |
+| `totalPages` | integer | At least 1. |
+| `configureCount` | integer | Configure options for the tab count (follows `show`, not `search`). |
+| `sdkCount` | integer | SDK options for the tab count. |
+
+### CreateCommandOptionRequest
+
+`username`, `appMgrAccess`, `buildAccess`, `command` (`Configure` \| `SDK`), `name`, `type` (`tstruct` \| `iview` \| `ivtoivload` \| `url`), and optional `promptId`, `targetUrl`, `paramField`, `extraParams`, `recordSource` (empty or `Axi_Dummy` means none).
+
+### UpdateCommandOptionRequest
+
+As [`CreateCommandOptionRequest`](#createcommandoptionrequest) without `command`.
+
+### CommandSettings schema
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `category` | string | |
+| `type` | string | Only with a `type` in the query. |
+| `properties` | object | Property name to value. Only with a `type`. |
+| `modifiedOn` | string (date-time) | Only with a `type`. |
+| `username` | string | Who changed it last. Only with a `type`. |
+| `types` | object | Without a `type`: type name to `{ properties, modifiedOn, username }`. |
+
+Fields that do not apply are left out of the JSON.
+
+### CommandSettingsSaveResult
+
+`category`, `type`, `properties` (the stored values) and `previous` (property name to the old value, `null` when new).
 
 ### Grammar
 
@@ -539,7 +792,9 @@ The earlier design, with a direct `IConnectionMultiplexer` and an `IRedisService
 | Command grammar | `commands`, per application, stored with an expiry value of 7200 | `forceRefresh=true` deletes the key. |
 | User favourites | `userfavourites`, per application and user | The key is deleted when a favourite is added, changed or removed. |
 
-User settings and the key-field endpoint do not use Redis.
+Command option writes also clear keys: switching an option clears the saving user's `command_config` key; adding or editing one clears that key and the shared `commands` key. Other users keep their cached copy until they press Refresh.
+
+User settings, command settings, the Config page's option lists and the key-field endpoint do not use Redis.
 
 ### Cache misses and Redis failures
 
@@ -565,6 +820,7 @@ These are facts about the code today, not recommendations.
 - **No rate limiting.** No rate-limiting middleware or package is configured. Any limiting would come from IIS, a proxy or a gateway in front.
 - **Redis is used, through `AxExtend`.** See [Redis cache](#redis-cache). Favourites need a Redis connection (the database is only read on a cache miss); configuration and grammar fall back to the database without it.
 - **Pipeline.** `UseExceptionHandler`, `UseHttpsRedirection`, `UseCors`, `UseAuthorization`, `MapControllers`. Swagger is added in development.
+- **Access flags are trusted.** The command option writes check `appMgrAccess` and `buildAccess` from the request body; CommandSettings checks nothing. The client decides who sees the screens.
 - **Unfinished pieces.** `axi_get` only serves `view=Metadata`. `POST /user-favourites` silently does nothing when Redis is not connected.
 
 <Callout type="info" title="Under consideration">
