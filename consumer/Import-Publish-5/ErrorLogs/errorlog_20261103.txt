@@ -1,4 +1,0 @@
-[2026-11-03 15:32:30] Method: Error in InstallPackage
-Message: The AXI NewPluginTest package could not be installed. Please review the installation logs for more details and try again. If the issue persists, contact your administrator.
-StackTrace:    at AxiInstallConsumerPackage.Services.PackageImportService.ProcessPackageImport(String queueData) in D:\Axi-Package-Consumer-main\Axi-Package-Consumer-main\AxiImportPackage\AxiImportPackage\Services\PackageImportService.cs:line 102
---------------------------------------------------
