@@ -7707,6 +7707,26 @@ if (typeof document !== "undefined") {
     }
 
     /**
+     * Parses the session variables text returned by axinterface.aspx/GetGlobalVar. When a value holds a raw control
+     * character (tab, newline ...) the text is not valid JSON, so it is parsed again with those characters as spaces.
+     * @param {string} text - The "d" string of the GetGlobalVar answer.
+     * @returns {object} Parsed object ({ globalVars: [...] }), or {} when it cannot be read.
+     */
+    function parseGlobalVarsText(text) {
+        const raw = typeof text === "string" && text ? text : "{}";
+        try {
+            return JSON.parse(raw) || {};
+        } catch (e) {
+            try {
+                return JSON.parse(raw.replace(/[\u0000-\u001F]/g, " ")) || {};
+            } catch (e2) {
+                console.error("[AxiCMD] Session variables could not be read:", e2);
+                return {};
+            }
+        }
+    }
+
+    /**
      * Reads the ARM session id and bearer token from the Axpert session global variables.
      * @async
      * @param {boolean} [force=false] - Ignore the cached pair and read it again.
@@ -7722,10 +7742,24 @@ if (typeof document !== "undefined") {
             });
             if (!res.ok) return null;
             const outer = await res.json();
-            const vars = JSON.parse(outer.d || "{}").globalVars || [];
+            // old code
+            // const vars = JSON.parse(outer.d || "{}").globalVars || [];
+            // const read = key => {
+            //     const hit = vars.find(o => o && o[key] !== undefined);
+            //     return hit ? String(hit[key] || "") : "";
+            // };
+            // new code: a session value can hold a raw tab / newline (seen on Oracle schemas), which makes JSON.parse
+            // throw, so no ARM session was found and AxList was never called. Parse again with control characters
+            // turned into spaces, and match the variable name without case (Oracle returns names in upper case).
+            const vars = parseGlobalVarsText(outer.d).globalVars || [];
             const read = key => {
-                const hit = vars.find(o => o && o[key] !== undefined);
-                return hit ? String(hit[key] || "") : "";
+                const lower = key.toLowerCase();
+                for (const o of vars) {
+                    if (!o || typeof o !== "object") continue;
+                    const k = Object.keys(o).find(n => n.toLowerCase() === lower);
+                    if (k !== undefined) return String(o[k] || "");
+                }
+                return "";
             };
             const sessionId = read("ARM_SessionId");
             const token = read("ARM_Token");
