@@ -9135,16 +9135,38 @@ if (typeof document !== "undefined") {
                 menu.id = "axiSettingsMenu";
                 menu.className = "axi-sm";
                 menu.setAttribute("role", "menu");
-                const entries = [{ id: "pagesize", label: "Records per load", run: () => openPageSizePanel() }];
+                // old code
+                // const entries = [{ id: "pagesize", label: "Records per load", run: () => openPageSizePanel() }];
+                // const perms = getAccessPermissions();
+                // if (perms.appMgrAccess && perms.buildAccess) entries.push({ id: "configure", label: "Configure", run: openConfigPage });
+                // new code: each entry has a drawn 16px icon (one stroke, currentColor), so the two rows read apart at a glance.
+                // Records per load: stacked rows with a count mark. Configure: sliders (not a gear, which is the button itself).
+                const entries = [{
+                    id: "pagesize", label: "Records per load", run: () => openPageSizePanel(),
+                    icon: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 4h7.5M6 8h7.5M6 12h7.5"/><path d="M2.5 3.25v1.5M2.5 7.25v1.5M2.5 11.25v1.5"/></svg>'
+                }];
                 const perms = getAccessPermissions();
-                if (perms.appMgrAccess && perms.buildAccess) entries.push({ id: "configure", label: "Configure", run: openConfigPage });
+                if (perms.appMgrAccess && perms.buildAccess) entries.push({
+                    id: "configure", label: "Configure", run: openConfigPage,
+                    icon: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M2.5 4.5h5M10.5 4.5h3M2.5 11.5h2M7.5 11.5h6"/><circle cx="9" cy="4.5" r="1.5"/><circle cx="6" cy="11.5" r="1.5"/></svg>'
+                });
                 entries.forEach((en) => {
                     const item = document.createElement("button");
                     item.type = "button";
                     item.className = "axi-sm-item";
                     item.setAttribute("role", "menuitem");
                     item.dataset.entry = en.id;
-                    item.textContent = en.label;
+                    // old code
+                    // item.textContent = en.label;
+                    // new code: icon, then the label (the label stays the accessible name; the icon is aria-hidden)
+                    const icon = document.createElement("span");
+                    icon.className = "axi-sm-icon";
+                    icon.innerHTML = en.icon || "";
+                    const text = document.createElement("span");
+                    text.className = "axi-sm-label";
+                    text.textContent = en.label;
+                    item.appendChild(icon);
+                    item.appendChild(text);
                     item.addEventListener("click", (ev) => { ev.stopPropagation(); closeSettingsMenu(); en.run(); });
                     // Focus follows the mouse, so the first entry (focused on open) does not stay highlighted next to the hovered one
                     item.addEventListener("mouseenter", () => item.focus({ preventScroll: true }));

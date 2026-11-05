@@ -1720,6 +1720,43 @@ body.axi-cmd-disabled #axiFavDeleteModalOverlay {
   box-shadow: inset 0 0 0 2px var(--axi-sp-signal);
 }
 
+/* Entry icons: a drawn 16px line icon in Slate before the label, darkening to Console Ink with the row on hover and
+   focus. No coloured tile: those belong to the verb marks in the command list. Flex keeps the icon at the start in RTL. */
+.axi-sm-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.axi-sm-icon {
+  flex: none;
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  color: var(--axi-sp-slate);
+  transition: color 0.12s ease-out;
+}
+
+.axi-sm-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.axi-sm-item:hover .axi-sm-icon,
+.axi-sm-item:focus-visible .axi-sm-icon {
+  color: var(--axi-sp-ink);
+}
+
+.axi-sm-label {
+  min-width: 0;
+}
+
+/* The list icon's bullets lead the lines, so it mirrors in right-to-left like the text it marks */
+body.btextDir-rtl .axi-sm-item[data-entry="pagesize"] .axi-sm-icon svg,
+[dir="rtl"] .axi-sm-item[data-entry="pagesize"] .axi-sm-icon svg {
+  transform: scaleX(-1);
+}
+
 /* Records per load */
 .axi-sp {
   width: 300px;

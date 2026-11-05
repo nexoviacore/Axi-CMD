@@ -5,5 +5,17 @@
       "maxFindings": 5,
       "maxChars": 8000
     }
+  },
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-font",
+        "value": "material icons outlined",
+        "createdAt": "2026-11-05T05:22:51.908Z",
+        "reason": "Only inside a commented-out legacy rule (axicmdmain.css .My-Fav-Name::after); the icon font belongs to the Axpert shell, not this design system"
+      }
+    ]
   }
 }
