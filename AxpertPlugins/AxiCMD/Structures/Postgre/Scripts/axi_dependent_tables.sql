@@ -49,9 +49,26 @@ VALUES (1920660000001,'F',0,NULL,'admin','2026-09-25 12:32:04','admin','2026-09-
 
 
 -- Insert AxiCMD Developer Option into axpstructconfigproval table
+-- old code
+-- <<
+-- INSERT INTO axpstructconfigproval (axpstructconfigprovalid, axpstructconfigpropsid, axpstructconfigprovalrow, configvalues)
+-- VALUES (1920660000003, 1920660000001, 1, 'false')
+-- >>
+-- new code: axpstructconfigproval is the list of values the Developer Options dropdown offers (one row per value),
+-- so it needs both true and false. The default (false) is set in axpstructconfig below.
+-- Remove the old single-value list first, so the script also fixes a database that already has it.
+<<
+DELETE FROM axpstructconfigproval WHERE axpstructconfigpropsid = 1920660000001
+>>
+
 <<
 INSERT INTO axpstructconfigproval (axpstructconfigprovalid, axpstructconfigpropsid, axpstructconfigprovalrow, configvalues)
-VALUES (1920660000003, 1920660000001, 1, 'false')
+VALUES (1920660000003, 1920660000001, 1, 'true')
+>>
+
+<<
+INSERT INTO axpstructconfigproval (axpstructconfigprovalid, axpstructconfigpropsid, axpstructconfigprovalrow, configvalues)
+VALUES (1920660000004, 1920660000001, 2, 'false')
 >>
 
 -- Insert AxiCMD Developer Option into axpstructconfig table
