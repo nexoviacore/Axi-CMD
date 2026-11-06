@@ -750,6 +750,54 @@ if (typeof document !== "undefined") {
     // When a fetch failed (fetchKey -> timestamp) so it can be retried after FAILED_FETCH_RETRY_MS
     const failedFetchTimes = {};
     const LS_TTL_MS = 30 * 60 * 1000;      // persisted list results are reused for this long
+    // new code: param values longer than this (e.g. param10 of axi_getstructsdata, which carries every session variable
+    // after "@@VARS@@") go into the cache key as a short hash instead of the full text
+    const CACHE_KEY_MAX_VALUE_CHARS = 40;
+
+    /**
+     * Short, stable hash of a string (53-bit cyrb53, base 36), used to keep long values out of cache keys.
+     * Not for security: it only has to give different keys for different values.
+     * @param {string} str - Text to hash.
+     * @returns {string} About 10 characters.
+     */
+    function shortHash(str) {
+        let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+        for (let i = 0; i < str.length; i++) {
+            const ch = str.charCodeAt(i);
+            h1 = Math.imul(h1 ^ ch, 2654435761);
+            h2 = Math.imul(h2 ^ ch, 1597334677);
+        }
+        h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+        h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+        return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+    }
+
+    /**
+     * The form a param value takes inside a list cache key: short values stay readable (other code finds entries by
+     * "param4:<transid>|" and "param8:<field>|"), long ones become "h<hash>".
+     * @param {string} value - Param value sent to the data source.
+     * @returns {string} Value for the cache key.
+     */
+    function cacheKeyValue(value) {
+        const text = String(value);
+        return (text.length > CACHE_KEY_MAX_VALUE_CHARS || text.indexOf("@@VARS@@") !== -1) ? "h" + shortHash(text) : text;
+    }
+
+    /**
+     * Removes list cache entries saved under the old long keys (full session variables in the key), which only used up
+     * localStorage space. Runs once at start-up; the new short keys never contain "@@VARS@@".
+     * @returns {void}
+     */
+    function purgeLongListCacheKeys() {
+        try {
+            const drop = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                if (k && k.startsWith("axi_") && k.toUpperCase().indexOf("@@VARS@@") !== -1) drop.push(k);
+            }
+            drop.forEach(k => localStorage.removeItem(k));
+        } catch (e) { }
+    }
 
     /**
      * Reads rows back from a localStorage entry written by writeListCache. Also accepts a plain array
@@ -1142,6 +1190,8 @@ if (typeof document !== "undefined") {
 
 
         if (axicmdenabled) {
+            // new code: free the space taken by list cache entries saved under the old long keys
+            purgeLongListCacheKeys();
             // The commands load at once with the page size known in this browser. The value saved on the server is
             // checked in the background and reloads the lists only if it differs (#275).
             syncPageSizeFromServer();
@@ -8075,7 +8125,10 @@ if (typeof document !== "undefined") {
                 values.forEach((value, index) => {
                     const key = `param${index + 1}`;
                     sqlParams[key] = value;
-                    normalizedParams.push(`${key}:${value}`);
+                    // old code
+                    // normalizedParams.push(`${key}:${value}`);
+                    // new code: the request still gets the full value; the cache key gets a short hash of a long one
+                    normalizedParams.push(`${key}:${cacheKeyValue(value)}`);
                 });
             }
 
