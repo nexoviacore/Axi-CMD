@@ -29,8 +29,21 @@ DROP TABLE axiconfig;
 
 -- TODO: Remove this in the next release
 <<
-DELETE FROM axpstructconfig WHERE propvalue1 = 'axicmdmainpage.html';
+DELETE FROM axpstructconfig WHERE LOWER(propvalue1) = 'axicmdmainpage.html'
 >>
+
+<<
+DELETE FROM axpstructconfigproval WHERE axpstructconfigpropsid IN (select axpstructconfigpropsid from axpstructconfigprops  WHERE LOWER(configprops) = 'axi command line enable')
+>>
+
+<<
+DELETE FROM axpstructconfigprops WHERE LOWER(configprops) = 'axi command line enable'
+>>
+
+<<
+delete from axpstructconfig where  lower(asprops) = 'axi command line enable'
+>>
+
 
 -- <<
 -- CREATE TABLE axiconfig (axienabled varchar(1), mainpagetemplate varchar(255)); 
@@ -51,7 +64,12 @@ VALUES (1920660000001,'F',0,NULL,'admin','2026-09-25 12:32:04','admin','2026-09-
 -- Insert AxiCMD Developer Option into axpstructconfigproval table
 <<
 INSERT INTO axpstructconfigproval (axpstructconfigprovalid, axpstructconfigpropsid, axpstructconfigprovalrow, configvalues)
-VALUES (1920660000003, 1920660000001, 1, 'false')
+VALUES (1920660000003, 1920660000001, 1, 'true')
+>>
+
+<<
+INSERT INTO axpstructconfigproval (axpstructconfigprovalid, axpstructconfigpropsid, axpstructconfigprovalrow, configvalues)
+VALUES (1920660000004, 1920660000001, 2, 'false')
 >>
 
 -- Insert AxiCMD Developer Option into axpstructconfig table
