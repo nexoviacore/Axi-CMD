@@ -866,7 +866,25 @@ public class TStructData
         }
         return res;
     }
-
+    public void DelHeaderAttaFromScriptFolder(string hdrfiles)
+    {
+        try
+        {
+            string sFileDir = scriptsPath + "Axpert\\" + sessionid + "\\";
+            string[] hdrfileList = hdrfiles.Split(',');
+            foreach (var hdelFile in hdrfileList)
+            {
+                sFileDir += hdelFile;
+                try
+                {
+                    if (File.Exists(sFileDir))
+                        File.Delete(sFileDir);
+                }
+                catch (Exception) { }
+            }
+        }
+        catch (Exception) { }
+    }
     protected void RemoveUnwantedAxpFiles(string transid, string recId, string delRows, TStructData tstData, ArrayList deletedFldArrayValues)
     {
         try
@@ -1307,7 +1325,7 @@ public class TStructData
 
                         if (recId != string.Empty)
                         {
-                            ClearIviewDataKey();
+                            //ClearIviewDataKey();
                             if (tstStrObj.AxpFileUploadFields.Count > 0)
                                 RemoveUnwantedAxpFiles(transid, recId, delRows, tstData, deletedFldArrayValues);
 
@@ -1353,6 +1371,10 @@ public class TStructData
                                 if (_thisRes == "filemissed")
                                     attaErrors += "Header attachements were not saved properly. Please reload the record and upload the missing files and save transaction again.";
                             }
+                            if (!string.IsNullOrEmpty(filesCpy))
+                            {
+                                DelHeaderAttaFromScriptFolder(filesCpy);
+                            }
                             try
                             {
                                 Custom custObj = Custom.Instance;
@@ -1368,6 +1390,8 @@ public class TStructData
                     }
                 }
             }
+            if (tstStrObj.ROSFields != string.Empty)
+                util.DeleteKeyOnRefreshSave(transid, tstStrObj.ROSFields);
             if (transid == "axrlr" || transid == "ad_re" || transid == "a__fn" || transid == "a__ap" || transid == "ad__q" || transid == "ad_af")//Delete tstruct cached keys for particular form On Save of AxRules
             {
                 try
@@ -3947,6 +3971,8 @@ public class TStructData
                 if (actionValue.ToLower() == "save")
                 {
                     isSave = true;
+                    if (tstStrObj.ROSFields != string.Empty)
+                        util.DeleteKeyOnRefreshSave(transid, tstStrObj.ROSFields);
                     if (HttpContext.Current.Session["AxReloadCloud"] != null)
                     {
                         if (HttpContext.Current.Session["AxReloadCloud"].ToString() == transid)
@@ -4014,8 +4040,11 @@ public class TStructData
                             if (_thisRes == "filemissed")
                                 attaErrors += "Header attachements were not uploaded properly. Please reload the record and upload the missing files again.";
                         }
-
-                        ClearIviewDataKey();
+                        if (!string.IsNullOrEmpty(files))
+                        {
+                            DelHeaderAttaFromScriptFolder(files);
+                        }
+                        //ClearIviewDataKey();
                         if (transid == "ad_pr")
                             SaveEmailSettings(inputXml);
                     }
@@ -4095,8 +4124,12 @@ public class TStructData
                         if (_thisRes == "filemissed")
                             attaErrors += "Header attachements were not uploaded properly. Please reload the record and upload the missing files again.";
                     }
+                    if (!string.IsNullOrEmpty(files))
+                    {
+                        DelHeaderAttaFromScriptFolder(files);
+                    }
 
-                    ClearIviewDataKey();
+                    //ClearIviewDataKey();
                 }
                 RefFastDataOnSave(AxActiveAction);
                 RefInMemOnSave();
@@ -6211,7 +6244,14 @@ public class TStructData
         if (recordid != "0")
         {
             if (value != oldValue)
-                oldVal = "ov='" + oldValue + "'";
+            {
+                if (transid == "sect" || transid == "a__rp")
+                {
+                    //For these 2 transid ov value passing alwasy empty
+                }
+                else
+                    oldVal = "ov='" + oldValue + "'";
+            }
             else
                 oldVal = "";
         }
@@ -8105,7 +8145,7 @@ public class TStructData
         DateTime asEnd = DateTime.Now;
         if (result.ToLower().IndexOf("data deleted successfully") > -1)
         {
-            ClearIviewDataKey();
+            //ClearIviewDataKey();
             RemoveAttachFromServer(s, transid);
             if (transid == "a__cd")
             {
@@ -8151,6 +8191,19 @@ public class TStructData
                         var keys = fObj.GetWildCardKeyNames(util.GetRedisServerkey(Constants.REDISARMPERMISSIONNEW, "*", formtransid));
                         fdwObj.DeleteKeys(keys);
                     }
+                }
+                catch (Exception ex) { }
+            }
+
+            if (transid == "sect" || transid == "a__rp")
+            {
+                try
+                {
+                    FDW fdwObj = new FDW();
+                    if (transid == "sect")
+                        fdwObj.Deletekey(util.GetRedisServerkey(Constants.HTMLPAGESDBXML, "HTML"));
+                    else
+                        fdwObj.Deletekey(util.GetRedisServerkey(Constants.REACTPAGESDBXML, "REACT"));
                 }
                 catch (Exception ex) { }
             }

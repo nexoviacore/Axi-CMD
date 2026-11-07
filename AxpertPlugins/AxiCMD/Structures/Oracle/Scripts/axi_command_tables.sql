@@ -170,6 +170,33 @@ INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PR
 INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) VALUES('57E65A66C98C4BF7B167B0FB182FD14F', 8, 2, 'field name', 'Axi_SetFieldList', NULL, NULL, NULL, ':transid', NULL)
 >>
 
+-- Configure: Product, Plugin and ChangeRequest options (account/repo settings). Appended to the existing lists so Custom Option names are kept.
+-- Run twice it changes nothing (guarded on ChangeRequest already being in the wordpos 2 list). The wordpos 3 sources go first, because its
+-- guard reads the wordpos 2 row, which the next statement changes. Both lists stay index-aligned: 3 options on one side, 3 Axi_Dummy on the other.
+<<
+UPDATE AXI_COMMAND_PROMPTS SET promptsource = RTRIM(promptsource, ',') || ',Axi_Dummy,Axi_Dummy,Axi_Dummy' WHERE cmdtoken = 4 AND wordpos = 3 AND EXISTS (SELECT 1 FROM AXI_COMMAND_PROMPTS p2 WHERE p2.cmdtoken = 4 AND p2.wordpos = 2 AND p2.promptvalues NOT LIKE '%ChangeRequest%')
+>>
 
+<<
+UPDATE AXI_COMMAND_PROMPTS SET promptvalues = RTRIM(promptvalues, ',') || ',Product,Plugin,ChangeRequest' WHERE cmdtoken = 4 AND wordpos = 2 AND promptvalues NOT LIKE '%ChangeRequest%'
+>>
 
+-- Install: `install <product|plugin|changerequest> <directory> [version]` (build access only). Rows are added only when absent, so a re-run changes nothing.
+-- axi_git_directories and axi_git_versions are NOT axdirectsql rows: the palette resolves them from the AxiGit listdirectories API.
+<<
+INSERT INTO axi_commands
+(cmdtoken, command_group, command, active)
+SELECT 10, 'Install', ' ', 'T' FROM dual WHERE NOT EXISTS (SELECT 1 FROM axi_commands WHERE cmdtoken = 10)
+>>
 
+<<
+INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) SELECT HEXTORAW('6474EF0115544DD7BE1BC41C8CDEE0F4'), 10, 2, 'object type', NULL, NULL, 'Product,Plugin,ChangeRequest', NULL, NULL, NULL FROM dual WHERE NOT EXISTS (SELECT 1 FROM AXI_COMMAND_PROMPTS WHERE cmdtoken = 10 AND wordpos = 2)
+>>
+
+<<
+INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) SELECT HEXTORAW('EB7DCE54C332404C984DC37AEF8FB1EB'), 10, 3, 'directory', 'axi_git_directories', NULL, NULL, NULL, NULL, NULL FROM dual WHERE NOT EXISTS (SELECT 1 FROM AXI_COMMAND_PROMPTS WHERE cmdtoken = 10 AND wordpos = 3)
+>>
+
+<<
+INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) SELECT HEXTORAW('B3B2FEA1E894496A8F6837FDCD76DDE8'), 10, 4, 'version', 'axi_git_versions', NULL, NULL, NULL, NULL, NULL FROM dual WHERE NOT EXISTS (SELECT 1 FROM AXI_COMMAND_PROMPTS WHERE cmdtoken = 10 AND wordpos = 4)
+>>

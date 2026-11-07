@@ -1,0 +1,98 @@
+---
+title: Config page
+description: The AxiCMD Config page - listing, switching, adding and editing the options of configure and sdk.
+---
+
+The AxiCMD Config page lets an administrator manage the options of `configure` and `sdk` (the rows of `axi_command_config`) without editing SQL.
+
+| File | Role |
+| --- | --- |
+| `AxpertPlugins/AxiCMD/HTMLPages/AxiCMDConfig.html` | The page. Its own CSS and JS, no CDN. |
+| `HTMLPages/js/axiconfigpage.js` | Page behaviour: tabs, paging, search, the drawer, the API calls. |
+| `HTMLPages/js/axiconfiglogic.js` | Rules with no DOM: names, fields per type, list edits. Mirrored in `AxiApi/Lib/CommandOptionRules.cs`; change both together. |
+| `HTMLPages/css/axiconfig.css` | Styles, including RTL through `dir`. |
+
+## Opening it
+
+The palette's gear button opens a menu with **Records per load** and **Configure**. **Configure** opens the page in the work area (the `middle1` iframe), and is offered only to users with **Config Page Access**: both Configure Access and build access. The page gets the two flags in its query string (`appmgraccess`, `buildaccess`).
+
+Without both flags the page is read-only and says so: *You can view these options. Changing them needs Configure Access and build access.*
+
+## Built-in and Custom Options
+
+| | Built-in Option | Custom Option |
+| --- | --- | --- |
+| Comes from | The install scripts (`is_system = 'T'`). | The Config page (`is_system = 'F'`). |
+| Id | `cfg_<command>_…` | `usr_<command>_<slug>`, at most 50 characters. |
+| Route (type, target, fields) | Read-only. | Editable. |
+| Name and record source | Read-only. | Editable. |
+| Active switch | Yes. | Yes. |
+| Removed by | Switching it off. | Switching it off. Options are never deleted. |
+
+The API refuses any change to a Built-in Option's route, name or record source with `403`.
+
+## The list
+
+- **Tabs:** Configure and SDK, each with the number of options.
+- **Show:** All, Custom or Inactive. The filter also changes the tab counts.
+- **Search:** by name or target, not case sensitive. It runs on the server after a 300 ms pause; `%` and `_` match themselves.
+- **Paging:** 25 rows a page, sorted by name, with previous / page numbers / next. Each tab keeps its page, fetched pages are cached, and an answer that arrives after a newer request is dropped.
+- **Active switch** on every row. Switching an option off hides it for everyone, so the page offers Undo straight away.
+
+## Adding and editing
+
+**Add option** opens a drawer: command, name, type, then only the fields the type uses.
+
+| Type | Fields (required in bold) | Opens |
+| --- | --- | --- |
+| `tstruct` | **Form**, param field | A form. |
+| `iview` | **Report**, target URL | A report. |
+| `ivtoivload` | **Report**, param field, extra parameters | A report with parameters. |
+| `url` | **Target URL**, param field | A page. |
+
+`action`, `processflow`, `shellaction` and `commandsetting` are Built-in only.
+
+The **Form or report** field searches the paged structure list (`axi_structmetalist`) through the palette, from 3 characters. The **Record source** picker lists the data sources already used by the Configure and SDK lists, with **None** (`Axi_Dummy`) first.
+
+**Rules**, the same in the page and the API:
+
+| Field | Rule |
+| --- | --- |
+| Name | Required, at most 200 characters, no comma, unique within the command (not case sensitive). |
+| Target URL | At most 500 characters. `http(s)` or a relative path such as `../aspx/mypage.aspx`; any other scheme and control characters are refused. |
+| Form / report (`promptId`) | At most 50 characters: letters, digits, `_ . / -`. |
+| Param field | At most 100 characters: letters, digits, `_`. |
+| Extra parameters | At most 500 characters. |
+| Record source | A plain name (letters, digits, `_`), at most 100 characters. |
+
+**Edit** opens the same drawer. A Built-in Option opens read-only with only the Active switch. Renaming a Custom Option shows a warning: saved favourites that use the old name stop working.
+
+## What a save changes
+
+A create or edit, in one transaction:
+
+1. Writes the `axi_command_config` row (with `record_source`, `NULL` for None).
+2. Appends the name to the option list in `axi_command_prompts` (word 2 of the command) and the record source to the paired source list (word 3). A rename replaces both entries in place, so their positions stay paired.
+
+The API then clears the saving user's `command_config` Redis key and the shared grammar key (`commands`). The page tells the palette to drop its local copy and reload. **Other users see the change after they press Refresh** in the palette.
+
+Re-installing the plugin keeps Custom Options: `axi_command_tables.sql` does not drop `axi_command_prompts`, so on a re-install its `CREATE TABLE` and shipped `INSERT` statements fail with "already exists" / duplicate key, which is expected.
+
+## API
+
+All under `{ARM}/AxiCMDApi/api/v1/Axi`. See [AxiApi](/docs/axiapi#command-options) for the full reference.
+
+| Method | Route | Use |
+| --- | --- | --- |
+| `GET` | `/command-config/options/page` | One page of options, with the tab counts. |
+| `GET` | `/command-config/options` | Every option (used by the Postman checks). |
+| `POST` | `/command-config/options/{configId}/active` | Switch an option on or off. |
+| `POST` | `/command-config/options` | Add a Custom Option. |
+| `POST` | `/command-config/options/{configId}` | Edit or rename a Custom Option. |
+
+Updates use `POST`, not `PUT`, because the IIS WebDAV module answers `PUT` with `405` before the request reaches AxiApi.
+
+## Tests
+
+- `tests/axi-config-*.test.js` load `axiconfiglogic.js` and check the rules.
+- The Postman collection `tests/postman/axi-command-config-options.postman_collection.json` covers the API, including the access refusals.

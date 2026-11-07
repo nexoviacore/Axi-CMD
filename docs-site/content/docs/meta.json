@@ -4,6 +4,8 @@
     "index",
     "architecture",
     "commands",
+    "config-page",
+    "install",
     "data-loading",
     "view-filters",
     "arabic-rtl",

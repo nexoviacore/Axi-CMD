@@ -4342,9 +4342,9 @@ namespace ASB
                 //pageNo,pagesize, frameno, activerow, parinfo subinfo, includedcs
                 string[] pgData = pageData.Split('~');
                 string activeRow = pgData[3];
-                int fetchRCount = 1000;
-                if (Session["PickListFetchSize"] != null && Session["PickListFetchSize"].ToString() != "")
-                    fetchRCount = int.Parse(Session["PickListFetchSize"].ToString());
+                int fetchRCount = 0;
+                //if (Session["PickListFetchSize"] != null && Session["PickListFetchSize"].ToString() != "")
+                //    fetchRCount = int.Parse(Session["PickListFetchSize"].ToString());
                 int pgNumber = int.Parse(pgData[0]);
                 if (fastdll == "True")
                     fldValue = ""; //Making value empty if the field is normal select 
@@ -4443,126 +4443,62 @@ namespace ASB
                     }
                     else if (fastdll == "True" && rfSave == "True" && refreshAC == "False")//Fetching data from session for combobox+refreshonsave filed.
                     {
-                        //string strRequest = ObjExecTr.RequestProcessTime("Request");
                         strRequest += ObjExecTr.KernelProcessTime(startkst, "Server side process before data ", "", "");
                         DateTime kst = DateTime.Now;
-                        string sessCacheKey = transid + "-" + fldName + "-" + parentFlds;
-                        if (Session[sessCacheKey] != null)
+                        string fldkey = utilObj.GetRedisServerFieldkey(tstData.transid, Constants.FIELDNAME, fldName, 0);
+                        string dllData = fObj.HashGetKey(fldkey, parentFlds);
+                        logobj.CreateLog("Data from Redis.-" + dllData, sessionid, "autocomplete-" + fldName, "");
+                        if (dllData != string.Empty && refreshAC == "False" && pickArrow == "False")
                         {
-                            result = Session[sessCacheKey].ToString();
+                            result = dllData;
                             isCache = true;
                             if (_tstKeyChanged != "")
                                 result = _tstKeyChanged + "♣*♣" + result;
-                            result = result + "♠" + strRequest + ObjExecTr.KernelProcessTime(kst, "GetSearchResult-fromSession", "", result);
+                            result = result + "♠" + strRequest + ObjExecTr.KernelProcessTime(kst, "GetSearchResult-rfSave", "", result);
                             return result;
                         }
                     }
-                    else if (fastdll == "False" && fldValue == "")//Fetching data from session for picklist field and input vaue is empty(that means user clicked on ENTER key, ARROW key or field arrow icon).
+                    else if (fastdll == "False" && fldValue == "" && refreshAC == "False")//Fetching data from session for picklist field and input vaue is empty(that means user clicked on ENTER key, ARROW key or field arrow icon).
                     {
-                        //string strRequest = ObjExecTr.RequestProcessTime("Request");
                         strRequest += ObjExecTr.KernelProcessTime(startkst, "Server side process before data ", "", "");
                         DateTime kst = DateTime.Now;
-                        string sessCacheKey = transid + "-" + fldName + "-" + parentFlds + "-empty";
-                        if (Session[sessCacheKey] != null)
+                        string fldkey = string.Empty;
+                        fldkey = utilObj.GetRedisServerFieldkey(tstData.transid, Constants.FIELDNAME, fldName, 0);
+                        string dllData = fObj.HashGetKey(fldkey, parentFlds);
+                        logobj.CreateLog("Data from Redis.-" + dllData, sessionid, "autocomplete-" + fldName, "");
+                        if (dllData != string.Empty && refreshAC == "False" && pickArrow == "False")
                         {
-                            result = Session[sessCacheKey].ToString();
-                            var pickData = JsonConvert.DeserializeObject<pickdatalist>(result.ToString());
-                            var rcount = pickData.pickdata[0].rcount;
-                            var fname = pickData.pickdata[1].fname;
-                            var dfname = pickData.pickdata[2].dfname;
-                            var data = pickData.pickdata[3].data;
-                            int rows = 50;
-                            int totalRecords = int.Parse(rcount) < fetchRCount ? int.Parse(rcount) : fetchRCount;
-                            int totalPages = totalRecords / rows;
-                            int perPage = pgNumber > totalPages ? totalRecords % rows : rows;
-                            string json = new JavaScriptSerializer().Serialize(data.GetRange(50 * (pgNumber - 1), perPage));
-                            result = "{\"pickdata\":[{\"rcount\":\"" + rcount + "\"},{\"fname\":\"" + fname + "\"},{\"dfname\":\"" + dfname + "\"},{\"data\":" + json + "}]}";
+                            result = dllData;
                             isCache = true;
                             if (_tstKeyChanged != "")
                                 result = _tstKeyChanged + "♣*♣" + result;
-                            result = result + "♠" + strRequest + ObjExecTr.KernelProcessTime(kst, "GetSearchResult-fromSession", "", result);
+                            result = result + "♠" + strRequest + ObjExecTr.KernelProcessTime(kst, "GetSearchResult-picklist", "", result);
                             return result;
                         }
                     }
-                    else if (fastdll == "False" && fldValue.Length < 2)//Fetching data from session for Picklist field if the input is 1 or 2 character. that means filterig empty picklist session values if the same session is empty user will get this message "Please enter minimum of 2 character to search".
+                    else if (fastdll == "False" && fldValue.Length < 2 && refreshAC == "False")//Fetching data from session for Picklist field if the input is 1 or 2 character. that means filterig empty picklist session values if the same session is empty user will get this message "Please enter minimum of 2 character to search".
                     {
                         result = "{\"pickdata\":[{\"rcount\":\"0\"},{\"fname\":\"" + fldName + "\"},{\"data\":[{\"i\":\"Please enter minimum of 2 characters to search\",\"v\":\"\",\"d\":\"\"}]}]}";
                         if (_tstKeyChanged != "")
                             result = _tstKeyChanged + "♣*♣" + result;
                         return result;
                     }
-                    else if (fastdll == "False" && fldValue.Length >= 2)//Fetching data from session for Picklist field and input values is >=2 characters, if not match the pattern of input will delete the existing session key and will create new session key with matched data.
+                    else if (fastdll == "False" && fldValue.Length >= 2 && refreshAC == "False")//Fetching data from session for Picklist field and input values is >=2 characters, if not match the pattern of input will delete the existing session key and will create new session key with matched data.
                     {
-                        //string strRequest = ObjExecTr.RequestProcessTime("Request");
                         strRequest += ObjExecTr.KernelProcessTime(startkst, "Server side process before data ", "", "");
                         DateTime kst = DateTime.Now;
-                        string SessPickKey = transid + "-" + fldName + "-" + parentFlds + "-♦";
-                        if (Session[SessPickKey] != null)
+                        string fldkey = string.Empty;
+                        fldkey = utilObj.GetRedisServerFieldkey(tstData.transid, Constants.FIELDNAME, fldName, 0);
+                        string dllData = fObj.HashGetKey(fldkey, parentFlds);
+                        logobj.CreateLog("Data from Redis.-" + dllData, sessionid, "autocomplete-" + fldName, "");
+                        if (dllData != string.Empty && refreshAC == "False" && pickArrow == "False")
                         {
-
-                            bool isPickCache = false, issvChanged = false;
-                            string SCacheKey = transid + "-" + fldName + "-" + parentFlds + "-♦" + fldValue;
-                            string SessPickKeyValue = Session[SessPickKey].ToString();
-                            if (SessPickKeyValue == SCacheKey)
-                                isPickCache = true;
-                            else if (fldValue.Contains(SessPickKeyValue.Split('♦')[1]))//(fldValue.StartsWith(SessPickKeyValue.Split('♦')[1]))
-                            {
-                                issvChanged = true;
-                                isPickCache = true;
-                            }
-                            else
-                            {
-                                Session.Remove(SessPickKeyValue);
-                                Session.Remove(SessPickKey);
-                            }
-                            if (isPickCache)
-                            {
-                                result = Session[SessPickKeyValue].ToString();
-                                var pickData = JsonConvert.DeserializeObject<pickdatalist>(result.ToString());
-                                var tolrcount = long.Parse(pickData.pickdata[0].rcount);
-                                var fname = pickData.pickdata[1].fname;
-                                var dfname = pickData.pickdata[2].dfname;
-                                var data = pickData.pickdata[3].data;
-                                string spcfldValue = string.Empty;
-                                if (issvChanged == true)
-                                {
-                                    spcfldValue = fldValue.Replace(SessPickKeyValue, "");
-                                    var splFldVals = spcfldValue.Split('%');
-                                    for (int j = 0; j < splFldVals.Length; j++)
-                                    {
-                                        var splFldVal = splFldVals[j].Split('_');
-                                        for (int k = 0; k < splFldVal.Length; k++)
-                                        {
-                                            data = data.AsEnumerable().Where(x => x.i.ToLower().Contains(splFldVal[k].ToLower())).ToList();
-                                        }
-                                    }
-                                }
-                                int rcount = data.Count();
-                                if (tolrcount == fetchRCount && rcount == 0 && issvChanged == true)
-                                {
-                                    Session.Remove(SessPickKeyValue);
-                                    Session.Remove(SessPickKey);
-                                }
-                                else if (tolrcount == fetchRCount && issvChanged == true && (spcfldValue.Contains("%") || spcfldValue.Contains("_")))
-                                {
-                                    Session.Remove(SessPickKeyValue);
-                                    Session.Remove(SessPickKey);
-                                }
-                                else
-                                {
-                                    int rows = 50;
-                                    int totalRecords = rcount < fetchRCount ? rcount : fetchRCount;
-                                    int totalPages = totalRecords / rows;
-                                    int perPage = pgNumber > totalPages ? totalRecords % rows : rows;
-                                    string json = new JavaScriptSerializer().Serialize(data.GetRange(50 * (pgNumber - 1), perPage));
-                                    result = "{\"pickdata\":[{\"rcount\":\"" + rcount + "\"},{\"fname\":\"" + fname + "\"},{\"dfname\":\"" + dfname + "\"},{\"data\":" + json + "}]}";
-                                    isCache = true;
-                                    if (_tstKeyChanged != "")
-                                        result = _tstKeyChanged + "♣*♣" + result;
-                                    result = result + "♠" + strRequest + ObjExecTr.KernelProcessTime(kst, "GetSearchResult-fromSession", "", result);
-                                    return result;
-                                }
-                            }
+                            result = dllData;
+                            isCache = true;
+                            if (_tstKeyChanged != "")
+                                result = _tstKeyChanged + "♣*♣" + result;
+                            result = result + "♠" + strRequest + ObjExecTr.KernelProcessTime(kst, "GetSearchResult-picklistvalue", "", result);
+                            return result;
                         }
                     }
                 }
@@ -4590,7 +4526,7 @@ namespace ASB
                                 activePRow = activePRow.Split('~').First();
                         }
                     }
-                    string spfldValue = utilObj.CheckSpecialChars(fldValue);
+                    string spfldValue = "";// utilObj.CheckSpecialChars(fldValue);
                     string iXml = string.Empty;
                     string aucSearchPattern = "contains";
                     if (HttpContext.Current.Session["AxpautoCompPatt"] != null && HttpContext.Current.Session["AxpautoCompPatt"].ToString() != "")
@@ -4637,69 +4573,36 @@ namespace ASB
                     {
                         if (IsApiFld != "true")
                         {
+                            string schemaName = string.Empty;
+                            if (HttpContext.Current.Session["dbuser"] != null)
+                                schemaName = HttpContext.Current.Session["dbuser"].ToString();
+                            FDW fdwObj = new FDW();
                             if (fastdll == "True" && rfSave != "True" && isCache == false && result != "" && pickArrow == "False")//Storing combobox values in redis with parent field key pair.
                             {
-                                string schemaName = string.Empty;
-                                if (HttpContext.Current.Session["dbuser"] != null)
-                                    schemaName = HttpContext.Current.Session["dbuser"].ToString();
-
-                                FDW fdwObj = new FDW();
                                 string fldkey = utilObj.GetRedisServerFieldkey(tstData.transid, Constants.FIELDNAME, fldName, 0);
                                 fdwObj.HashSetKey(fldkey, parentFlds, result);
                             }
                             else if (fastdll == "True" && rfSave == "True" && isCache == false && result != "" && pickArrow == "False")//Saving combobox+refreshonsave field values in session with parent field key pair.
                             {
-                                string sessCacheKey = transid + "-" + fldName + "-" + parentFlds;
-                                Session[sessCacheKey] = result;
-                                utilObj.AddKeyOnRefreshSave(sessCacheKey);
+                                string fldkey = utilObj.GetRedisServerFieldkey(tstData.transid, Constants.FIELDNAME, fldName, 0);
+                                fdwObj.HashSetKey(fldkey, parentFlds, result);
                             }
                             else if (fastdll == "False" && fldValue == "" && isCache == false && result != "" && pickArrow == "False")//Saving picklist field values in session with parent field key pair if the input value is empty.
                             {
-                                string sessCacheKey = transid + "-" + fldName + "-" + parentFlds + "-empty";
-                                Session[sessCacheKey] = result;
-                                if (rfSave == "True")
-                                    utilObj.AddKeyOnRefreshSave(sessCacheKey);
-                                var pickData = JsonConvert.DeserializeObject<pickdatalist>(result.ToString());
-                                var rcount = pickData.pickdata[0].rcount;
-                                var fname = pickData.pickdata[1].fname;
-                                var dfname = pickData.pickdata[2].dfname;
-                                var data = pickData.pickdata[3].data;
-                                int rows = 50;
-                                int totalRecords = int.Parse(rcount) < fetchRCount ? int.Parse(rcount) : fetchRCount;
-                                int totalPages = totalRecords / rows;
-                                int perPage = pgNumber > totalPages ? totalRecords % rows : rows;
-                                string json = new JavaScriptSerializer().Serialize(data.GetRange(50 * (pgNumber - 1), perPage));
-                                result = "{\"pickdata\":[{\"rcount\":\"" + rcount + "\"},{\"fname\":\"" + fname + "\"},{\"dfname\":\"" + dfname + "\"},{\"data\":" + json + "}]}";
+                                string fldkey = utilObj.GetRedisServerFieldkey(tstData.transid, Constants.FIELDNAME, fldName, 0);
+                                fdwObj.HashSetKey(fldkey, parentFlds, result);
                             }
                             else if (fastdll == "False" && fldValue != "" && isCache == false && result != "" && pickArrow == "False")//Saving picklist field values in session with parent field key pair if the input value lenght is greater than or equal to(>=) 3 characters.
                             {
-                                string SessCacheKey = transid + "-" + fldName + "-" + parentFlds + "-♦" + fldValue;
-                                string SessPickKey = transid + "-" + fldName + "-" + parentFlds + "-♦";
-                                Session[SessCacheKey] = result;
-                                Session[SessPickKey] = SessCacheKey;
-                                if (rfSave == "True")
-                                {
-                                    utilObj.AddKeyOnRefreshSave(SessCacheKey);
-                                    utilObj.AddKeyOnRefreshSave(SessPickKey);
-                                }
-                                var pickData = JsonConvert.DeserializeObject<pickdatalist>(result.ToString());
-                                var rcount = pickData.pickdata[0].rcount;
-                                var fname = pickData.pickdata[1].fname;
-                                var dfname = pickData.pickdata[2].dfname;
-                                var data = pickData.pickdata[3].data;
-                                int rows = 50;
-                                int totalRecords = int.Parse(rcount) < fetchRCount ? int.Parse(rcount) : fetchRCount;
-                                int totalPages = totalRecords / rows;
-                                int perPage = pgNumber > totalPages ? totalRecords % rows : rows;
-                                string json = new JavaScriptSerializer().Serialize(data.GetRange(50 * (pgNumber - 1), perPage));
-                                result = "{\"pickdata\":[{\"rcount\":\"" + rcount + "\"},{\"fname\":\"" + fname + "\"},{\"dfname\":\"" + dfname + "\"},{\"data\":" + json + "}]}";
+                                string fldkey = utilObj.GetRedisServerFieldkey(tstData.transid, Constants.FIELDNAME, fldName, 0);
+                                fdwObj.HashSetKey(fldkey, parentFlds, result);
                             }
 
                             if (parentFldNames != string.Empty)
                             {
-                                FDW fdwObj = new FDW();
+                                FDW _fdwObj = new FDW();
                                 string fldkey = utilObj.GetRedisServerFieldkey(tstData.transid, Constants.FIELDPARAMNAMES, fldName, 0);
-                                fdwObj.HashSetKey(fldkey, fldName, parentFldNames);
+                                _fdwObj.HashSetKey(fldkey, fldName, parentFldNames);
                             }
 
                         }
