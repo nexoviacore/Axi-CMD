@@ -10769,6 +10769,28 @@ function getFormattedToolbarJSON(toolbarJSON) {
     }).filter((button) => { return button.key })
 }
 
+function sortToolbarByTlhw(toolbarObj) {
+    const toNum = v => parseInt(v, 10) || 0;
+    const nodes = Object.entries(toolbarObj).filter(([, v]) => v && typeof v === "object");
+    if (!nodes.length) return toolbarObj;
+
+    // Only the first node decides: dwbtb "true" and empty ordNo -> sort by tlhw, else leave untouched
+    const first = nodes[0][1];
+    const applies =
+        String(first.dwbtb).toLowerCase() === "true" &&
+        String(first.ordNo ?? "").trim() === "";
+    if (!applies) return toolbarObj;
+
+    const pos = v => (v.tlhw || "").split(",").map(toNum); // top, left, ...
+    nodes.sort(([, a], [, b]) => {
+        const [at = 0, al = 0] = pos(a);
+        const [bt = 0, bl = 0] = pos(b);
+        return at - bt || al - bl;
+    });
+
+    return Object.fromEntries(nodes);
+}
+
 /**
  * @description: generate complete toolbar html including parameters based on toolbarJSON
  * @author Prashik
@@ -10784,6 +10806,8 @@ function constructToolbar() {
         if (typeof toolbarJSON == "string") {
             toolbarJSON = JSON.parse(toolbarJSON);
         }
+        if (iviewButtonStyle == "old")
+            toolbarJSON = sortToolbarByTlhw(toolbarJSON);
     }
 
     toolbarHTML = ``;

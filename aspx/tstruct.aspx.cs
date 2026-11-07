@@ -334,9 +334,23 @@ public partial class Tstruct : System.Web.UI.Page
                         hdnTstPermission.Value = objws.GetTstPermissions(_thistrId, "", "", "create");
                 }
                 util.TempAttaServerFiles();
-                util.DeleteKeyOnRefreshSave();
+                //util.DeleteKeyOnRefreshSave();
                 if (Session["project"] != null)
                 {
+                    try
+                    {
+                        proj = Session["project"].ToString();
+                        user = Session["user"].ToString();
+                        sid = Session["nsessionid"].ToString();
+                        AxRole = Session["AxRole"].ToString();
+                        language = Session["language"].ToString();
+                        transId = _thistrId;
+                        CacheManager cacheMgr = GetCacheObject();
+                        strObj = GetStrObject(cacheMgr);
+                        if (strObj.ROSFields != string.Empty)
+                            util.DeleteKeyOnRefreshSave(transId, strObj.ROSFields);
+                    }
+                    catch (Exception ex) { }
                     string _isDupTab = string.Empty;
                     if (Request.QueryString["isDupTab"] != null)
                         _isDupTab = Request.QueryString["isDupTab"].ToString();
@@ -630,7 +644,7 @@ public partial class Tstruct : System.Web.UI.Page
             SetLangStyles();
         }
         util.TempAttaServerFiles();
-        util.DeleteKeyOnRefreshSave();
+        //util.DeleteKeyOnRefreshSave();
 
         UpdateTstAttLoad();
 
@@ -867,7 +881,8 @@ public partial class Tstruct : System.Web.UI.Page
         CacheManager cacheMgr = GetCacheObject();
         strObj = GetStrObject(cacheMgr);
         GetStructConfig(strObj);
-
+        if (strObj.ROSFields != string.Empty)
+            util.DeleteKeyOnRefreshSave(transId, strObj.ROSFields);
         if (Session["MobileView"] != null && Session["MobileView"].ToString() == "True")
             isMobileView = true;
         else
@@ -4484,20 +4499,20 @@ public partial class Tstruct : System.Web.UI.Page
     }
     private void AlignToolbarBtnsDwb(TStructDef strObj)
     {
-        int tempLftCnt = 0;
-        int BtnLftCnt = 0;
-        for (BtnLftCnt = 0; BtnLftCnt < leftBtns.Count; BtnLftCnt++)
-        {
-            for (tempLftCnt = 0; tempLftCnt < tmpLeftBtns.Count; tempLftCnt++)
-            {
-                if (leftBtns[BtnLftCnt].ToString() == tmpLeftBtns[tempLftCnt].ToString())
-                {
-                    if (toolBarBtns.Count > tempLftCnt)
-                        sortedBtns.Add(toolBarBtns[tempLftCnt]);
-                    break;
-                }
-            }
-        }
+        //int tempLftCnt = 0;
+        //int BtnLftCnt = 0;
+        //for (BtnLftCnt = 0; BtnLftCnt < leftBtns.Count; BtnLftCnt++)
+        //{
+        //    for (tempLftCnt = 0; tempLftCnt < tmpLeftBtns.Count; tempLftCnt++)
+        //    {
+        //        if (leftBtns[BtnLftCnt].ToString() == tmpLeftBtns[tempLftCnt].ToString())
+        //        {
+        //            if (toolBarBtns.Count > tempLftCnt)
+        //                sortedBtns.Add(toolBarBtns[tempLftCnt]);
+        //            break;
+        //        }
+        //    }
+        //}
         if (HttpContext.Current.Session["language"].ToString() == "ARABIC")
         {
             for (int j = 0; j <= sortedBtns.Count - 1; j++)
@@ -7384,7 +7399,6 @@ public partial class Tstruct : System.Web.UI.Page
             if (HttpContext.Current.Session["ExpFldsForAxVarsandCOnfig"] != null)
                 HttpContext.Current.Session.Remove("ExpFldsForAxVarsandCOnfig");
             utils.TempAttaServerFiles();
-            utils.DeleteKeyOnRefreshSave();
             string queryStringParamsData = QueryStringParams(tstQureystr);
             queryString = queryStringParamsData.Split('♠')[0];
             actstrType = queryStringParamsData.Split('♠')[1];
@@ -7412,6 +7426,8 @@ public partial class Tstruct : System.Web.UI.Page
             if (tstData == null)
                 return Constants.DUPLICATESESS;
             string transId = tstData.transID;
+            if (tstData.tstStrObj.ROSFields != string.Empty)
+                utils.DeleteKeyOnRefreshSave(transId, tstData.tstStrObj.ROSFields);
             string errorLog = logobj.CreateLog("Form Load Service", HttpContext.Current.Session["nsessionid"].ToString(), "FormData-" + transId, "new");
             DateTime eTime1 = DateTime.Now;
             TStructDef strObj = tstData.tstStrObj;
@@ -7919,7 +7935,6 @@ public partial class Tstruct : System.Web.UI.Page
         try
         {
             utils.TempAttaServerFiles();
-            utils.DeleteKeyOnRefreshSave();
             string queryStringParamsData = QueryStringParams(tstQureystr);
             if (HttpContext.Current.Session["project"] == null)
                 return utils.SESSTIMEOUT;
@@ -7940,6 +7955,8 @@ public partial class Tstruct : System.Web.UI.Page
             if (tstData == null)
                 return Constants.DUPLICATESESS;
             string transId = tstData.transID;
+            if (tstData.tstStrObj.ROSFields != string.Empty)
+                utils.DeleteKeyOnRefreshSave(transId, tstData.tstStrObj.ROSFields);
             ASB.WebService objws = new ASB.WebService();
             string tstPermissions = objws.GetTstPermissions(transId, "recordid", recordid, "edit");
             if (tstPermissions != string.Empty && !tstPermissions.StartsWith("{"))
@@ -9006,7 +9023,6 @@ public partial class Tstruct : System.Web.UI.Page
         try
         {
             utils.TempAttaServerFiles();
-            utils.DeleteKeyOnRefreshSave();
             string queryStringParamsData = QueryStringParams(tstQureystr);
             _creataxiflag = queryStringParamsData.Split('♠')[6];
             if (HttpContext.Current.Session["project"] == null)
@@ -9022,6 +9038,8 @@ public partial class Tstruct : System.Web.UI.Page
             if (tstData == null)
                 return Constants.DUPLICATESESS;
             string transId = tstData.transID;
+            if (tstData.tstStrObj.ROSFields != string.Empty)
+                utils.DeleteKeyOnRefreshSave(transId, tstData.tstStrObj.ROSFields);
             string errorLog = logobj.CreateLog("Load Data service.", HttpContext.Current.Session["nsessionid"].ToString(), "LoadData-" + transId, "new");
             string recordid = "0";
             //LoadRecidFromListNew(transId, recordid);// Not required to call here because this session getting updated through webservice method
@@ -9086,7 +9104,6 @@ public partial class Tstruct : System.Web.UI.Page
         try
         {
             utils.TempAttaServerFiles();
-            utils.DeleteKeyOnRefreshSave();
             string queryStringParamsData = QueryStringParams(tstQureystr);
             if (HttpContext.Current.Session["project"] == null)
                 return utils.SESSTIMEOUT;
@@ -9107,6 +9124,8 @@ public partial class Tstruct : System.Web.UI.Page
             if (tstData == null)
                 return Constants.DUPLICATESESS;
             string transId = tstData.transID;
+            if (tstData.tstStrObj.ROSFields != string.Empty)
+                utils.DeleteKeyOnRefreshSave(transId, tstData.tstStrObj.ROSFields);
             Util.Util.DeletedraftRediskeys(transId);
             string errorLog = logobj.CreateLog("Load Data service.", HttpContext.Current.Session["nsessionid"].ToString(), "LoadData-" + transId, "new");
             //LoadRecidFromListNew(transId, recordid);// Not required to call here because this session getting updated through webservice method
@@ -10294,7 +10313,7 @@ public partial class Tstruct : System.Web.UI.Page
         {
             Util.Util _util = new Util.Util();
             _util.TempAttaServerFiles();
-            _util.DeleteKeyOnRefreshSave();
+            //_util.DeleteKeyOnRefreshSave();
         }
         catch (Exception ex)
         { }

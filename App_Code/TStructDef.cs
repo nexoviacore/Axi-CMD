@@ -254,6 +254,7 @@ public class TStructDef
     }
     public string listofRagVarfld = string.Empty;
     public string AxTstIsPEG = "false";
+    public string ROSFields = string.Empty;
     #endregion
 
     #region Constructor
@@ -3206,7 +3207,7 @@ public class TStructDef
                         foreach (var marName in maRoles)
                         {
                             int index = Array.IndexOf(userRolesList, marName);
-                            if (index != -1 || (marName != "" && marName.ToLower() == "default"))
+                            if (index != -1)// || (marName != "" && marName.ToLower() == "default"))
                             {
                                 isMaskMatch = true;
                                 break;
@@ -3227,15 +3228,38 @@ public class TStructDef
                     }
                     else if (fldNode.Attributes["masking"] != null && fldNode.Attributes["masking"].Value != "No Mask" && fldNode.Attributes["masking"].Value == "Show few characters")
                     {
-                        maskType = fldNode.Attributes["masking"].Value;
-                        if (fldNode.Attributes["lastcharmask"] != null)
-                            maskDtls += fldNode.Attributes["lastcharmask"].Value;
-                        if (fldNode.Attributes["firstcharmask"] != null)
-                            maskDtls += "♦" + fldNode.Attributes["firstcharmask"].Value;
-                        if (fldNode.Attributes["maskchar"] != null)
-                            maskDtls += "♦" + fldNode.Attributes["maskchar"].Value;
+                        string strmaRoles = String.Empty;
                         if (fldNode.Attributes["maskroles"] != null)
-                            maskDtls += "♦" + fldNode.Attributes["maskroles"].Value;
+                            strmaRoles = fldNode.Attributes["maskroles"].Value;
+                        string[] maRoles = strmaRoles.Split(',');
+                        string userRoles = HttpContext.Current.Session["AxRole"].ToString();
+                        string[] userRolesList = userRoles.Split(',');
+                        bool isMaskMatch = false;
+                        foreach (var marName in maRoles)
+                        {
+                            int index = Array.IndexOf(userRolesList, marName);
+                            if (index != -1)// || (marName != "" && marName.ToLower() == "default"))
+                            {
+                                isMaskMatch = true;
+                                break;
+                            }
+                        }
+                        if (isMaskMatch)
+                        {
+                            maskType = fldNode.Attributes["masking"].Value;
+                            //if (fldNode.Attributes["lastcharmask"] != null)
+                            //    maskDtls += fldNode.Attributes["lastcharmask"].Value;
+                            //if (fldNode.Attributes["firstcharmask"] != null)
+                            //    maskDtls += "♦" + fldNode.Attributes["firstcharmask"].Value;
+                            if (fldNode.Attributes["firstcharmask"] != null)
+                                maskDtls += fldNode.Attributes["firstcharmask"].Value;
+                            if (fldNode.Attributes["lastcharmask"] != null)
+                                maskDtls += "♦" + fldNode.Attributes["lastcharmask"].Value;
+                            if (fldNode.Attributes["maskchar"] != null)
+                                maskDtls += "♦" + fldNode.Attributes["maskchar"].Value;
+                            if (fldNode.Attributes["maskroles"] != null)
+                                maskDtls += "♦" + fldNode.Attributes["maskroles"].Value;
+                        }
                     }
                 }
                 catch (Exception ex) { }
@@ -3872,6 +3896,10 @@ public class TStructDef
                     else if (moeDetailNode.Name == "a24")
                     {
                         fld.refreshOnSave = moeDetailNode.InnerText;
+                        if (fld.refreshOnSave != "" && fld.refreshOnSave == "True")
+                        {
+                            ROSFields = ROSFields == string.Empty ? fld.name : ROSFields + "," + fld.name;
+                        }
                     }
                     else if (moeDetailNode.Name == "a25")
                     {

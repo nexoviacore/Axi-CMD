@@ -522,6 +522,9 @@ function clearAll() {
     notifications = [];
     var menuElement = document.querySelector("#notificationtrigger");
     menuElement.click();
+    try {
+        $(".tooltip-inner").parent().remove();
+    } catch (ex) { }
 }
 
 function GetHistoryFromCache() {

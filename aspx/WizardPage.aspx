@@ -98,7 +98,7 @@
     <script src="../Js/wizard.min.js?v=10"></script>
     <script src="../Js/common.min.js?v=166"></script>
     <script src="../Js/wizardComp.min.js?v=10" type="text/javascript"></script>
-    <script src="../Js/helper.min.js?v=178" type="text/javascript"></script>
+    <script src="../Js/helper.min.js?v=180" type="text/javascript"></script>
     <script src="../Js/alerts.min.js?v=33"></script>
     <script src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js?v=2"></script>
     <link href="../newPopups/Remodal/remodal-default-theme.min.css?v=2" rel="stylesheet" />

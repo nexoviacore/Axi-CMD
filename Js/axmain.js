@@ -2959,16 +2959,67 @@ function getKeysWithPrefix(prefix) {
 
     return matchingKeys;
 }
+//function clearKeysByFormat(input) {
+//    try {
+//        var parts = input.split("♣");
+//        var start = parts[0];
+//        var end = parts[1];
+//        var allKeys = Object.keys(localStorage);
+//        allKeys.forEach(function (key) {
+//            if (key.startsWith(start) && key.includes(end)) {
+//                localStorage.removeItem(key);
+//            }
+//        });
+//    } catch (ex) { }
+//}
 function clearKeysByFormat(input) {
     try {
         var parts = input.split("♣");
         var start = parts[0];
         var end = parts[1];
-        var allKeys = Object.keys(localStorage);
-        allKeys.forEach(function (key) {
-            if (key.startsWith(start) && key.includes(end)) {
-                localStorage.removeItem(key);
+        if (typeof indexedDB == "undefined")
+            return;
+        var request = indexedDB.open("AxDropdownCacheDB", 1);
+        request.onupgradeneeded = function (event) {
+            var db = event.target.result;
+            if (!db.objectStoreNames.contains("dropdowns")) {
+                var store = db.createObjectStore("dropdowns", { keyPath: "key" });
+                store.createIndex("timestamp", "timestamp", { unique: false });
             }
-        });
-    } catch (ex) { }
+        };
+        request.onsuccess = function (event) {
+            var db = event.target.result;
+            try {
+                var tx = db.transaction("dropdowns", "readwrite");
+                var store = tx.objectStore("dropdowns");
+                var cursorRequest = store.openCursor();
+                cursorRequest.onsuccess = function (event) {
+                    var cursor = event.target.result;
+                    if (cursor) {
+                        var key = cursor.primaryKey;
+                        if (typeof key === "string" && key.startsWith(start) && key.includes(end)) {
+                            cursor.delete();
+                        }
+                        cursor.continue();
+                    }
+                };
+                cursorRequest.onerror = function (event) {
+                    // handle error if required
+                };
+                tx.oncomplete = function () {
+                    db.close();
+                };
+                tx.onerror = function (event) {
+                    db.close();
+                };
+            } catch (ex) {
+                db.close();
+            }
+        };
+        request.onerror = function () {
+            // handle error if required
+        };
+    } catch (ex) {
+        // handle error if required
+    }
 }
