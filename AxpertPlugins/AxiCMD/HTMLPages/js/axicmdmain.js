@@ -7650,37 +7650,99 @@ if (typeof document !== "undefined") {
 
 
 
+    // new code: Arabic text of the hint shown in the command bar. Keys are the prompt labels in lower case (prompt
+    // column of axi_command_prompts and the labels passed in code). Only the hint is translated: command words and
+    // option values stay English, because they are what the user types and the parser reads.
+    const AXI_HINT_TEXT_AR = {
+        "next": "التالي",
+        "ready to run": "جاهز للتشغيل",
+        "value": "القيمة",
+        "tstruct name": "اسم النموذج",
+        "search value": "قيمة البحث",
+        "key field": "الحقل الرئيسي",
+        "object name": "اسم الكائن",
+        "object type": "نوع الكائن",
+        "type": "النوع",
+        "name": "الاسم",
+        "with values": "مع القيم",
+        "field name": "اسم الحقل",
+        "fieldname": "اسم الحقل",
+        "fieldvalue": "قيمة الحقل",
+        "account name": "اسم الحساب",
+        "repo name": "اسم المستودع",
+        "directory": "المجلد",
+        "version": "الإصدار"
+    };
+
+    /**
+     * True when the shell runs in Arabic (right-to-left): Mainnew.aspx puts "btextDir-rtl" / dir="rtl" on the body.
+     * @returns {boolean} Arabic UI.
+     */
+    function isArabicUi() {
+        const body = document.body;
+        return !!body && (body.classList.contains("btextDir-rtl") || (body.getAttribute("dir") || "").toLowerCase() === "rtl");
+    }
+
+    /**
+     * Hint text in the UI language: the Arabic text for a known label in Arabic mode, otherwise the label unchanged
+     * (custom prompt labels from the Config page have no translation and are shown as entered).
+     * @param {string} text - English label.
+     * @returns {string} Text to show.
+     */
+    function hintText(text) {
+        const label = String(text);
+        if (!isArabicUi()) return label;
+        return AXI_HINT_TEXT_AR[label.trim().toLowerCase()] || label;
+    }
+
     /**
      * Updates ghost/hint text displayed in the search input based on prompt schema.
      * @param {object} prompt - Active prompt definition.
      * @returns {void}
      */
     function updateDynamicHintFromPrompt(prompt) {
+        // new code: the hint reads right to left in Arabic mode (the input itself stays left to right for English commands)
+        const arabic = isArabicUi();
+        hintDiv.dir = arabic ? "rtl" : "";
 
         if (prompt) {
-            let label = prompt.prompt || "value";
+            // old code
+            // let label = prompt.prompt || "value";
+            // new code: known labels are translated in Arabic mode
+            let label = hintText(prompt.prompt || "value");
             if (prompt.promptValues && !prompt.prompt) {
                 // label = prompt.promptValues.split(',').join(' / ');
                 label = prompt.promptValues.split(',').slice(0, 3);
             }
-            hintDiv.textContent = `Next: <${label}>`;
+            // old code
+            // hintDiv.textContent = `Next: <${label}>`;
+            // new code
+            hintDiv.textContent = `${hintText("Next")}: <${label}>`;
             hintDiv.style.color = "#f59e0b";
         } else {
+            // old code: padding-right and the English text were fixed
+            // hintDiv.innerHTML = `
+            // <span style="display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; padding-right: 12px;">
+            //     <svg ...><polyline points="20 6 9 17 4 12"></polyline></svg>
+            //     Ready to Run
+            // </span>`;
+            // new code: padding on the inline end (right in English, left in Arabic) and the text in the UI language
             hintDiv.innerHTML = `
-    <span style="display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; padding-right: 12px;">
-        <svg xmlns="http://www.w3.org/2000/svg" 
-             width="16" height="16" 
-             viewBox="0 0 24 24" 
-             fill="none" 
-             stroke="currentColor" 
-             stroke-width="2" 
-             stroke-linecap="round" 
+    <span style="display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; padding-inline-end: 12px;">
+        <svg xmlns="http://www.w3.org/2000/svg"
+             width="16" height="16"
+             viewBox="0 0 24 24"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="2"
+             stroke-linecap="round"
              stroke-linejoin="round">
             <polyline points="20 6 9 17 4 12"></polyline>
         </svg>
-        Ready to Run
+        <span class="axi-hint-ready"></span>
     </span>
 `;
+            hintDiv.querySelector(".axi-hint-ready").textContent = hintText("Ready to Run");
 
             hintDiv.style.color = "#22c55e";
 
