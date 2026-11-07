@@ -735,7 +735,7 @@
     <script src="../js/datatables.min.js"></script>
     <script src="../js/Entity-Filter.min.js?v=9"></script>
     <script src="../js/Entity-common.min.js?v=18"></script>
-    <script src="../js/Entity.min.js?v=40"></script>
+    <script src="../js/Entity.min.js?v=42"></script>
 
     <script type="text/javascript">
         /* Variables from mainpage */

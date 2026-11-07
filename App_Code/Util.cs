@@ -5451,28 +5451,64 @@ namespace Util
             }
         }
 
-        public void DeleteKeyOnRefreshSave()
+        public void DeleteKeyOnRefreshSave(string transId, string refreshFields)
         {
-            var frSavekeys = new List<string>();
-            if (HttpContext.Current.Session["ac-frsave-key"] != null)
-            {
-                frSavekeys = (List<string>)HttpContext.Current.Session["ac-frsave-key"];
-                for (int i = 0; i < frSavekeys.Count; i++)
-                {
-                    HttpContext.Current.Session.Remove(frSavekeys[i].ToString());
-                }
-            }
-            HttpContext.Current.Session.Remove("ac-frsave-key");
             try
             {
-                var lstAutKeys = HttpContext.Current.Session.Keys.Cast<string>().Where(x => x.StartsWith("autocomplete♦")).ToList();
-                if (lstAutKeys.Count > 0)
+                string schemaName = string.Empty;
+                if (HttpContext.Current.Session["dbuser"] != null)
+                    schemaName = HttpContext.Current.Session["dbuser"].ToString();
+                FDW fdwObj = new FDW();
+                string[] refreshFieldsList = refreshFields.Split(',');
+                foreach (string keyField in refreshFieldsList)
                 {
-                    foreach (string _key in lstAutKeys)
-                        HttpContext.Current.Session.Remove(_key);
+                    string fldkey = GetRedisServerFieldkey(transId, Constants.FIELDNAME, keyField, 0);
+                    fdwObj.Deletekey(fldkey);
                 }
             }
-            catch (Exception ex) { }
+            catch (Exception)
+            { }
+
+            //try
+            //{
+            //    string schemaName = string.Empty;
+            //    if (HttpContext.Current.Session["dbuser"] != null)
+            //        schemaName = HttpContext.Current.Session["dbuser"].ToString();
+            //    FDR fdrObj = (FDR)HttpContext.Current.Session["FDR"];
+            //    string flKey = transId + "-" + Constants.FIELDNAMEREFRESHSAVE + "-";
+            //    var redisDraftkeys = fdrObj.GetAllKeys(schemaName + "-" + flKey);
+            //    FDW fdwObj = new FDW();
+            //    foreach (string keyVal in redisDraftkeys)
+            //    {
+            //        fdwObj.DeleteAllKeys(keyVal, schemaName);
+            //    }
+            //}
+            //catch (Exception)
+            //{ }
+            //try
+            //{
+            //    var frSavekeys = new List<string>();
+            //    if (HttpContext.Current.Session["ac-frsave-key"] != null)
+            //    {
+            //        frSavekeys = (List<string>)HttpContext.Current.Session["ac-frsave-key"];
+            //        for (int i = 0; i < frSavekeys.Count; i++)
+            //        {
+            //            HttpContext.Current.Session.Remove(frSavekeys[i].ToString());
+            //        }
+            //    }
+            //    HttpContext.Current.Session.Remove("ac-frsave-key");
+            //}
+            //catch (Exception) { }
+            //try
+            //{
+            //    var lstAutKeys = HttpContext.Current.Session.Keys.Cast<string>().Where(x => x.StartsWith("autocomplete♦")).ToList();
+            //    if (lstAutKeys.Count > 0)
+            //    {
+            //        foreach (string _key in lstAutKeys)
+            //            HttpContext.Current.Session.Remove(_key);
+            //    }
+            //}
+            //catch (Exception ex) { }
         }
 
 
@@ -5804,6 +5840,25 @@ namespace Util
                         DataTable filteredDt = dataRows.Any() ? dataRows.CopyToDataTable() : new DataTable();
 
                         stsValue = JsonConvert.SerializeObject(filteredDt);
+                    }
+                    catch (Exception ex) { }
+                }
+                else if (ConfType == "axi command line enable")
+                {
+                    //AxRole = "♦" + AxRole.Replace(",", "♦") + "♦";
+                    //try
+                    //{
+                    //    stsValue = dt.AsEnumerable().Where(x => x.Field<string>("ASPROPS").ToLower() == ConfType && (AxRole.Contains("♦" + x.Field<string>("USERROLES") + "♦") || x.Field<string>("USERROLES") == "ALL")).Select(x => x.Field<string>("PROPSVAL")).First().ToString();
+                    //}
+                    //catch (Exception ex) { }
+                    AxRole = "♦" + AxRole.Replace(",", "♦") + "♦";
+                    try
+                    {
+                        var rows = dt.AsEnumerable().Where(x => x.Field<string>("ASPROPS").ToLower() == ConfType).ToList();
+                        DataRow roleRow = rows.FirstOrDefault(x => x.Field<string>("USERROLES") != "ALL" && AxRole.Contains("♦" + x.Field<string>("USERROLES") + "♦"));
+                        DataRow row = roleRow != null ? roleRow : rows.FirstOrDefault(x => x.Field<string>("USERROLES") == "ALL");
+                        if (row != null)
+                            stsValue = row.Field<string>("PROPSVAL");
                     }
                     catch (Exception ex) { }
                 }

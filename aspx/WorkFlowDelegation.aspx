@@ -90,7 +90,7 @@
 
     <script src="../Js/WF.min.js?v=5" type="text/javascript"></script>
 
-    <script src="../Js/helper.min.js?v=178" type="text/javascript"></script>
+    <script src="../Js/helper.min.js?v=180" type="text/javascript"></script>
 
     <script src="../Js/dimmingdiv.min.js?v=2" type="text/javascript"></script>
 

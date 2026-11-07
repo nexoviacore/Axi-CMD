@@ -120,7 +120,7 @@
         <div class="d-flex justify-content-center align-items-center p-10 vh-100">
             <asp:ScriptManager ID="ScriptManager1" runat="server">
                 <Scripts>
-                    <asp:ScriptReference Path="../Js/helper.min.js?v=178" />
+                    <asp:ScriptReference Path="../Js/helper.min.js?v=180" />
                 </Scripts>
                 <Services>
                     <asp:ServiceReference Path="../WebService.asmx" />
