@@ -1516,6 +1516,47 @@ div::-webkit-scrollbar-thumb, html::-webkit-scrollbar-thumb, ol::-webkit-scrollb
 	border-right: 3px solid #ff6a6a !important;
 }
 
+/* Header: the header padding mirrors, so the toolbar icons keep their gap from the left edge */
+.btextDir-rtl .header .container-fluid {
+	padding-left: 25px !important;
+	padding-right: 10px !important;
+}
+
+/* Sidebar: menu links, icon on the right, so the larger padding moves to the left */
+.btextDir-rtl .menu-fit > .menu-item > .menu-content,
+.btextDir-rtl .menu-fit > .menu-item > .menu-link {
+	padding-left: 15px !important;
+	padding-right: 10px !important;
+}
+
+/* Sidebar: third-level submenu indent from the right */
+.btextDir-rtl .menu-sub:not([data-popper-placement]) > .menu-item > .menu-sub:not([data-popper-placement]) > .menu-item > .menu-sub:not([data-popper-placement]) > .menu-item > .menu-link {
+	padding-left: 1rem !important;
+	padding-right: calc(2.5rem + 1rem) !important;
+}
+
+/* Sidebar: the dot after the active item's title sits after the text, on its left */
+.btextDir-rtl .aside .menu .menu-active .menu-title::after {
+	margin-left: 0;
+	margin-right: 9px;
+}
+
+/* Sidebar footer: "Powered by" offset from the right */
+.btextDir-rtl #kt_aside_footer .menu-title.poweredBy {
+	left: auto;
+	right: 29px;
+}
+
+/* Sidebar background overlay and the hover shadow, mirrored */
+.btextDir-rtl .aside.aside-default::after {
+	left: auto;
+	right: -65px;
+}
+
+body.btextDir-rtl[data-kt-aside-minimize="on"] .aside.aside-hoverable:hover {
+	box-shadow: -5px 0 10px #1f2b4854;
+}
+
 /*Arabic*/
 
 .content {
