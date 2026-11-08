@@ -22,7 +22,7 @@ Issue #30  showTraceFileDialog(),
 11. Make axi_command_config configurable by the user: new AxiCMDConfig.html page (opened from the AxiCMD gear menu "Configure", only for users with Configure Access) to turn Built-in Options of the configure and sdk commands on/off and add, edit or deactivate Custom Options, through new AxiApi command-config endpoints. Custom Options survive re-installs (axi_command_prompts is no longer dropped). New configure/sdk options are added only through this page, not SQL.
 Issue #281 (tickets #282 - #287)
 
-12. TSK-0896 - Show "User Activation" under the Configure command based on axusers.licactivation: admin (username admin with the default role) always sees it; any other user sees it only when their licactivation is true (true / T, any case). A missing row, null or a failed lookup hides it. New ADS axi_userlicactivation (Postgres and Oracle) is read through loadList before the commands are built.
+12. TSK-0896 - Show "User Activation" under the Configure command based on axusers.licactivation: a user, admin included, sees it only when their licactivation is true (true / T, any case). A missing row, null or a failed lookup hides it. New ADS axi_userlicactivation (Postgres and Oracle) is read through loadList before the commands are built.
 Issue #288
 
 13. Two tstructs with the same caption but different transids (e.g. Test Form2 (ytdf) and Test Form2 (tst2)): "Test Form2" view opened the wrong form. The palette now keeps the form picked from the suggestions, keeps "(transid)" in the input when another structure of the same type shares the caption ("Test Form2 (tst2)" view), recognises "Caption (transid)" when typed, and blocks a shared caption typed by hand with a toast listing the choices.
@@ -30,7 +30,7 @@ Issue #289
 
 
 
-15. New "install" command: install product / plugin / changerequest <directory> [version]. The GitHub account and repo of each type are saved with "configure product|plugin|changerequest <account> <repo>" through the new AxiApi CommandSettings API (axi_command_settings table, Postgres and Oracle); configure checks the repo through AxiGit listdirectories first and blocks a repo or account GitHub does not know. Install suggests the directories of the configured repo (AxiGit POST /api/git/listdirectories under the ARM url) and then their versions ("Latest" by default), and on run sends the install request to the ARM PushToQueue API (queue axiinstallpackagesqueue), with a progress modal in the palette.
+14. New "install" command: install product / plugin / changerequest <directory> [version]. The GitHub account and repo of each type are saved with "configure product|plugin|changerequest <account> <repo>" through the new AxiApi CommandSettings API (axi_command_settings table, Postgres and Oracle); configure checks the repo through AxiGit listdirectories first and blocks a repo or account GitHub does not know. Install suggests the directories of the configured repo (AxiGit POST /api/git/listdirectories under the ARM url) and then their versions ("Latest" by default), and on run sends the install request to the ARM PushToQueue API (queue axiinstallpackagesqueue), with a progress modal in the palette.
 PR #290 (branch feat/implement-install-command)
 
 
