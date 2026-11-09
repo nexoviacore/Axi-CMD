@@ -21,6 +21,12 @@ This site documents how AxiCMD works, for the people who build and maintain it.
   <Card title="Commands" href="/docs/commands">
     Commands are data, not code: how the grammar and the prompt options are stored.
   </Card>
+  <Card title="Config page" href="/docs/config-page">
+    Listing, switching, adding and editing the options of `configure` and `sdk`.
+  </Card>
+  <Card title="Install" href="/docs/install">
+    Setting the Git repository and queuing a product, plugin or change request install.
+  </Card>
   <Card title="Data loading" href="/docs/data-loading">
     ADS, AxList, paging, search, and the three cache layers.
   </Card>
@@ -53,7 +59,10 @@ The code and these docs are in the [Axi-CMD repository on GitHub](https://github
 | `AxpertPlugins/AxiCMD/HTMLPages/js/axicmdmain.js` | The engine: one large script that parses tokens, resolves entities, ranks suggestions and runs commands. |
 | `AxpertPlugins/AxiCMD/Structures/Postgre/Scripts` | Database scripts for PostgreSQL. |
 | `AxpertPlugins/AxiCMD/Structures/Oracle/Scripts` | The same scripts for Oracle. Keep both sets in sync. |
-| `AxiApi/` | ASP.NET Core (.NET 8) API for command configuration, favourites and user settings. |
+| `AxpertPlugins/AxiCMD/HTMLPages/AxiCMDConfig.html` | The Config page for the `configure` and `sdk` options. |
+| `AxiApi/` | ASP.NET Core (.NET 8) API for command configuration, favourites, user settings and command settings. |
+| `consumer/Import-Publish-<n>/` | Published builds of the install queue consumer (`AxiInstallConsumerPackage`). |
+| `docker/rabbitmq/` | A local RabbitMQ broker with the delayed-message plugin, for the install queue. |
 | `aspx/mainHomeConfigTemplate.html` | The shell page that hosts the palette and loads `axicmdmain.js?v=N`. |
 | `docs/` | ADRs, specs and the refactor plan written alongside the code. |
 | `ThirdParty/` | Pinned vendor code. Do not edit. |

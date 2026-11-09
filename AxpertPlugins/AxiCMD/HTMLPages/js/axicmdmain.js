@@ -308,6 +308,7 @@ if (typeof document !== "undefined") {
             "editprompt": "edit",
             "analyze": "analytics",
             "help": "help_outline",
+            "install": "cloud_download",
             "version": "info"
         }
     };
@@ -451,6 +452,7 @@ if (typeof document !== "undefined") {
     let commandFavorites = [];
     let axiFavoritesUrl = "";
     let axiKeyfieldUrl = "";
+    let axiCommandSettingsUrl = "";
     let axiSettingsUrl = "";
     const MAX_FAVORITES = AxiCmdConfig.MAX_FAVORITES;
     let commandRoutes = [];
@@ -458,6 +460,9 @@ if (typeof document !== "undefined") {
     let isEditing = false;
     let isProgrammaticExecution = false;
     let suppressFocusSuggestions = false;
+    // new code: option label ("Product") while a configure product / plugin / changerequest save runs, null otherwise.
+    // hide(), render() and executeCommandsV2() read it, so it is declared here, before any of them can run.
+    let commandSettingSaving = null;
     let isInitialLoad = true;
 
     const goOption = AxiCmdConfig.SHORTCUT_OPTIONS.GO;
@@ -745,6 +750,54 @@ if (typeof document !== "undefined") {
     // When a fetch failed (fetchKey -> timestamp) so it can be retried after FAILED_FETCH_RETRY_MS
     const failedFetchTimes = {};
     const LS_TTL_MS = 30 * 60 * 1000;      // persisted list results are reused for this long
+    // new code: param values longer than this (e.g. param10 of axi_getstructsdata, which carries every session variable
+    // after "@@VARS@@") go into the cache key as a short hash instead of the full text
+    const CACHE_KEY_MAX_VALUE_CHARS = 40;
+
+    /**
+     * Short, stable hash of a string (53-bit cyrb53, base 36), used to keep long values out of cache keys.
+     * Not for security: it only has to give different keys for different values.
+     * @param {string} str - Text to hash.
+     * @returns {string} About 10 characters.
+     */
+    function shortHash(str) {
+        let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+        for (let i = 0; i < str.length; i++) {
+            const ch = str.charCodeAt(i);
+            h1 = Math.imul(h1 ^ ch, 2654435761);
+            h2 = Math.imul(h2 ^ ch, 1597334677);
+        }
+        h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+        h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+        return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+    }
+
+    /**
+     * The form a param value takes inside a list cache key: short values stay readable (other code finds entries by
+     * "param4:<transid>|" and "param8:<field>|"), long ones become "h<hash>".
+     * @param {string} value - Param value sent to the data source.
+     * @returns {string} Value for the cache key.
+     */
+    function cacheKeyValue(value) {
+        const text = String(value);
+        return (text.length > CACHE_KEY_MAX_VALUE_CHARS || text.indexOf("@@VARS@@") !== -1) ? "h" + shortHash(text) : text;
+    }
+
+    /**
+     * Removes list cache entries saved under the old long keys (full session variables in the key), which only used up
+     * localStorage space. Runs once at start-up; the new short keys never contain "@@VARS@@".
+     * @returns {void}
+     */
+    function purgeLongListCacheKeys() {
+        try {
+            const drop = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                if (k && k.startsWith("axi_") && k.toUpperCase().indexOf("@@VARS@@") !== -1) drop.push(k);
+            }
+            drop.forEach(k => localStorage.removeItem(k));
+        } catch (e) { }
+    }
 
     /**
      * Reads rows back from a localStorage entry written by writeListCache. Also accepts a plain array
@@ -1014,6 +1067,7 @@ if (typeof document !== "undefined") {
         axiCommandConfigUrl = `${AxiArmUrl}/AxiCMDApi/api/v1/Axi/command-config`;
         axiKeyfieldUrl = `${AxiArmUrl}/AxiCMDApi/api/v1/Axi/setkeyfield`;
         axiSettingsUrl = `${AxiArmUrl}/AxiCMDApi/api/v1/Axi/user-settings`;
+        axiCommandSettingsUrl = `${AxiArmUrl}/AxiCMDApi/api/v1/CommandSettings`;
 
 
         input = document.getElementById("Axi-Searchinp");
@@ -1136,6 +1190,8 @@ if (typeof document !== "undefined") {
 
 
         if (axicmdenabled) {
+            // new code: free the space taken by list cache entries saved under the old long keys
+            purgeLongListCacheKeys();
             // The commands load at once with the page size known in this browser. The value saved on the server is
             // checked in the background and reloads the lists only if it differs (#275).
             syncPageSizeFromServer();
@@ -2171,6 +2227,12 @@ if (typeof document !== "undefined") {
 
         if (optType === "action") {
             handleKeyfield({ tokens, commandConfig });
+            return true;
+        }
+
+        // Configure Product / Plugin / ChangeRequest: saves "<account> <repo>" through the CommandSettings API
+        if (optType === "commandsetting") {
+            handleCommandSetting({ tokens, commandConfig, configRow });
             return true;
         }
 
@@ -5159,6 +5221,11 @@ if (typeof document !== "undefined") {
 
         const groupKey = cleanString(tokens[0]);
 
+        // Install <type> <directory> [version]: the directory and version lists come from the AxiGit API, not the ADS
+        if (groupKey.toLowerCase() === "install" && getCommandConfig("install") && getInstallWords(inputText).length >= 3) {
+            return getInstallSuggestions(inputText);
+        }
+
         const subCmdFull = tokens.slice(1).map(t => cleanString(t)).join(" ").toLowerCase().trim();
         const subCmdFirst = tokens[1] ? cleanString(tokens[1]).toLowerCase().trim() : "";
         const isResponsibilityCmd = subCmdFirst === "responsibility" || subCmdFirst === "responsibilities" || subCmdFirst === "responsibility listing" || subCmdFull === "responsibility listing" || subCmdFull === "responsibilities" || subCmdFull.startsWith("responsibility");
@@ -5268,6 +5335,11 @@ if (typeof document !== "undefined") {
 
             return processRunCommands(tokens, targetIndex, structType);
         }
+        // Configure Product / Plugin / ChangeRequest: hints and Go only, no list fetch
+        if (groupKey.toLowerCase() === "configure" && tokens.length > 2 && isCommandSettingOption(tokens[1])) {
+            return getCommandSettingSuggestions(tokens);
+        }
+
         const promptInfo = getActivePromptInfo(commandConfig, tokens, targetIndex);
         // console.log("Resolved Param" + JSON.stringify(resolvedParams)); 
         // console.log("ResolvedParamType = " + JSON.stringify(resolvedParamType)); 
@@ -5344,6 +5416,12 @@ if (typeof document !== "undefined") {
             }
 
             else if (groupKey.toLowerCase() === "configure" && tokens.length > 2) {
+                // new code
+                if (isCommandSettingOption(tokens[1])) {
+                    const csOptions = shouldOfferCommandSettingGo(tokens) ? [goOption] : [];
+                    filteredObjects = csOptions;
+                    return csOptions;
+                }
                 if (cleanCommandToken(tokens[1]).toLowerCase() === "keyfield") {
                     filteredObjects = [goOption];
                     return [goOption];
@@ -5378,6 +5456,17 @@ if (typeof document !== "undefined") {
         const partialTyped = cleanString(tokens[targetIndex]);
 
         //We return go/pop up for configure when tokens length is greater than 3(Below we have another check it will work but realsource is finded so here itself we returning it for configure)
+        // old code
+        // if (groupKey.toLowerCase() === "configure" && tokens.length > 3 && tokens[1].toLowerCase() != "keyfield") {
+        //     filteredObjects = [goOption, popOption];
+        //     return [goOption, popOption]
+        // }
+        // new code
+        if (groupKey.toLowerCase() === "configure" && tokens.length > 3 && isCommandSettingOption(tokens[1])) {
+            const csOptions = shouldOfferCommandSettingGo(tokens) ? [goOption] : [];
+            filteredObjects = csOptions;
+            return csOptions;
+        }
         if (groupKey.toLowerCase() === "configure" && tokens.length > 3 && tokens[1].toLowerCase() != "keyfield") {
             filteredObjects = [goOption, popOption];
             return [goOption, popOption]
@@ -6798,6 +6887,12 @@ if (typeof document !== "undefined") {
      */
     function render() {
 
+        // new code: while a configure product / plugin / changerequest save runs, the loader replaces the suggestions
+        if (commandSettingSaving) {
+            drawCommandSettingSavingRow();
+            return;
+        }
+
         // console.log("Render called");
         // Emptying the list resets its scroll position. Background requests (commands, favourites, the next
         // page ...) finish while the user is scrolling and trigger a re-render, which threw the user back to
@@ -6913,16 +7008,20 @@ if (typeof document !== "undefined") {
         if (validItems.length === 0 && isAnyFetchActive) {
             if (!showInitialWrapper) {
                 list.innerHTML = "";
-                const li = document.createElement("li");
-                li.className = "axi-suggestion-loading d-flex align-items-center justify-content-center py-3 px-4 text-muted gap-2";
-                li.style.fontSize = "13px";
-                li.style.textAlign = "center";
+                // old code
+                // const li = document.createElement("li");
+                // li.className = "axi-suggestion-loading d-flex align-items-center justify-content-center py-3 px-4 text-muted gap-2";
+                // li.style.fontSize = "13px";
+                // li.style.textAlign = "center";
+                // const loadingText = items.find(it => typeof it === "string" && (it.startsWith("Searching") || it.startsWith("Fetching"))) || (isSearchPending() ? "Searching..." : "Loading options...");
+                // li.innerHTML = `
+                //     <span class="spinner-border h-15px w-15px align-middle text-gray-400" role="status" aria-hidden="true" style="border-width: 2px; margin-inline-end: 6px;"></span>
+                //     <span><bdi>${loadingText}</bdi></span>
+                // `;
+                // list.appendChild(li);
+                // new code: same row, built by the shared helper (also used by the configure product / plugin / changerequest save)
                 const loadingText = items.find(it => typeof it === "string" && (it.startsWith("Searching") || it.startsWith("Fetching"))) || (isSearchPending() ? "Searching..." : "Loading options...");
-                li.innerHTML = `
-                    <span class="spinner-border h-15px w-15px align-middle text-gray-400" role="status" aria-hidden="true" style="border-width: 2px; margin-inline-end: 6px;"></span>
-                    <span><bdi>${loadingText}</bdi></span>
-                `;
-                list.appendChild(li);
+                list.appendChild(createSuggestionLoadingRow(loadingText));
                 list.style.display = "block";
                 return;
             }
@@ -7148,6 +7247,8 @@ if (typeof document !== "undefined") {
      * @returns {void}
      */
     function hide() {
+        // new code: keep the "Saving ... repository..." loader on screen until the save ends (endCommandSettingSaving hides it)
+        if (commandSettingSaving) return;
         if (megaDropdown) {
             megaDropdown.style.setProperty("display", "none", "important");
             megaDropdown.classList.remove("show", "menu-dropdown");
@@ -7471,7 +7572,10 @@ if (typeof document !== "undefined") {
         const keepStructName = isStructRow
             && getTargetEntityMatches(foundObj.caption).filter(d => areTypesMatching(d.stype || d.STYPE, foundObj.stype)).length > 1;
 
-        if (suggestion.includes("(") && suggestion.includes(")") && !isAdsValue && !isValueToken && !keepStructName) {
+        // old code
+        // if (suggestion.includes("(") && suggestion.includes(")") && !isAdsValue && !isValueToken && !keepStructName) {
+        // new code: install directory and version names keep their brackets
+        if (suggestion.includes("(") && suggestion.includes(")") && !isAdsValue && !isValueToken && !keepStructName && commandGroup !== "install") {
             const lastBracketIndex = suggestion.lastIndexOf("(");
 
 
@@ -7488,7 +7592,10 @@ if (typeof document !== "undefined") {
 
         }
 
-        if (displayName.includes("[") && displayName.includes("]") && !isAdsValue) {
+        // old code
+        // if (displayName.includes("[") && displayName.includes("]") && !isAdsValue) {
+        // new code: install directory and version names keep their brackets
+        if (displayName.includes("[") && displayName.includes("]") && !isAdsValue && commandGroup !== "install") {
             const lastBracketIndex = suggestion.lastIndexOf("[");
             const text = suggestion.substring(0, lastBracketIndex).trim();
 
@@ -7543,37 +7650,99 @@ if (typeof document !== "undefined") {
 
 
 
+    // new code: Arabic text of the hint shown in the command bar. Keys are the prompt labels in lower case (prompt
+    // column of axi_command_prompts and the labels passed in code). Only the hint is translated: command words and
+    // option values stay English, because they are what the user types and the parser reads.
+    const AXI_HINT_TEXT_AR = {
+        "next": "التالي",
+        "ready to run": "جاهز للتشغيل",
+        "value": "القيمة",
+        "tstruct name": "اسم النموذج",
+        "search value": "قيمة البحث",
+        "key field": "الحقل الرئيسي",
+        "object name": "اسم الكائن",
+        "object type": "نوع الكائن",
+        "type": "النوع",
+        "name": "الاسم",
+        "with values": "مع القيم",
+        "field name": "اسم الحقل",
+        "fieldname": "اسم الحقل",
+        "fieldvalue": "قيمة الحقل",
+        "account name": "اسم الحساب",
+        "repo name": "اسم المستودع",
+        "directory": "المجلد",
+        "version": "الإصدار"
+    };
+
+    /**
+     * True when the shell runs in Arabic (right-to-left): Mainnew.aspx puts "btextDir-rtl" / dir="rtl" on the body.
+     * @returns {boolean} Arabic UI.
+     */
+    function isArabicUi() {
+        const body = document.body;
+        return !!body && (body.classList.contains("btextDir-rtl") || (body.getAttribute("dir") || "").toLowerCase() === "rtl");
+    }
+
+    /**
+     * Hint text in the UI language: the Arabic text for a known label in Arabic mode, otherwise the label unchanged
+     * (custom prompt labels from the Config page have no translation and are shown as entered).
+     * @param {string} text - English label.
+     * @returns {string} Text to show.
+     */
+    function hintText(text) {
+        const label = String(text);
+        if (!isArabicUi()) return label;
+        return AXI_HINT_TEXT_AR[label.trim().toLowerCase()] || label;
+    }
+
     /**
      * Updates ghost/hint text displayed in the search input based on prompt schema.
      * @param {object} prompt - Active prompt definition.
      * @returns {void}
      */
     function updateDynamicHintFromPrompt(prompt) {
+        // new code: the hint reads right to left in Arabic mode (the input itself stays left to right for English commands)
+        const arabic = isArabicUi();
+        hintDiv.dir = arabic ? "rtl" : "";
 
         if (prompt) {
-            let label = prompt.prompt || "value";
+            // old code
+            // let label = prompt.prompt || "value";
+            // new code: known labels are translated in Arabic mode
+            let label = hintText(prompt.prompt || "value");
             if (prompt.promptValues && !prompt.prompt) {
                 // label = prompt.promptValues.split(',').join(' / ');
                 label = prompt.promptValues.split(',').slice(0, 3);
             }
-            hintDiv.textContent = `Next: <${label}>`;
+            // old code
+            // hintDiv.textContent = `Next: <${label}>`;
+            // new code
+            hintDiv.textContent = `${hintText("Next")}: <${label}>`;
             hintDiv.style.color = "#f59e0b";
         } else {
+            // old code: padding-right and the English text were fixed
+            // hintDiv.innerHTML = `
+            // <span style="display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; padding-right: 12px;">
+            //     <svg ...><polyline points="20 6 9 17 4 12"></polyline></svg>
+            //     Ready to Run
+            // </span>`;
+            // new code: padding on the inline end (right in English, left in Arabic) and the text in the UI language
             hintDiv.innerHTML = `
-    <span style="display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; padding-right: 12px;">
-        <svg xmlns="http://www.w3.org/2000/svg" 
-             width="16" height="16" 
-             viewBox="0 0 24 24" 
-             fill="none" 
-             stroke="currentColor" 
-             stroke-width="2" 
-             stroke-linecap="round" 
+    <span style="display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; padding-inline-end: 12px;">
+        <svg xmlns="http://www.w3.org/2000/svg"
+             width="16" height="16"
+             viewBox="0 0 24 24"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="2"
+             stroke-linecap="round"
              stroke-linejoin="round">
             <polyline points="20 6 9 17 4 12"></polyline>
         </svg>
-        Ready to Run
+        <span class="axi-hint-ready"></span>
     </span>
 `;
+            hintDiv.querySelector(".axi-hint-ready").textContent = hintText("Ready to Run");
 
             hintDiv.style.color = "#22c55e";
 
@@ -7650,6 +7819,26 @@ if (typeof document !== "undefined") {
     }
 
     /**
+     * Parses the session variables text returned by axinterface.aspx/GetGlobalVar. When a value holds a raw control
+     * character (tab, newline ...) the text is not valid JSON, so it is parsed again with those characters as spaces.
+     * @param {string} text - The "d" string of the GetGlobalVar answer.
+     * @returns {object} Parsed object ({ globalVars: [...] }), or {} when it cannot be read.
+     */
+    function parseGlobalVarsText(text) {
+        const raw = typeof text === "string" && text ? text : "{}";
+        try {
+            return JSON.parse(raw) || {};
+        } catch (e) {
+            try {
+                return JSON.parse(raw.replace(/[\u0000-\u001F]/g, " ")) || {};
+            } catch (e2) {
+                console.error("[AxiCMD] Session variables could not be read:", e2);
+                return {};
+            }
+        }
+    }
+
+    /**
      * Reads the ARM session id and bearer token from the Axpert session global variables.
      * @async
      * @param {boolean} [force=false] - Ignore the cached pair and read it again.
@@ -7665,10 +7854,24 @@ if (typeof document !== "undefined") {
             });
             if (!res.ok) return null;
             const outer = await res.json();
-            const vars = JSON.parse(outer.d || "{}").globalVars || [];
+            // old code
+            // const vars = JSON.parse(outer.d || "{}").globalVars || [];
+            // const read = key => {
+            //     const hit = vars.find(o => o && o[key] !== undefined);
+            //     return hit ? String(hit[key] || "") : "";
+            // };
+            // new code: a session value can hold a raw tab / newline (seen on Oracle schemas), which makes JSON.parse
+            // throw, so no ARM session was found and AxList was never called. Parse again with control characters
+            // turned into spaces, and match the variable name without case (Oracle returns names in upper case).
+            const vars = parseGlobalVarsText(outer.d).globalVars || [];
             const read = key => {
-                const hit = vars.find(o => o && o[key] !== undefined);
-                return hit ? String(hit[key] || "") : "";
+                const lower = key.toLowerCase();
+                for (const o of vars) {
+                    if (!o || typeof o !== "object") continue;
+                    const k = Object.keys(o).find(n => n.toLowerCase() === lower);
+                    if (k !== undefined) return String(o[k] || "");
+                }
+                return "";
             };
             const sessionId = read("ARM_SessionId");
             const token = read("ARM_Token");
@@ -7984,7 +8187,10 @@ if (typeof document !== "undefined") {
                 values.forEach((value, index) => {
                     const key = `param${index + 1}`;
                     sqlParams[key] = value;
-                    normalizedParams.push(`${key}:${value}`);
+                    // old code
+                    // normalizedParams.push(`${key}:${value}`);
+                    // new code: the request still gets the full value; the cache key gets a short hash of a long one
+                    normalizedParams.push(`${key}:${cacheKeyValue(value)}`);
                 });
             }
 
@@ -8877,6 +9083,7 @@ if (typeof document !== "undefined") {
                     tstructList = null;
                     adsList = null;
                     axDatasourceObj = {};
+                    clearInstallCaches();
                     activeFetches.clear();
                     failedFetches.clear();
                     // paging / search bookkeeping belongs to the data that was just discarded
@@ -9043,16 +9250,38 @@ if (typeof document !== "undefined") {
                 menu.id = "axiSettingsMenu";
                 menu.className = "axi-sm";
                 menu.setAttribute("role", "menu");
-                const entries = [{ id: "pagesize", label: "Records per load", run: () => openPageSizePanel() }];
+                // old code
+                // const entries = [{ id: "pagesize", label: "Records per load", run: () => openPageSizePanel() }];
+                // const perms = getAccessPermissions();
+                // if (perms.appMgrAccess && perms.buildAccess) entries.push({ id: "configure", label: "Configure", run: openConfigPage });
+                // new code: each entry has a drawn 16px icon (one stroke, currentColor), so the two rows read apart at a glance.
+                // Records per load: stacked rows with a count mark. Configure: sliders (not a gear, which is the button itself).
+                const entries = [{
+                    id: "pagesize", label: "Records per load", run: () => openPageSizePanel(),
+                    icon: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 4h7.5M6 8h7.5M6 12h7.5"/><path d="M2.5 3.25v1.5M2.5 7.25v1.5M2.5 11.25v1.5"/></svg>'
+                }];
                 const perms = getAccessPermissions();
-                if (perms.appMgrAccess && perms.buildAccess) entries.push({ id: "configure", label: "Configure", run: openConfigPage });
+                if (perms.appMgrAccess && perms.buildAccess) entries.push({
+                    id: "configure", label: "Configure", run: openConfigPage,
+                    icon: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M2.5 4.5h5M10.5 4.5h3M2.5 11.5h2M7.5 11.5h6"/><circle cx="9" cy="4.5" r="1.5"/><circle cx="6" cy="11.5" r="1.5"/></svg>'
+                });
                 entries.forEach((en) => {
                     const item = document.createElement("button");
                     item.type = "button";
                     item.className = "axi-sm-item";
                     item.setAttribute("role", "menuitem");
                     item.dataset.entry = en.id;
-                    item.textContent = en.label;
+                    // old code
+                    // item.textContent = en.label;
+                    // new code: icon, then the label (the label stays the accessible name; the icon is aria-hidden)
+                    const icon = document.createElement("span");
+                    icon.className = "axi-sm-icon";
+                    icon.innerHTML = en.icon || "";
+                    const text = document.createElement("span");
+                    text.className = "axi-sm-label";
+                    text.textContent = en.label;
+                    item.appendChild(icon);
+                    item.appendChild(text);
                     item.addEventListener("click", (ev) => { ev.stopPropagation(); closeSettingsMenu(); en.run(); });
                     // Focus follows the mouse, so the first entry (focused on open) does not stay highlighted next to the hovered one
                     item.addEventListener("mouseenter", () => item.focus({ preventScroll: true }));
@@ -9748,6 +9977,10 @@ if (typeof document !== "undefined") {
         if (!axicmdenabled) {
             return;
         }
+        // new code: a configure product / plugin / changerequest save is running; Enter on the read-only input does nothing
+        if (commandSettingSaving) {
+            return;
+        }
         if (document.querySelector(".AXI-Sec")?.classList.contains("axi-tour-active")) {
             return;
         }
@@ -9883,6 +10116,18 @@ if (typeof document !== "undefined") {
         }
         if (groupNameNormalized === "sdk" && !accessPermissions.buildAccess) {
             showToast(`User '${window.mainUserName}' has no access for command: ${text}`);
+            return;
+        }
+
+        // Install has its own handler (build access only): the directory / version prompts are not configured options
+        if (groupNameNormalized === "install") {
+            if (!accessPermissions.buildAccess) {
+                showToast(`User '${window.mainUserName}' has no access for command: ${text}`);
+                return;
+            }
+            handleInstallCommand(text);
+            hide();
+            if (!isNavigating) saveToHistory(text);
             return;
         }
 
@@ -11485,6 +11730,1621 @@ if (typeof document !== "undefined") {
         } catch (err) {
             showToast(`Error: ${err.message || err}`);
         }
+    }
+
+    // ---------------------------------------------------------------------------------------------------------
+    // Configure Product / Plugin / ChangeRequest (prompt_option_type 'commandsetting')
+    // ---------------------------------------------------------------------------------------------------------
+    const COMMAND_SETTING_LABELS = { product: "Product", plugin: "Plugin", changerequest: "Change Request" };
+    const commandSettingSavedCache = {};   // type -> { t, v } ; v = { accountname, reponame } or null when the GET failed
+    const commandSettingPending = {};      // type -> true while a GET is running
+    const COMMAND_SETTING_RETRY_MS = 30000;
+    // new code: loader while a save runs; the state (commandSettingSaving) is declared at the top with the other palette state
+    const COMMAND_SETTING_SAVE_TIMEOUT_MS = 30000;
+
+    /**
+     * Builds the spinner row the palette shows while something loads (same markup as "Searching...").
+     * @param {string} text - Text next to the spinner.
+     * @returns {HTMLLIElement}
+     */
+    function createSuggestionLoadingRow(text) {
+        const li = document.createElement("li");
+        li.className = "axi-suggestion-loading d-flex align-items-center justify-content-center py-3 px-4 text-muted gap-2";
+        li.style.fontSize = "13px";
+        li.style.textAlign = "center";
+        li.innerHTML = `
+                    <span class="spinner-border h-15px w-15px align-middle text-gray-400" role="status" aria-hidden="true" style="border-width: 2px; margin-inline-end: 6px;"></span>
+                    <span><bdi></bdi></span>
+                `;
+        li.querySelector("bdi").textContent = text;
+        return li;
+    }
+
+    /**
+     * Draws the "Saving ... repository..." row in the palette. render() calls it instead of the suggestions while a save runs.
+     * @returns {void}
+     */
+    function drawCommandSettingSavingRow() {
+        if (!list) return;
+        list.innerHTML = "";
+        list.classList.remove("My-Command-Wrapper");
+        if (favouritesCard) favouritesCard.style.display = "none";
+        if (commandHeader) commandHeader.style.display = "none";
+        list.appendChild(createSuggestionLoadingRow(`Saving ${commandSettingSaving} repository...`));
+        list.style.display = "block";
+        if (megaDropdown) megaDropdown.style.display = "flex";
+    }
+
+    /**
+     * Starts the save loader: palette stays open with the command, input is read-only so it cannot run twice.
+     * @param {string} label - Option label (Product / Plugin / Change Request).
+     * @returns {void}
+     */
+    function startCommandSettingSaving(label) {
+        commandSettingSaving = label;
+        if (input) input.readOnly = true;
+        drawCommandSettingSavingRow();
+    }
+
+    /**
+     * Ends the save loader. On success the palette closes; otherwise it reopens with the typed command so it can be fixed.
+     * @param {boolean} success - True when the save went through.
+     * @returns {void}
+     */
+    function endCommandSettingSaving(success) {
+        commandSettingSaving = null;
+        if (input) input.readOnly = false;
+        if (success) {
+            hide();
+            return;
+        }
+        reopenPaletteForCommandSetting();
+    }
+
+    /**
+     * Shows the palette again with the typed command (cursor at the end) after a failed or refused save.
+     * Deferred, because the command runner calls hide() right after the handler returns.
+     * @returns {void}
+     */
+    function reopenPaletteForCommandSetting() {
+        setTimeout(() => {
+            try {
+                if (!input) return;
+                suppressFocusSuggestions = true; // the focus listener then skips its own handleInput
+                input.focus();
+                suppressFocusSuggestions = false; // in case the input already had focus and no focus event fired
+                input.setSelectionRange(input.value.length, input.value.length);
+                handleInput();
+            } catch (e) { }
+        }, 0);
+    }
+
+    /**
+     * Validates an account / repository name token for the commandsetting options.
+     * @param {string} raw - Raw token.
+     * @returns {{ok: boolean, value: string, message: string}} Result with the cleaned value.
+     */
+    function validateCommandSettingName(raw) {
+        const value = cleanCommandToken(raw == null ? "" : String(raw));
+        if (!value) return { ok: false, value: "", message: "Name is required" };
+        if (value.length > 100) return { ok: false, value, message: "Name must be 100 characters or fewer" };
+        if (!/^[A-Za-z0-9._-]+$/.test(value)) return { ok: false, value, message: "Name can contain only letters, numbers, dot, underscore and hyphen" };
+        return { ok: true, value, message: "" };
+    }
+
+    /**
+     * Returns the configure row of a typed option when that option is a commandsetting one.
+     * @param {string} tokenName - Typed option token (tokens[1]).
+     * @returns {object|null} Configure row or null.
+     */
+    function getCommandSettingRow(tokenName) {
+        const opt = cleanCommandToken(tokenName || "");
+        if (!opt) return null;
+        const row = getCommandConfigRow("Configure", opt);
+        if (!row) return null;
+        const optType = (row.promptOptionType || row.prompt_option_type || row.PromptOptionType || "").toLowerCase();
+        return optType === "commandsetting" ? row : null;
+    }
+
+    /**
+     * True when the typed configure option is a commandsetting option (Product, Plugin, ChangeRequest).
+     * @param {string} tokenName - Typed option token (tokens[1]).
+     * @returns {boolean}
+     */
+    function isCommandSettingOption(tokenName) {
+        return !!getCommandSettingRow(tokenName);
+    }
+
+    /**
+     * Go is offered only once both the account and the repo name are present and valid.
+     * @param {string[]} tokens - Command tokens.
+     * @returns {boolean}
+     */
+    function shouldOfferCommandSettingGo(tokens) {
+        // old code
+        // return !!tokens && tokens.length > 3 && validateCommandSettingName(tokens[2]).ok && validateCommandSettingName(tokens[3]).ok;
+        // new code: words after the repo name mean a name with a space was typed, so no Go
+        return !!tokens && tokens.length > 3 && !hasCommandSettingExtraWords(tokens)
+            && validateCommandSettingName(tokens[2]).ok && validateCommandSettingName(tokens[3]).ok;
+    }
+
+    /**
+     * True when anything other than blanks follows the repo name (configure product <account> <repo> ...).
+     * @param {string[]} tokens - Command tokens.
+     * @returns {boolean}
+     */
+    function hasCommandSettingExtraWords(tokens) {
+        return !!tokens && tokens.slice(4).some(t => cleanCommandToken(t || "").trim() !== "");
+    }
+
+    /**
+     * Property type (product / plugin / changerequest) of a commandsetting row.
+     * @param {object} row - Configure row.
+     * @param {string} tokenName - Typed option, used when the row has no prompt id.
+     * @returns {string} Lower-case property type.
+     */
+    function getCommandSettingType(row, tokenName) {
+        const id = row ? (row.promptId || row.prompt_id || row.PromptId || "") : "";
+        return (id || cleanCommandToken(tokenName || "")).toString().trim().toLowerCase();
+    }
+
+    /**
+     * Human label for a property type.
+     * @param {string} type - Property type.
+     * @returns {string} Label.
+     */
+    function getCommandSettingLabel(type) {
+        return COMMAND_SETTING_LABELS[(type || "").toLowerCase()] || type;
+    }
+
+    /**
+     * Reads accountname / reponame from a response properties object, tolerating casing.
+     * @param {object} props - Properties object.
+     * @returns {{accountname: string, reponame: string}} Values ("" when missing).
+     */
+    function readCommandSettingProps(props) {
+        const p = props || {};
+        const pick = (...keys) => {
+            for (const k of keys) { if (p[k] !== undefined && p[k] !== null) return String(p[k]); }
+            return "";
+        };
+        return { accountname: pick("accountname", "accountName", "AccountName", "Accountname"), reponame: pick("reponame", "repoName", "RepoName", "Reponame") };
+    }
+
+    /**
+     * Gets username from the shell session.
+     * @returns {string} Username.
+     */
+    function getCommandSettingUser() {
+        return window.mainUserName ||
+            (typeof callParentNew === "function" && callParentNew("mainUserName")) ||
+            (typeof parent !== "undefined" && parent.mainUserName) ||
+            (typeof top !== "undefined" && top.mainUserName) ||
+            "";
+    }
+
+    /**
+     * Loads the currently saved value of a commandsetting type once (cached for the palette session) and
+     * redraws the suggestions when it arrives. A failed GET shows no suggestion and is retried after a while.
+     * @param {string} type - Property type.
+     * @returns {void}
+     */
+    function loadSavedCommandSetting(type) {
+        if (!type || !axiCommandSettingsUrl || commandSettingPending[type]) return;
+        const cached = commandSettingSavedCache[type];
+        if (cached && (cached.v || (Date.now() - cached.t) < COMMAND_SETTING_RETRY_MS)) return;
+        const appname = getProjectName() || "";
+        if (!appname) return;
+        commandSettingPending[type] = true;
+        fetch(`${axiCommandSettingsUrl}?appname=${encodeURIComponent(appname)}&category=axicmd&type=${encodeURIComponent(type)}`)
+            .then(res => res.ok ? res.json() : Promise.reject(new Error("HTTP " + res.status)))
+            .then(data => {
+                const props = data && (data.properties || data.Properties);
+                commandSettingSavedCache[type] = { t: Date.now(), v: readCommandSettingProps(props) };
+            })
+            .catch(() => { commandSettingSavedCache[type] = { t: Date.now(), v: null }; })
+            .finally(() => {
+                delete commandSettingPending[type];
+                try {
+                    const cur = getTokens(input.value);
+                    if (cur.length > 2 && cleanCommandToken(cur[0]).toLowerCase() === "configure" && getCommandSettingType(getCommandSettingRow(cur[1]), cur[1]) === type && commandSettingSavedCache[type].v) {
+                        handleInput();
+                    }
+                } catch (e) { }
+            });
+    }
+
+    /**
+     * Suggestions for "configure <product|plugin|changerequest> <account> <repo>": hint and Go only (no saved value).
+     * @param {string[]} tokens - Command tokens.
+     * @returns {Array} Suggestion list (may include goOption).
+     */
+    function getCommandSettingSuggestions(tokens) {
+        const row = getCommandSettingRow(tokens[1]);
+        const type = getCommandSettingType(row, tokens[1]);
+        const wordNo = tokens.length;
+        let list = [];
+        filteredObjects = [];
+
+        if (wordNo === 3) updateDynamicHintFromPrompt({ prompt: "account name" });
+        else if (wordNo === 4) updateDynamicHintFromPrompt({ prompt: "repo name" });
+        else updateDynamicHintFromPrompt(null);
+
+        // old code
+        // if (wordNo === 3 || wordNo === 4) {
+        //     loadSavedCommandSetting(type);
+        //     const saved = commandSettingSavedCache[type] && commandSettingSavedCache[type].v;
+        //     const savedValue = saved ? (wordNo === 3 ? saved.accountname : saved.reponame) : "";
+        //     const partial = cleanCommandToken(tokens[wordNo - 1] || "").toLowerCase();
+        //     if (savedValue && savedValue.toLowerCase().startsWith(partial) && savedValue.toLowerCase() !== partial) {
+        //         list = [savedValue];
+        //         filteredObjects = [{ name: savedValue, displaydata: savedValue }];
+        //     }
+        // }
+        // new code: the saved account / repo from axi_command_settings is no longer offered as a suggestion;
+        // only the account name / repo name hint and Go are shown
+
+        if (shouldOfferCommandSettingGo(tokens)) {
+            list.unshift(goOption);
+            filteredObjects.unshift(goOption);
+        }
+        return list;
+    }
+
+    /**
+     * Saves the account / repo pair for a commandsetting option through the CommandSettings API.
+     * @async
+     * @param {object} context - Execution context.
+     * @param {string[]} context.tokens - Command tokens.
+     * @param {object} context.configRow - Matching configure row.
+     * @returns {Promise<void>}
+     */
+    async function handleCommandSetting({ tokens, commandConfig, configRow }) {
+        // new code: a save is already running (loader on screen), so ignore a second Go / Enter
+        if (commandSettingSaving) return;
+
+        const propertyType = getCommandSettingType(configRow, tokens[1]);
+        const label = getCommandSettingLabel(propertyType);
+
+        const perms = getAccessPermissions();
+        if (!(perms.appMgrAccess && perms.buildAccess)) {
+            showToast(`User '${window.mainUserName}' has no access to configure ${label}`);
+            return;
+        }
+
+        // old code
+        // const account = validateCommandSettingName(tokens[2]);
+        // if (!account.ok) { showToast(`Account name: ${account.message}`); return; }
+        // const repo = validateCommandSettingName(tokens[3]);
+        // if (!repo.ok) { showToast(`Repo name: ${repo.message}`); return; }
+        // // new code: account and repo names cannot contain spaces, so extra words are an error, not ignored
+        // if (hasCommandSettingExtraWords(tokens)) { showToast(`Only an account name and a repo name are expected after '${label}'`); return; }
+        // new code: on a refused name the palette reopens with the command, so it can be corrected
+        const account = validateCommandSettingName(tokens[2]);
+        if (!account.ok) { showToast(`Account name: ${account.message}`); reopenPaletteForCommandSetting(); return; }
+        const repo = validateCommandSettingName(tokens[3]);
+        if (!repo.ok) { showToast(`Repo name: ${repo.message}`); reopenPaletteForCommandSetting(); return; }
+        // account and repo names cannot contain spaces, so extra words are an error, not ignored
+        if (hasCommandSettingExtraWords(tokens)) { showToast(`Only an account name and a repo name are expected after '${label}'`); reopenPaletteForCommandSetting(); return; }
+
+        const appname = getProjectName() || "";
+        const username = getCommandSettingUser();
+        if (!appname) { showToast("Application session is not available. App name is required."); return; }
+        if (!username) { showToast("User session is not available. Username is required."); return; }
+
+        // new code: loader in the palette until the API answers; set before the first await, so the hide() the
+        // command runner calls after this handler returns keeps the palette open
+        startCommandSettingSaving(label);
+        let savedOk = false;
+        // old code
+        // const abortCtrl = (typeof AbortController !== "undefined") ? new AbortController() : null;
+        // const abortTimer = abortCtrl ? setTimeout(() => abortCtrl.abort(), COMMAND_SETTING_SAVE_TIMEOUT_MS) : null;
+        // new code: the save timeout starts after the repository check, which has its own timeout
+        const abortCtrl = (typeof AbortController !== "undefined") ? new AbortController() : null;
+        let abortTimer = null;
+
+        try {
+            // new code: a repository GitHub does not know is not saved; when GitHub cannot be asked, save and warn
+            const repoCheck = await verifyCommandSettingRepo(propertyType, account.value, repo.value);
+            if (repoCheck.blocked) {
+                showToast(`Error: ${repoCheck.message} Check the account and repo names.`);
+                return;
+            }
+            abortTimer = abortCtrl ? setTimeout(() => abortCtrl.abort(), COMMAND_SETTING_SAVE_TIMEOUT_MS) : null;
+
+            const res = await fetch(`${axiCommandSettingsUrl}?appname=${encodeURIComponent(appname)}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                signal: abortCtrl ? abortCtrl.signal : undefined,
+                body: JSON.stringify({
+                    username: username,
+                    propertyCategory: "axicmd",
+                    propertyType: propertyType,
+                    properties: { accountname: account.value, reponame: repo.value }
+                })
+            });
+
+            // old code
+            // let dataObj = null;
+            // try { dataObj = await res.json(); } catch (e) { }
+            // new code: a 400 from the API is a plain-text message, so read text and parse JSON only when it is JSON
+            let dataObj = null;
+            let bodyText = "";
+            try { bodyText = await res.text(); dataObj = JSON.parse(bodyText); } catch (e) { }
+
+            if (!res.ok || (dataObj && dataObj.success === false)) {
+                const plainMessage = (typeof dataObj === "string" ? dataObj : (!dataObj ? bodyText : "")).trim();
+                const errorMessage = dataObj?.message || dataObj?.Message || dataObj?.error || dataObj?.title || plainMessage || "Failed to save " + label + " repository";
+                showToast(`Error: ${errorMessage}`);
+                return;
+            }
+
+            const saved = readCommandSettingProps(dataObj?.properties || dataObj?.Properties);
+            const prev = readCommandSettingProps(dataObj?.previous || dataObj?.Previous);
+            const newAccount = saved.accountname || account.value;
+            const newRepo = saved.reponame || repo.value;
+            const wasText = (prev.accountname || prev.reponame) ? `${prev.accountname}/${prev.reponame}` : "not set";
+
+            delete commandSettingSavedCache[propertyType];
+            clearInstallCaches(propertyType);
+            savedOk = true;
+            // old code
+            // showToast(`${label} repository set to ${newAccount}/${newRepo} (was ${wasText})`, 5000, true);
+            // new code: say when the repository could not be checked
+            if (repoCheck.warning) {
+                showToast(`${label} repository set to ${newAccount}/${newRepo} (was ${wasText}), but it could not be checked on GitHub: ${repoCheck.warning}`, 8000, "warning");
+            } else {
+                showToast(`${label} repository set to ${newAccount}/${newRepo} (was ${wasText})`, 5000, true);
+            }
+        } catch (err) {
+            // old code
+            // showToast(`Error: ${err.message || err}`);
+            // new code: say so when the save was stopped by the timeout
+            if (err && err.name === "AbortError") {
+                showToast(`Error: saving the ${label} repository took too long. Please try again.`);
+            } else {
+                showToast(`Error: ${err.message || err}`);
+            }
+        } finally {
+            // new code: loader off; palette closes on success, reopens with the command on failure
+            if (abortTimer) clearTimeout(abortTimer);
+            endCommandSettingSaving(savedOk);
+        }
+    }
+
+    // ---------------------------------------------------------------------------------------------------------
+    // Install Product / Plugin / ChangeRequest:  install <product|plugin|changerequest> <directory> [version]
+    // Account / repo come from the CommandSettings API (set with "configure <type> <account> <repo>"), the
+    // directories and versions from the AxiGit listdirectories API, and Go pushes the request to the ARM queue.
+    // axi_git_directories / axi_git_versions in the prompt rows are markers resolved here, never sent to the ADS.
+    // The pure helpers (tokenizer, validation, cache, payload) are mirrored in tests/axi-install-command.test.js.
+    // ---------------------------------------------------------------------------------------------------------
+    // old code
+    // const AXI_INSTALL_QUEUE_NAME = "AxiInstallQueue";
+    // new code: queue the AxiInstallConsumerPackage consumer listens on
+    const AXI_INSTALL_QUEUE_NAME = "axiinstallpackagesqueue";
+    const AXI_INSTALL_QUEUE_OK = "QUEUEDATAINSERTEDSUCESSFULLY";
+    const INSTALL_DEFAULT_VERSION = "Latest";   // sent when the command has no version
+    const INSTALL_TYPES = { product: "product", plugin: "plugin", changerequest: "changerequest" };
+    const INSTALL_CACHE_TTL_MS = 30 * 60 * 1000;
+    const INSTALL_REQUEST_TIMEOUT_MS = 30000;
+    const INSTALL_RETRY_MS = 30000;
+    const INSTALL_AUTOCLOSE_MS = 6000;
+    const INSTALL_STEP_MIN_MS = 250;   // each modal step stays visible at least this long
+    const installDirsCache = {};     // cache key -> { t, d } ; d = whole listdirectories response
+    const installDirsPending = {};   // cache key -> Promise while a listdirectories call runs
+    const installDirsError = {};     // cache key -> { t, message } of the last failed call
+    const installRepoCache = {};     // type -> { t, v } ; v = { account, repo } or null (not configured / GET failed)
+    const installRepoPending = {};   // type -> Promise while the CommandSettings GET runs (shared by every caller)
+    let installModal = null;         // the open progress modal, if any
+
+    /**
+     * Splits an install command into words. A double-quoted text is one word and the quotes are removed,
+     * so  install product "My Dir" Latest  gives [install, product, My Dir, Latest]. Only the install command uses it.
+     * @param {string} str - Raw command text.
+     * @returns {string[]} Words without quotes.
+     */
+    function tokenizeInstallCommand(str) {
+        const words = [];
+        if (!str || typeof str !== "string") return words;
+        const re = /"([^"]*)"?|([^\s"]+)/g;
+        let m;
+        while ((m = re.exec(str)) !== null) {
+            words.push(m[1] !== undefined ? m[1] : m[2]);
+        }
+        return words;
+    }
+
+    /**
+     * Words of the install command as the palette needs them while typing: an empty last word is added when the
+     * text ends with a space (outside an open quote), so the word being typed is always the last one.
+     * @param {string} str - Raw command text.
+     * @returns {string[]} Words without quotes.
+     */
+    function getInstallWords(str) {
+        const words = tokenizeInstallCommand(str);
+        const text = typeof str === "string" ? str : "";
+        const quoteCount = (text.match(/"/g) || []).length;
+        if (/\s$/.test(text) && quoteCount % 2 === 0) words.push("");
+        return words;
+    }
+
+    /**
+     * Maps the typed type word to the managerType the AxiGit API expects.
+     * @param {string} typeWord - Typed word (Product, ChangeRequest, "change request" ...).
+     * @returns {string} product / plugin / changerequest, or "" when it is not a type.
+     */
+    function getInstallManagerType(typeWord) {
+        const key = String(typeWord == null ? "" : typeWord).replace(/["\s]/g, "").toLowerCase();
+        return INSTALL_TYPES[key] || "";
+    }
+
+    /**
+     * Checks a typed install command against the directories of the repository.
+     * A directory with versions needs one of them; a directory without versions takes none; extra words are refused.
+     * @param {string[]} words - Words of the command (install, type, directory, version).
+     * @param {Array<{name: string, versions: string[]}>} directories - Directories from listdirectories.
+     * @returns {{ok: boolean, message: string, directory: string, version: string}} Result with the exact names.
+     */
+    function validateInstallArgs(words, directories) {
+        const fail = (message) => ({ ok: false, message, directory: "", version: "" });
+        const list = Array.isArray(directories) ? directories : [];
+        if (!words || words.length < 2 || !getInstallManagerType(words[1])) return fail("Install expects product, plugin or changerequest");
+        const dirWord = words[2] === undefined || words[2] === null ? "" : String(words[2]).trim();
+        if (!dirWord) return fail("Directory is required");
+        const dir = list.find(d => String(d.name).toLowerCase() === dirWord.toLowerCase());
+        if (!dir) return fail(`Directory '${dirWord}' was not found in the repository`);
+        const versions = Array.isArray(dir.versions) ? dir.versions : [];
+        const extra = words.slice(versions.length > 0 ? 4 : 3).filter(w => String(w).trim() !== "");
+        if (extra.length > 0) {
+            return fail(versions.length > 0
+                ? "Only a directory and a version are expected after the type"
+                : `'${dir.name}' has no versions, only the directory is expected after the type`);
+        }
+        // old code
+        // if (versions.length === 0) return { ok: true, message: "", directory: dir.name, version: "" };
+        // const verWord = words[3] === undefined || words[3] === null ? "" : String(words[3]).trim();
+        // if (!verWord) return fail(`Version is required for '${dir.name}'`);
+        // const ver = versions.find(v => String(v).toLowerCase() === verWord.toLowerCase());
+        // if (!ver) return fail(`Version '${verWord}' was not found for '${dir.name}'`);
+        // return { ok: true, message: "", directory: dir.name, version: ver };
+        // new code: a directory without versions in the AxiGitAPI answer is installed as Latest (versionDefaulted says so,
+        // the typed command had no version word); a directory with versions needs one of them
+        if (versions.length === 0) return { ok: true, message: "", directory: dir.name, version: INSTALL_DEFAULT_VERSION, versionDefaulted: true };
+        const verWord = words[3] === undefined || words[3] === null ? "" : String(words[3]).trim();
+        // if (!verWord) return { ok: true, message: "", directory: dir.name, version: INSTALL_DEFAULT_VERSION, versionDefaulted: true };
+        if (!verWord) return fail(`Version is required for '${dir.name}'`);
+        const ver = versions.find(v => String(v).toLowerCase() === verWord.toLowerCase());
+        if (!ver) return fail(`Version '${verWord}' was not found for '${dir.name}'`);
+        return { ok: true, message: "", directory: dir.name, version: ver, versionDefaulted: false };
+    }
+
+    /**
+     * Cache key (localStorage and memory) of a repository's directory listing.
+     * @param {string} type - product / plugin / changerequest.
+     * @param {string} account - Account name.
+     * @param {string} repo - Repo name.
+     * @returns {string} Key.
+     */
+    function buildInstallCacheKey(type, account, repo) {
+        return `axi_install_dirs_${type}_${account}_${repo}_v1`;
+    }
+
+    /**
+     * Reads a stored cache entry ({t, d} JSON) and returns it when it is still within the 30 minute TTL.
+     * @param {string|null} raw - Stored text.
+     * @param {number} now - Current time in ms.
+     * @returns {{t: number, d: object}|null} The entry or null.
+     */
+    function readInstallCacheEntry(raw, now) {
+        if (!raw) return null;
+        try {
+            const entry = JSON.parse(raw);
+            if (entry && typeof entry.t === "number" && entry.d && (now - entry.t) < INSTALL_CACHE_TTL_MS) return entry;
+        } catch (e) { }
+        return null;
+    }
+
+    /**
+     * Message of a failed AxiGit call: the ProblemDetails detail or title, else the plain text, else the HTTP status.
+     * @param {number} status - HTTP status.
+     * @param {string} text - Response body.
+     * @returns {string} Message.
+     */
+    function getInstallProblemMessage(status, text) {
+        let obj = null;
+        try { obj = JSON.parse(text); } catch (e) { }
+        const msg = obj && typeof obj === "object" ? (obj.detail || obj.title || obj.message || "") : "";
+        return String(msg || (obj === null ? text : "") || "").trim() || `Request failed (HTTP ${status})`;
+    }
+
+    /**
+     * Message of a failed directory listing as shown by install: a "not found" (404) also says how to change the saved repository.
+     * @param {string} type - product / plugin / changerequest.
+     * @param {string} message - Error message.
+     * @param {number} status - HTTP status of the failure (0 when there was no answer).
+     * @returns {string} Message.
+     */
+    function getInstallDirsErrorText(type, message, status) {
+        const text = String(message || "Could not load the directories").trim();
+        return status === 404 ? `${text} Run configure ${type} <account> <repo> to change it.` : text;
+    }
+
+    /**
+     * Checks a repository before "configure" saves it, through the listdirectories call install uses.
+     * Not found (404) or refused input (400) blocks the save; no answer, GitHub down (502) or a server error only warns,
+     * so an outage does not stop configuring.
+     * @async
+     * @param {string} type - product / plugin / changerequest.
+     * @param {string} account - Account name.
+     * @param {string} repo - Repo name.
+     * @returns {Promise<{blocked: boolean, warning: string, message: string}>} Result.
+     */
+    async function verifyCommandSettingRepo(type, account, repo) {
+        if (!AxiArmUrl) return { blocked: false, warning: "the ARM url is not set", message: "" };
+        try {
+            await fetchInstallDirectories(type, account, repo, true);
+            return { blocked: false, warning: "", message: "" };
+        } catch (err) {
+            const message = (err && err.message) || "Could not check the repository";
+            if (err && (err.status === 404 || err.status === 400)) return { blocked: true, warning: "", message };
+            return { blocked: false, warning: message, message: "" };
+        }
+    }
+
+    /**
+     * Id of one install request (the consumer can dedupe on it): crypto.randomUUID, or a random v4-shaped id when it is missing.
+     * @returns {string} Id.
+     */
+    function generateInstallRequestId() {
+        try {
+            if (typeof crypto !== "undefined" && crypto && typeof crypto.randomUUID === "function") return crypto.randomUUID();
+        } catch (e) { }
+        return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
+            const r = Math.floor(Math.random() * 16);
+            return (c === "x" ? r : ((r % 4) + 8)).toString(16);
+        });
+    }
+
+    /**
+     * Payload of the install request that goes to the queue.
+     * @param {object} p - Values (type, account, repo, directory, version, commitSha, appname, username, now).
+     * @returns {object} Payload.
+     */
+    function buildInstallPayload(p) {
+        // old code
+        // return {
+        //     action: "install",
+        //     requestId: p.requestId || "",
+        //     type: p.type,
+        //     account: p.account,
+        //     repo: p.repo,
+        //     managerType: p.type,
+        //     directory: p.directory,
+        //     version: p.version || "",
+        //     commitSha: p.commitSha || "",
+        //     appname: p.appname,
+        //     username: p.username,
+        //     requestedOn: p.requestedOn || (p.now instanceof Date ? p.now : new Date()).toISOString()
+        // };
+        // new code: field names the install consumer reads (appName, packageName, packageVersion, requestedBy, requestId)
+        return {
+            action: "install",
+            requestId: p.requestId || "",
+            type: p.type,
+            account: p.account,
+            repo: p.repo,
+            managerType: p.type,
+            packageName: p.directory,
+            packageVersion: p.version || "",
+            commitSha: p.commitSha || "",
+            appName: p.appname,
+            requestedBy: p.username,
+            requestedOn: p.requestedOn || (p.now instanceof Date ? p.now : new Date()).toISOString()
+        };
+    }
+
+    /**
+     * Body of ARMPushToQueue for a payload.
+     * @param {object} payload - Install payload.
+     * @returns {object} Request body.
+     */
+    function buildInstallQueueBody(payload) {
+        return { queuename: AXI_INSTALL_QUEUE_NAME, queuedata: JSON.stringify(payload), queuejson: payload, trace: false };
+    }
+
+    /**
+     * Reads the ARMPushToQueue answer. Success is an ok status and the success word in the body, which may be plain text or JSON-wrapped.
+     * @param {boolean} ok - HTTP ok flag.
+     * @param {number} status - HTTP status.
+     * @param {string} text - Response body.
+     * @returns {{success: boolean, message: string}} Result.
+     */
+    function parseInstallQueueResult(ok, status, text) {
+        const body = typeof text === "string" ? text : "";
+        if (ok && body.indexOf(AXI_INSTALL_QUEUE_OK) !== -1) return { success: true, message: "" };
+        let obj = null;
+        try { obj = JSON.parse(body); } catch (e) { }
+        // new code: ARM's response filter answers {"result":{"message":"queue Inserted Successfully","success":true}}
+        const wrapped = (obj && typeof obj === "object" && obj.result && typeof obj.result === "object") ? obj.result : null;
+        if (ok && ((wrapped && wrapped.success === true) || (obj && typeof obj === "object" && obj.success === true))) return { success: true, message: "" };
+        if (wrapped) obj = wrapped;
+        let msg = "";
+        if (obj && typeof obj === "object") msg = obj.message || obj.Message || obj.error || obj.detail || obj.title || "";
+        else if (typeof obj === "string") msg = obj;
+        else msg = body;
+        msg = String(msg || "").trim();
+        if (!msg) msg = ok ? "The queue did not confirm the request" : `Request failed (HTTP ${status})`;
+        return { success: false, message: msg };
+    }
+
+    /**
+     * Forgets the install caches of one type (memory and localStorage): after a configure save, or on Refresh (type omitted = all).
+     * @param {string} [type] - product / plugin / changerequest.
+     * @returns {void}
+     */
+    function clearInstallCaches(type) {
+        const prefix = type ? `axi_install_dirs_${type}_` : "axi_install_dirs_";
+        Object.keys(installDirsCache).forEach(k => { if (k.indexOf(prefix) === 0) delete installDirsCache[k]; });
+        Object.keys(installDirsError).forEach(k => { if (k.indexOf(prefix) === 0) delete installDirsError[k]; });
+        if (type) delete installRepoCache[type]; else Object.keys(installRepoCache).forEach(k => delete installRepoCache[k]);
+        try {
+            const drop = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                if (k && k.indexOf(prefix) === 0) drop.push(k);
+            }
+            drop.forEach(k => localStorage.removeItem(k));
+        } catch (e) { }
+    }
+
+    /**
+     * Redraws the suggestions when the palette still shows an install command (after a background load finished).
+     * @returns {void}
+     */
+    function refreshInstallSuggestions() {
+        try {
+            if (installModal) return;
+            if (!megaDropdown || getComputedStyle(megaDropdown).display === "none") return;
+            if (input && (tokenizeInstallCommand(input.value)[0] || "").toLowerCase() === "install") handleInput();
+        } catch (e) { }
+    }
+
+    /**
+     * Account / repo saved for a type. Returns the cached value, or starts the GET (once) and says it is loading.
+     * @param {string} type - product / plugin / changerequest.
+     * @returns {{loading: boolean, value: {account: string, repo: string}|null}} State.
+     */
+    function getInstallRepoState(type) {
+        const cached = installRepoCache[type];
+        if (cached && (cached.v || (Date.now() - cached.t) < INSTALL_RETRY_MS)) return { loading: false, value: cached.v };
+        if (!installRepoPending[type]) loadInstallRepo(type).then(refreshInstallSuggestions);
+        return { loading: true, value: null };
+    }
+
+    /**
+     * Reads the saved account / repo of a type through the CommandSettings GET.
+     * @async
+     * @param {string} type - product / plugin / changerequest.
+     * @returns {Promise<{account: string, repo: string}|null>} Value, or null when not configured / not reachable.
+     */
+    function loadInstallRepo(type) {
+        const cached = installRepoCache[type];
+        if (cached && (cached.v || (Date.now() - cached.t) < INSTALL_RETRY_MS)) return Promise.resolve(cached.v);
+        if (installRepoPending[type]) return installRepoPending[type];
+        const appname = getProjectName() || "";
+        if (!axiCommandSettingsUrl || !appname) { installRepoCache[type] = { t: Date.now(), v: null }; return Promise.resolve(null); }
+        installRepoPending[type] = (async () => {
+            let value = null;
+            try {
+                const res = await fetch(`${axiCommandSettingsUrl}?appname=${encodeURIComponent(appname)}&category=axicmd&type=${encodeURIComponent(type)}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    const props = readCommandSettingProps(data && (data.properties || data.Properties));
+                    if (props.accountname && props.reponame) value = { account: props.accountname, repo: props.reponame };
+                }
+            } catch (e) { value = null; }
+            delete installRepoPending[type];
+            installRepoCache[type] = { t: Date.now(), v: value };
+            return value;
+        })();
+        return installRepoPending[type];
+    }
+
+    /**
+     * Directory listing of a repository: memory, then localStorage (30 minutes), then POST listdirectories.
+     * @async
+     * @param {string} type - product / plugin / changerequest (the managerType).
+     * @param {string} account - Account name.
+     * @param {string} repo - Repo name.
+     * @param {boolean} [force=false] - Skip the caches and ask the API (the cache is then updated with the answer).
+     * @returns {Promise<object>} The listdirectories response. Rejects with an Error whose message is shown to the user.
+     */
+    function fetchInstallDirectories(type, account, repo, force = false) {
+        const key = buildInstallCacheKey(type, account, repo);
+        const mem = installDirsCache[key];
+        if (!force && mem && (Date.now() - mem.t) < INSTALL_CACHE_TTL_MS) return Promise.resolve(mem.d);
+        if (!force) {
+            try {
+                const stored = readInstallCacheEntry(localStorage.getItem(key), Date.now());
+                if (stored) { installDirsCache[key] = stored; return Promise.resolve(stored.d); }
+            } catch (e) { }
+        }
+        if (installDirsPending[key]) return installDirsPending[key];
+
+        installDirsPending[key] = (async () => {
+            const abortCtrl = (typeof AbortController !== "undefined") ? new AbortController() : null;
+            const abortTimer = abortCtrl ? setTimeout(() => abortCtrl.abort(), INSTALL_REQUEST_TIMEOUT_MS) : null;
+            try {
+                // old code
+                // const res = await fetch(`${AxiArmUrl}/AxiGit/api/git/listdirectories`, {
+                // new code
+                const res = await fetch(`${AxiArmUrl}/AxiGitAPI/api/git/listdirectories`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    signal: abortCtrl ? abortCtrl.signal : undefined,
+                    body: JSON.stringify({ account: account, repo: repo, managerType: type })
+                });
+                const text = await res.text();
+                // old code
+                // if (!res.ok) throw new Error(getInstallProblemMessage(res.status, text));
+                // new code: keep the HTTP status, so callers can tell "repository not found" (404) from "GitHub down" (502)
+                if (!res.ok) {
+                    const httpErr = new Error(getInstallProblemMessage(res.status, text));
+                    httpErr.status = res.status;
+                    throw httpErr;
+                }
+                let data = null;
+                try { data = JSON.parse(text); } catch (e) { }
+                if (!data || typeof data !== "object") throw new Error("The directory list could not be read");
+                if (!Array.isArray(data.directories)) data.directories = [];
+                const entry = { t: Date.now(), d: data };
+                installDirsCache[key] = entry;
+                delete installDirsError[key];
+                try { localStorage.setItem(key, JSON.stringify(entry)); } catch (e) { }
+                return data;
+            } catch (err) {
+                const message = (err && err.name === "AbortError") ? "Loading the directories took too long. Please try again." : (err && err.message) || String(err);
+                // old code
+                // installDirsError[key] = { t: Date.now(), message };
+                // throw new Error(message);
+                // new code: the status travels with the error (0 = no HTTP answer: timeout or network)
+                const status = (err && err.status) || 0;
+                installDirsError[key] = { t: Date.now(), message, status };
+                const outErr = new Error(message);
+                outErr.status = status;
+                throw outErr;
+            } finally {
+                if (abortTimer) clearTimeout(abortTimer);
+                delete installDirsPending[key];
+            }
+        })();
+        return installDirsPending[key];
+    }
+
+    /**
+     * State of the directory listing for the suggestions: the data, or loading (call started), or the last error (kept 30 s, no call loop).
+     * @param {string} type - product / plugin / changerequest.
+     * @param {string} account - Account name.
+     * @param {string} repo - Repo name.
+     * @returns {{loading: boolean, error: string, data: object|null}} State.
+     */
+    function getInstallDirsState(type, account, repo) {
+        const key = buildInstallCacheKey(type, account, repo);
+        const mem = installDirsCache[key];
+        if (mem && (Date.now() - mem.t) < INSTALL_CACHE_TTL_MS) return { loading: false, error: "", data: mem.d };
+        const err = installDirsError[key];
+        // old code
+        // if (err && (Date.now() - err.t) < INSTALL_RETRY_MS) return { loading: false, error: err.message, data: null };
+        // if (!installDirsPending[key]) {
+        //     fetchInstallDirectories(type, account, repo).then(refreshInstallSuggestions, (e) => {
+        //         showToast(e.message || "Could not load the directories");
+        //         refreshInstallSuggestions();
+        //     });
+        // }
+        // new code: a "not found" also says how to change the saved repository
+        if (err && (Date.now() - err.t) < INSTALL_RETRY_MS) return { loading: false, error: getInstallDirsErrorText(type, err.message, err.status), data: null };
+        if (!installDirsPending[key]) {
+            fetchInstallDirectories(type, account, repo).then(refreshInstallSuggestions, (e) => {
+                showToast(getInstallDirsErrorText(type, e && e.message, e && e.status));
+                refreshInstallSuggestions();
+            });
+        }
+        // a stored copy answers at once, without waiting for the promise
+        const filled = installDirsCache[key];
+        if (filled) return { loading: false, error: "", data: filled.d };
+        return { loading: true, error: "", data: null };
+    }
+
+    /**
+     * Suggestions for "install <type> <directory> [version]" from the third word on: directories, versions or Go.
+     * @param {string} text - Raw input text.
+     * @returns {Array} Suggestion list (strings and goOption); filteredObjects is set to match.
+     */
+    function getInstallSuggestions(text) {
+        const words = getInstallWords(text);
+        const type = getInstallManagerType(words[1]);
+        filteredObjects = [];
+        updateDynamicHintFromPrompt(null);
+        if (!type || !getAccessPermissions().buildAccess) return [];
+
+        const repoState = getInstallRepoState(type);
+        if (repoState.loading) return ["Fetching repository settings..."];
+        if (!repoState.value) return [`Run configure ${type} <account> <repo> first`];
+        const { account, repo } = repoState.value;
+
+        const dirsState = getInstallDirsState(type, account, repo);
+        if (dirsState.loading) return ["Fetching directories..."];
+        if (dirsState.error) return [`Error: ${dirsState.error}`];
+        const dirs = (dirsState.data && dirsState.data.directories) || [];
+        if (dirs.length === 0) return [`No directories found in ${account}/${repo}`];
+
+        const asObjects = (names) => names.map(n => ({ name: n, displaydata: n }));
+
+        if (words.length === 3) {
+            updateDynamicHintFromPrompt({ prompt: "directory" });
+            const partial = words[2].toLowerCase();
+            const names = dirs.map(d => d.name).filter(n => String(n).toLowerCase().includes(partial));
+            names.sort((a, b) => (String(b).toLowerCase().startsWith(partial) ? 1 : 0) - (String(a).toLowerCase().startsWith(partial) ? 1 : 0));
+            filteredObjects = asObjects(names);
+            return names;
+        }
+
+        const dir = dirs.find(d => String(d.name).toLowerCase() === String(words[2]).trim().toLowerCase());
+        if (!dir) return [];
+        const versions = Array.isArray(dir.versions) ? dir.versions : [];
+
+        if (versions.length === 0) {
+            // no versions: Go right after the directory, anything else typed is an extra word
+            if (words.length === 4 && words[3] === "") { filteredObjects = [goOption]; return [goOption]; }
+            return [];
+        }
+        if (words.length === 4) {
+            updateDynamicHintFromPrompt({ prompt: "version" });
+            const partial = words[3].toLowerCase();
+            const names = versions.filter(v => String(v).toLowerCase().startsWith(partial));
+            // old code: the version was optional, so Go was offered before one was typed
+            // if (!partial) {
+            //     filteredObjects = [goOption, ...asObjects(names)];
+            //     return [goOption, ...names];
+            // }
+            // new code: a directory with versions needs one, so only the versions are offered until one is chosen
+            if (partial && versions.some(v => String(v).toLowerCase() === partial)) {
+                // exact match: Go first, the other versions starting with the typed text stay in the list
+                filteredObjects = [goOption, ...asObjects(names)];
+                return [goOption, ...names];
+            }
+            filteredObjects = asObjects(names);
+            return names;
+        }
+        if (words.length === 5 && words[4] === "" && validateInstallArgs(words.slice(0, 4), dirs).ok) {
+            filteredObjects = [goOption];
+            return [goOption];
+        }
+        return [];
+    }
+
+    /**
+     * Runs "install <type> <directory> [version]": checks it against the repository, then opens the progress modal.
+     * @async
+     * @param {string} text - Typed command.
+     * @returns {Promise<void>}
+     */
+    async function handleInstallCommand(text) {
+        const words = tokenizeInstallCommand(text);
+        const type = getInstallManagerType(words[1]);
+        if (!getAccessPermissions().buildAccess) {
+            showToast(`User '${window.mainUserName}' has no access for command: ${text}`);
+            return;
+        }
+        if (!type) { showToast("Install expects product, plugin or changerequest"); reopenPaletteForCommandSetting(); return; }
+
+        const appname = getProjectName() || "";
+        const username = getCommandSettingUser();
+        if (!appname) { showToast("Application session is not available. App name is required."); return; }
+        if (!username) { showToast("User session is not available. Username is required."); return; }
+
+        const repoInfo = await loadInstallRepo(type);
+        if (!repoInfo) { showToast(`Run configure ${type} <account> <repo> first`); reopenPaletteForCommandSetting(); return; }
+
+        let data;
+        try {
+            data = await fetchInstallDirectories(type, repoInfo.account, repoInfo.repo);
+        } catch (err) {
+            // old code
+            // showToast(err.message || "Could not load the directories");
+            // new code
+            showToast(getInstallDirsErrorText(type, err && err.message, err && err.status));
+            reopenPaletteForCommandSetting();
+            return;
+        }
+        const checked = validateInstallArgs(words, data.directories);
+        if (!checked.ok) { showToast(checked.message); reopenPaletteForCommandSetting(); return; }
+
+        openInstallModal({
+            type: type,
+            directory: checked.directory,
+            version: checked.version,
+            // new code: the modal re-checks the command as typed, without the Latest added for a missing version
+            versionDefaulted: !!checked.versionDefaulted,
+            account: repoInfo.account,
+            repo: repoInfo.repo,
+            commitSha: data.commitSha || "",
+            appname: appname,
+            username: username
+        });
+    }
+
+    /**
+     * Pushes the install request to the ARM queue (no auth headers, 30 s timeout).
+     * @async
+     * @param {object} payload - Install payload.
+     * @returns {Promise<{success: boolean, message: string}>} Result.
+     */
+    async function pushInstallToQueue(payload) {
+        const abortCtrl = (typeof AbortController !== "undefined") ? new AbortController() : null;
+        const abortTimer = abortCtrl ? setTimeout(() => abortCtrl.abort(), INSTALL_REQUEST_TIMEOUT_MS) : null;
+        try {
+            const res = await fetch(`${AxiArmUrl}/ARM_APIs/api/v1/ARMPushToQueue`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                signal: abortCtrl ? abortCtrl.signal : undefined,
+                body: JSON.stringify(buildInstallQueueBody(payload))
+            });
+            const text = await res.text();
+            return parseInstallQueueResult(res.ok, res.status, text);
+        } catch (err) {
+            if (err && err.name === "AbortError") return { success: false, message: "The request took too long. Please try again." };
+            return { success: false, message: (err && err.message) || String(err) };
+        } finally {
+            if (abortTimer) clearTimeout(abortTimer);
+        }
+    }
+
+    // ---- Install progress modal -------------------------------------------------------------------------------
+    // old code
+    /* const INSTALL_MODAL_CSS = `
+.axi-install-root{--ai-surface:#ffffff;--ai-ink:#1d2547;--ai-muted:#5b6482;--ai-rule:#dde1eb;--ai-paper:#f4f5f9;--ai-signal:#3f51c2;--ai-signal-tint:#eceffc;--ai-ok:#177a4a;--ai-ok-tint:#e4f4ea;--ai-err:#a3261a;--ai-err-tint:#fcefed;--ai-shadow:0 24px 60px -12px rgba(29,37,71,.35),0 4px 14px rgba(29,37,71,.12);position:fixed;inset:0;z-index:100001;display:flex;align-items:center;justify-content:center;padding:16px;font-family:"Segoe UI",system-ui,-apple-system,"Noto Sans Arabic",sans-serif;color:var(--ai-ink);line-height:1.4}
+:is(html.dark,html.dark-theme,body.dark,body.dark-theme,[data-bs-theme="dark"]) .axi-install-root{--ai-surface:#1e2230;--ai-ink:#e8ebf7;--ai-muted:#9aa3c4;--ai-rule:#2f3652;--ai-paper:#171a26;--ai-signal:#8d9bff;--ai-signal-tint:#262c4d;--ai-ok:#4cc38a;--ai-ok-tint:#16302a;--ai-err:#ff8f80;--ai-err-tint:#3a2224;--ai-shadow:0 24px 60px -12px rgba(0,0,0,.65),0 4px 14px rgba(0,0,0,.4)}
+.axi-install-root *{box-sizing:border-box}
+.axi-install-backdrop{position:absolute;inset:0;background:rgba(19,24,48,.48);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);animation:axi-install-fade .2s ease-out both}
+.axi-install-dialog{position:relative;width:min(440px,100%);max-height:calc(100vh - 32px);overflow:auto;background:var(--ai-surface);border:1px solid var(--ai-rule);border-radius:16px;box-shadow:var(--ai-shadow);outline:none;animation:axi-install-rise .28s cubic-bezier(.2,.8,.2,1) both}
+.axi-install-root.axi-install-leaving .axi-install-backdrop{animation:axi-install-fade .16s ease-in reverse both}
+.axi-install-root.axi-install-leaving .axi-install-dialog{animation:axi-install-rise .16s ease-in reverse both}
+.axi-install-head{display:flex;align-items:center;gap:14px;padding:22px 24px 14px}
+.axi-install-badge{flex:none;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:var(--ai-signal-tint);color:var(--ai-signal)}
+.axi-install-badge svg{width:24px;height:24px}
+.axi-install-titles{min-width:0}
+.axi-install-title{margin:0;font-size:17px;font-weight:600;letter-spacing:-.01em}
+.axi-install-sub{margin:2px 0 0;font-size:13px;color:var(--ai-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.axi-install-body{padding:6px 24px 8px}
+.axi-install-steps{list-style:none;margin:0;padding:0;display:grid;transition:opacity .2s ease}
+.axi-install-step{position:relative;display:grid;grid-template-columns:24px 1fr;gap:12px;align-items:center;min-height:42px}
+.axi-install-step:not(:last-child)::before{content:"";position:absolute;left:11px;top:31px;bottom:-7px;width:2px;border-radius:2px;background:var(--ai-rule)}
+.axi-install-step:not(:last-child)::after{content:"";position:absolute;left:11px;top:31px;bottom:-7px;width:2px;border-radius:2px;background:var(--ai-ok);transform:scaleY(0);transform-origin:top;transition:transform .35s ease}
+.axi-install-step[data-state="done"]:not(:last-child)::after{transform:scaleY(1)}
+.axi-install-marker{position:relative;width:24px;height:24px;border-radius:50%;border:2px solid var(--ai-rule);background:var(--ai-surface);display:grid;place-items:center;transition:background-color .25s ease,border-color .25s ease}
+.axi-install-marker svg{position:absolute;width:14px;height:14px;opacity:0;transform:scale(.5);transition:opacity .2s ease,transform .25s cubic-bezier(.2,1.4,.4,1)}
+.axi-install-spin{position:absolute;inset:-2px;border-radius:50%;border:2px solid transparent;opacity:0}
+.axi-install-step[data-state="active"] .axi-install-marker{border-color:var(--ai-signal-tint)}
+.axi-install-step[data-state="active"] .axi-install-spin{opacity:1;border-top-color:var(--ai-signal);border-right-color:var(--ai-signal);animation:axi-install-spin .8s linear infinite}
+.axi-install-step[data-state="done"] .axi-install-marker{background:var(--ai-ok);border-color:var(--ai-ok);color:#fff}
+.axi-install-step[data-state="done"] .axi-install-ico-ok,.axi-install-step[data-state="error"] .axi-install-ico-err{opacity:1;transform:scale(1)}
+.axi-install-step[data-state="error"] .axi-install-marker{background:var(--ai-err);border-color:var(--ai-err);color:#fff}
+.axi-install-label{font-size:14px;color:var(--ai-muted);transition:color .2s ease}
+.axi-install-step[data-state="active"] .axi-install-label{color:var(--ai-ink);font-weight:600}
+.axi-install-step[data-state="done"] .axi-install-label{color:var(--ai-ink)}
+.axi-install-step[data-state="error"] .axi-install-label{color:var(--ai-err);font-weight:600}
+.axi-install-collapse{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s ease}
+.axi-install-collapse>div{min-height:0;overflow:hidden}
+.axi-install-error{margin-top:10px;padding:12px 14px;border-radius:10px;background:var(--ai-err-tint);color:var(--ai-err);font-size:13px;word-break:break-word}
+.axi-install-error strong{display:block;margin-bottom:2px}
+.axi-install-success{text-align:center;padding:4px 0 6px}
+.axi-install-check{position:relative;width:64px;height:64px;margin:6px auto 12px}
+.axi-install-check::before{content:"";position:absolute;inset:0;border-radius:50%;background:var(--ai-ok-tint);animation:axi-install-halo .9s ease-out both}
+.axi-install-check svg{position:relative;width:64px;height:64px}
+.axi-install-check circle{fill:none;stroke:var(--ai-ok);stroke-width:3;stroke-dasharray:176;stroke-dashoffset:176;animation:axi-install-draw .55s .05s ease-out forwards}
+.axi-install-check path{fill:none;stroke:var(--ai-ok);stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:40;stroke-dashoffset:40;animation:axi-install-draw .35s .5s ease-out forwards}
+.axi-install-ok-title{margin:0;font-size:18px;font-weight:600;letter-spacing:-.01em}
+.axi-install-ok-text{margin:4px 0 14px;font-size:13.5px;color:var(--ai-muted)}
+.axi-install-card{margin:0;padding:12px 14px;border-radius:12px;background:var(--ai-paper);border:1px solid var(--ai-rule);display:grid;grid-template-columns:auto 1fr;gap:6px 14px;text-align:start;font-size:13px}
+.axi-install-card dt{color:var(--ai-muted)}
+.axi-install-card dd{margin:0;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.axi-install-card .axi-install-mono{font-family:Consolas,"Cascadia Mono","Courier New",monospace;font-weight:500}
+.axi-install-foot{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:14px 24px 20px;min-height:68px}
+.axi-install-note{margin-inline-end:auto;font-size:12.5px;color:var(--ai-muted)}
+.axi-install-btn{appearance:none;border:1px solid var(--ai-rule);background:var(--ai-surface);color:var(--ai-ink);font:inherit;font-size:14px;font-weight:600;padding:8px 18px;border-radius:9px;cursor:pointer;transition:background-color .15s ease,border-color .15s ease,transform .1s ease}
+.axi-install-btn:hover{background:var(--ai-paper)}
+.axi-install-btn:active{transform:translateY(1px)}
+.axi-install-btn:focus-visible{outline:2px solid var(--ai-signal);outline-offset:2px}
+.axi-install-btn-primary{background:var(--ai-signal);border-color:var(--ai-signal);color:#fff}
+.axi-install-btn-primary:hover{background:var(--ai-signal);filter:brightness(1.08)}
+:is(html.dark,html.dark-theme,body.dark,body.dark-theme,[data-bs-theme="dark"]) .axi-install-btn-primary{color:#10142a}
+.axi-install-bar{position:absolute;left:0;right:0;bottom:0;height:3px;background:transparent;overflow:hidden}
+.axi-install-bar>i{display:block;height:100%;background:var(--ai-ok);transform-origin:left;transform:scaleX(1)}
+.axi-install-root [hidden]{display:none!important}
+.axi-install-root.axi-install--success .axi-install-steps{display:none}
+.axi-install-root.axi-install--error .axi-install-note,.axi-install-root.axi-install--success .axi-install-note{display:none}
+.axi-install-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);border:0;white-space:nowrap}
+@keyframes axi-install-fade{from{opacity:0}to{opacity:1}}
+@keyframes axi-install-rise{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes axi-install-spin{to{transform:rotate(360deg)}}
+@keyframes axi-install-draw{to{stroke-dashoffset:0}}
+@keyframes axi-install-halo{from{transform:scale(.6);opacity:0}60%{opacity:1}to{transform:scale(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){
+.axi-install-root *,.axi-install-root *::before,.axi-install-root *::after{animation-duration:.001s!important;animation-delay:0s!important;transition-duration:.001s!important}
+.axi-install-step[data-state="active"] .axi-install-spin{animation:none;border-color:var(--ai-signal)}
+}
+`; */
+    // new code
+    // Follows DESIGN.md ("The Quiet Console"), like the version dialog: a solid sheet over the plain navy scrim, ruled
+    // rows, Console Ink for text, done steps and the primary action, Signal Indigo only for the current step and focus.
+    const INSTALL_MODAL_CSS = `
+.axi-install-root{--ai-ink:#1d2547;--ai-ink-hover:#2c3766;--ai-slate:#5b6482;--ai-paper:#f4f5f9;--ai-sheet:#fff;--ai-rule:#dde1eb;--ai-field:#c9cedb;--ai-signal:#3f51c2;--ai-signal-tint:#eceffb;--ai-err:#a3261a;--ai-err-tint:#fcefed;--ai-display:Bahnschrift,"DIN Alternate","Segoe UI",system-ui,sans-serif;position:fixed;inset:0;z-index:100001;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;font:13px/1.45 "Segoe UI",system-ui,-apple-system,"Noto Sans Arabic",sans-serif;color:var(--ai-ink)}
+.axi-install-root *{box-sizing:border-box}
+.axi-install-root ::selection{background:var(--ai-signal-tint);color:var(--ai-ink)}
+.axi-install-backdrop{position:absolute;inset:0;background:rgba(29,37,71,.28);animation:axi-install-fade .14s ease-out both}
+.axi-install-dialog{position:relative;width:min(400px,100%);max-height:calc(100vh - 32px);overflow:auto;background:var(--ai-sheet);border:1px solid var(--ai-rule);border-radius:8px;box-shadow:0 24px 56px -24px rgba(29,37,71,.5);outline:none;animation:axi-install-in .18s cubic-bezier(.22,1,.36,1) both}
+.axi-install-root.axi-install-leaving .axi-install-backdrop{animation:axi-install-fade .12s ease-in reverse both}
+.axi-install-root.axi-install-leaving .axi-install-dialog{animation:axi-install-in .12s ease-in reverse both}
+.axi-install-head{display:flex;align-items:flex-start;gap:12px;padding:16px 20px 0}
+.axi-install-titles{flex:1;min-width:0}
+.axi-install-title{margin:0;font:600 16px/1.25 var(--ai-display);color:var(--ai-ink)}
+.axi-install-sub{margin:8px 0 0;display:flex;align-items:baseline;gap:8px;min-width:0;font-size:14px;unicode-bidi:isolate}
+.axi-install-dir{min-width:0;font-weight:600;color:var(--ai-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.axi-install-ver{flex:none;font-family:var(--ai-display);font-variant-numeric:tabular-nums;color:var(--ai-slate)}
+.axi-install-repo{margin:2px 0 0;font-size:12px;color:var(--ai-slate);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;unicode-bidi:plaintext}
+.axi-install-x{flex:none;width:30px;height:30px;margin-block-start:-5px;margin-inline-end:-6px;padding:0;display:inline-flex;align-items:center;justify-content:center;color:var(--ai-slate);background:transparent;border:0;border-radius:6px;cursor:pointer}
+.axi-install-x:hover{color:var(--ai-ink);background:var(--ai-paper)}
+.axi-install-x:disabled{opacity:.4;cursor:default;background:transparent}
+.axi-install-x svg{width:16px;height:16px}
+.axi-install-meter{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:16px 20px 0}
+.axi-install-meter>i{height:3px;border-radius:2px;background:var(--ai-rule);transition:background-color .2s ease-out}
+.axi-install-meter>i[data-state="active"]{background:var(--ai-signal)}
+.axi-install-meter>i[data-state="done"]{background:var(--ai-ink)}
+.axi-install-meter>i[data-state="error"]{background:var(--ai-err)}
+.axi-install-body{padding:12px 20px 0}
+.axi-install-steps{list-style:none;margin:0;padding:0;border-top:1px solid var(--ai-rule)}
+.axi-install-step{display:grid;grid-template-columns:18px minmax(0,1fr) auto;align-items:center;gap:12px;min-height:40px;padding:8px 0;border-bottom:1px solid var(--ai-rule)}
+.axi-install-marker{position:relative;width:18px;height:18px;border-radius:50%;border:1.5px solid var(--ai-field);display:grid;place-items:center;color:#fff;transition:background-color .16s ease-out,border-color .16s ease-out}
+.axi-install-marker svg{position:absolute;width:11px;height:11px;opacity:0}
+.axi-install-spin{position:absolute;inset:-1.5px;border-radius:50%;border:1.5px solid transparent;opacity:0}
+.axi-install-step[data-state="active"] .axi-install-marker{border-color:var(--ai-signal-tint)}
+.axi-install-step[data-state="active"] .axi-install-spin{opacity:1;border-top-color:var(--ai-signal);animation:axi-install-spin .7s linear infinite}
+.axi-install-step[data-state="done"] .axi-install-marker{background:var(--ai-ink);border-color:var(--ai-ink)}
+.axi-install-step[data-state="done"] .axi-install-ico-ok{opacity:1}
+.axi-install-step[data-state="done"] .axi-install-ico-ok path{stroke-dasharray:24;stroke-dashoffset:24;animation:axi-install-draw .2s ease-out forwards}
+.axi-install-step[data-state="error"] .axi-install-marker{background:var(--ai-err);border-color:var(--ai-err)}
+.axi-install-step[data-state="error"] .axi-install-ico-err{opacity:1}
+.axi-install-label{min-width:0;color:var(--ai-slate);unicode-bidi:plaintext}
+.axi-install-step[data-state="active"] .axi-install-label{color:var(--ai-ink);font-weight:600}
+.axi-install-step[data-state="done"] .axi-install-label{color:var(--ai-ink)}
+.axi-install-step[data-state="error"] .axi-install-label{color:var(--ai-err);font-weight:600}
+.axi-install-time{font:12px/1 var(--ai-display);font-variant-numeric:tabular-nums;color:var(--ai-slate);unicode-bidi:isolate}
+.axi-install-error{margin-top:12px;padding:10px 12px;border:1px solid #efc9c3;border-radius:6px;background:var(--ai-err-tint);color:var(--ai-err);overflow-wrap:anywhere;unicode-bidi:plaintext}
+.axi-install-error strong{display:block;margin-bottom:2px}
+.axi-install-info{margin:0 0 12px;padding:10px 12px;border:1px solid #d5dbf5;border-radius:6px;background:var(--ai-signal-tint);color:var(--ai-ink);unicode-bidi:plaintext}
+.axi-install-readout{margin:0;border-top:1px solid var(--ai-rule)}
+.axi-install-row{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--ai-rule)}
+.axi-install-row dt{flex:none;font-weight:600;color:var(--ai-slate)}
+.axi-install-row dd{min-width:0;margin:0;font-weight:600;color:var(--ai-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;unicode-bidi:isolate}
+.axi-install-row dd.axi-install-num{font-family:var(--ai-display);font-variant-numeric:tabular-nums}
+.axi-install-row dd.axi-install-code{font:400 12.5px/1.45 Consolas,"Cascadia Mono","Courier New",monospace;direction:ltr}
+.axi-install-foot{position:relative;display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:16px 20px 20px}
+.axi-install-note{margin-inline-end:auto;font-size:12px;color:var(--ai-slate);font-variant-numeric:tabular-nums;unicode-bidi:plaintext}
+.axi-install-btn{min-height:34px;padding:0 14px;font:inherit;font-weight:600;color:var(--ai-ink);background:var(--ai-sheet);border:1px solid var(--ai-field);border-radius:6px;cursor:pointer;transition:background-color .12s ease-out}
+.axi-install-btn:hover{background:var(--ai-paper)}
+.axi-install-btn-primary{color:#fff;background:var(--ai-ink);border-color:var(--ai-ink)}
+.axi-install-btn-primary:hover{background:var(--ai-ink-hover);border-color:var(--ai-ink-hover)}
+.axi-install-btn:focus-visible,.axi-install-x:focus-visible{outline:2px solid var(--ai-signal);outline-offset:2px}
+.axi-install-bar{position:absolute;inset-inline:0;bottom:0;height:2px;overflow:hidden}
+.axi-install-bar>i{display:block;height:100%;background:var(--ai-signal);transform-origin:left}
+:is([dir="rtl"],.btextDir-rtl) .axi-install-bar>i{transform-origin:right}
+.axi-install-root [hidden]{display:none!important}
+.axi-install-root.axi-install--success .axi-install-steps{display:none}
+.axi-install-root.axi-install--error .axi-install-note{display:none}
+.axi-install-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);border:0;white-space:nowrap}
+@keyframes axi-install-fade{from{opacity:0}to{opacity:1}}
+@keyframes axi-install-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes axi-install-spin{to{transform:rotate(360deg)}}
+@keyframes axi-install-draw{to{stroke-dashoffset:0}}
+@media (prefers-reduced-motion:reduce){
+.axi-install-root *,.axi-install-root *::before,.axi-install-root *::after{animation-duration:.001s!important;animation-delay:0s!important;transition-duration:.001s!important}
+.axi-install-step[data-state="active"] .axi-install-spin{animation:none;border-color:var(--ai-signal)}
+}
+`;
+
+    const INSTALL_ICON_CLOSE = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg>';
+    const INSTALL_ICON_PACKAGE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/><path d="M3.3 7.5L12 12l8.7-4.5"/><path d="M12 12v9"/></svg>';
+    const INSTALL_ICON_OK = '<svg class="axi-install-ico-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+    const INSTALL_ICON_ERR = '<svg class="axi-install-ico-err" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>';
+    const INSTALL_ICON_BIG_CHECK = '<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="28"/><path d="M20 33l8 8 16-17"/></svg>';
+
+    /**
+     * Adds the modal's single scoped <style> once.
+     * @returns {void}
+     */
+    function ensureInstallStyles() {
+        if (document.getElementById("axi-install-styles")) return;
+        const style = document.createElement("style");
+        style.id = "axi-install-styles";
+        style.textContent = INSTALL_MODAL_CSS;
+        document.head.appendChild(style);
+    }
+
+    /**
+     * Closes the install modal that is open, if any.
+     * @param {boolean} [immediate=false] - Skip the leave animation.
+     * @returns {void}
+     */
+    function closeInstallModal(immediate = false) {
+        if (installModal) installModal.close(immediate);
+    }
+
+    /**
+     * Opens the install progress modal and runs the steps: checking the repository and resolving the version come from the
+     * cached listing (short staged delays), queuing is the real ARMPushToQueue call, then the success or error state shows.
+     * @param {object} ctx - type, directory, version, account, repo, commitSha, appname, username.
+     * @returns {void}
+     */
+    function openInstallModal(ctx) {
+        closeInstallModal(true);
+        ensureInstallStyles();
+
+        const label = getCommandSettingLabel(ctx.type);
+        // old code
+        // const sha7 = ctx.commitSha ? String(ctx.commitSha).slice(0, 7) : "";
+        // const stepLabels = [
+        //     "Checking repository",
+        //     sha7 ? `Resolving version @ ${sha7}` : "Resolving version",
+        //     "Queuing install",
+        //     "Installation started"
+        // ];
+        // new code: three steps; the directory / version re-check is part of "Checking repository"
+        const stepLabels = [
+            "Checking repository",
+            "Queuing install request",
+            "Installation request queued"
+        ];
+        const prevFocus = document.activeElement;
+        // one id and one timestamp per install: Retry sends the same ones, so the consumer can dedupe
+        const m = {
+            inflight: false, closed: false, hover: false, kbdFocus: false, timer: null, remaining: INSTALL_AUTOCLOSE_MS,
+            requestId: generateInstallRequestId(), requestedOn: new Date().toISOString(), resumeFrom: 0, fresh: null
+        };
+
+        const mk = (tag, cls, text) => {
+            const node = document.createElement(tag);
+            if (cls) node.className = cls;
+            if (text !== undefined) node.textContent = text;
+            return node;
+        };
+
+        const titleId = "axi-install-title-" + Date.now();
+        const root = mk("div", "axi-install-root axi-install--running");
+        const backdrop = mk("div", "axi-install-backdrop");
+        const dialog = mk("div", "axi-install-dialog");
+        dialog.setAttribute("role", "dialog");
+        dialog.setAttribute("aria-modal", "true");
+        dialog.setAttribute("aria-labelledby", titleId);
+        dialog.tabIndex = -1;
+
+        // header
+        // old code
+        // const head = mk("div", "axi-install-head");
+        // const badge = mk("div", "axi-install-badge");
+        // badge.innerHTML = INSTALL_ICON_PACKAGE;
+        // const titles = mk("div", "axi-install-titles");
+        // const title = mk("h2", "axi-install-title", `Installing ${label}`);
+        // title.id = titleId;
+        // const sub = mk("p", "axi-install-sub", `${ctx.directory} · ${ctx.version || "no version"}`);
+        // sub.title = sub.textContent;
+        // titles.appendChild(title);
+        // titles.appendChild(sub);
+        // head.appendChild(badge);
+        // head.appendChild(titles);
+        // new code
+        // title, then the directory (Console Ink) and its version (Slate, Bahnschrift), then account/repo; a close icon at the end
+        const head = mk("div", "axi-install-head");
+        const titles = mk("div", "axi-install-titles");
+        const title = mk("h2", "axi-install-title", `Installing ${label}`);
+        title.id = titleId;
+        const sub = mk("p", "axi-install-sub");
+        const subDir = mk("span", "axi-install-dir", ctx.directory);
+        subDir.title = ctx.directory;
+        sub.appendChild(subDir);
+        // old code
+        // sub.appendChild(mk("span", "axi-install-ver", ctx.version || "No version"));
+        // new code
+        sub.appendChild(mk("span", "axi-install-ver", ctx.version || INSTALL_DEFAULT_VERSION));
+        const repoLine = mk("p", "axi-install-repo", `${ctx.account}/${ctx.repo}`);
+        titles.appendChild(title);
+        titles.appendChild(sub);
+        titles.appendChild(repoLine);
+        const xBtn = mk("button", "axi-install-x");
+        xBtn.type = "button";
+        xBtn.setAttribute("aria-label", "Close");
+        xBtn.innerHTML = INSTALL_ICON_CLOSE;
+        head.appendChild(titles);
+        head.appendChild(xBtn);
+
+        // one meter segment per step: Signal Indigo for the current one, Console Ink when done, Error Red when failed
+        const meter = mk("div", "axi-install-meter");
+        meter.setAttribute("aria-hidden", "true");
+        // new code: the stylesheet lays out four segments; one column per step instead
+        meter.style.gridTemplateColumns = `repeat(${stepLabels.length},1fr)`;
+
+        // body: stepper, error, success
+        const body = mk("div", "axi-install-body");
+        const live = mk("div", "axi-install-sr");
+        live.setAttribute("aria-live", "polite");
+        live.setAttribute("role", "status");
+        const steps = mk("ol", "axi-install-steps");
+        const labelEls = [];
+        // new code
+        const timeEls = [];
+        const segEls = [];
+        const stepStart = [];
+        const stepEls = stepLabels.map((text) => {
+            const li = mk("li", "axi-install-step");
+            li.dataset.state = "pending";
+            const marker = mk("span", "axi-install-marker");
+            marker.appendChild(mk("span", "axi-install-spin"));
+            marker.insertAdjacentHTML("beforeend", INSTALL_ICON_OK + INSTALL_ICON_ERR);
+            li.appendChild(marker);
+            const labelEl = mk("span", "axi-install-label", text);
+            labelEls.push(labelEl);
+            li.appendChild(labelEl);
+            // new code
+            const timeEl = mk("span", "axi-install-time", "");
+            timeEls.push(timeEl);
+            li.appendChild(timeEl);
+            const seg = document.createElement("i");
+            seg.dataset.state = "pending";
+            segEls.push(seg);
+            meter.appendChild(seg);
+            steps.appendChild(li);
+            return li;
+        });
+
+        const errorBox = mk("div", "axi-install-error");
+        errorBox.hidden = true;
+        errorBox.setAttribute("role", "alert");
+        const errorHead = mk("strong", "", "Installation could not be started");
+        const errorMsg = mk("span", "", "");
+        errorBox.appendChild(errorHead);
+        errorBox.appendChild(errorMsg);
+
+        // old code
+        // const success = mk("div", "axi-install-success");
+        // success.hidden = true;
+        // const check = mk("div", "axi-install-check");
+        // check.innerHTML = INSTALL_ICON_BIG_CHECK;
+        // const okTitle = mk("h3", "axi-install-ok-title", "Your installation has started");
+        // const okText = mk("p", "axi-install-ok-text", "You'll get a notification when it finishes.");
+        // const card = mk("dl", "axi-install-card");
+        // const addRow = (k, v, mono) => {
+        //     const dt = mk("dt", "", k);
+        //     card.appendChild(dt);
+        //     const dd = mk("dd", mono ? "axi-install-mono" : "", v);
+        //     dd.title = v;
+        //     card.appendChild(dd);
+        //     return { dt, dd };
+        // };
+        // addRow("Type", label);
+        // addRow("Directory", ctx.directory);
+        // addRow("Version", ctx.version || "no version");
+        // addRow("Repository", `${ctx.account}/${ctx.repo}`);
+        // const commitRow = addRow("Commit", sha7, true);
+        // commitRow.dt.hidden = commitRow.dd.hidden = !sha7;
+        // success.appendChild(check);
+        // success.appendChild(okTitle);
+        // success.appendChild(okText);
+        // success.appendChild(card);
+        // new code
+        // success: an info note, then a ruled readout like the version dialog (the header title changes to "... started")
+        const success = mk("div", "axi-install-success");
+        success.hidden = true;
+        const okText = mk("p", "axi-install-info", "You'll get a notification when it finishes.");
+        const card = mk("dl", "axi-install-readout");
+        const addRow = (k, v, cls) => {
+            const row = mk("div", "axi-install-row");
+            const dt = mk("dt", "", k);
+            const dd = mk("dd", cls || "", v);
+            dd.title = v;
+            row.appendChild(dt);
+            row.appendChild(dd);
+            card.appendChild(row);
+            return { row, dt, dd };
+        };
+        // old code
+        // addRow("Directory", ctx.directory);
+        // addRow("Version", ctx.version || "No version", ctx.version ? "axi-install-num" : "");
+        // addRow("Repository", `${ctx.account}/${ctx.repo}`);
+        // const commitRow = addRow("Commit", sha7, "axi-install-code");
+        // commitRow.row.hidden = !sha7;
+        // addRow("Request", String(m.requestId).slice(0, 8), "axi-install-code");
+        // new code: no Commit and Request rows (both are still sent in the payload)
+        // addRow("Directory", ctx.directory);
+        // the row is named after the manager type (Product / Plugin / Change Request) instead of "Directory"
+        addRow(label, ctx.directory);
+        addRow("Version", ctx.version || INSTALL_DEFAULT_VERSION, "axi-install-num");
+        addRow("Repository", `${ctx.account}/${ctx.repo}`);
+        success.appendChild(okText);
+        success.appendChild(card);
+
+        body.appendChild(live);
+        body.appendChild(steps);
+        body.appendChild(errorBox);
+        body.appendChild(success);
+
+        // footer
+        const foot = mk("div", "axi-install-foot");
+        const note = mk("span", "axi-install-note", "This only takes a moment.");
+        const countdown = mk("span", "axi-install-note", "");
+        countdown.hidden = true;
+        const retryBtn = mk("button", "axi-install-btn axi-install-btn-primary", "Retry");
+        retryBtn.type = "button";
+        retryBtn.hidden = true;
+        const closeBtn = mk("button", "axi-install-btn", "Close");
+        closeBtn.type = "button";
+        closeBtn.hidden = true;
+        const doneBtn = mk("button", "axi-install-btn axi-install-btn-primary", "Done");
+        doneBtn.type = "button";
+        doneBtn.hidden = true;
+        [note, countdown, closeBtn, retryBtn, doneBtn].forEach(n => foot.appendChild(n));
+
+        const bar = mk("div", "axi-install-bar");
+        const barFill = document.createElement("i");
+        bar.appendChild(barFill);
+        bar.hidden = true;
+
+        dialog.appendChild(head);
+        dialog.appendChild(meter);
+        dialog.appendChild(body);
+        dialog.appendChild(foot);
+        dialog.appendChild(bar);
+        root.appendChild(backdrop);
+        root.appendChild(dialog);
+
+        const setStep = (i, state) => {
+            stepEls[i].dataset.state = state;
+            // new code
+            segEls[i].dataset.state = state;
+            if (state === "active") stepStart[i] = Date.now();
+            timeEls[i].textContent = (state === "done" || state === "error") && stepStart[i]
+                ? `${((Date.now() - stepStart[i]) / 1000).toFixed(1)}s`
+                : "";
+            if (state === "active") live.textContent = `Step ${i + 1} of ${stepLabels.length}: ${stepLabels[i]}`;
+            if (state === "error") live.textContent = `Failed at step ${i + 1}: ${stepLabels[i]}`;
+        };
+        const setMode = (mode) => {
+            root.classList.remove("axi-install--running", "axi-install--error", "axi-install--success");
+            root.classList.add("axi-install--" + mode);
+            note.hidden = mode !== "running";
+        };
+
+        m.close = (immediate) => {
+            if (m.closed) return;
+            m.closed = true;
+            if (m.timer) clearInterval(m.timer);
+            document.removeEventListener("keydown", onDocKey, true);
+            if (installModal === m) installModal = null;
+            const remove = () => { if (root.parentNode) root.parentNode.removeChild(root); };
+            if (immediate) remove();
+            else { root.classList.add("axi-install-leaving"); setTimeout(remove, 180); }
+            try {
+                if (prevFocus && prevFocus !== input && prevFocus !== document.body && document.contains(prevFocus) && typeof prevFocus.focus === "function") prevFocus.focus();
+            } catch (e) { }
+        };
+
+        const onDocKey = (e) => {
+            if (e.key === "Escape") {
+                e.stopPropagation();
+                e.preventDefault();
+                if (!m.inflight) m.close(false);
+                return;
+            }
+            if (e.key !== "Tab") return;
+            m.kbdFocus = true;
+            const focusables = Array.from(dialog.querySelectorAll("button")).filter(b => !b.hidden && !b.disabled);
+            if (focusables.length === 0) { e.preventDefault(); dialog.focus(); return; }
+            const first = focusables[0];
+            const last = focusables[focusables.length - 1];
+            const active = document.activeElement;
+            if (!dialog.contains(active) || active === dialog) { e.preventDefault(); (e.shiftKey ? last : first).focus(); }
+            else if (e.shiftKey && active === first) { e.preventDefault(); last.focus(); }
+            else if (!e.shiftKey && active === last) { e.preventDefault(); first.focus(); }
+        };
+        document.addEventListener("keydown", onDocKey, true);
+
+        backdrop.addEventListener("mousedown", () => { if (!m.inflight) m.close(false); });
+        closeBtn.addEventListener("click", () => m.close(false));
+        xBtn.addEventListener("click", () => { if (!m.inflight) m.close(false); });
+        doneBtn.addEventListener("click", () => m.close(false));
+        dialog.addEventListener("mouseenter", () => { m.hover = true; });
+        dialog.addEventListener("mouseleave", () => { m.hover = false; });
+        dialog.addEventListener("focusout", (e) => { if (!e.relatedTarget || !dialog.contains(e.relatedTarget)) m.kbdFocus = false; });
+
+        const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+        const showSuccess = () => {
+            setMode("success");
+            success.hidden = false;
+            errorBox.hidden = true;
+            retryBtn.hidden = true;
+            closeBtn.hidden = true;
+            doneBtn.hidden = false;
+            countdown.hidden = false;
+            bar.hidden = false;
+            // old code
+            // live.textContent = "Your installation has started. You'll get a notification when it finishes.";
+            // title.textContent = `${label} installation started`;
+            // new code: the request is queued; the installation itself is reported by the notification
+            live.textContent = "Your installation request is queued. You'll get a notification when it finishes.";
+            title.textContent = `${label} installation request queued`;
+            doneBtn.focus();
+            m.remaining = INSTALL_AUTOCLOSE_MS;
+            let last = Date.now();
+            const paint = () => {
+                barFill.style.transform = `scaleX(${Math.max(0, m.remaining / INSTALL_AUTOCLOSE_MS)})`;
+                countdown.textContent = `Closing in ${Math.max(1, Math.ceil(m.remaining / 1000))}s`;
+            };
+            paint();
+            m.timer = setInterval(() => {
+                const now = Date.now();
+                const dt = now - last;
+                last = now;
+                if (m.hover || m.kbdFocus) return;
+                m.remaining -= dt;
+                if (m.remaining <= 0) { m.close(false); return; }
+                paint();
+            }, 100);
+        };
+
+        const showError = (message) => {
+            setMode("error");
+            errorMsg.textContent = message;
+            errorBox.hidden = false;
+            retryBtn.hidden = false;
+            closeBtn.hidden = false;
+            doneBtn.hidden = true;
+            retryBtn.focus();
+        };
+
+        // old code
+        // // the commit of the fresh listing replaces the one seen when the command was typed
+        // const setSha = (sha) => {
+        //     ctx.commitSha = sha || "";
+        //     const short = ctx.commitSha.slice(0, 7);
+        //     stepLabels[1] = short ? `Resolving version @ ${short}` : "Resolving version";
+        //     labelEls[1].textContent = stepLabels[1];
+        //     commitRow.dd.textContent = short;
+        //     commitRow.dd.title = short;
+        //     // old code
+        //     // commitRow.dt.hidden = commitRow.dd.hidden = !short;
+        //     // new code
+        //     commitRow.row.hidden = !short;
+        // };
+        const waitAtLeast = (promise, ms) => Promise.all([promise, delay(ms)]).then(r => r[0]);
+        const failStep = (i, message, resumeFrom) => {
+            m.resumeFrom = resumeFrom;
+            setStep(i, "error");
+            showError(message);
+        };
+
+        // Steps: 1 fresh listdirectories (cache updated), 2 resolve the commit and re-check directory / version, 3 queue call, 4 started
+        const run = async (from) => {
+            if (from <= 0) {
+                setStep(0, "active");
+                let fresh;
+                try {
+                    fresh = await waitAtLeast(fetchInstallDirectories(ctx.type, ctx.account, ctx.repo, true), INSTALL_STEP_MIN_MS);
+                } catch (err) {
+                    if (m.closed) return;
+                    // old code
+                    // failStep(0, (err && err.message) || "Could not check the repository", 0);
+                    // new code
+                    failStep(0, getInstallDirsErrorText(ctx.type, (err && err.message) || "Could not check the repository", err && err.status), 0);
+                    return;
+                }
+                if (m.closed) return;
+                // old code
+                // m.fresh = fresh;
+                // setStep(0, "done");
+                // new code: the directory / version re-check and the fresh commit belong to this step now
+                m.fresh = fresh;
+                const words = ["install", ctx.type, ctx.directory];
+                if (ctx.version && !ctx.versionDefaulted) words.push(ctx.version);
+                const checked = validateInstallArgs(words, m.fresh && m.fresh.directories);
+                if (!checked.ok) {
+                    failStep(0, `The repository changed since the command was typed. ${checked.message}`, 0);
+                    return;
+                }
+                ctx.commitSha = (m.fresh && m.fresh.commitSha) || ctx.commitSha || "";
+                setStep(0, "done");
+            }
+            // old code
+            // if (from <= 1) {
+            //     setStep(1, "active");
+            //     const words = ["install", ctx.type, ctx.directory];
+            //     if (ctx.version) words.push(ctx.version);
+            //     const checked = validateInstallArgs(words, m.fresh && m.fresh.directories);
+            //     await delay(INSTALL_STEP_MIN_MS);
+            //     if (m.closed) return;
+            //     if (!checked.ok) {
+            //         failStep(1, `The repository changed since the command was typed. ${checked.message}`, 0);
+            //         return;
+            //     }
+            //     setSha(m.fresh.commitSha);
+            //     setStep(1, "done");
+            // }
+            // setStep(2, "active");
+            // setStep(3, "pending");
+            // new code: step 2 is the queue call, step 3 the queued confirmation
+            setStep(1, "active");
+            setStep(2, "pending");
+            m.inflight = true;
+            xBtn.disabled = true;
+            const result = await waitAtLeast(pushInstallToQueue(buildInstallPayload({
+                requestId: m.requestId,
+                type: ctx.type,
+                account: ctx.account,
+                repo: ctx.repo,
+                directory: ctx.directory,
+                // old code
+                // version: ctx.version,
+                // new code
+                version: ctx.version || INSTALL_DEFAULT_VERSION,
+                commitSha: ctx.commitSha,
+                appname: ctx.appname,
+                username: ctx.username,
+                requestedOn: m.requestedOn
+            })), INSTALL_STEP_MIN_MS);
+            m.inflight = false;
+            xBtn.disabled = false;
+            if (m.closed) return;
+            // old code
+            // if (!result.success) {
+            //     failStep(2, result.message, 2);
+            //     return;
+            // }
+            // setStep(2, "done");
+            // setStep(3, "active");
+            // await delay(INSTALL_STEP_MIN_MS);
+            // if (m.closed) return;
+            // setStep(3, "done");
+            // new code
+            if (!result.success) {
+                failStep(1, result.message, 1);
+                return;
+            }
+            setStep(1, "done");
+            setStep(2, "active");
+            await delay(INSTALL_STEP_MIN_MS);
+            if (m.closed) return;
+            setStep(2, "done");
+            await delay(300);
+            if (m.closed) return;
+            showSuccess();
+        };
+
+        retryBtn.addEventListener("click", () => {
+            if (m.inflight) return;
+            const from = m.resumeFrom;
+            for (let i = from; i < stepEls.length; i++) setStep(i, "pending");
+            setMode("running");
+            errorBox.hidden = true;
+            retryBtn.hidden = true;
+            closeBtn.hidden = true;
+            dialog.focus();
+            run(from);
+        });
+
+        installModal = m;
+        document.body.appendChild(root);
+        dialog.focus();
+        run(0);
     }
 
     // function getType(axDatasourceKey, text, paramValuesCsv, tokens, commandConfig) {
@@ -13690,6 +15550,8 @@ if (typeof document !== "undefined") {
             text.startsWith("Searching") ||
             text.startsWith("Type at least") ||
             text.startsWith("No matching") ||
+            text.startsWith("Run configure ") ||
+            text.startsWith("No directories") ||
             text === "No Data" ||
             text === "Please type the value..." ||
             text === "Please type Valid date using / (ex: DD / MM / YYYY)" ||
@@ -17151,7 +19013,7 @@ if (typeof document !== "undefined") {
      * Filters command dictionary according to user permissions.
      * @param {object} commandsFromDb - Raw commands from DB.
      * @param {object} accessPermissions - User permissions object.
-     * @param {boolean} [canActivateUsers=false] - axusers.licactivation is on for the user (shows User Activation to non-admins).
+     * @param {boolean} [canActivateUsers=false] - axusers.licactivation is on for the user (User Activation is shown only then, admin included).
      * @returns {object} Filtered commands dictionary.
      */
     function buildCommandsByAccessPermissions(commandsFromDb, accessPermissions, canActivateUsers = false) {
@@ -17176,6 +19038,7 @@ if (typeof document !== "undefined") {
                     case 'buildAccess':
                         delete commandsFromDb['SDK'];
                         delete commandsFromDb['Source'];
+                        delete commandsFromDb['Install'];
                         break;
 
                     default:
@@ -17257,14 +19120,25 @@ if (typeof document !== "undefined") {
                 const rawType = types[i].trim();
                 const isActive = (axiCommandConfigList && axiCommandConfigList.length > 0) ? !!getCommandConfigRow("Configure", rawType) : true;
 
-                // User Activation: admin always; anyone else only with licactivation on
-                if (!isAdmin && !canActivateUsers && rawType.toLowerCase() === "user activation") {
+                // old code
+                // // User Activation: admin always; anyone else only with licactivation on
+                // if (!isAdmin && !canActivateUsers && rawType.toLowerCase() === "user activation") {
+                //     continue;
+                // }
+                // new code: User Activation only when axusers.licactivation is T / true (any case), for admin and every other user
+                if (!canActivateUsers && rawType.toLowerCase() === "user activation") {
                     continue;
                 }
 
                 const typeRow = getCommandConfigRow("Configure", rawType);
                 if (typeRow && (typeRow.promptOptionType || typeRow.prompt_option_type || typeRow.PromptOptionType || "").toLowerCase() === "shellaction"
                     && accessPermissions.buildAccess === false) {
+                    continue;
+                }
+
+                // Product / Plugin / ChangeRequest need both configure and build access
+                if (typeRow && (typeRow.promptOptionType || typeRow.prompt_option_type || typeRow.PromptOptionType || "").toLowerCase() === "commandsetting"
+                    && !(accessPermissions.appMgrAccess && accessPermissions.buildAccess)) {
                     continue;
                 }
 

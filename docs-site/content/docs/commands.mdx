@@ -7,7 +7,9 @@ description: How commands, prompts and options are stored and resolved.
 
 The words a user can type are not hard-coded in the script. The command grammar comes from database tables, and the `configure` and `sdk` options and their sources are rows, not code. Adding or changing one is a data change.
 
-The verbs include `create`, `edit`, `view`, `source`, `configure`, `sdk`, `analyse`, `upload` and `download`.
+The verbs include `create`, `edit`, `view`, `source`, `configure`, `sdk`, `analyse`, `upload`, `download` and `install`.
+
+Administrators add, edit and switch the options of `configure` and `sdk` on the [Config page](/docs/config-page). `install` is described on its own page: [Install](/docs/install).
 
 ## Word order: target first
 
@@ -18,7 +20,7 @@ Commands that act on a form, report or page are typed with the target first, the
 | `cityf view` | List the records of the form `cityf`, to view one. |
 | `invoice edit` | List the records of the form `invoice`, to edit one. |
 
-Commands that have no target of their own start with the verb: `configure user listing`, `sdk tstruct`, `upload`, `download`.
+Commands that have no target of their own start with the verb: `configure user listing`, `sdk tstruct`, `upload`, `download`, `install product`.
 
 The engine also accepts the verb first (`view cityf`). `getTokens` swaps the first two words when the first is a known target and the second is a valid action for it, so the rest of the code always sees the verb first. This is why `param1` is the command and `param4` the form, whichever order the user typed. The docs and examples use the target-first order.
 
@@ -31,8 +33,9 @@ The engine also accepts the verb first (`view cityf`). `getTokens` swaps the fir
 | `axi_command_config` | Routing for `configure`, `sdk`, `upload` and `download`: the option, the target (`transid`, `ivname`, script or URL), and its type. |
 | `axp_tstructprops` | Form properties, including the key field and whether a user configured it. |
 | `axi_userfavourites` | Saved commands with alias labels and target URLs. |
+| `axi_command_settings` | App-wide settings written by commands, for example the Git account and repo of `configure product`. See [Install](/docs/install). |
 
-The scripts that create and fill them are `axi_command_tables.sql` and `axi_axdirectsql_tables.sql` in `Structures/Postgre/Scripts` and `Structures/Oracle/Scripts`.
+The scripts that create and fill them are in `Structures/Postgre/Scripts` and `Structures/Oracle/Scripts`. See [Database](/docs/database#scripts) for the list and the order.
 
 ### `axi_command_config` columns
 
@@ -42,11 +45,35 @@ The scripts that create and fill them are `axi_command_tables.sql` and `axi_axdi
 | `command` | The verb: `Configure`, `SDK`, `Upload` or `Download`. |
 | `prompt_options` | The option the user picks, for example `user listing`. |
 | `prompt_id` | The target: a `transid`, an `ivname` or a script name. |
-| `prompt_option_type` | How to open it: `tstruct`, `iview`, `action` or `url`. |
+| `prompt_option_type` | How to run it. See the types below. |
 | `param_field` | Field used to load a record. |
 | `target_url` | Explicit URL override. |
 | `extra_params` | Extra query parameters, for example `AxOpenAct=true&isDupTab=false`. |
 | `active` | `T` or `F`. |
+| `is_system` | `T` for a Built-in Option shipped with AxiCMD, `F` for a Custom Option added on the [Config page](/docs/config-page). |
+| `record_source` | The data source that lists the option's records, for a Custom Option. `NULL` means none. |
+
+### Option types
+
+| Type | Does | Custom Options |
+| --- | --- | --- |
+| `tstruct` | Opens a form. | Yes |
+| `iview` | Opens a report. | Yes |
+| `ivtoivload` | Opens a report with parameters (`ivtoivload.aspx`). | Yes |
+| `url` | Opens a page. | Yes |
+| `action` | Runs a script action. | Built-in only |
+| `processflow` | Opens the Process Builder (`processflow.aspx`); without a parameter, the `ad_pm` form. | Built-in only |
+| `shellaction` | Runs a function of the main page. `prompt_id` is `trace_on`, `trace_off` or `trace_files`. | Built-in only |
+| `commandsetting` | Saves an app-wide setting through the CommandSettings API (`configure product`, `plugin`, `changerequest`). | Built-in only |
+
+### Options with their own access rules
+
+| Option | Shown to |
+| --- | --- |
+| `configure trace on`, `trace off`, `trace files` (`shellaction`) | Users with build access, the same rule as the header's Show Logs. They call the product's `ToggleShowLog` and `showTraceFileDialog`. |
+| `configure product`, `plugin`, `changerequest` (`commandsetting`) | Users with both Configure Access and build access. |
+| `configure user activation` | `admin`, or a user whose `axusers.licactivation` is true / `T` (any case). The palette reads it through the `axi_userlicactivation` ADS before it builds the commands; a missing row, `NULL` or a failed call counts as off. |
+| `install` | Users with build access. |
 
 ## Prompts and their parameters
 

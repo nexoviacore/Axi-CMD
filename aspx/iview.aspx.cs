@@ -4111,6 +4111,8 @@ public partial class iview : System.Web.UI.Page
             string actionVal = string.Empty;
             string fileUpload = string.Empty;
             dynamic icon;
+            string btntlhw = string.Empty;
+            string ordNo = string.Empty;
             string confirm = null;
             bool isroot = false;
             JObject taskJO = null;
@@ -4137,6 +4139,14 @@ public partial class iview : System.Web.UI.Page
                 if (visible == "false")
                 {
                     continue;
+                }
+                if (cbaseDataNode.Attributes["tlhw"] != null)
+                {
+                    btntlhw = cbaseDataNode.Attributes["tlhw"].Value;
+                }
+                if (cbaseDataNode.Attributes["ordno"] != null)
+                {
+                    ordNo = cbaseDataNode.Attributes["ordno"].Value;
                 }
                 if (cbaseDataNode.Attributes["folder"] != null)
                 {
@@ -4394,6 +4404,9 @@ public partial class iview : System.Web.UI.Page
                     toolbarJO["key"] = key;
                     toolbarJO.Add("icon", icon);
                     toolbarJO.Add("isRoot", isroot);
+                    toolbarJO.Add("tlhw", btntlhw);
+                    toolbarJO.Add("dwbtb", "true");
+                    toolbarJO.Add("ordNo", ordNo);
                     if (mainToolbarJO[key] == null)
                     {
                         mainToolbarJO[key] = toolbarJO;

@@ -293,7 +293,7 @@ public partial class ParamsTstruct : System.Web.UI.Page
             SetLangStyles();
         }
         util.TempAttaServerFiles();
-        util.DeleteKeyOnRefreshSave();
+        //util.DeleteKeyOnRefreshSave();
 
         UpdateTstAttLoad();
 
@@ -493,7 +493,8 @@ public partial class ParamsTstruct : System.Web.UI.Page
         CacheManager cacheMgr = GetCacheObject();
         strObj = GetStrObject(cacheMgr);
         GetStructConfig(strObj);
-
+        if (strObj.ROSFields != string.Empty)
+            util.DeleteKeyOnRefreshSave(transId, strObj.ROSFields);
         if (Session["MobileView"] != null && Session["MobileView"].ToString() == "True")
             isMobileView = true;
         else
@@ -5957,7 +5958,6 @@ public partial class ParamsTstruct : System.Web.UI.Page
             if (HttpContext.Current.Session["ExpFldsForAxVarsandCOnfig"] != null)
                 HttpContext.Current.Session.Remove("ExpFldsForAxVarsandCOnfig");
             utils.TempAttaServerFiles();
-            utils.DeleteKeyOnRefreshSave();
             string queryStringParamsData = QueryStringParams(tstQureystr);
             queryString = queryStringParamsData.Split('♠')[0];
             actstrType = queryStringParamsData.Split('♠')[1];
@@ -5975,6 +5975,8 @@ public partial class ParamsTstruct : System.Web.UI.Page
             if (tstData == null)
                 return Constants.DUPLICATESESS;
             string transId = tstData.transID;
+            if (tstData.tstStrObj.ROSFields != string.Empty)
+                utils.DeleteKeyOnRefreshSave(transId, tstData.tstStrObj.ROSFields);
             string errorLog = logobj.CreateLog("Form Load Service", HttpContext.Current.Session["nsessionid"].ToString(), "FormData-" + transId, "new");
             DateTime eTime1 = DateTime.Now;
             TStructDef strObj = tstData.tstStrObj;
@@ -6386,7 +6388,6 @@ public partial class ParamsTstruct : System.Web.UI.Page
         try
         {
             utils.TempAttaServerFiles();
-            utils.DeleteKeyOnRefreshSave();
             string queryStringParamsData = QueryStringParams(tstQureystr);
             if (HttpContext.Current.Session["project"] == null)
                 return utils.SESSTIMEOUT;
@@ -6398,6 +6399,8 @@ public partial class ParamsTstruct : System.Web.UI.Page
             if (tstData == null)
                 return Constants.DUPLICATESESS;
             string transId = tstData.transID;
+            if (tstData.tstStrObj.ROSFields != string.Empty)
+                utils.DeleteKeyOnRefreshSave(transId, tstData.tstStrObj.ROSFields);
             Util.Util.DeletedraftRediskeys(transId);
             string errorLog = logobj.CreateLog("Load Data service.", HttpContext.Current.Session["nsessionid"].ToString(), "LoadData-" + transId, "new");
             LoadRecidFromListNew(transId, recordid);
@@ -7218,7 +7221,6 @@ public partial class ParamsTstruct : System.Web.UI.Page
         try
         {
             utils.TempAttaServerFiles();
-            utils.DeleteKeyOnRefreshSave();
             QueryStringParams(tstQureystr);
             if (HttpContext.Current.Session["project"] == null)
                 return utils.SESSTIMEOUT;
@@ -7226,6 +7228,8 @@ public partial class ParamsTstruct : System.Web.UI.Page
             if (tstData == null)
                 return Constants.DUPLICATESESS;
             string transId = tstData.transID;
+            if (tstData.tstStrObj.ROSFields != string.Empty)
+                utils.DeleteKeyOnRefreshSave(transId, tstData.tstStrObj.ROSFields);
             string errorLog = logobj.CreateLog("Load Data service.", HttpContext.Current.Session["nsessionid"].ToString(), "LoadData-" + transId, "new");
             string recordid = "0";
             LoadRecidFromListNew(transId, recordid);
@@ -7277,7 +7281,6 @@ public partial class ParamsTstruct : System.Web.UI.Page
         try
         {
             utils.TempAttaServerFiles();
-            utils.DeleteKeyOnRefreshSave();
             string queryStringParamsData = QueryStringParams(tstQureystr);
             if (HttpContext.Current.Session["project"] == null)
                 return utils.SESSTIMEOUT;
@@ -7289,6 +7292,8 @@ public partial class ParamsTstruct : System.Web.UI.Page
             if (tstData == null)
                 return Constants.DUPLICATESESS;
             string transId = tstData.transID;
+            if (tstData.tstStrObj.ROSFields != string.Empty)
+                utils.DeleteKeyOnRefreshSave(transId, tstData.tstStrObj.ROSFields);
             Util.Util.DeletedraftRediskeys(transId);
             string errorLog = logobj.CreateLog("Load Data service.", HttpContext.Current.Session["nsessionid"].ToString(), "LoadData-" + transId, "new");
             LoadRecidFromListNew(transId, recordid);

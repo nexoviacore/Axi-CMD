@@ -15,3 +15,8 @@ AxpertPlugins/AxiCMD/PluginScripts/AxiCMDApi/logs/
 /AxpertPlugins/AxiCMD/docs/.obsidian
 # Local Netlify folder
 .netlify
+# AxiInstall RabbitMQ consumer (separate project, kept out of this repo)
+# old code
+# /consumer/AxiImportPackage/
+# new code
+/consumer/

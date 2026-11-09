@@ -85,7 +85,7 @@
     <title><%=appTitle%></title>
     <link rel="shortcut icon" href="../images/favicon.ico" />
     <script src="../Js/xmlToJson.js?v=2"></script>
-    <script src="../Js/helper.min.js?v=178"></script>
+    <script src="../Js/helper.min.js?v=180"></script>
     <script src="../assets/js/loadingoverlay.min.js?v=3" type="text/javascript"></script>
     <script type="text/javascript" src="../Js/common.min.js?v=166"></script>
     <script src="../Js/process.min.js?v=361"></script>
@@ -184,7 +184,7 @@
     <script src="../Js/sso.min.js?v=2" type="text/javascript"></script>
     <script src="../Js/msal.min.js" type="text/javascript"></script>
     <script src="../Js/okta-auth-js.min.js" type="text/javascript"></script>
-    <script type="text/javascript" src="../js/main.min.js?v=346"></script>
+    <script type="text/javascript" src="../js/main.min.js?v=347"></script>
 </head>
 
 <body id="mainNewPageBody" onload="ChangeDir('<');"

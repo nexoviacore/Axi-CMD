@@ -5,13 +5,38 @@ description: Tables, the ADS row, the SQL functions and keeping Postgres and Ora
 
 ## Scripts
 
-Every script exists twice and must stay in sync:
+Every script exists twice and must stay in sync. Run them in this order:
 
-| Script | Contents |
+| # | Script | Contents |
+| --- | --- | --- |
+| 1 | `axi_axdirectsql_tables.sql` | The ADS rows in `axdirectsql`. |
+| 2 | `axi_command_tables.sql` | `axi_commands`, `axi_command_prompts`, `axp_tstructprops` and their data, including the `install` command and the `Product`, `Plugin`, `ChangeRequest` options of `configure`. |
+| 3 | `axi_command_config.sql` | `axi_command_config` and its Built-in Option rows. |
+| 4 | `axi_dependent_tables.sql` | `Axi_UserFavourites`, `Axi_UserSettings` and the "Axi Command Line Enable" setting (seeded `false`). |
+| 5 | `axi_command_settings.sql` | `axi_command_settings`. |
+| 6 | `axi_functions.sql` | The SQL functions (and, for Oracle, the object and table types they return). |
+
+### Re-running the scripts
+
+- `axi_command_tables.sql` **does not drop** `axi_command_prompts`, so Custom Option names in the prompt lists survive a re-install. On a re-install its `CREATE TABLE` and shipped `INSERT` statements fail with "already exists" or a duplicate key; that is expected. The later additions (`install`, the `configure` repository options) are guarded and add rows only when they are missing.
+- `axi_command_config.sql` adds the `is_system` and `record_source` columns with re-runnable `ALTER TABLE` statements and marks the shipped rows `is_system = 'T'`.
+- The Oracle `axi_functions.sql` drops functions before the types they use, so it can be re-run.
+
+### `axi_command_settings`
+
+App-wide settings written by commands. One row per property, unique on (`propertycategory`, `propertytype`, `propertyname`).
+
+| Column | Meaning |
 | --- | --- |
-| `axi_command_tables.sql` | The command, prompt and configuration tables and their data. |
-| `axi_axdirectsql_tables.sql` | The ADS rows in `axdirectsql`. |
-| `axi_functions.sql` | The SQL functions (and, for Oracle, the object and table types they return). |
+| `id` | UUID. |
+| `propertycategory` | For example `axicmd`. |
+| `propertytype` | For example `product`, `plugin`, `changerequest`. |
+| `propertyname` | For example `accountname`, `reponame`. |
+| `propertyvalue` | The value (up to 4000 characters). |
+| `username` | Who changed it last. |
+| `createdon`, `modifiedon` | Timestamps. |
+
+It is read and written by the [CommandSettings API](/docs/axiapi#commandsettings).
 
 Locations: `AxpertPlugins/AxiCMD/Structures/Postgre/Scripts` and `AxpertPlugins/AxiCMD/Structures/Oracle/Scripts`.
 
@@ -26,6 +51,9 @@ An ADS row in `axdirectsql` has a name (`sqlname`) and the SQL to run. The palet
 | `axi_structmetalist` | The forms, reports, pages and data sources the user may use. Paged. |
 | `axi_getstructsdata` | The record rows and field rows of one form. Paged. |
 | `axi_viewlist` | A paged source (listed in `PAGED_SOURCES`). |
+| `axi_userlicactivation` | The user's `axusers.licactivation` as text, to decide whether `configure user activation` is shown. |
+
+`axi_git_directories` and `axi_git_versions`, the prompt sources of `install`, are **not** ADS rows: the palette resolves them from AxiGitAPI. See [Install](/docs/install).
 
 `axi_getstructsdata` calls the function with ten parameters:
 

@@ -19,6 +19,8 @@ The plugin version shown to users is in `AxpertPlugins/AxiCMD/AxiCMDVersioninfo.
 | In memory | Press the Refresh button in the palette, or reload the page. |
 | Browser (`localStorage`) | Run `Object.keys(localStorage).filter(k => k.startsWith("axi_")).forEach(k => localStorage.removeItem(k))` in the console. |
 | Server (ADS cache, 6 hours) | Clear the ADS cache, or recycle the application pool. |
+| Server (AxiApi Redis) | Press Refresh in the palette: it asks AxiApi to rebuild the command configuration and grammar (`forceRefresh=true`). |
+| Install directory list | Press Refresh in the palette, or save `configure <type>` again. |
 
 ## Testing with session variables
 
@@ -44,4 +46,8 @@ It is rebuilt from the session on page load. See [View filters](/docs/view-filte
 | `view` / `edit` shows all records | No `axvarcore` row for the form, or an unresolved placeholder skipped the filter. See [View filters](/docs/view-filters). |
 | Search on a form fails with `column p.na does not exist` | The form has no key field. Known open item. |
 | List shows only the first 100 rows | Paged by design. Scroll to load more, or type 3 or more characters to search the server. |
+| A new or changed Config page option is missing for other users | They still have their cached commands. They press Refresh in the palette. |
+| The Config page is read-only | The user lacks Configure Access or build access. Both are needed. |
+| Saving an option on the Config page gives `405` | An old page that sent `PUT`; IIS WebDAV blocks it. Reload the page so it sends `POST`. |
+| `install` problems | See [Install](/docs/install#troubleshooting). |
 | In Arabic the bar, input or status text looks mirrored wrongly, or the Settings gear is missing | The `btextDir-rtl` rules in `axicmdmain.css` or the old cached stylesheet. Bump `axicmdmain.css?v=N` and press Ctrl+F5. See [Arabic and RTL](/docs/arabic-rtl). |

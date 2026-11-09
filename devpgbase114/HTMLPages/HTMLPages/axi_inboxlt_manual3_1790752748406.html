@@ -1,0 +1,5680 @@
+<html xmlns="http://www.w3.org/1999/xhtml"><head runat="server">
+    <title>Process Flow</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1a">
+    <link rel="stylesheet" href="../../UI/axpertUI/style.bundle.css">
+    <link rel="stylesheet" href="../../UI/axpertUI/plugins.bundle.css">
+    <link rel="stylesheet" href="../../ThirdParty/jquery-confirm-master/jquery-confirm.min.css">
+    <link rel="stylesheet" href="css/AxpertInbox.css?v=11" type="text/css">
+
+    <style>
+        /* Parent title */
+        .v2-accordion-header .v2-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #172554;
+        }
+
+        /* Parent count */
+        .v2-accordion-header .inbox-count {
+            background: #eff6ff;
+            color: #2563eb;
+
+            padding: 4px 9px;
+            border-radius: 14px;
+
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* ---------- CHILD CONTAINER ---------- */
+
+        .v2-accordion-body {
+            background: #ffffff;
+            padding: 0;
+        }
+
+        /* Each child is visually indented */
+        .v2-child-item {
+            position: relative;
+
+            margin-left: 20px;
+
+            border-top: 1px solid #edf0f5;
+            background: #ffffff;
+        }
+
+        /* Vertical hierarchy line */
+        .v2-child-item::before {
+            content: "";
+
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+
+            width: 1px;
+
+            background: #dbe3ef;
+        }
+
+        /* ---------- CHILD HEADER ---------- */
+
+        .v2-child-header {
+            min-height: 48px;
+
+            padding: 10px 12px 10px 22px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            background: #ffffff;
+
+            cursor: pointer;
+
+            position: relative;
+        }
+
+        /* Small horizontal connector from vertical line */
+        .v2-child-header::before {
+            content: "";
+
+            position: absolute;
+            left: 0;
+            top: 50%;
+
+            width: 12px;
+            height: 1px;
+
+            background: #dbe3ef;
+        }
+
+
+        /* Child title */
+        .v2-child-header .v2-title {
+            font-size: 12px;
+            font-weight: 500;
+
+            color: #334155;
+        }
+
+        /* Child count */
+        .v2-child-header .inbox-count {
+            background: #f1f5ff;
+            color: #2563eb;
+
+            padding: 4px 9px;
+
+            border-radius: 14px;
+
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* Child hover */
+
+
+        .v2-child-header:hover .v2-title {
+            color: #1d4ed8;
+        }
+
+        /* Child expanded */
+        .v2-child-header.active {
+            background: #f8fbff;
+        }
+
+        /* Child body */
+        .v2-child-body {
+            margin-left: 22px;
+            background: #ffffff;
+        }
+
+        /* Remove the old circular icon effect */
+        .v2-child-header .material-icons {
+            box-shadow: none !important;
+        }
+
+        /* =========================================================
+   1. PARENT ACCORDION HEADER (Primary Level)
+   ========================================================= */
+
+
+
+
+        /* =========================================================
+   2. CHILD ACCORDION ITEM (Secondary Level)
+   ========================================================= */
+
+        .search-input {
+            width: 390px !important
+        }
+
+        .v2-accordion-header .material-icons,
+        .v2-child-header .material-icons {
+            font-size: 20px !important;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f4f7fc;
+            border: 1px solid #d7e3f5;
+            border-radius: 50%;
+            color: black;
+
+            transition: all .2s ease;
+        }
+
+        .v2-accordion-header:hover .material-icons,
+        .v2-child-header:hover .material-icons {
+            background: #2563eb;
+            color: #fff;
+        }
+
+        /* Child Header Title - Scale down weight and size relative to parent */
+        .v2-child-header .v2-title {
+            font-size: 12px;
+            font-weight: 600;
+            /* Reduced from 800 */
+            color: #4b5675;
+            /* Slightly softer gray-dark color */
+        }
+
+
+        #rightIframe {
+            flex: 1;
+
+            border: 0;
+            min-height: 90% !important;
+        }
+
+        .v2-child-item {
+            border-top: 1px solid #e5e5e5;
+            margin-left: 20px;
+        }
+
+        .v2-child-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            cursor: pointer;
+            background: #fafafa;
+        }
+
+        .v2-child-body {
+            display: none;
+        }
+
+        .v2-child-body.show {
+            display: block;
+        }
+
+        .people-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            align-items: center;
+
+            cursor: pointer;
+            background-color: #fff;
+            margin: 00;
+            overflow: hidden;
+        }
+
+        .people-row:hover {
+            background: #f7f9fc;
+        }
+
+        .people-scheduler {
+            visibility: hidden;
+            color: #4e86c7;
+            cursor: pointer;
+        }
+
+        .people-row:hover .people-scheduler {
+            visibility: visible;
+        }
+    </style>
+    <!-- <style>
+        #Process-stepper {
+
+            flex: none !important;
+            margin-left: 32.3333% !important;
+            width: 67.6667% !important;
+            max-width: 115% !important;
+            background: #fff;
+            position: relative;
+            z-index: 10;
+            top: 3px;
+
+            /* scrollbar */
+            overflow-x: auto !important;
+            overflow-y: hidden !important;
+            white-space: nowrap;
+            height: 40px;
+        }
+
+        #horizontal-processbar {
+            display: inline-flex !important;
+            width: max-content !important;
+            min-width: max-content !important;
+            flex-wrap: nowrap !important;
+        }
+
+        body#Task_activity {
+            overflow: hidden;
+        }
+
+        div#ktMenu {
+            /* transform: translate(327px, 35px)!important; */
+            cursor: pointer;
+            padding: 8px;
+            font-size: small;
+            font-weight: 500;
+            position: absolute;
+            inset: unset !important;
+            transform: none !important;
+        }
+
+        .text-hover-primary:hover {
+            background: #d3d3d35c;
+            transition: color .2s ease, background-color .2s ease;
+            /* color: #0774fe!important; */
+            /* width: -webkit-fill-available; */
+            color: black !important;
+        }
+
+
+        .user-main {
+            background: #4e86c7;
+            color: #fff;
+            padding: 5px 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            display: block;
+            align-items: center;
+            user-select: none;
+            position: relative !important;
+            z-index: 100000 !important;
+            pointer-events: auto;
+            font-size: 15spx;
+            font-size: 15px;
+            min-width: 110px;
+            max-width: 160px;
+            left: -10px;
+        }
+
+        .arrow {
+            position: absolute;
+            right: 0px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 12px;
+            pointer-events: none;
+
+        }
+
+        .group-btn .material-icons {
+            font-size: 18px;
+        }
+
+
+
+        .user-item {
+            padding: 10px 14px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+
+
+
+        /* ===============================
+   INBOX USER SWITCHER — FINAL FIX
+================================ */
+
+        #topPanel {
+            position: relative !important;
+            overflow: visible !important;
+
+        }
+
+        .inbox-user-switcher {
+            position: relative !important;
+            display: inline-block;
+            z-index: 9999;
+
+        }
+
+
+        /* Dropdown menu */
+        .user-dropdown {
+            position: absolute !important;
+            top: calc(100% + 6px);
+            left: 0;
+            min-width: 200px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            display: none;
+            z-index: 100001 !important;
+            transform: none !important;
+            inset: unset !important;
+            top: 46px !important;
+            left: -11px !important;
+        }
+
+        /* When opened */
+        .user-dropdown.open {
+            display: block !important;
+        }
+
+        /* Prevent Axpert overlays from covering it */
+        .Page-Title,
+        .Title-Section,
+        .Tkts-toolbar-Right,
+        .Tkts-toolbar-Left {
+            overflow: visible !important;
+        }
+
+
+
+        .user-item:hover {
+            background: #f3f6fb;
+        }
+
+        /* .pagename{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: max-content;
+    gap: 4px;
+} */
+        .icon-filters {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .icon-filter {
+            display: flex;
+            align-items: center;
+            /* gap: 6px; */
+            padding: 6px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            background: #f3f6fb;
+            color: #444;
+            font-size: 12px;
+            transition: all .2s ease;
+            margin: 10px 0px;
+        }
+
+        .icon-filter .material-icons {
+            font-size: 18px;
+        }
+
+        .icon-filter:hover {
+            background: #e1e7f5;
+        }
+
+        .icon-filter.active {
+            background: #4e86c7;
+            color: white;
+        }
+
+        .icon-filter .count {
+            font-size: 11px;
+            opacity: 0.85;
+        }
+
+        .icon-all {
+            color: #3b82f6;
+        }
+
+        /* Blue */
+        .icon-active {
+            color: #f59e0b;
+        }
+
+        /* Amber */
+        .icon-completed {
+            color: #22c55e;
+        }
+
+        /* Green */
+        .icon-sent {
+            color: #6366f1;
+        }
+
+        /* Indigo */
+        .icon-pending {
+            color: #f97316;
+        }
+
+        /* Orange */
+        .icon-approved {
+            color: #10b981;
+        }
+
+        /* Teal */
+        .icon-rejected {
+            color: #ef4444;
+        }
+
+        /* Red */
+        .icon-returned {
+            color: #8b5cf6;
+        }
+
+        /* Violet */
+        .icon-filter.active .material-icons {
+            color: inherit;
+        }
+
+        .icon-message {
+            color: #0ea5e9;
+        }
+
+        /* Sky Blue */
+        .icon-notification {
+            color: #facc15;
+        }
+
+        /* Yellow */
+        .inbox-user-select {
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: 1px solid #d0d5dd;
+            background: #2563eb;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .inbox-user-select {
+            background: #4e86c7;
+            color: #fff;
+            padding: 6px 36px 6px 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 15px;
+            border: none;
+            outline: none;
+            appearance: none;
+            min-width: 140px;
+            max-width: 200px;
+            background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='16' viewBox='0 0 24 24' width='16' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+        }
+
+        .inbox-user-select option {
+            color: #000;
+        }
+
+        /* Make ONLY the dropdown options white */
+        .inbox-user-select option {
+            background: #ffffff !important;
+            color: #000000 !important;
+        }
+
+        /* Highlight on hover / selected option */
+        .inbox-user-select option:checked,
+        .inbox-user-select option:hover {
+            background: #f3f6fb !important;
+            color: #000000 !important;
+        }
+
+        .filter-group {
+            position: relative;
+        }
+
+        .group-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #f3f6fb;
+            border-radius: 8px;
+            padding: 6px 12px;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            width: 100px;
+        }
+
+        .group-btn:hover {
+            background: #e1e7f5;
+        }
+
+        .group-btn .arrow {
+            font-size: 16px;
+            transition: .2s;
+        }
+
+        .filter-group.open .arrow {
+            transform: rotate(180deg);
+        }
+
+        .group-menu {
+            position: absolute;
+            top: 115%;
+            left: 0;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, .15);
+            padding: 6px;
+            display: none;
+            z-index: 1000;
+            min-width: 210px;
+        }
+
+        .filter-group.open .group-menu {
+            display: block;
+        }
+
+        .group-menu .icon-filter {
+            width: 100%;
+            justify-content: flex-start;
+            border-radius: 6px;
+        }
+
+        .group-menu .icon-filter:hover {
+            background: #f3f6fb;
+        }
+
+        /* 
+        new */
+
+        .inbox-sub-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+            /* padding: 8px 12px; */
+            /* border-bottom: 1px solid #e5e7eb; */
+            /* background: #fff; */
+        }
+
+        .all-toggle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+        }
+
+        .filter-btn {
+            border: none;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        .active-filters {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .filter-chip {
+            background: #eef2f7;
+            border-radius: 14px;
+            padding: 4px 10px;
+            font-size: 12px;
+        }
+
+        .filter-chip span {
+            cursor: pointer;
+            margin-left: 6px;
+        }
+
+
+
+        .hidden {
+            display: none !important;
+        }
+
+        .inbox-sub-toolbar {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .filter-wrapper {
+            position: relative;
+            /* 🔑 anchor for popup */
+        }
+
+        .filter-panel {
+            display: none;
+            position: absolute;
+            top: calc(100% - 12px);
+            left: 220px;
+            width: 330px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 10px 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+
+
+
+        .filter-panel label {
+            display: inline-block;
+            width: 48%;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .filter-panel.show {
+            display: block;
+            position: absolute;
+            z-index: 2000;
+        }
+
+
+        .filter-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 0;
+            cursor: pointer;
+        }
+
+        .filter-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+
+
+        .filter-message-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            /* pushes X to last */
+            background: #eaeef2;
+            padding: 5px 16px;
+            border-radius: 4px;
+            margin: 0;
+            font-size: 14px;
+        }
+
+        #filterMessageText {
+            flex: 1;
+        }
+
+
+        .close-btn {
+            background: transparent;
+            border: 1px solid #94a3b8;
+            color: #1f2937;
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .all-toggle.active {
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        .search-box {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+           
+
+        .search-input {
+            flex: 1;
+            padding-right: 149px;
+            /* width: 178%; */
+            padding-left: 5px;
+        }
+
+        .filter-icon {
+            position: absolute;
+            right: 10px;
+            cursor: pointer;
+            color: #888;
+        }
+
+        .filter-icon.active {
+            color: #0d6efd;
+            /* blue highlight */
+        }
+
+        .menu.menu-sub.menu-sub-dropdown.menu-rounded.menu-gray-600.menu-state-bg-light.fw-bolder.w-300px.py-3.initialized.show {
+            position: absolute;
+            right: 0px;
+        }
+
+        #plistContent {
+            height: 90vh;
+            overflow-y: auto;
+        }
+
+        #filterMessageBar {
+            position: absolute;
+            top: 82px;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            /* background: #eef4ff; */
+            padding: 0px 16px;
+            border-bottom: 1px solid #ddd;
+            transform: translateY(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        #filterMessageBar.show {
+            transform: translateY(0);
+        }
+
+        #filterMessageBar.hidden {
+            transform: translateY(-100%);
+        }
+
+        .nametime {
+            display: block;
+            width: 80px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .content:has(#New-Landing-layout) {
+            background: #f1f4f9 !important;
+            height: 50vh !important;
+            max-height: calc(100vh - 90px) !important;
+        }
+
+        /* ul#horizontal-processbar { */
+        /* margin-top: 45px !important; */
+        /* padding: 0px !important; */
+        /* } */
+        /* #Process-stepper {
+    display: block !important;
+    flex: none !important;
+    margin-left: 32.3333% !important;
+    width: 44.6667% !important;
+    /* max-width: 82.6667% !important; 
+    background: #fff;
+    max-width: 68% !important;
+    position: relative;
+    z-index: 10;
+    top: 3px;
+    overflow-x: auto;
+    overflow-y: hidden;
+} */
+        /* 
+#horizontal-processbar {
+    width: max-content;
+    min-width: 100%;
+} */
+        .deep-search-highlight {
+            animation: highlightFlash 1s ease-in-out 3;
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+        }
+
+        @keyframes highlightFlash {
+            0% {
+                background: #fff3cd;
+            }
+
+            50% {
+                background: #ffe69c;
+            }
+
+            100% {
+                background: #fff3cd;
+            }
+        }
+
+        .custom-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* button style */
+        .hdr-btn {
+            padding: 6px 14px;
+            background: #4e86c7;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+            color: white;
+        }
+
+        .hdr-btn.active {
+            background: #4e86c7;
+            color: black;
+        }
+
+        /* fix select alignment */
+        .inbox-user-switcher {
+            display: flex;
+            align-items: center;
+        }
+
+        /* dropdown */
+        .hdr-dropdown {
+            position: relative;
+            width: 180px;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 110%;
+            left: 0;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            display: none;
+            min-width: 180px;
+            z-index: 9999;
+        }
+
+        .dropdown-item {
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+
+        .dropdown-item:hover {
+            background: #f3f6fb;
+        }
+
+        /* show dropdown */
+        .hdr-dropdown.open .dropdown-menu {
+            display: block;
+        }
+
+        .dots-menu {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border-radius: 50%;
+        }
+
+        .dots-menu .material-icons {
+            font-size: 20px;
+        }
+
+        .dropdown-submenu {
+            position: relative;
+        }
+
+        .dropdown-submenu .submenu {
+            display: none;
+            position: absolute;
+            left: 100%;
+            top: 0;
+            min-width: 180px;
+            background: #fff;
+            border-radius: 6px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .dropdown-submenu:hover .submenu {
+            display: block;
+        }
+
+        .submenu-toggle {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .accordion-header {
+            padding: 8px 12px;
+            background: #f3f6fb;
+            cursor: pointer;
+            border-bottom: 1px solid #ddd;
+            font-weight: 500;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .accordion-body {
+            padding: 8px 12px;
+            background: #fff;
+        }
+
+        .task-item {
+            padding: 4px 0;
+            font-size: 13px;
+            border-bottom: 1px dashed #eee;
+        }
+
+        .search-highlight {
+            border: 2px solid #90ee90;
+            /* light green */
+            border-radius: 6px;
+            background: #f0fff0;
+        }
+
+        /* Target the actual header element */
+        .user-main {
+            position: sticky !important;
+            top: 0;
+            z-index: 1050;
+            /* Stays above task cards */
+            background: white;
+        }
+
+        .submenu-toggle {
+            pointer-events: none;
+            /* ❌ disable click */
+            cursor: default;
+            /* normal cursor */
+            font-weight: 600;
+            /* looks like header */
+        }
+
+        .stepper-horizontal li:not(:first-child)::before {
+            position: relative;
+            -webkit-box-flex: 1;
+            flex: 1 1 0%;
+            height: 1px;
+            margin: 0.5rem 0px 0px;
+            content: "";
+            background-color: rgba(0, 0, 0, 0.1);
+            min-width: 40px;
+        }
+
+
+        /* v2css */
+        .v2-accordion-item {
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .v2-accordion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+            cursor: pointer;
+            background: #fff;
+        }
+
+        .v2-accordion-header.active {
+            background: #eff6ff;
+        }
+
+        .v2-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .v2-arrow {
+            font-family: 'Material Icons';
+            font-size: 18px;
+        }
+
+        .v2-title {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .v2-accordion-body {
+            display: none;
+            background: #fff;
+        }
+
+        .empty-state {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 40px;
+            color: #888;
+        }
+
+        .v2-accordion-body.show {
+            display: block;
+        }
+
+        .v2-pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+        }
+
+        .page-btn {
+            border: none;
+            background: #2563eb;
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .v2-accordion-item {
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .v2-accordion-header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+
+            background: #fff;
+
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            padding: 14px 16px;
+
+            cursor: pointer;
+
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .v2-accordion-header.active {
+            background: #eff6ff;
+        }
+
+        .v2-accordion-body {
+            display: none;
+        }
+
+        .v2-accordion-body.show {
+            display: block;
+        }
+
+        .v2-scroll-body {
+
+            max-height: 319px;
+
+            overflow-y: auto;
+
+            background: #fff;
+        }
+
+        .v2-scroll-body[data-section="people"],
+        .v2-scroll-body[data-section="groups"] {
+            max-height: 240px;
+        }
+
+        #body_Container {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        #ProcessFlow_New-container,
+        #ProcessFlow_Content,
+        #tickets,
+        #InboxAccordion {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+        }
+
+        #InboxAccordion {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        #Tickets_details_view {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            max-height: 90vh;
+            position: relative;
+        }
+
+        .directory-chat-panel {
+            position: absolute;
+            inset: 0;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            background: #f8fbff;
+        }
+
+        .directory-chat-panel.d-none {
+            display: none !important;
+        }
+
+        #process_centerpanel {
+            width: 100%;
+            height: 100%;
+            margin-bottom: 0;
+            border: 0;
+            background: transparent;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .chat-shell {
+            height: 100%;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            background: #f8fbff;
+        }
+
+        .chat-shell-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 16px 18px;
+            background: #fff;
+            border-bottom: 1px solid #dbe4f0;
+        }
+
+        .chat-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .chat-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 700;
+            font-size: 15px;
+            background: #2563eb;
+            flex: none;
+            box-shadow: 0 10px 18px rgba(37, 99, 235, 0.14);
+        }
+
+        .chat-avatar.chat-avatar-group {
+            background: #0f766e;
+            box-shadow: 0 10px 18px rgba(15, 118, 110, 0.12);
+        }
+
+        .chat-name {
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 1.2;
+            color: #1f2937;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chat-subline {
+            margin-top: 4px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .chat-chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 9px;
+            border-radius: 999px;
+            background: #eef4ff;
+            color: #2563eb;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .chat-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: none;
+        }
+
+        .chat-icon-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 10px;
+            background: #f3f7fb;
+            color: #475569;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: default;
+        }
+
+        .chat-feed {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .chat-empty {
+            flex: 1;
+            min-height: 220px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #64748b;
+        }
+
+        .chat-empty-card {
+            background: #fff;
+            border: 1px solid #dbe4f0;
+            border-radius: 18px;
+            padding: 22px 24px;
+            box-shadow: 0 14px 30px rgba(15, 23, 42, 0.06);
+            max-width: 360px;
+        }
+
+        .chat-empty-title {
+            margin-top: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .chat-empty-meta {
+            margin-top: 8px;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #64748b;
+        }
+
+        .chat-message {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            max-width: 50%;
+        }
+
+        .chat-message.self {
+            margin-left: auto;
+            flex-direction: row-reverse;
+        }
+
+        .chat-avatar-sm {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            background: #dbeafe;
+            color: #1d4ed8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            flex: none;
+        }
+
+        .chat-bubble {
+            padding: 6px 12px;
+            border-radius: 18px;
+            background: #f0f0f0;
+            border: none;
+            box-shadow: none;
+            color: #1f2937;
+            line-height: 0.8;
+            white-space: unset;
+            font-size: 14px;
+            padding: 17px;
+        }
+
+        .chat-message.self .chat-bubble {
+            background: #0078d4;
+            border-color: #0078d4;
+            color: #fff;
+            border-radius: 18px;
+        }
+
+        .chat-message-meta {
+            margin-top: 2px;
+            display: flex;
+            justify-content: space-between;
+            gap: 4px;
+            font-size: 10px;
+            color: #64748b;
+        }
+
+        .chat-message.self .chat-message-meta {
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .chat-composer {
+            padding: 14px 16px;
+            background: #fff;
+            border-top: 1px solid #dbe4f0;
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .chat-input-wrap {
+            flex: 1;
+            position: relative;
+        }
+
+        .chat-input {
+            width: 100%;
+            min-height: 46px;
+            max-height: 120px;
+            resize: none;
+            border: 1px solid #dbe4f0;
+            border-radius: 14px;
+            padding: 12px 14px;
+            outline: none;
+            font-size: 14px;
+            line-height: 1.4;
+            background: #f8fbff;
+            color: #1f2937;
+        }
+
+        .chat-input:focus {
+            border-color: #93c5fd;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+            background: #fff;
+        }
+
+        .chat-send {
+            width: 44px;
+            height: 44px;
+            border: none;
+            border-radius: 14px;
+            background: #2563eb;
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 18px rgba(37, 99, 235, 0.18);
+        }
+
+        .chat-send:disabled {
+            background: #94a3b8;
+            box-shadow: none;
+        }
+
+        .directory-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 16px 18px;
+            cursor: pointer;
+            border-bottom: 1px solid #eef2f7;
+            background: #fff;
+            transition: background 0.15s ease, border-color 0.15s ease;
+        }
+
+        .directory-row:hover {
+            background: #f8fbff;
+        }
+
+        .directory-row.selected {
+            background: #eaf2ff;
+            border-left: 3px solid #2563eb;
+            padding-left: 15px;
+        }
+
+        .directory-row.group-member-row {
+            padding-left: 44px;
+            background: #fbfdff;
+        }
+
+        .directory-row.group-member-row.selected {
+            padding-left: 41px;
+        }
+
+        .group-loading,
+        .group-empty {
+            padding: 12px 18px 12px 72px;
+            font-size: 13px;
+            color: #64748b;
+            background: #fbfdff;
+            border-bottom: 1px solid #eef2f7;
+        }
+
+        .directory-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #dbeafe;
+            color: #1d4ed8;
+            font-weight: 700;
+            flex: none;
+            box-shadow: 0 8px 14px rgba(59, 130, 246, 0.08);
+        }
+
+        .directory-avatar.directory-avatar-group {
+            background: #dcfce7;
+            color: #166534;
+            box-shadow: 0 8px 14px rgba(22, 101, 52, 0.08);
+        }
+
+        .directory-main {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .directory-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .directory-meta {
+            margin-top: 5px;
+            font-size: 12px;
+            color: #64748b;
+            line-height: 1.45;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .directory-badges {
+            margin-top: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .directory-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 8px;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4f46e5;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .directory-cta {
+            color: #94a3b8;
+            font-size: 18px;
+            margin-top: 8px;
+            flex: none;
+        }
+    </style> -->
+	<link type="text/css" rel="stylesheet" href="../../devpgbase114/HTMLPages/Css/axi_inboxlt_manual3css_1790752748406.css?v=1790752815913">
+</head>
+
+
+<body id="Process_Flow" class="header-fixed header-tablet-and-mobile-fixed aside-fixed overflow-hidden vh-100 min-vh-100">
+
+    <!--begin::Content-->
+    <div class="content-- d-flex flex-column flex-column-fluid">
+        <!--begin::Container-->
+        <div id="pf_content_container" class="">
+            <!--begin::Row-->
+
+            <div class="row overflow-hidden-- vh-100-- min-vh-100--" id="PROFLOW-overalldiv">
+                <div class="Page-Title-Bar">
+                    <div class="Title-Section">
+
+
+                        <div class="Tkts-toolbar-Right">
+                            <button id="" type="submit" class="btn btn-sm btn-icon btn-primary btn-active-primary btn-custom-border-radius d-none">
+                                <span class="material-icons material-icons-style material-icons-2">add_task</span>
+                            </button>
+                            <button type="button" id="headerRefreshBtn" class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Refresh Page" onclick="axProcessObj.refreshPage();">
+                                <span class="material-icons material-icons-style material-icons-2">refresh</span>
+                            </button>
+
+                            <button id="pd_timeline" class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm d-none" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-start" data-kt-menu-flip="top-end" data-kt-menu-attach="parent" title="Timeline">
+                                <span class="material-icons material-icons-style material-icons-2">history_toggle_off</span>
+                            </button>
+
+                            <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light fw-bolder w-400px py-3" data-kt-menu="true" data-id="pd_timeline">
+                                <div id="TimeLine_overall" class="content">
+                                    <div class="card" id="Timeline-wrap">
+                                        <h1 class="Timeline-heading">
+                                            Timeline
+                                        </h1>
+                                        <ul class="Timel-sessions full-session d-none">
+                                        </ul>
+                                        <span id="nodata" class="p-5">No Timeline data available.</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="top-panel" id="topPanel">
+
+                            <div class="Page-Title" id="process-name">
+                                <input type="checkbox" class="maincheckbox">
+
+                                <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm  tb-btn btn-sm " data-kt-menu-attach="parent" data-bs-title="Hide record List" data-bs-toggle="tooltip" data-bs-placement="bottom" title="" id="collapseicon">
+                                    <span class="material-icons material-icons-style material-icons-2">menu</span>
+                                </div>
+
+
+                                <span>My Inbox</span>
+
+
+
+                                <div class="Tkts-toolbar-Left">
+                                    <div class="d-flex gap-1">
+                                        <div class="d-flex-- align-items-stretch flex-shrink-0 gap-8 filterAlignChild">
+                                            <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm  tb-btn btn-sm d-none" data-kt-menu-attach="parent" data-bs-title="Next Record" data-bs-toggle="tooltip" data-bs-placement="bottom" id="nextrecord">
+                                                <span class="material-icons material-icons-style material-icons-2">arrow_downward</span>
+                                            </div>
+                                            <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm  tb-btn btn-sm d-none" data-kt-menu-attach="parent" data-bs-title="Previous Record" data-bs-toggle="tooltip" data-bs-placement="bottom" id="previousrecord">
+                                                <span class="material-icons material-icons-style material-icons-2">arrow_upward</span>
+                                            </div>
+
+
+
+                                            <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm  tb-btn btn-sm" data-kt-menu-placement="bottom" data-kt-menu-flip="top" data-kt-menu-attach="parent" id="filterButton" data-kt-menu-trigger="click">
+                                                <span class="material-icons material-icons-style material-icons-2" data-bs-toggle="tooltip" data-bs-title="Filter">filter_list</span>
+                                            </div>
+
+                                            <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded  menu-title-gray-700 menu-icon-gray-500 menu-active-bg menu-state-color fw-semibold py-4 fs-base w-250px" data-kt-menu="true" id="ktMenu" data-kt-element="theme-mode-menu">
+                                                <div class="menu-item cursor-pointer">
+                                                    <a href="#" class="menu-link active" id="alllist" data-id="all">
+                                                        <span class="menu-icon">
+                                                            <span class="material-icons">mail</span></span>
+                                                        <span class="menu-title">All</span>
+                                                        <span class="menu-count">150</span>
+                                                    </a>
+                                                </div>
+                                                <div class="menu-item cursor-pointer">
+                                                    <a href="#" class="menu-link" id="Open_Task" data-id="">
+                                                        <span class="menu-icon">
+                                                            <span class="material-icons">mark_email_unread</span></span>
+
+                                                        <span class="menu-title">Open Task</span>
+                                                        <span class="menu-count">10</span>
+                                                    </a>
+                                                </div>
+                                                <div class="menu-item cursor-pointer">
+                                                    <a href="#" class="menu-link" id="My_Team" data-id="">
+                                                        <span class="menu-icon">
+                                                            <span class="material-icons">groups</span></span>
+
+                                                        <span class="menu-title">My Team</span>
+                                                        <span class="menu-count">10</span>
+                                                    </a>
+                                                </div>
+                                                <div class="menu-item cursor-pointer">
+                                                    <a href="#" class="menu-link" id="Pending_Approval" data-id="">
+                                                        <span class="menu-icon">
+                                                            <span class="material-icons">mark_email_read</span></span>
+
+                                                        <span class="menu-title">Pending Approval</span>
+                                                        <span class="menu-count">10</span>
+                                                    </a>
+                                                </div>
+                                                <div class="menu-item cursor-pointer">
+                                                    <a href="#" class="menu-link" id="Unread" data-id="">
+                                                        <span class="menu-icon">
+                                                            <span class="material-icons">unsubscribe</span></span>
+
+                                                        <span class="menu-title">Unread</span>
+                                                        <span class="menu-count">10</span>
+                                                    </a>
+                                                </div>
+                                                <div class="menu-item cursor-pointer">
+                                                    <a href="#" class="menu-link" id="Send_Items" data-id="completed">
+                                                        <span class="menu-icon">
+                                                            <span class="material-icons">forward_to_inbox</span></span>
+
+                                                        <span class="menu-title">Send Items</span>
+                                                        <span class="menu-count">110</span>
+                                                    </a>
+                                                </div>
+
+
+                                            </div>
+
+                                            <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm  tb-btn btn-sm selectbtn" data-kt-menu-placement="bottom" data-kt-menu-flip="top" data-kt-menu-attach="parent">
+                                                <span class="material-icons material-icons-style material-icons-2" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Select">copy</span>
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+
+
+
+                            <!-- Actions Section -->
+                            <div class="d-flex Right-Header-Section">
+
+
+
+                                <!-- <div class="Filter-Section-wrapper">
+                                    <span style="
+                                  font-size: small;
+                                  display: flex;
+                                  align-items: center;
+                                  justify-content: center;
+                                  color: gray;
+                                  margin: 5px;
+                              ">Filter</span>
+                                    <div class="hdr-dropdown main-filter">
+
+                                        <div class="hdr-btn submenu-toggle dropdown-toggle">
+                                            All
+                                            <!-- <span class="material-icons arrow">expand_more</span>
+                                        </div>
+
+                                        <div class="dropdown-menu">
+
+                                            <!-- ALL
+                                            <div class="dropdown-item" data-id="ALL">All</div>
+
+                                            <!-- MY TASKS 
+                                            <div class="dropdown-item" data-id="Open Tasks">My Tasks</div>
+
+                                            <!-- MY TEAM TASKS
+                                            <div class="dropdown-submenu">
+                                                <div class="dropdown-item submenu-toggle dropdown-toggle">
+                                                    My Team Tasks
+                                                </div>
+                                                <div class="submenu">
+                                                    <div class="dropdown-item" data-id="TeamAll">All</div>
+                                                    <!-- dynamically append team members 
+                                                    <div id="userSelect"></div>
+                                                </div>
+                                            </div>
+
+                                            <!-- PENDING APPROVAL
+                                            <div class="dropdown-item" data-id="Pending">My Pending Approvals</div>
+
+                                            <!-- OTHER FILTERS 
+                                            <div class="dropdown-submenu">
+                                                <div class="dropdown-item submenu-toggle dropdown-toggle">
+                                                    Other Filters
+                                                </div>
+                                                <div class="submenu">
+                                                    <div class="dropdown-item" data-id="Approved">Approved</div>
+                                                    <div class="dropdown-item" data-id="Rejected">Rejected</div>
+                                                    <div class="dropdown-item" data-id="Returned">Returned</div>
+                                                    <!-- <div class="dropdown-item" data-id="Messages">Messages</div> 
+                                                    <div class="dropdown-item" data-id="Notifications">Notifications
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div> -->
+
+                                <div class="section search-section">
+                                    <div class="search-box">
+                                        <input id="advTextSearch" class="search-input" placeholder="Search Approvals,Messages etc..">
+                                        <span class="material-icons search-icon" id="deepSearchToggle">search</span>
+
+                                        <!-- Deep search toggle -->
+                                        <!-- <span id="deepSearchToggle" class="material-icons filter-icon" title="Deep Search">
+                                              tune
+                                                     </span> -->
+                                    </div>
+                                </div>
+                                <div class="section actions">
+                                    <div>
+                                        <!-- Trigger -->
+                                        <div id="pd_all_tasksNew" class="act btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm" onclick="axProcessObj.openBulkApprove();" data-kt-menu-placement="bottom-start" data-kt-menu-flip="top-start" data-kt-menu-attach="parent" title="Bulk Approve">
+                                            <span class="material-icons material-icons-style material-icons-2">
+                                                checklist
+                                            </span>
+                                        </div>
+
+                                        <!-- Menu -->
+                                        <div class="menu menu-sub menu-sub-dropdown menu-rounded menu-gray-600 menu-state-bg-light fw-bolder w-300px py-3" data-kt-menu="true" data-id="pd_all_tasksNew">
+                                            <pd-alltasksnew></pd-alltasksnew>
+                                        </div>
+                                    </div>
+
+                                    <!-- <button id="schedulerBtn" class="act btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm ">
+                                        <span class="material-icons material-icons-style material-icons-2 initialized" data-bs-toggle="tooltip" data-bs-original-title="Scheduler" title="">calendar_month</span></button> -->
+
+                                    <button id="refreshBtn" type="button" class="act btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Refresh">
+                                        <span class="material-icons material-icons-style material-icons-2">refresh</span>
+                                    </button>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="row d-none" id="Process-stepper">
+                        <div class="col-md-12" id="horizontal">
+                            <ul class="stepper stepper-horizontal" id="horizontal-processbar">
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div id="filterMessageBar" class="filter-message-bar hidden">
+
+                    <span id="filterMessageText"></span>
+                    <button id="closeFilterBar" class="close-btn">✕</button>
+                </div>
+
+
+
+
+                <!--begin:::Col-->
+                <div class="col-xl-4 p-0 col-md-4 d-flex flex-column flex-column-fluid vh-100 min-vh-100" id="PROFLOW_Left">
+                    <div class="card card-xl-stretch  flex-root h-1px  ">
+
+                        <!--begin::Body-->
+                        <div class="card-body h-300px mb-3" id="body_Container">
+                            <div id="ProcessFlow_New-container">
+
+                                <div class="tab-content" id="ProcessFlow_Content">
+                                    <!-- <div class="tab-pane fade active show" role="tabpanel" id="Tickets_Pending">
+                                        <div id="plistContentPending">
+                                        </div>
+                                    </div>
+                                    <div class="tab-pane fade" role="tabpanel" id="Tickets_Completed">
+                                        <div id="plistContentCompleted">
+                                        </div>
+                                    </div> -->
+
+                                    <div class="tab-pane fade active show" role="tabpanel" id="tickets">
+                                        <div id="InboxAccordion" class="inbox-accordion"></div>
+
+                                        <!-- <div id="plistContent"></div> -->
+                                    </div>
+                                </div>
+                            </div>
+                            <!--end::Body-->
+                        </div>
+
+                    </div>
+                    <!--end::Table Widget 1-->
+                </div>
+                <!--end:::Col-->
+                <!--begin:::Col-->
+                <div id="PROFLOW_Right" class="p-0 col-xl-8  col-md-8 d-flex flex-column flex-column-fluid vh-100 min-vh-100">
+                    <div class="card card-xl-stretch  flex-root h-1px  ">
+                        <iframe data-ignore-history="true" class="d-none horizontal-iframe" id="rightIframe" src="about:blank"></iframe>
+                        <!--begin::Body-->
+                        <div class="card-body p-0" id="Tickets_details_view">
+                            <div id="directoryChatPanel" class="directory-chat-panel d-none"></div>
+                            <div class="card mb-5 mb-xl-2 h-100" id="process_centerpanel">
+                                <div class="d-flex flex-column text-center h-100 justify-content-center" style="height:95%">
+                                    <span class="material-icons material-icons-style material-icons-5tx mx-auto text-gray-500">add_task</span>
+                                    <h3 class="fw-boldest">Select a task from left panel to view its details</h3>
+                                    <!-- <h6 class="fst-italic text-gray-400">Nothing is selected</h6> -->
+                                </div>
+                            </div>
+                            <!--end::Card body-->
+                        </div>
+
+                    </div>
+                    <!--end:::Col-->
+                </div>
+                <div id="ProcessFlow_New_Right_Last" class="col-xl-2 col-md-2 d-flex flex-column flex-column-fluid vh-100 min-vh-100 d-block d-none">
+                    <div class="card card-xl-stretch  flex-root h-1px  ">
+
+                        <!--begin::Body-->
+                        <div class="card-body h-300px ">
+                            <div class="row">
+                                <div class="col-xl-12 col-md-4 d-flex flex-column flex-column-fluid KPI_Section  ">
+                                    <div class="card ">
+                                        <div class="card-header collapsible cursor-pointer rotate " data-bs-toggle="collapse" aria-expanded="false" data-bs-target="#KPI-1">
+                                            <h3 class="card-title">KPI Title</h3>
+                                            <div class="card-toolbar rotate-180">
+                                                <span class="material-icons material-icons-style material-icons-2">
+                                                    expand_circle_down
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="collapse show" id="KPI-1">
+                                            <div class="card-body">
+                                                <figure>
+                                                    <img class="img-fluid" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOEAAADhCAMAAAAJbSJIAAAAw1BMVEX////DIC8mMlL/PzTnLDX99fa/AAm/ABD24+WGi5kYJ0t7gJDr7/D/Oi3/LR7/09Hzo6bmGyfnJS/rYWbajZHBDSLr2Nfk1Nf/r6z/MiTtcnbnDx4AGUPR1tu1vMDa3d/Fys7g4+Sqsbf19/gAAAC/xcipsbaNkJbXhIn67e4KIEgVJUr/6ej/GwCdpqyOmaD2u73wj5LmAADsVlsAAjtyeIl1eH6Dh40mLz8WIjUAABwiLDxHTVdfY2w2PEkAACEEFyxohIB5AAAC50lEQVR4nO3dDU/TQByA8fMFUDgR8F28l3J0Q9ThCxbUbfr9P5XtTIS1S2+DHtdbnl8II8s/Wx+2NeFyG0IAAAAAAAAAAAAAAAAAAAAAAADAIxdCG2F0+ZOJfSxByCOhRZ7lQmth5f+rXSniUXWqbBPGmqowu/YgrlGhFkofiYE2prwAAAC4rY2T5w0n72MfVZc2Nl80bD6KfVRd2ti817BFYVIoTB+F6aMwffEKTSakFUJJ7+TtRCvMsoHULs/Lb2HvKFqh1IOssZoYQrRCa7QbKKvU4Oo6J2X3z9l4r0NZPjvl7CsszqXpozB9FArx+HS77nQn1uHewBKFH+7Xba9Z4TaF/UYhhf1HIYX9RyGF/Uchhf0XrdBpfTd7E6MV5tY2VoQjrZcGKrROGVvbIxxEvNehVcLkd7DPmzMNhf1HIYX9RyGF/df3wtcLfFzpFvpeuPum4dPTlW6h74VPHjTsUjiPQgpDo9CPQgpvYamdeykXqpGY7b5sXy9NuNCpXC6xXppwobJnUkvvLuiEC6tXoFTenexJFy6FQvH5bdOX6wPJF+4dHtTtP7s+kH7h/sO6AwoppLBTFFJIYYXCsCikkMIKhWFRSGHk/aVaZ1l5sa6Fwpp/66XZ1XU3WC/tb6FQxs32l7YvJyZcKAe5U9o5bVvHEi5cEoUUUlihMCwKKaSwQmFYFFJIYYXCsCikkMJK4ELP+4DTL/S9l3u3af49M3tfDxu+zRduNcx/rv7O+bu68+8dFl7tL62WS+teLjA3kL1aYG7CO2BUk1lwLPJGn5bL/3sCAABYI3rom7BFYdsn3EWRtU/kRaFWOKhOXU59nyY1OhLH7RM/rPnZPjEcyV+R/nmvKvSZZ2Q0nrQ/znLqvZuhXuLJEsbFdHzpGfE+hu539bdaq7JwOFrtyLpy7MTU8/QZTc7+tE9cjCeT9onhuPD9IgNx5RnC91l10nhfQdJzoilvwzcBAAAAAAAAAACAyP4CTKCchAxIOYAAAAAASUVORK5CYII=">
+                                                </figure>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card ">
+                                        <div class="card-header collapsible cursor-pointer rotate" data-bs-toggle="collapse" aria-expanded="true" data-bs-target="#KPI-2">
+                                            <h3 class="card-title">KPI Title</h3>
+                                            <div class="card-toolbar rotate-180">
+                                                <span class="material-icons material-icons-style material-icons-2">
+                                                    expand_circle_down
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="collapse show" id="KPI-2">
+                                            <div class="card-body">
+                                                <figure>
+                                                    <img class="img-fluid" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTvyClOEGXUMdXM2DezoaC8GkYJ_Oo6BOSQAg&amp;usqp=CAU">
+                                                </figure>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!--end::Container-->
+            </div>
+
+
+        </div>
+    </div>
+
+    <!--end::Content-->
+    <div id="waitDiv" class="page-loader rounded-2 bg-radial-gradient">
+        <div class="loader-box-wrapper d-flex bg-white p-20 shadow rounded">
+            <span class="loader"></span>
+        </div>
+    </div>
+
+    <div class="modal fade" id="filterModal">
+        <div class="modal-dialog modal-fullscreen modal-dialog-scrollable">
+            <div class="modal-content">
+
+                <!-- Modal body -->
+                <div class="modal-body p-0">
+                    <div class="container" id="dvModalFilter"></div>
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="teamModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+
+                <!-- Header -->
+                <div class="modal-header">
+                    <h5 class="modal-title">Team Tasks</h5>
+                    <button type="button" class="btn-close---" data-bs-dismiss="modal"></button>
+                </div>
+
+                <!-- Body -->
+                <div class="modal-body" id="teamPopupContent">
+                    <!-- Dynamic content -->
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="../../UI/axpertUI/plugins.bundle.js"></script>
+    <script type="text/javascript" src="../../UI/axpertUI/scripts.bundle.js"></script>
+    <script type="text/javascript" src="../../ThirdParty/jquery-confirm-master/jquery-confirm.min.js"></script>
+    <script type="text/javascript" src="../../Js/alerts.min.js?v=32"></script>
+    <script type="text/javascript" src="../../Js/handlebars.min.js?v=2"></script>
+    <script type="text/javascript" src="../../Js/common.min.js?v=158"></script>
+    <script type="text/javascript" src="../../Js/helper.min.js?v=172"></script>
+    <script type="text/javascript" src="../../Js/xmlToJson.min.js"></script>
+    <script type="text/javascript" src="../../Js/AxProcessFlowCommon.min.js?v=1"></script>
+    <script type="text/javascript" src="../HTMLPages/js/AxProcessFlow_V3.js?v=11"></script>
+    <script src="../report/js/taskslst_inbox.js?v=1230202515104"></script>
+
+
+    <script type="text/javascript">
+        var _processName = 'AxProcessFlow';
+    </script>
+
+    <script>
+        class InboxV2 {
+
+            constructor() {
+
+                this.store = {
+                    approvalPending: [],
+                    approvalRequested: [],
+                    reminders: [],
+                    escalations: [],
+                    completed: []
+
+                };
+                this.totalCounts = {
+    approvalPending: 0,
+    approvalRequested: 0,
+    messages: 0,
+    reminders: 0,
+    escalations: 0,
+    completed: 0
+};
+                this.loaded = {
+    approvalPending: false,
+    approvalRequested: false,
+    reminders: false,
+    escalations: false,
+    completed: false
+};
+                this.schedulerFromLHS = false;
+                this.schedulerUserName = "";
+                this.currentChildSection = "approvalPending";
+                this.currentSection = "approvals";
+
+                this.pageSize = 0;
+
+                // Fast/deep search state
+                this.searchRequestId = 0;
+                this.searchCache = new Map();
+                this.searchBaseStore = {};
+                this.maxSearchCacheEntries = 10;
+
+                this.clientChunkSize = 20;
+                this.clientRenderLimit = {
+
+                    pending: 20,
+
+                    completed: 20,
+                    reminders: 20,
+                    escalations: 20,
+                };
+
+                this.pagination = {
+                    reminders: 1,
+                    escalations: 1,
+                    completed: 1
+                };
+
+                this.loading = {
+                    approvalPending: false,
+                    approvalRequested: false,
+                    messages: false,
+                    reminders: false,
+                    escalations: false,
+                    completed: false
+                };
+                this.visibleCount = {
+
+                    reminders: 0,
+                    escalations: 0,
+                    approvalPending: 0,
+                    approvalRequested: 0,
+
+                    completed: 0
+                };
+                this.hasMore = {
+                    tasks: true,
+                    pending: true,
+                    notifications: true,
+                    completed: true,
+                    reminders: false,
+                    people: true,
+                    groups: true
+                };
+                this.chatThreads = {};
+                this.activeConversationKey = "";
+                this.activeConversationItem = null;
+                this.activeConversationSection = "";
+                this.peopleSourceRows = [];
+                this.peopleSearchText = "";
+                this.groupSourceRows = [];
+                this.groupSearchText = "";
+                this.groupChildrenCache = {};
+                this.groupChildrenLoading = {};
+                this.expandedGroupKey = "";
+                this.accordionDelegateBound = false;
+                this.sections = [
+                  {
+    key: "approvals",
+    label: "Approvals",
+    countDs: "DS_Count",
+    children: [
+        {
+            key: "approvalPending",
+            label: "Approvals Pending With Me",
+            ds: "DS_PendingApprovals"
+        },
+        {
+            key: "approvalRequested",
+            label: "Approvals Requested By Me",
+            ds: "REQUESTEDBYME"
+        }
+    ]
+},,
+
+                    {
+                        key: "messages",
+                        label: "Messages",
+                        ds: "DS_Messages",
+                        countDs: "DS_Count"
+                    },
+                    {
+                        key: "reminders",
+                        label: "Reminders",
+                        ds: "DS_Reminders",
+                        countDs: "DS_Count"
+                    },
+                    {
+                        key: "escalations",
+                        label: "Escalations",
+                        ds: "DS_Escalations",
+                        countDs: "DS_Count"
+                    },
+                    {
+                        key: "completed",
+                        label: "Completed",
+                        ds: "DS_Completed",
+                        countDs: "DS_Count"
+                    }
+                ];
+
+                this.init();
+            }
+
+            async init() {
+                this.cacheDom();
+                this.bindEvents();
+              await this.loadCounts();
+                await this.loadInitialDS();
+            }
+
+            async loadCounts() {
+
+    try {
+
+        console.log("[InboxV2] Loading DS_Count");
+
+        const result = await this.fetchDS(
+            "DS_Count",
+            "",
+            1,
+            {},
+            {
+                pageSize: 1
+            }
+        );
+
+        const rows = result.rows || [];
+
+        console.log("[InboxV2] DS_Count result:", rows);
+
+        if (!rows.length) {
+            console.warn("[InboxV2] DS_Count returned no rows");
+            return;
+        }
+
+        const countRow = rows[0];
+
+        console.log("[InboxV2] DS_Count row:", countRow);
+
+        /*
+         * Map the DS_Count columns to the accordion sections.
+         *
+         * Change these property names if your DS_Count
+         * returns different column names.
+         */
+
+        this.totalCounts.approvalPending =
+            Number(
+                countRow.approvalpending ??
+                countRow.approval_pending ??
+                countRow.pendingapproval ??
+                countRow.pending ??
+                0
+            );
+
+        this.totalCounts.approvalRequested =
+            Number(
+                countRow.approvalrequested ??
+                countRow.approval_requested ??
+                countRow.requestedbyme ??
+                countRow.requested ??
+                0
+            );
+
+        this.totalCounts.messages =
+            Number(
+                countRow.messages ??
+                countRow.message ??
+                0
+            );
+
+        this.totalCounts.reminders =
+            Number(
+                countRow.reminders ??
+                countRow.reminder ??
+                0
+            );
+
+        this.totalCounts.escalations =
+            Number(
+                countRow.escalations ??
+                countRow.escalation ??
+                0
+            );
+
+        this.totalCounts.completed =
+            Number(
+                countRow.completed ??
+                countRow.complete ??
+                0
+            );
+
+        console.log(
+            "[InboxV2] Total counts:",
+            this.totalCounts
+        );
+
+        /*
+         * Keep visibleCount as the TOTAL count.
+         * This is what buildAccordion() uses.
+         */
+
+        Object.keys(this.totalCounts).forEach(section => {
+            this.visibleCount[section] =
+                this.totalCounts[section];
+        });
+
+    } catch (error) {
+
+        console.error(
+            "[InboxV2] DS_Count failed:",
+            error
+        );
+    }
+}
+            async loadInitialDS() {
+
+                const sectionKey =
+                    this.currentChildSection || "approvalPending";
+
+                const section = this.getSearchableSections()
+                    .find(x => x.key === sectionKey);
+
+                if (!section) return;
+
+                try {
+
+                    const result = await this.fetchDS(
+                        section.ds,
+                        "",
+                        1
+                    );
+
+                    const rows = result.rows || [];
+
+                    this.store[section.key] =
+                        this.sortLatest(rows);
+
+                    this.visibleCount[section.key] =
+                        result.totalCount ??
+                        rows.length;
+
+                    this.hasMore[section.key] =
+                        rows.length <
+                        (result.totalCount ?? rows.length);
+                        this.loaded[section.key] = true;
+
+                } catch (error) {
+
+                    console.error(
+                        `Initial DS load failed: ${section.ds}`,
+                        error
+                    );
+                }
+
+                this.buildAccordion();
+            }
+            getSearchableSections() {
+
+                const result = [];
+
+                this.sections.forEach(parent => {
+
+                    if (parent.children?.length) {
+
+                        parent.children.forEach(child => {
+
+                            if (child.ds) {
+
+                                result.push({
+                                    key: child.key,
+                                    label: child.label,
+                                    parentKey: parent.key,
+                                    parentLabel: parent.label,
+                                    ds: child.ds
+                                });
+
+                            }
+
+                        });
+
+                    } else if (parent.ds) {
+
+                        result.push({
+                            key: parent.key,
+                            label: parent.label,
+                            parentKey: parent.key,
+                            parentLabel: parent.label,
+                            ds: parent.ds
+                        });
+
+                    }
+
+                });
+
+                return result;
+            }
+            cacheDom() {
+
+                this.accordionEl =
+                    document.getElementById("InboxAccordion");
+
+                this.contentEl =
+                    document.getElementById("plistContent");
+
+                this.searchEl =
+                    document.getElementById("advTextSearch");
+
+                this.refreshBtn =
+                    document.getElementById("refreshBtn");
+
+                this.rightIframe =
+                    document.getElementById("rightIframe");
+
+                this.rightPanelHostEl =
+                    document.getElementById("Tickets_details_view") ||
+                    document.getElementById("PROFLOW_Right");
+
+                this.directoryChatPanelEl =
+                    document.getElementById("directoryChatPanel");
+
+                this.processCenterPanelEl =
+                    document.getElementById("process_centerpanel");
+
+                this.defaultRightPanelHtml =
+                    this.processCenterPanelEl?.innerHTML || "";
+            }
+            bindEvents() {
+
+                // ============================
+                // SEARCH
+                // ============================
+                if (this.searchEl) {
+
+                    const performSearch = async () => {
+
+                        const searchText =
+                            this.searchEl.value.trim().toLowerCase();
+
+                        // Invalidate previous search immediately.
+                        const requestId = ++this.searchRequestId;
+
+                        try {
+
+                            // --------------------------------
+                            // CLEAR SEARCH
+                            // --------------------------------
+                            if (!searchText) {
+
+                                this.searchRequestId++;
+
+                                // A cleared search starts a fresh data state.
+                                this.searchCache.clear();
+                                this.searchBaseStore = {};
+
+                                this.currentSection = "approvals";
+                                this.currentChildSection = "approvalPending";
+
+                                this.sections.forEach(section => {
+                                    if (section.children?.length) {
+                                        section.children.forEach(child => {
+                                            this.resetSectionLoadState(child.key);
+                                        });
+                                    } else {
+                                        this.resetSectionLoadState(section.key);
+                                    }
+                                });
+
+                                // After clear, only Pending is loaded.
+                                // Every other accordion must make a fresh DS call
+                                // when the user expands it.
+                                this.sections.forEach(section => {
+                                    if (section.children?.length) {
+                                        section.children.forEach(child => {
+                                            if (child.key !== "approvalPending") {
+                                                this.loaded[child.key] = false;
+                                                this.loading[child.key] = false;
+                                            }
+                                        });
+                                    } else if (section.key !== "approvalPending") {
+                                        this.loaded[section.key] = false;
+                                        this.loading[section.key] = false;
+                                    }
+                                });
+
+                                await this.loadInitialDS();
+
+                                // Always return to expanded Pending.
+                                this.currentSection = "approvals";
+                                this.currentChildSection = "approvalPending";
+                                this.buildAccordion();
+
+                                showDefaultRightPanel();
+                                return;
+                            }
+
+                            // --------------------------------
+                            // CACHE HIT
+                            // --------------------------------
+                            const cached = this.searchCache.get(searchText);
+
+                            if (cached) {
+
+                                Object.keys(cached.store).forEach(key => {
+                                    this.store[key] =
+                                        cached.store[key].slice();
+
+                                    this.visibleCount[key] =
+                                        cached.visibleCount[key] ?? 0;
+
+                                    this.loaded[key] = true;
+                                    this.hasMore[key] = false;
+                                });
+
+                                if (requestId !== this.searchRequestId) return;
+
+                                this.applySearchMatch();
+                                showDefaultRightPanel();
+                                return;
+                            }
+
+                            // --------------------------------
+                            // FAST SEARCH:
+                            // 1) Filter already-loaded sections locally first.
+                            // 2) Only call the DB for sections that are not loaded
+                            //    or where the loaded rows contain no match.
+                            await this.searchAllSections(
+                                searchText,
+                                requestId
+                            );
+
+                            if (requestId !== this.searchRequestId) return;
+
+                            const snapshot = {
+                                store: {},
+                                visibleCount: {}
+                            };
+
+                            this.sections.forEach(section => {
+
+                                const saveSection = key => {
+                                    snapshot.store[key] =
+                                        (this.store[key] || []).slice();
+
+                                    snapshot.visibleCount[key] =
+                                        this.visibleCount[key] ?? 0;
+                                };
+
+                                if (section.children?.length) {
+                                    section.children.forEach(child =>
+                                        saveSection(child.key)
+                                    );
+                                } else {
+                                    saveSection(section.key);
+                                }
+                            });
+
+                            this.searchCache.set(searchText, snapshot);
+
+                            while (
+                                this.searchCache.size >
+                                this.maxSearchCacheEntries
+                            ) {
+                                const firstKey =
+                                    this.searchCache.keys().next().value;
+
+                                this.searchCache.delete(firstKey);
+                            }
+
+                            this.applySearchMatch();
+                            showDefaultRightPanel();
+
+                        } catch (error) {
+
+                            if (requestId !== this.searchRequestId) return;
+
+                            console.error(
+                                "[InboxV2] Search failed:",
+                                error
+                            );
+                        }
+                    };
+
+                    // Search while typing
+                    this.searchEl.addEventListener(
+                        "input",
+                        this.debounce(performSearch, 250)
+                    );
+
+                    // Search icon click
+                    const searchIcon =
+                        document.getElementById("deepSearchToggle");
+
+                    if (searchIcon) {
+
+                        searchIcon.style.cursor = "pointer";
+
+                        searchIcon.addEventListener("click", () => {
+
+                            performSearch();
+
+                        });
+
+                    }
+                }
+
+
+                // ============================
+                // REFRESH
+                // ============================
+                if (this.refreshBtn) {
+
+                    this.refreshBtn.addEventListener(
+                        "click",
+                        async event => {
+
+                            event.preventDefault();
+                            event.stopPropagation();
+
+                            console.log("[InboxV2] Refresh clicked");
+                            ShowDimmer(true);
+                            try {
+
+                                // --------------------------------
+                                // Stop chat polling
+                                // --------------------------------
+                                if (this.chatRefreshInterval) {
+
+                                    clearInterval(
+                                        this.chatRefreshInterval
+                                    );
+
+                                    this.chatRefreshInterval = null;
+                                }
+
+                                if (this.pollingTimer) {
+
+                                    clearInterval(
+                                        this.pollingTimer
+                                    );
+
+                                    this.pollingTimer = null;
+                                }
+
+
+                                // --------------------------------
+                                // Hide chat panel
+                                // --------------------------------
+                                this.hideDirectoryChatPanel();
+
+
+                                // --------------------------------
+                                // Show normal task panel
+                                // --------------------------------
+                                if (this.processCenterPanelEl) {
+
+                                    this.processCenterPanelEl.style.display = "";
+
+                                    this.processCenterPanelEl.classList.remove(
+                                        "d-none"
+                                    );
+
+                                }
+
+
+                                // --------------------------------
+                                // Clear selected rows
+                                // --------------------------------
+                                if (this.accordionEl) {
+
+                                    this.accordionEl
+                                        .querySelectorAll(
+                                            ".directory-row.selected, " +
+                                            ".task-item.selected, " +
+                                            ".active"
+                                        )
+                                        .forEach(row => {
+
+                                            row.classList.remove(
+                                                "selected",
+                                                "active"
+                                            );
+
+                                        });
+
+                                }
+
+
+                                // --------------------------------
+                                // Reset actual sections
+                                // --------------------------------
+                                this.sections.forEach(section => {
+
+                                    if (section.children) {
+
+                                        section.children.forEach(child => {
+
+                                            this.resetSectionLoadState(
+                                                child.key
+                                            );
+
+                                        });
+
+                                    } else {
+
+                                        this.resetSectionLoadState(
+                                            section.key
+                                        );
+
+                                    }
+
+                                });
+                                this.currentSection = "approvals";
+                                this.currentChildSection = "approvalPending";
+
+                                // --------------------------------
+                                // Reload everything
+                                // --------------------------------
+                                await this.loadInitialDS();
+
+                                showDefaultRightPanel()
+                                console.log(
+                                    "[InboxV2] Refresh completed"
+                                );
+
+                            } catch (error) {
+
+                                console.error(
+                                    "[InboxV2] Refresh failed:",
+                                    error
+                                );
+
+                            } finally {
+
+                                // Always hide loader after
+                                // refresh completes/fails
+                                ShowDimmer(false);
+
+                            }
+
+                        }
+                    );
+
+                }
+
+
+                // ============================
+                // TOOLTIPS
+                // ============================
+                this.initTooltips();
+            }
+            // bindEvents() {
+
+            //     if (
+            //         this.searchEl &&
+            //         typeof this.searchEl.addEventListener === "function"
+            //     ) {
+            //         this.searchEl.addEventListener(
+            //             "input",
+            //             this.debounce(async () => {
+            //                 const sections = [
+            //                     "tasks",
+            //                     "pending",
+            //                     // "notifications",
+            //                     "completed",
+            //                     // "people",
+            //                     // "groups"
+            //                 ];
+
+            //                 sections.forEach(section => {
+            //                     this.resetSectionLoadState(section);
+            //                 });
+
+            //                 await Promise.all([
+            //                     this.loadSection("tasks"),
+            //                     this.loadSection("pending"),
+            //                     // this.loadSection("notifications"),
+            //                     this.loadSection("completed"),
+            //                     // this.loadSection("people"),
+            //                     // this.loadSection("groups")
+            //                 ]);
+            //             }, 500)
+            //         );
+            //     }
+
+            //     if (
+            //         this.refreshBtn &&
+            //         typeof this.refreshBtn.addEventListener === "function"
+            //     ) {
+            //         this.refreshBtn.addEventListener("click", async () => {
+            //             // 1️⃣ Reset Chat layout states and hide the active chat containers immediately
+            //             if (this.directoryChatPanelEl) {
+            //                 this.directoryChatPanelEl.classList.add("d-none");
+            //                 this.directoryChatPanelEl.style.display = "none";
+            //             }
+
+            //             // Clear active chat message threads or active receiver details if tracked
+            //             this.activeChatId = null;
+            //             this.activeReceiver = null;
+
+            //             // 2️⃣ Stop any active background polling timers/intervals so they don't fight for DOM space
+            //             if (this.chatRefreshInterval) {
+            //                 clearInterval(this.chatRefreshInterval);
+            //                 this.chatRefreshInterval = null;
+            //             }
+            //             if (this.pollingTimer) {
+            //                 clearInterval(this.pollingTimer);
+            //                 this.pollingTimer = null;
+            //             }
+
+
+
+            //             showDefaultRightPanel();
+
+
+            //             // 4️⃣ Remove selected/active background highlights from list elements
+            //             if (this.accordionEl) {
+            //                 this.accordionEl
+            //                     .querySelectorAll(".directory-row.selected, .task-item.selected, .active")
+            //                     .forEach(row => row.classList.remove("selected", "active"));
+            //             }
+
+            //             // 5️⃣ Existing load section refreshes
+            //             const sections = [
+            //                 "tasks",
+            //                 "pending",
+            //                 "notifications",
+            //                 "completed",
+            //                 "people",
+            //                 "groups"
+            //             ];
+
+            //             sections.forEach(section => {
+            //                 this.resetSectionLoadState(section);
+            //             });
+
+            //             await Promise.all([
+            //                 this.loadSection("tasks"),
+            //                 this.loadSection("pending"),
+            //                 this.loadSection("notifications"),
+            //                 this.loadSection("completed"),
+            //                 this.loadSection("people"),
+            //                 this.loadSection("groups")
+            //             ]);
+            //         });
+            //         if (this.directoryChatPanelEl) {
+            //             this.directoryChatPanelEl.classList.add("d-none");
+            //             this.directoryChatPanelEl.style.display = "none";
+            //         }
+            //     }
+
+            //     this.initTooltips();
+            // }
+
+            resetSectionLoadState(section) {
+                this.pagination[section] = 1;
+                this.hasMore[section] = true;
+
+                // IMPORTANT:
+                // After clearing search, every section must become
+                // "not loaded" again. Otherwise the accordion thinks
+                // Messages / Completed are already loaded and skips
+                // their DS call when the user expands them.
+                this.loaded[section] = false;
+                this.loading[section] = false;
+
+                this.store[section] = [];
+                this.visibleCount[section] = 0;
+
+                if (this.isClientPagedSection(section)) {
+                    this.clientRenderLimit[section] =
+                        this.clientChunkSize;
+                }
+
+                if (section === "groups") {
+                    this.groupChildrenCache = {};
+                    this.groupChildrenLoading = {};
+                    this.expandedGroupKey = "";
+                }
+            }
+
+            normalizeSearchValue(value) {
+                if (value === null || value === undefined) return "";
+                return String(value).trim().toLowerCase();
+            }
+
+            rowMatchesSearch(row, searchText) {
+
+                const q = this.normalizeSearchValue(searchText);
+                if (!q) return true;
+
+                const fields = [
+                    "subject",
+                    "displaytitle",
+                    "taskname",
+                    "displaycontent",
+                    "taskid",
+                    "id",
+                    "name",
+                    "username",
+                    "user",
+                    "userid",
+                    "fromuser",
+                    "touser",
+                    "reportingto",
+                    "assignedto",
+                    "assignedby",
+                    "owner",
+                    "member",
+                    "membername",
+                    "fullname",
+                    "email",
+                    "usergroup",
+                    "groupname",
+                    "title",
+                    "hlink_params",
+                    "remarks",
+                    "description",
+                    "reference",
+                    "refno",
+                    "docno",
+                    "requestno",
+                    "eventdatetime",
+                    "createdon",
+                    "modifiedon"
+                ];
+
+                const explicitMatch = fields.some(field =>
+                    this.normalizeSearchValue(row?.[field]).includes(q)
+                );
+
+                if (explicitMatch) return true;
+
+                // Final fallback: search every primitive property returned by
+                // the DS. This covers DS-specific names such as usrname,
+                // approver, sender, receiver, etc.
+                return Object.values(row || {}).some(value =>
+                    value !== null &&
+                    value !== undefined &&
+                    typeof value !== "object" &&
+                    this.normalizeSearchValue(value).includes(q)
+                );
+            }
+
+            filterSearchRows(rows, searchText) {
+                if (!searchText) return rows || [];
+
+                return (rows || []).filter(row =>
+                    this.rowMatchesSearch(row, searchText)
+                );
+            }
+
+            applySearchMatch() {
+
+                let matchedSection = null;
+                let matchedChild = null;
+
+                for (const section of this.sections) {
+
+                    if (section.children?.length) {
+
+                        for (const child of section.children) {
+
+                            const data =
+                                this.store[child.key] || [];
+
+                            // Do NOT use visibleCount/totalCount here.
+                            // Some DSs can return an unfiltered total.
+                            if (data.length > 0) {
+                                matchedSection = section.key;
+                                matchedChild = child.key;
+                                break;
+                            }
+                        }
+
+                        if (matchedSection) break;
+
+                    } else {
+
+                        const data =
+                            this.store[section.key] || [];
+
+                        if (data.length > 0) {
+                            matchedSection = section.key;
+                            break;
+                        }
+                    }
+                }
+
+                if (matchedSection) {
+
+                    this.currentSection = matchedSection;
+
+                    if (matchedChild) {
+                        this.currentChildSection = matchedChild;
+                    }
+
+                } else {
+
+                    this.currentSection = "";
+                    this.currentChildSection = "";
+                }
+
+                this.buildAccordion();
+            }
+
+            async searchAllSections(searchText, searchRequestId) {
+
+                const normalizedSearch =
+                    this.normalizeSearchValue(searchText);
+
+                // Capture the original loaded rows once per search session.
+                // This prevents a previous search from destroying the data
+                // needed by the next search term.
+                this.sections.forEach(section => {
+
+                    const capture = key => {
+
+                        if (
+                            this.loaded[key] === true &&
+                            Array.isArray(this.store[key]) &&
+                            !this.searchBaseStore[key]
+                        ) {
+                            this.searchBaseStore[key] =
+                                this.store[key].slice();
+                        }
+                    };
+
+                    if (section.children?.length) {
+                        section.children.forEach(child =>
+                            capture(child.key)
+                        );
+                    } else if (section.ds) {
+                        capture(section.key);
+                    }
+                });
+
+                const promises = [];
+
+                const searchOne = async (sectionKey, ds) => {
+
+                    const hasBase =
+                        Array.isArray(
+                            this.searchBaseStore[sectionKey]
+                        );
+
+                    // -------------------------------------------------
+                    // FAST PATH: use already-loaded unfiltered rows.
+                    // -------------------------------------------------
+                    if (hasBase) {
+
+                        const localRows =
+                            this.filterSearchRows(
+                                this.searchBaseStore[sectionKey],
+                                normalizedSearch
+                            );
+
+                        if (localRows.length > 0) {
+
+                            this.store[sectionKey] =
+                                this.sortLatest(localRows);
+
+                            this.visibleCount[sectionKey] =
+                                localRows.length;
+
+                            this.loaded[sectionKey] = true;
+                            this.hasMore[sectionKey] = false;
+
+                            return;
+                        }
+
+                        // No local match. Search the DB because the loaded
+                        // client page may not contain all records.
+                    }
+
+                    // -------------------------------------------------
+                    // DB PATH: section not loaded or no local match.
+                    // -------------------------------------------------
+                    const result =
+                        await this.fetchDS(
+                            ds,
+                            normalizedSearch,
+                            1,
+                            {},
+                            { pageSize: 100 }
+                        );
+
+                    if (
+                        searchRequestId !== null &&
+                        searchRequestId !== this.searchRequestId
+                    ) {
+                        return;
+                    }
+
+                    const rows =
+                        this.filterSearchRows(
+                            result.rows || [],
+                            normalizedSearch
+                        );
+
+                    this.store[sectionKey] =
+                        this.sortLatest(rows);
+
+                    this.visibleCount[sectionKey] =
+                        rows.length;
+
+                    this.loaded[sectionKey] = true;
+                    this.hasMore[sectionKey] = false;
+                };
+
+                this.sections.forEach(section => {
+
+                    if (section.children?.length) {
+
+                        section.children.forEach(child => {
+                            promises.push(
+                                searchOne(child.key, child.ds)
+                            );
+                        });
+
+                    } else if (section.ds) {
+
+                        promises.push(
+                            searchOne(section.key, section.ds)
+                        );
+                    }
+                });
+
+                await Promise.all(promises);
+
+                if (
+                    searchRequestId === null ||
+                    searchRequestId === this.searchRequestId
+                ) {
+                    this.buildAccordion();
+                }
+            }
+
+            async loadAllDS(searchText = "", searchRequestId = null) {
+
+                const normalizedSearch =
+                    this.normalizeSearchValue(searchText);
+
+                const isSearch = !!normalizedSearch;
+
+                // Deep search gets a larger first page. Normal loading
+                // keeps the existing lightweight page size.
+                const searchPageSize = 100;
+
+                const promises = [];
+
+                this.sections.forEach(section => {
+
+                    if (section.children?.length) {
+
+                        section.children.forEach(child => {
+
+                            promises.push((async () => {
+
+                                const result =
+                                    await this.fetchDS(
+                                        child.ds,
+                                        normalizedSearch,
+                                        1,
+                                        {},
+                                        isSearch
+                                            ? { pageSize: searchPageSize }
+                                            : {}
+                                    );
+
+                                if (
+                                    searchRequestId !== null &&
+                                    searchRequestId !== this.searchRequestId
+                                ) {
+                                    return;
+                                }
+
+                                let rows = result.rows || [];
+
+                                // Fallback for DSs that ignore searchtext.
+                                if (isSearch) {
+                                    rows =
+                                        this.filterSearchRows(
+                                            rows,
+                                            normalizedSearch
+                                        );
+                                }
+
+                                this.store[child.key] =
+                                    this.sortLatest(rows);
+
+                                this.visibleCount[child.key] =
+                                    rows.length;
+
+                                this.loaded[child.key] = true;
+                                this.hasMore[child.key] = false;
+
+                            })());
+                        });
+
+                    } else if (section.ds) {
+
+                        promises.push((async () => {
+
+                            const result =
+                                await this.fetchDS(
+                                    section.ds,
+                                    normalizedSearch,
+                                    1,
+                                    {},
+                                    isSearch
+                                        ? { pageSize: searchPageSize }
+                                        : {}
+                                );
+
+                            if (
+                                searchRequestId !== null &&
+                                searchRequestId !== this.searchRequestId
+                            ) {
+                                return;
+                            }
+
+                            let rows = result.rows || [];
+
+                            if (isSearch) {
+                                rows =
+                                    this.filterSearchRows(
+                                        rows,
+                                        normalizedSearch
+                                    );
+                            }
+
+                            this.store[section.key] =
+                                this.sortLatest(rows);
+
+                            this.visibleCount[section.key] =
+                                rows.length;
+
+                            this.loaded[section.key] = true;
+                            this.hasMore[section.key] = false;
+
+                        })());
+                    }
+                });
+
+                await Promise.all(promises);
+
+                if (
+                    searchRequestId === null ||
+                    searchRequestId === this.searchRequestId
+                ) {
+                    this.buildAccordion();
+                }
+            }
+
+            fetchDS(
+                dsName,
+                searchText = "",
+                pageNo = 1,
+                extraSqlParams = {},
+                requestOptions = {}
+            ) {
+
+                return new Promise((resolve, reject) => {
+                    const safeExtraSqlParams =
+                        extraSqlParams &&
+                            typeof extraSqlParams === "object"
+                            ? extraSqlParams
+                            : {};
+                    const safeRequestOptions =
+                        requestOptions &&
+                            typeof requestOptions === "object"
+                            ? requestOptions
+                            : {};
+                    const includeDefaultSqlParams =
+                        safeRequestOptions.includeDefaultSqlParams !== false;
+
+                    const params = {
+
+                        adsNames: [dsName],
+
+                        props: {
+                            pageno: pageNo,
+                            pagesize:
+                                safeRequestOptions.pageSize ??
+                                this.pageSize
+                        },
+
+                        sqlParams: includeDefaultSqlParams
+                            ? {
+
+                                name:
+                                    parent.mainUserName,
+
+                                searchtext:
+                                    searchText,
+
+                                ...safeExtraSqlParams
+                            }
+                            : {
+                                ...safeExtraSqlParams
+                            }
+                    };
+
+                    parent.GetDataFromAxList(
+
+                        params,
+
+                        (response) => {
+
+                            try {
+
+                                const rawResponse =
+                                    typeof response === "string"
+                                        ? response
+                                        : typeof response?.d === "string"
+                                            ? response.d
+                                            : JSON.stringify(response?.d || response);
+
+                                const parsedResponse =
+                                    JSON.parse(rawResponse);
+
+                                const parsed =
+                                    typeof parsedResponse?.d === "string"
+                                        ? JSON.parse(parsedResponse.d)
+                                        : parsedResponse;
+
+                                const ds =
+                                    parsed?.result?.data?.[0] || {};
+
+                                const rows =
+                                    ds.data || [];
+
+                                const totalCount =
+                                    ds.totalcount ||
+                                    ds.recordcount ||
+                                    ds.totalrows ||
+                                    rows.length;
+
+                                resolve({
+                                    rows,
+                                    totalCount
+                                });
+
+                            } catch (e) {
+
+                                console.error(e);
+
+                                resolve({
+                                    rows: [],
+                                    totalCount: 0
+                                });
+                            }
+                        },
+
+                        reject
+                    );
+                });
+            }
+            sortLatest(data = []) {
+
+                return data.sort((a, b) => {
+
+                    const d1 = new Date(
+                        b.modifiedon ||
+                        b.createdon ||
+                        b.createddate ||
+                        0
+                    );
+
+                    const d2 = new Date(
+                        a.modifiedon ||
+                        a.createdon ||
+                        a.createddate ||
+                        0
+                    );
+
+                    return d1 - d2;
+                });
+            }
+
+            isClientPagedSection(section) {
+                return true;
+            }
+
+            getRenderedSectionRows(section, data = []) {
+                if (!this.isClientPagedSection(section)) {
+                    return data;
+                }
+
+                const limit =
+                    this.clientRenderLimit[section] ||
+                    this.clientChunkSize;
+
+                return data.slice(0, limit);
+            }
+
+            getRenderedSectionCount(section) {
+                const data = this.store[section] || [];
+
+                if (!this.isClientPagedSection(section)) {
+                    return data.length;
+                }
+
+                return Math.min(
+                    this.clientRenderLimit[section] ||
+                    this.clientChunkSize,
+                    data.length
+                );
+            }
+
+            revealNextClientRows(section, scrollBody) {
+                if (!this.isClientPagedSection(section)) {
+                    return false;
+                }
+
+                const data = this.store[section] || [];
+                const start = this.getRenderedSectionCount(section);
+
+                if (start >= data.length) {
+                    return false;
+                }
+
+                const nextLimit = Math.min(
+                    start + this.clientChunkSize,
+                    data.length
+                );
+                const rows = data.slice(start, nextLimit);
+
+                this.clientRenderLimit[section] = nextLimit;
+
+                if (scrollBody) {
+                    scrollBody.insertAdjacentHTML(
+                        "beforeend",
+                        this.renderCards(rows, section, start)
+                    );
+                    this.updateSectionCount(section);
+                    this.bindDirectoryAndTaskClicks();
+                    this.bindAccordionScrollHandoff();
+                } else {
+                    this.buildAccordion();
+                }
+
+                return true;
+            }
+
+            updateSectionCount(section) {
+
+                let countBadge =
+                    this.accordionEl.querySelector(
+                        `.v2-child-header[data-section="${section}"] .inbox-count`
+                    );
+
+                if (!countBadge) {
+
+                    countBadge =
+                        this.accordionEl.querySelector(
+                            `.v2-accordion-header[data-section="${section}"] .inbox-count`
+                        );
+                }
+
+                if (!countBadge) return;
+
+                const total =
+                    this.visibleCount[section] ??
+                    this.store[section].length;
+
+                const shown =
+                    this.getRenderedSectionCount(section);
+
+                countBadge.innerText = `${shown}/${total}`;
+            }
+
+            buildAccordion() {
+
+                if (!this.accordionEl) return;
+
+                let html = "";
+                this.sections
+                    .filter(section => !section.isChildOf)
+                    .forEach(section => {
+
+                        const expanded = this.currentSection === section.key;
+                        const data = this.store[section.key] || [];
+
+                        const renderedData =
+                            this.getRenderedSectionRows(section.key, data);
+
+                        const totalCount =
+                            this.visibleCount[section.key] ?? data.length;
+
+                        const shownCount =
+                            this.isClientPagedSection(section.key)
+                                ? renderedData.length
+                                : data.length;
+                        html += `
+        <div class="v2-accordion-item">
+
+            <div class="v2-accordion-header ${expanded ? "active" : ""}"
+                 data-section="${section.key}">
+
+                <div class="v2-left">
+                    <span class="material-icons">
+                        ${expanded ? "expand_less" : "expand_more"}
+                    </span>
+
+                    <span class="v2-title">
+                        ${section.label}
+                    </span>
+                </div>
+ ${!section.children
+                                ? `<span class="inbox-count">
+                   ${shownCount}/${totalCount}
+               </span>`
+                                : ""
+                            }
+            </div>
+
+            <div class="v2-accordion-body ${expanded ? "show" : ""}">
+        `;
+
+                        // Child accordions
+                        const children = section.children || [];
+
+                        if (children.length) {
+
+                            children.forEach(child => {
+
+                                const data = this.store[child.key] || [];
+
+                                const renderedData =
+                                    this.getRenderedSectionRows(child.key, data);
+
+                                const totalCount =
+                                    this.visibleCount[child.key] ??
+                                    data.length;
+
+                                const shownCount =
+                                    this.isClientPagedSection(child.key)
+                                        ? renderedData.length
+                                        : data.length;
+
+                                html += `
+                <div class="v2-child-item">
+
+                    <div class="v2-child-header ${this.currentChildSection === child.key ? "active" : ""
+                                    }"
+                         data-section="${child.key}">
+
+                        <div class="v2-left">
+
+                           <span class="material-icons">
+    ${this.currentChildSection === child.key
+                                        ? "expand_less"
+                                        : "expand_more"
+                                    }
+</span>
+
+                            <span class="v2-title">
+                                ${child.label}
+                            </span>
+
+                        </div>
+
+                        <span class="inbox-count">
+                            ${shownCount}/${totalCount}
+                        </span>
+
+                    </div>
+
+                    <div class="v2-child-body ${this.currentChildSection === child.key ? "show" : ""
+                                    }">
+
+                        <div class="v2-scroll-body"
+                             data-section="${child.key}">
+
+                            ${this.renderCards(
+                                        renderedData,
+                                        child.key
+                                    )}
+
+                        </div>
+
+                    </div>
+
+                </div>
+                `;
+                            });
+
+                        } else {
+
+                            // Normal accordion (Pending, Completed...)
+                            const data = this.store[section.key] || [];
+
+                            const renderedData =
+                                this.getRenderedSectionRows(section.key, data);
+
+                            html += `
+            <div class="v2-scroll-body"
+                 data-section="${section.key}">
+
+                ${this.renderCards(
+                                renderedData,
+                                section.key
+                            )}
+
+            </div>
+            `;
+                        }
+
+                        html += `
+            </div>
+        </div>
+        `;
+                    });
+                //                 this.sections.forEach(section => {
+
+                //                     const data =
+                //                         this.store[section.key] || [];
+                //                     const renderedData =
+                //                         this.getRenderedSectionRows(
+                //                             section.key,
+                //                             data
+                //                         );
+
+                //                     const expanded =
+                //                         this.currentSection === section.key;
+                //                     const totalCount =
+                //                         this.visibleCount[section.key] ??
+                //                         data.length ??
+                //                         0;
+                //                     const shownCount =
+                //                         this.isClientPagedSection(section.key)
+                //                             ? renderedData.length
+                //                             : data.length;
+
+                //                     html += `
+
+                //             <div class="v2-accordion-item">
+
+                //                 <div class="
+                //                     v2-accordion-header
+                //                     ${expanded ? "active" : ""}
+                //                 "
+                //                 data-section="${section.key}">
+
+                //                     <div class="v2-left">
+
+                //                         <span class="material-icons">
+                //                             ${expanded ? "expand_less" : "expand_more"}
+                //                         </span>
+
+                //                         <span class="v2-title">
+                //                             ${section.label}
+                //                         </span>
+
+                //                     </div>
+
+                //               <span class="inbox-count">
+                //    ${shownCount}/${totalCount}
+                // </span>
+                //                 </div>
+
+                //               <div class="
+                //     v2-accordion-body
+                //     ${expanded ? "show" : ""}
+                // ">
+
+                //     <div class="v2-scroll-body"
+                //          data-section="${section.key}">
+
+                //         ${this.renderCards(
+                //                         renderedData,
+                //                         section.key
+                //                     )}
+
+                //     </div>
+
+                // </div>
+                //         `;
+                //                 });
+
+                this.accordionEl.innerHTML = html;
+
+                this.bindAccordionClicks();
+                this.bindDirectoryAndTaskClicks();
+                this.bindScrollPagination();
+                this.bindAccordionScrollHandoff();
+                this.initTooltips();
+            }
+            bindAccordionClicks() {
+
+                // Parent accordion click
+                
+    document
+        .querySelectorAll(".v2-accordion-header")
+        .forEach(el => {
+
+            el.onclick = async (e) => {
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                const parent =
+                    el.dataset.parent ||
+                    el.dataset.section;
+
+                if (!parent) {
+                    console.warn(
+                        "[InboxV2] Parent accordion has no data-section"
+                    );
+                    return;
+                }
+
+                console.log(
+                    "[InboxV2] Parent clicked:",
+                    parent
+                );
+
+                const parentConfig =
+                    this.sections.find(
+                        section =>
+                            section &&
+                            section.key === parent
+                    );
+
+                if (!parentConfig) {
+                    console.warn(
+                        "[InboxV2] Parent config not found:",
+                        parent
+                    );
+                    return;
+                }
+
+                // -------------------------------------------------
+                // Parent with children
+                // -------------------------------------------------
+
+                if (parentConfig.children?.length) {
+
+                    this.currentSection =
+                        this.currentSection === parent
+                            ? ""
+                            : parent;
+
+                    this.buildAccordion();
+
+                    return;
+                }
+
+                // -------------------------------------------------
+                // Normal section with its own DS
+                // -------------------------------------------------
+
+                if (
+                    this.currentSection !== parent
+                ) {
+                    this.currentSection = parent;
+                } else {
+                    this.currentSection = "";
+                }
+
+                if (
+                    this.currentSection === parent &&
+                    !this.loaded[parent]
+                ) {
+
+                    console.log(
+                        "[InboxV2] Loading parent DS:",
+                        parentConfig.ds
+                    );
+
+                    await this.loadSection(parent);
+
+                    return;
+                }
+
+                this.buildAccordion();
+            };
+        });
+
+
+    // =====================================================
+    // CHILD ACCORDION
+    // =====================================================
+
+    document
+        .querySelectorAll(".v2-child-header")
+        .forEach(el => {
+
+            el.onclick = async (e) => {
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                const section =
+                    el.dataset.section;
+
+                if (!section) {
+                    console.warn(
+                        "[InboxV2] Child accordion has no data-section"
+                    );
+                    return;
+                }
+
+                console.log(
+                    "[InboxV2] Child clicked:",
+                    section
+                );
+
+                this.currentSection = "approvals";
+                this.currentChildSection = section;
+
+                // Find the actual child configuration
+                const childConfig =
+                    this.getSearchableSections()
+                        .find(
+                            item =>
+                                item &&
+                                item.key === section
+                        );
+
+                if (!childConfig) {
+
+                    console.warn(
+                        "[InboxV2] Child config not found:",
+                        section
+                    );
+
+                    return;
+                }
+
+                console.log(
+                    "[InboxV2] Child DS:",
+                    childConfig.ds
+                );
+
+                // =================================================
+                // FIRST CLICK → LOAD DS
+                // =================================================
+
+                if (!this.loaded[section]) {
+
+                    console.log(
+                        "[InboxV2] Loading child DS:",
+                        childConfig.ds
+                    );
+
+                    /*
+                     * IMPORTANT:
+                     *
+                     * Do NOT set
+                     * this.loading[section] = true
+                     *
+                     * loadSection() manages loading itself.
+                     */
+
+                    await this.loadSection(section);
+
+                    return;
+                }
+
+                // =================================================
+                // ALREADY LOADED → TOGGLE
+                // =================================================
+
+                const body =
+                    el.nextElementSibling;
+
+                if (!body) return;
+
+                body.classList.toggle("show");
+
+                const icon =
+                    el.querySelector(".material-icons");
+
+                if (icon) {
+
+                    icon.innerText =
+                        body.classList.contains("show")
+                            ? "expand_less"
+                            : "expand_more";
+                }
+            };
+        });
+
+                document.addEventListener("click", e => {
+
+                    const icon = e.target.closest(".people-scheduler");
+                    if (!icon) return;
+
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const row = icon.closest(".people-row");
+
+                    this.schedulerFromLHS = true;
+                    this.schedulerUserName = row.dataset.uname;
+
+                    document.getElementById("schedulerBtn").click();
+                });
+
+            }
+
+            ensureRightPanelHosts() {
+                this.rightPanelHostEl =
+                    document.getElementById("Tickets_details_view") ||
+                    document.getElementById("PROFLOW_Right");
+
+                this.rightIframe =
+                    document.getElementById("rightIframe");
+
+                this.processCenterPanelEl =
+                    document.getElementById("process_centerpanel");
+
+                this.directoryChatPanelEl =
+                    document.getElementById("directoryChatPanel");
+
+                if (
+                    this.rightPanelHostEl &&
+                    this.directoryChatPanelEl &&
+                    !this.rightPanelHostEl.contains(
+                        this.directoryChatPanelEl
+                    )
+                ) {
+                    this.rightPanelHostEl.insertBefore(
+                        this.directoryChatPanelEl,
+                        this.rightPanelHostEl.firstChild
+                    );
+                }
+
+                if (
+                    this.rightPanelHostEl &&
+                    !this.directoryChatPanelEl
+                ) {
+                    this.directoryChatPanelEl =
+                        document.createElement("div");
+                    this.directoryChatPanelEl.id =
+                        "directoryChatPanel";
+                    this.directoryChatPanelEl.className =
+                        "directory-chat-panel d-none";
+
+                    this.rightPanelHostEl.insertBefore(
+                        this.directoryChatPanelEl,
+                        this.rightPanelHostEl.firstChild
+                    );
+                }
+
+                if (this.rightPanelHostEl) {
+                    this.rightPanelHostEl.style.position = "relative";
+                }
+            }
+
+            showProcessCenterPanel(html) {
+                this.ensureRightPanelHosts();
+
+                if (!this.processCenterPanelEl) return;
+
+                this.showTaskPanelHost();
+
+                this.processCenterPanelEl.innerHTML = html;
+            }
+
+            showDirectoryChatPanel(html) {
+                this.ensureRightPanelHosts();
+
+                if (!this.directoryChatPanelEl) return;
+
+                if (this.processCenterPanelEl) {
+                    this.processCenterPanelEl.style.display = "none";
+                    this.processCenterPanelEl.classList.add("d-none");
+                }
+
+                if (this.rightIframe) {
+                    this.rightIframe.classList.add("d-none");
+                    if (this.rightIframe.getAttribute("src") !== "about:blank") {
+                        this.rightIframe.setAttribute("src", "about:blank");
+                    }
+                }
+
+                this.directoryChatPanelEl.innerHTML = html;
+                this.directoryChatPanelEl.style.display = "flex";
+                this.directoryChatPanelEl.style.position = "absolute";
+                this.directoryChatPanelEl.style.inset = "0";
+                this.directoryChatPanelEl.style.zIndex = "1000";
+                this.directoryChatPanelEl.style.background = "#f8fbff";
+                this.directoryChatPanelEl.classList.remove("d-none");
+
+                console.log("[InboxV2] right panel: chat rendered", {
+                    hasChatShell:
+                        !!this.directoryChatPanelEl.querySelector(
+                            ".chat-shell"
+                        ),
+                    panelState: this.getRightPanelDebugState()
+                });
+            }
+
+            showTaskPanelHost() {
+                this.ensureRightPanelHosts();
+
+                this.hideDirectoryChatPanel();
+
+                if (this.processCenterPanelEl) {
+                    this.processCenterPanelEl.style.display = "";
+                    this.processCenterPanelEl.classList.remove("d-none");
+                }
+
+                console.log("[InboxV2] right panel: task host shown", {
+                    panelState: this.getRightPanelDebugState()
+                });
+            }
+
+            hideDirectoryChatPanel() {
+                if (!this.directoryChatPanelEl) return;
+
+                this.directoryChatPanelEl.style.display = "none";
+                this.directoryChatPanelEl.classList.add("d-none");
+                this.directoryChatPanelEl.innerHTML = "";
+            }
+
+            getActiveRightPanelRoot() {
+                this.ensureRightPanelHosts();
+
+                if (
+                    this.directoryChatPanelEl &&
+                    !this.directoryChatPanelEl.classList.contains("d-none")
+                ) {
+                    return this.directoryChatPanelEl;
+                }
+
+                return this.processCenterPanelEl;
+            }
+
+            getRightPanelDebugState() {
+                return {
+                    currentSection: this.currentSection,
+                    rightHostId: this.rightPanelHostEl?.id || "",
+                    chatPanelInDom: !!this.directoryChatPanelEl?.isConnected,
+                    chatPanelHidden:
+                        this.directoryChatPanelEl?.classList.contains(
+                            "d-none"
+                        ),
+                    chatPanelDisplay:
+                        this.directoryChatPanelEl?.style.display || "",
+                    processPanelInDom:
+                        !!this.processCenterPanelEl?.isConnected,
+                    processPanelHidden:
+                        this.processCenterPanelEl?.classList.contains(
+                            "d-none"
+                        ),
+                    processPanelDisplay:
+                        this.processCenterPanelEl?.style.display || "",
+                    iframeHidden:
+                        this.rightIframe?.classList.contains("d-none")
+                };
+            }
+
+            activateDirectoryRow(directoryRow) {
+                const section =
+                    directoryRow.dataset.section || "";
+                const index =
+                    Number(directoryRow.dataset.index || 0);
+                const groupKey =
+                    directoryRow.dataset.groupKey || "";
+                const isGroupRow =
+                    directoryRow.classList.contains("group-row");
+
+                console.log("[InboxV2] switch: directory row clicked", {
+                    from: this.currentSection,
+                    to: section,
+                    index,
+                    groupKey,
+                    isGroupRow,
+                    panelState: this.getRightPanelDebugState()
+                });
+
+                if (isGroupRow) {
+                    this.toggleGroupUsers(groupKey);
+                    return;
+                }
+
+                if (section === "groupMembers") {
+                    this.openGroupMemberChat(groupKey, index);
+                    return;
+                }
+
+                this.openDirectoryChat(section, index);
+            }
+
+            bindDirectoryAndTaskClicks() {
+                if (!this.accordionEl) return;
+
+                if (!this.accordionDelegateBound) {
+                    this.accordionDelegateBound = true;
+
+                    window.addEventListener(
+                        "click",
+                        event => {
+                            const source =
+                                event.target instanceof Element
+                                    ? event.target
+                                    : event.target?.parentElement;
+
+                            const directoryRow =
+                                source?.closest?.(".directory-row");
+
+                            if (
+                                !directoryRow ||
+                                !this.accordionEl?.contains(directoryRow)
+                            ) {
+                                return;
+                            }
+
+                            event.preventDefault();
+                            event.stopPropagation();
+                            event.stopImmediatePropagation();
+
+                            this.activateDirectoryRow(directoryRow);
+                            const selectedRow =
+                                document.querySelector(".directory-row.selected");
+
+                            if (selectedRow) {
+
+                                const toUser =
+                                    selectedRow.querySelector(".directory-name")
+                                        ?.textContent?.trim();
+
+                                this.loadChatHistory(toUser);
+                                this.startChatPolling();
+                            }
+                        },
+                        true
+                    );
+
+                    this.accordionEl.addEventListener(
+                        "click",
+                        event => {
+                            const source =
+                                event.target instanceof Element
+                                    ? event.target
+                                    : event.target?.parentElement;
+
+                            const target =
+                                source?.closest?.(".tasktitle, .directory-row");
+
+                            if (!target || !this.accordionEl.contains(target)) {
+                                return;
+                            }
+
+                            event.preventDefault();
+                            event.stopPropagation();
+                            event.stopImmediatePropagation();
+
+                            if (target.classList.contains("tasktitle")) {
+                                const taskLink = target;
+
+                                const msgType = taskLink.dataset.msgtype || "NA";
+                                const taskId = taskLink.dataset.taskid || "";
+                                const hlinkParams = taskLink.dataset.hlinkParams || "";
+
+                                this.activeConversationKey = "";
+                                this.activeConversationItem = null;
+
+                                if (this.chatRefreshInterval) {
+                                    clearInterval(this.chatRefreshInterval);
+                                    this.chatRefreshInterval = null;
+                                }
+
+                                if (this.pollingTimer) {
+                                    clearInterval(this.pollingTimer);
+                                    this.pollingTimer = null;
+                                }
+
+                                this.hideDirectoryChatPanel();
+                                this.showTaskPanelHost();
+
+                                if (msgType === "NA" || msgType !== "Task" || msgType !== "Ticket") {
+
+                                    axProcessObj.openTask(
+                                        taskLink,
+                                        taskLink.dataset.taskname,
+                                        taskLink.dataset.tasktype,
+                                        taskLink.dataset.transid,
+                                        taskLink.dataset.keyfield,
+                                        taskLink.dataset.keyvalue,
+                                        taskLink.dataset.recordid,
+                                        taskId,
+                                        taskLink.dataset.indexno,
+                                        taskLink.dataset.hlinkTransid,
+                                        hlinkParams,
+                                        taskLink.dataset.processname,
+                                        msgType,
+                                        "LeftPanel"
+                                    );
+
+                                    axProcessObj.toggleRowBackground(taskLink);
+
+                                } else {
+
+                                    openTicketDetails(
+                                        taskId,
+                                        window.top.mainUserName,
+                                        msgType,
+                                        hlinkParams
+                                    );
+
+                                }
+
+
+
+                                return;
+                            }
+
+                            this.activateDirectoryRow(target);
+                        },
+                        true
+                    );
+                }
+
+                this.accordionEl
+                    .querySelectorAll(".tasktitle")
+                    .forEach(taskLink => {
+                        taskLink.onclick = event => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            event.stopImmediatePropagation();
+
+                            const taskId =
+                                taskLink.dataset.taskid || "";
+                            const touser =
+                                taskLink.dataset.touser || "";
+                            const tasktype =
+                                taskLink.dataset.tasktype || "";
+                            const hlinkParams =
+                                taskLink.dataset.hlinkParams || "";
+
+                            if (
+                                typeof window.openTicketDetails ===
+                                "function"
+                            ) {
+                                console.log(
+                                    "[InboxV2] switch: task detail clicked",
+                                    {
+                                        from: this.currentSection,
+                                        to: "task",
+                                        taskId,
+                                        touser,
+                                        tasktype,
+                                        hlinkParams,
+                                        panelState:
+                                            this.getRightPanelDebugState()
+                                    }
+                                );
+                                // Stop chat mode
+                                this.activeConversationKey = "";
+                                this.activeConversationItem = null;
+
+                                if (this.chatRefreshInterval) {
+                                    clearInterval(this.chatRefreshInterval);
+                                    this.chatRefreshInterval = null;
+                                }
+
+                                if (this.pollingTimer) {
+                                    clearInterval(this.pollingTimer);
+                                    this.pollingTimer = null;
+                                }
+
+                                this.hideDirectoryChatPanel();
+                                this.showTaskPanelHost();
+                                window.openTicketDetails(
+                                    taskId,
+                                    touser,
+                                    tasktype,
+                                    hlinkParams
+                                );
+                            }
+                        };
+                    });
+
+                this.accordionEl
+                    .querySelectorAll(".directory-row")
+                    .forEach(directoryRow => {
+                        const activate = async event => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            event.stopImmediatePropagation();
+
+                            this.activateDirectoryRow(directoryRow);
+                        };
+
+                        directoryRow.onclick = activate;
+                        directoryRow.onkeydown = event => {
+                            if (
+                                event.key === "Enter" ||
+                                event.key === " "
+                            ) {
+                                activate(event);
+                            }
+                        };
+                    });
+            }
+
+            // renderSection(section) {
+
+            //     const data =
+            //         this.store[section] || [];
+
+            //     this.renderCards(data);
+            // }
+
+            renderCards(data, section, startIndex = 0) {
+
+
+
+                if (section === "people") {
+                    return this.renderPeople(data);
+                }
+                if (!data.length) {
+
+                    return `
+            <div class="empty-state">
+                No records found
+            </div>
+        `;
+                }
+
+                let html = "";
+
+                if (section === "groups") {
+                    return data
+                        .map((item, index) =>
+                            this.renderGroupCard(item, startIndex + index)
+                        )
+                        .join("");
+                }
+
+                if (section === "people" || section === "groupMembers") {
+                    return data
+                        .map((item, index) =>
+                            this.renderDirectoryCard(
+                                item,
+                                section,
+                                startIndex + index
+                            )
+                        )
+                        .join("");
+                }
+
+                data.forEach((item, index) => {
+
+                    const title =
+                        item.subject ||
+                        item.displaytitle ||
+                        item.taskname ||
+                        "Untitled";
+
+                    const content =
+                        item.displaycontent ||
+                        item.processname ||
+                        item.description ||
+                        "";
+
+                    const date =
+                        item.eventdatetime ||
+                        item.modifiedon ||
+                        item.createdon ||
+                        "";
+                    const taskId = getTaskId(item);
+                    const checkboxId = taskId || item.taskid || index;
+
+
+                    html += `
+
+<div class="container listrow completed-row"
+     data-status="${this.escapeHtml(item.cstatus || "")}"
+     data-index="${index}">
+
+    <div class="row">
+
+        <div class="col-2 checkbox-wrapper">
+
+           
+            <div class="user">
+
+                <span class="material-icons">
+
+                    ${item.rectype === "MSG"
+                            ? "notifications"
+                            : "task"
+                        }
+
+                </span>
+
+            </div>
+
+        </div>
+
+        <div class="col-7">
+
+            <div>
+
+                <a href="javascript:void(0)"
+
+                   class="
+                        tasktitle
+                        ProcessFlow_New-List-Title
+                        Procurement-list
+                   "
+
+                   data-taskid="${this.escapeHtml(taskId || "")}"
+                   data-msgtype="${this.escapeHtml(item.msgtype || 'NA')}"
+                   data-taskname="${this.escapeHtml(item.taskname || '')}"
+    data-transid="${this.escapeHtml(item.transid || '')}"
+    data-keyfield="${this.escapeHtml(item.keyfield || '')}"
+    data-keyvalue="${this.escapeHtml(item.keyvalue || '')}"
+    data-recordid="${this.escapeHtml(item.recordid || '')}"
+    data-indexno="${this.escapeHtml(item.indexno || '')}"
+    data-hlink-transid="${this.escapeHtml(item.hlink_transid || '')}"
+    data-hlink-params="${this.escapeHtml(item.hlink_params || '')}"
+    data-processname="${this.escapeHtml(item.processname || '')}"
+                   data-touser="${this.escapeHtml(item.touser || "")}"
+                   data-tasktype="${this.escapeHtml(item.tasktype || "")}"
+                   data-hlink-params="${this.escapeHtml(item.hlink_params || "")}"
+                   data-caption="${this.escapeHtml(title)}"
+
+                   data-bs-toggle="tooltip"
+                   data-bs-placement="bottom"
+                   data-bs-title="${this.escapeHtml(title)}" >
+
+                    ${this.escapeHtml(title)}
+
+                </a>
+
+            </div>
+
+            <div class="taskcontent"
+
+                 data-bs-toggle="tooltip"
+                 data-bs-placement="bottom"
+                 data-bs-title="${this.escapeHtml(content)}">
+
+                ${content}
+
+            </div>
+
+            <div class="rowicons"></div>
+
+             
+             
+${section !== "messages" && item.taskstatus?.toLowerCase() !== "pending"
+                            ? `
+    <span class="badge ${item.taskstatus?.toLowerCase() === "approved"
+                                ? "badge-light-success"
+                                : item.taskstatus?.toLowerCase() === "completed"
+                                    ? "badge-light-success"
+                                    : item.taskstatus?.toLowerCase() === "in progress"
+                                        ? "badge-light-primary"
+                                        : item.taskstatus?.toLowerCase() === "rejected"
+                                            ? "badge-light-danger"
+                                            : item.taskstatus?.toLowerCase() === "withdrawn"
+                                                ? "badge-light-danger"
+                                                : item.taskstatus?.toLowerCase() === "returned"
+                                                    ? "badge-light-warning"
+                                                    : "badge-light-primary"
+                            } fw-bold">
+        ${item.taskstatus}
+    </span>
+  `
+                            : ""
+                        }
+        </div>
+
+        <div class="timespace col-3">
+
+            <div class="nametime"
+
+                 data-bs-toggle="tooltip"
+                 data-bs-placement="bottom"
+                 data-bs-title="${this.escapeHtml(item.fromuser || "")}">
+
+                ${this.escapeHtml(item.fromuser || " ")}
+
+            </div>
+
+            <div class="nametime"
+
+                 data-bs-toggle="tooltip"
+                 data-bs-placement="bottom"
+                 data-bs-title="${this.escapeHtml(date)}">
+
+                ${this.escapeHtml(date)}
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+`;
+                });
+
+
+
+                return html;
+            }
+
+            renderPeople(data) {
+
+                if (!data.length) {
+                    return `<div class="empty-state">No associates found</div>`;
+                }
+
+                return data.map(item => `
+
+               <div class="people-row"
+               data-uname="${item.username}">
+
+                <div class="people-name">
+                ${item.username}
+               </div>
+
+            <span class="material-icons people-scheduler">
+                calendar_month
+            </span>
+
+        </div>
+
+    `).join("");
+
+            }
+            renderGroupCard(item, index) {
+                const groupName = this.getGroupName(item);
+                const groupKey = groupName;
+                const expanded = this.expandedGroupKey === groupKey;
+                const children = this.groupChildrenCache[groupKey] || [];
+                const loading = !!this.groupChildrenLoading[groupKey];
+                const initials = this.getInitials(groupName, "GR");
+
+                let childHtml = "";
+
+                if (expanded) {
+                    if (loading) {
+                        childHtml = `
+<div class="group-loading">Loading users...</div>
+`;
+                    } else if (!children.length) {
+                        childHtml = `
+<div class="group-empty">No users found</div>
+`;
+                    } else {
+                        childHtml = children
+                            .map((child, childIndex) =>
+                                this.renderGroupMemberCard(
+                                    child,
+                                    groupKey,
+                                    childIndex
+                                )
+                            )
+                            .join("");
+                    }
+                }
+
+                return `
+<div class="directory-row group-row"
+     role="button"
+     tabindex="0"
+     data-section="groups"
+     data-group-key="${this.escapeHtml(groupKey)}"
+     data-index="${index}">
+    <div class="directory-avatar directory-avatar-group">
+        ${this.escapeHtml(initials)}
+    </div>
+    <div class="directory-main">
+        <div class="directory-name">
+            ${this.escapeHtml(groupName)}
+        </div>
+        <div class="directory-meta">
+            User group
+        </div>
+    </div>
+    <span class="material-icons directory-cta">${expanded ? "expand_less" : "expand_more"
+                    }</span>
+</div>
+${childHtml}
+`;
+            }
+
+            renderGroupMemberCard(item, groupKey, index) {
+                const member = {
+                    ...item,
+                    __parentGroup: groupKey,
+                    usergroups: item.usergroups || groupKey
+                };
+                const title = this.getDirectoryTitle(
+                    member,
+                    "groupMembers"
+                );
+                const metaText = this.getDirectoryMetaText(
+                    member,
+                    "groupMembers"
+                );
+                const badges = this.getDirectoryBadges(
+                    member,
+                    "groupMembers"
+                );
+                const initials = this.getInitials(title, "PE");
+                const selected =
+                    this.activeConversationKey ===
+                    this.getConversationKey(member, "groupMembers");
+
+                return `
+<div class="directory-row group-member-row ${selected ? "selected" : ""}"
+     role="button"
+     tabindex="0"
+     data-section="groupMembers"
+     data-group-key="${this.escapeHtml(groupKey)}"
+     data-index="${index}">
+    <div class="directory-avatar">
+        ${this.escapeHtml(initials)}
+    </div>
+    <div class="directory-main">
+        <div class="directory-name">
+            ${this.escapeHtml(title)}
+        </div>
+        ${metaText
+                        ? `<div class="directory-meta">${this.escapeHtml(metaText)}</div>`
+                        : ""
+                    }
+        ${badges.length
+                        ? `<div class="directory-badges">${badges
+                            .map(
+                                badge =>
+                                    `<span class="directory-badge">${this.escapeHtml(
+                                        badge
+                                    )}</span>`
+                            )
+                            .join("")}</div>`
+                        : ""
+                    }
+    </div>
+    <span class="material-icons directory-cta">chevron_right</span>
+</div>
+`;
+            }
+
+            renderDirectoryCard(item, section, index) {
+                const title = this.getDirectoryTitle(item, section);
+                const metaText = this.getDirectoryMetaText(item, section);
+                const badges = this.getDirectoryBadges(item, section);
+                const initials = this.getInitials(title, section === "groups" ? "GR" : "PE");
+                const selected =
+                    this.activeConversationKey ===
+                    this.getConversationKey(item, section);
+
+                return `
+<div class="directory-row ${selected ? "selected" : ""}"
+     role="button"
+     tabindex="0"
+     data-section="${this.escapeHtml(section)}"
+     data-index="${index}">
+    <div class="directory-avatar ${section === "groups" ? "directory-avatar-group" : ""
+                    }">
+        ${this.escapeHtml(initials)}
+    </div>
+    <div class="directory-main">
+        <div class="directory-name">
+            ${this.escapeHtml(title)}
+        </div>
+        ${metaText
+                        ? `<div class="directory-meta">${this.escapeHtml(metaText)}</div>`
+                        : ""
+                    }
+        ${badges.length
+                        ? `<div class="directory-badges">${badges
+                            .map(
+                                badge =>
+                                    `<span class="directory-badge">${this.escapeHtml(
+                                        badge
+                                    )}</span>`
+                            )
+                            .join("")}</div>`
+                        : ""
+                    }
+    </div>
+    <span class="material-icons directory-cta">chevron_right</span>
+</div>
+`;
+            }
+
+            async toggleGroupUsers(groupKey) {
+                if (!groupKey) return;
+
+                if (this.expandedGroupKey === groupKey) {
+                    this.expandedGroupKey = "";
+                    this.buildAccordion();
+                    return;
+                }
+
+                this.expandedGroupKey = groupKey;
+                this.currentSection = "groups";
+
+                if (
+                    Object.prototype.hasOwnProperty.call(
+                        this.groupChildrenCache,
+                        groupKey
+                    )
+                ) {
+                    this.buildAccordion();
+                    return;
+                }
+
+                this.groupChildrenLoading[groupKey] = true;
+                this.buildAccordion();
+
+                try {
+                    const result = await this.fetchDS(
+                        "DS_User_Groups",
+                        this.searchEl?.value || "",
+                        1,
+                        {
+                            ugroup: groupKey,
+                            searchtext: this.searchEl?.value || ""
+                        },
+                        {
+                            includeDefaultSqlParams: false
+                        }
+                    );
+
+                    this.groupChildrenCache[groupKey] =
+                        (result.rows || []).map(row => ({
+                            ...row,
+                            __parentGroup: groupKey,
+                            usergroups: row.usergroups || groupKey
+                        }));
+                } finally {
+                    this.groupChildrenLoading[groupKey] = false;
+                    this.buildAccordion();
+                }
+            }
+
+            openGroupMemberChat(groupKey, index) {
+                const item =
+                    this.groupChildrenCache?.[groupKey]?.[index];
+
+                if (!item) return;
+
+                this.ensureRightPanelHosts();
+
+                const fromSection = this.currentSection;
+                const conversationKey = this.getConversationKey(
+                    item,
+                    "groupMembers"
+                );
+                const title = this.getDirectoryTitle(
+                    item,
+                    "groupMembers"
+                );
+
+                this.activeConversationItem = item;
+                this.activeConversationSection = "groupMembers";
+                this.activeConversationKey = conversationKey;
+                this.currentSection = "groups";
+                this.expandedGroupKey = groupKey;
+
+                console.log("[InboxV2] switch: opening group member chat", {
+                    from: fromSection,
+                    to: "groupMembers",
+                    groupKey,
+                    index,
+                    title,
+                    conversationKey,
+                    panelState: this.getRightPanelDebugState()
+                });
+
+                this.showDirectoryChatPanel(
+                    this.renderChatPanel(
+                        item,
+                        "groupMembers"
+                    )
+                );
+                this.bindChatComposer();
+
+                if (this.accordionEl) {
+                    this.accordionEl
+                        .querySelectorAll(".directory-row.selected")
+                        .forEach(row => row.classList.remove("selected"));
+
+                    const currentRows =
+                        this.accordionEl.querySelectorAll(
+                            '.group-member-row[data-section="groupMembers"]'
+                        );
+
+                    currentRows[index]?.classList.add("selected");
+                }
+
+                requestAnimationFrame(() => {
+                    const feed =
+                        this.getActiveRightPanelRoot()?.querySelector(
+                            ".chat-feed"
+                        );
+                    if (feed) {
+                        feed.scrollTop = feed.scrollHeight;
+                    }
+                });
+            }
+
+            openDirectoryChat(section, index) {
+                const item = this.store?.[section]?.[index];
+                if (!item) return;
+
+                this.ensureRightPanelHosts();
+
+                const fromSection = this.currentSection;
+                const conversationKey = this.getConversationKey(item, section);
+                const title = this.getDirectoryTitle(item, section);
+                const shouldRebuild =
+                    fromSection !== section;
+                this.activeConversationItem = item;
+                this.activeConversationSection = section;
+                this.activeConversationKey = conversationKey;
+                this.currentSection = section;
+
+                console.log("[InboxV2] switch: opening directory chat", {
+                    from: fromSection,
+                    to: section,
+                    index,
+                    title,
+                    conversationKey,
+                    shouldRebuild,
+                    panelState: this.getRightPanelDebugState()
+                });
+
+                this.showDirectoryChatPanel(
+                    this.renderChatPanel(
+                        item,
+                        section
+                    )
+                );
+                this.bindChatComposer();
+                const toUser =
+                    item.uname ||
+                    item.username ||
+                    item.name;
+
+                this.loadChatHistory(toUser);
+                this.startChatPolling();
+                if (!shouldRebuild && this.accordionEl) {
+                    this.accordionEl
+                        .querySelectorAll(".directory-row.selected")
+                        .forEach(row => row.classList.remove("selected"));
+
+                    const currentRow =
+                        this.accordionEl.querySelector(
+                            `.directory-row[data-section="${section}"][data-index="${index}"]`
+                        );
+
+                    currentRow?.classList.add("selected");
+                }
+
+                if (shouldRebuild) {
+                    requestAnimationFrame(() => {
+                        this.buildAccordion();
+                    });
+                }
+
+                requestAnimationFrame(() => {
+                    const feed =
+                        this.getActiveRightPanelRoot()?.querySelector(".chat-feed");
+                    if (feed) {
+                        feed.scrollTop = feed.scrollHeight;
+                    }
+                });
+            }
+
+            bindAccordionScrollHandoff() {
+                if (!this.accordionEl) return;
+
+                const outer = this.accordionEl;
+
+                this.accordionEl
+                    .querySelectorAll(".v2-scroll-body")
+                    .forEach(el => {
+                        el.onwheel = event => {
+                            const delta = event.deltaY || 0;
+                            const atTop = el.scrollTop <= 0;
+                            const atBottom =
+                                el.scrollTop + el.clientHeight >=
+                                el.scrollHeight - 1;
+
+                            if (
+                                (delta < 0 && atTop) ||
+                                (delta > 0 && atBottom)
+                            ) {
+                                outer.scrollTop = Math.max(
+                                    0,
+                                    outer.scrollTop + delta
+                                );
+                                event.preventDefault();
+                            }
+                        };
+                    });
+            }
+
+            //             showDefaultRightPanel() {
+            //                 if (!this.processCenterPanelEl) return;
+
+            //                 this.showProcessCenterPanel(
+            //                     this.defaultRightPanelHtml || this.renderEmptyRightPanel()
+            //                 );
+            //             }
+
+            //             renderEmptyRightPanel() {
+            //                 return `
+            // <div class="d-flex flex-column text-center h-100 justify-content-center">
+            //     <span class="material-icons material-icons-style material-icons-5tx mx-auto text-gray-500">forum</span>
+            //     <h3 class="fw-boldest">Nothing is selected</h3>
+            // </div>
+            // `;
+            //             }
+
+            renderChatPanel(item, section) {
+                const title = this.getDirectoryTitle(item, section);
+                const metaText = this.getDirectoryMetaText(item, section);
+                const badges = this.getDirectoryBadges(item, section);
+                const initials = this.getInitials(
+                    title,
+                    section === "groups" ? "GR" : "PE"
+                );
+                const threadKey = this.getConversationKey(item, section);
+                const messages = this.chatThreads[threadKey] || [];
+
+                if (!this.chatThreads[threadKey]) {
+                    this.chatThreads[threadKey] = [];
+                }
+
+                return `
+<div class="chat-shell" data-thread-key="${this.escapeHtml(threadKey)}">
+    <div class="chat-shell-header">
+        <div class="chat-profile">
+            <div class="chat-avatar ${section === "groups" ? "chat-avatar-group" : ""
+                    }">${this.escapeHtml(initials)}</div>
+            <div class="min-w-0">
+                <div class="chat-name">${this.escapeHtml(title)}</div>
+                <div class="chat-subline">
+                    ${section === "people" && item.reportingto
+                        ? `<span class="chat-chip">Reports to ${this.escapeHtml(
+                            item.reportingto
+                        )}</span>`
+                        : ""
+                    }
+                    ${section === "groups" && item.reportingto
+                        ? `<span class="chat-chip">Owner ${this.escapeHtml(
+                            item.reportingto
+                        )}</span>`
+                        : ""
+                    }
+                    ${badges
+                        .slice(0, 3)
+                        .map(
+                            badge =>
+                                `<span class="chat-chip">${this.escapeHtml(
+                                    badge
+                                )}</span>`
+                        )
+                        .join("")}
+                </div>
+            </div>
+        </div>
+        <div class="chat-actions" style="display: none;">
+        </div>
+    </div>
+    <div class="chat-feed" id="chatFeed">
+        ${messages.length
+                        ? messages
+                            .map(message => this.renderChatMessage(message, title))
+                            .join("")
+                        : this.renderChatEmpty(title, metaText, badges, initials, section)
+                    }
+    </div>
+    <form class="chat-composer" id="chatComposerForm" data-thread-key="${this.escapeHtml(
+                        threadKey
+                    )}">
+        <div class="chat-input-wrap">
+            <textarea class="chat-input" id="chatInput" rows="1" placeholder="Type a message..."></textarea>
+        </div>
+        <button class="chat-send" type="submit" aria-label="Send">
+            <span class="material-icons material-icons-style material-icons-2">send</span>
+        </button>
+    </form>
+</div>
+`;
+            }
+
+            renderChatEmpty(title, metaText, badges, initials, section) {
+                return `
+<div class="chat-empty">
+    <div class="chat-empty-card">
+        <div class="chat-avatar ${section === "groups" ? "chat-avatar-group" : ""
+                    } mx-auto">${this.escapeHtml(initials)}</div>
+        <div class="chat-empty-title">${this.escapeHtml(title)}</div>
+        ${metaText
+                        ? `<div class="chat-empty-meta">${this.escapeHtml(metaText)}</div>`
+                        : ""
+                    }
+        ${badges.length
+                        ? `<div class="chat-subline" >${badges
+                            .slice(0, 3)
+                            .map(
+                                badge =>
+                                    `<span class="chat-chip">${this.escapeHtml(
+                                        badge
+                                    )}</span>`
+                            )
+                            .join("")}</div>`
+                        : ""
+                    }
+    </div>
+</div>
+`;
+            }
+
+            renderChatMessage(message, contactName) {
+                const isSelf = message.sender === "me";
+                const avatar = isSelf
+                    ? "ME"
+                    : this.getInitials(contactName, "PE");
+                const label = isSelf ? "You" : contactName;
+                const time = message.time || "";
+
+                return `
+<div class="chat-message ${isSelf ? "self" : ""}">
+    <div class="chat-avatar-sm">${this.escapeHtml(avatar)}</div>
+    <div class="chat-bubble">
+        <div>${this.escapeHtml(message.text || "")}</div>
+        <div class="chat-message-meta">
+            <span>${this.escapeHtml(label)}</span>
+            <span>${this.escapeHtml(time)}</span>
+        </div>
+    </div>
+</div>
+`;
+            }
+
+            bindChatComposer() {
+                const panelRoot = this.getActiveRightPanelRoot();
+                const form =
+                    panelRoot?.querySelector("#chatComposerForm");
+                const input =
+                    panelRoot?.querySelector("#chatInput");
+                const feed =
+                    panelRoot?.querySelector("#chatFeed");
+
+                if (!form || !input || !feed) return;
+
+                form.onsubmit = event => {
+                    event.preventDefault();
+
+                    const text = input.value.trim();
+                    if (!text) return;
+
+                    const threadKey = form.dataset.threadKey || "";
+                    if (!this.chatThreads[threadKey]) {
+                        this.chatThreads[threadKey] = [];
+                    }
+
+                    const toUser = threadKey.split("|")[1] || "";
+                    const now = new Date();
+                    const eventDateTime =
+                        now.getFullYear().toString() +
+                        String(now.getMonth() + 1).padStart(2, "0") +
+                        String(now.getDate()).padStart(2, "0") +
+                        String(now.getHours()).padStart(2, "0") +
+                        String(now.getMinutes()).padStart(2, "0") +
+                        String(now.getSeconds()).padStart(2, "0") +
+                        String(now.getMilliseconds()).padStart(3, "0");
+
+                    parent.AxSetValue("a__sm", "fromuser", "1", "0", parent.mainUserName);
+                    parent.AxSetValue("a__sm", "touser_ui", "1", "0", toUser);
+                    parent.AxSetValue("a__sm", "msgtitle", "1", "0", text);
+                    parent.AxSetValue("a__sm", "message", "1", "0", text);
+                    parent.AxSetValue("a__sm", "eventdatetime", "1", "0", eventDateTime);
+
+                    const resp = parent.AxSubmitData("a__sm", "0");
+
+                    this.chatThreads[threadKey].push({
+                        sender: "me",
+                        text,
+                        time: this.formatTime(new Date())
+                    });
+
+                    this.showDirectoryChatPanel(
+                        this.renderChatPanel(
+                            this.activeConversationItem,
+                            this.activeConversationSection
+                        )
+                    );
+                    this.bindChatComposer();
+
+                    requestAnimationFrame(() => {
+                        const nextFeed =
+                            this.getActiveRightPanelRoot()?.querySelector("#chatFeed");
+                        if (nextFeed) {
+                            nextFeed.scrollTop = nextFeed.scrollHeight;
+                        }
+                    });
+                };
+
+                input.onkeydown = event => {
+                    if (event.key === "Enter" && !event.shiftKey) {
+                        event.preventDefault();
+                        form.requestSubmit
+                            ? form.requestSubmit()
+                            : form.dispatchEvent(
+                                new Event("submit", {
+                                    bubbles: true,
+                                    cancelable: true
+                                })
+                            );
+                        const selectedRow =
+                            document.querySelector(".directory-row.selected");
+
+                        if (selectedRow) {
+
+                            const toUser =
+                                selectedRow.querySelector(".directory-name")
+                                    ?.textContent?.trim();
+
+                            this.loadChatHistory(toUser);
+                            this.startChatPolling();
+                        }
+                    }
+                };
+
+                requestAnimationFrame(() => {
+                    input.focus();
+                });
+            }
+
+            getGroupName(item) {
+                return (
+                    item.usergroup ||
+                    item.groupname ||
+                    item.displaytitle ||
+                    item.name ||
+                    item.username ||
+                    item.title ||
+                    "Untitled"
+                );
+            }
+
+            getDirectoryTitle(item, section) {
+                const candidates =
+                    section === "groups"
+                        ? [
+                            item.usergroup,
+                            item.groupname,
+                            item.displaytitle,
+                            item.name,
+                            item.username,
+                            item.title
+                        ]
+                        : [
+                            item.username,
+                            item.user,
+                            item.userid,
+                            item.member,
+                            item.membername,
+                            item.displaytitle,
+                            item.name,
+                            item.fullname,
+                            item.email,
+                            item.taskname,
+                            item.usergroup
+                        ];
+
+                return candidates.find(value => value) || "Untitled";
+            }
+
+            getDirectoryMetaText(item, section) {
+                const meta = [];
+
+                if (section === "people" || section === "groupMembers") {
+                    if (item.reportingto) {
+                        meta.push(`Reports to ${item.reportingto}`);
+                    }
+                    if (section === "groupMembers" && item.__parentGroup) {
+                        meta.push(`Group ${item.__parentGroup}`);
+                    }
+                    const groups =
+                        section === "groupMembers"
+                            ? []
+                            : this.splitList(item.usergroups);
+                    if (groups.length) {
+                        meta.push(
+                            `${groups.length} group${groups.length === 1 ? "" : "s"
+                            }`
+                        );
+                    }
+                } else if (section === "groups") {
+                    const owner =
+                        item.reportingto ||
+                        item.owner ||
+                        item.createdby ||
+                        item.lead ||
+                        item.manager;
+                    if (owner) {
+                        meta.push(`Owner ${owner}`);
+                    }
+                    const members =
+                        item.members ||
+                        item.membercount ||
+                        item.totalmembers ||
+                        item.usercount;
+                    if (members) {
+                        const memberCount = Array.isArray(members)
+                            ? members.length
+                            : Number(members);
+                        if (!Number.isNaN(memberCount)) {
+                            meta.push(
+                                `${memberCount} member${memberCount === 1 ? "" : "s"
+                                }`
+                            );
+                        } else {
+                            meta.push(String(members));
+                        }
+                    }
+                }
+
+                return meta.join(" | ");
+            }
+
+            getDirectoryBadges(item, section) {
+                const values =
+                    section === "groups"
+                        ? this.splitList(item.usergroups || item.members)
+                        : this.splitList(
+                            item.usergroups || item.__parentGroup
+                        );
+
+                return values.slice(0, 4);
+            }
+
+            getConversationKey(item, section) {
+                return [
+                    section,
+                    item.username,
+                    item.user,
+                    item.userid,
+                    item.member,
+                    item.membername,
+                    item.email,
+                    item.usergroup,
+                    item.groupname,
+                    item.displaytitle,
+                    item.name,
+                    item.taskid,
+                    item.id,
+                    item.__parentGroup,
+                    item.reportingto
+                ]
+                    .filter(Boolean)
+                    .join("|")
+                    .toLowerCase();
+            }
+
+            splitList(value) {
+                if (!value) return [];
+                if (Array.isArray(value)) {
+                    return value.map(item => String(item).trim()).filter(Boolean);
+                }
+
+                return String(value)
+                    .split(/[;,|]/)
+                    .map(item => item.trim())
+                    .filter(Boolean);
+            }
+
+            getInitials(label, fallback = "PE") {
+                const parts = String(label || "")
+                    .trim()
+                    .split(/\s+/)
+                    .filter(Boolean);
+
+                if (!parts.length) {
+                    return fallback;
+                }
+
+                if (parts.length === 1) {
+                    return parts[0].slice(0, 2).toUpperCase();
+                }
+
+                return parts
+                    .slice(0, 2)
+                    .map(word => word.charAt(0))
+                    .join("")
+                    .toUpperCase();
+            }
+
+            escapeHtml(value) {
+                const node = document.createElement("div");
+                node.textContent = String(value ?? "");
+                return node.innerHTML;
+            }
+
+            formatTime(value) {
+                const date = value instanceof Date ? value : new Date(value);
+                if (Number.isNaN(date.getTime())) {
+                    return "";
+                }
+
+                return date.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit"
+                });
+            }
+
+            bindScrollPagination() {
+                document
+                    .querySelectorAll(".v2-scroll-body")
+                    .forEach(el => {
+                        el.onscroll = async () => {
+                            const section = el.dataset.section;
+
+                            if (this.loading[section]) return;
+
+                            // Threshold distance from bottom to trigger (in pixels)
+                            const threshold = 50;
+                            const reachedBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - threshold;
+
+                            // if (reachedBottom) {
+                            //     if (this.revealNextClientRows(section, el)) {
+                            //         return;
+                            //     }
+
+                            //     if (!this.hasMore[section]) return;
+
+                            //     this.pagination[section]++;
+
+                            //     console.log("Loading page", this.pagination[section], "for section", section);
+
+                            //     // Execution flow transfers to custom chunk-appending inside loadSection
+                            //     await this.loadSection(section);
+                            // }
+
+                            if (reachedBottom) {
+                                this.revealNextClientRows(section, el);
+                            }
+                        };
+                    });
+            }
+            bindPagination() {
+
+                document
+                    .querySelectorAll(".page-btn")
+                    .forEach(btn => {
+
+                        btn.onclick = async () => {
+
+                            const section =
+                                btn.dataset.section;
+
+                            const type =
+                                btn.dataset.type;
+
+                            if (type === "next") {
+
+                                this.pagination[section]++;
+
+                            } else if (
+                                type === "prev" &&
+                                this.pagination[section] > 1
+                            ) {
+
+                                this.pagination[section]--;
+                            }
+
+                            await this.loadSection(section);
+
+                            this.buildAccordion();
+                        };
+                    });
+            }
+            async loadSection(sectionKey) {
+
+    if (this.loading[sectionKey] === undefined) {
+        this.loading[sectionKey] = false;
+    }
+
+    if (this.loading[sectionKey]) return;
+
+    const section =
+        this.getSearchableSections()
+            .find(x => x.key === sectionKey);
+
+    if (!section?.ds) return;
+
+    this.loading[sectionKey] = true;
+
+    try {
+
+        const pageNo =
+            this.pagination[sectionKey] || 1;
+
+        const result = await this.fetchDS(
+            section.ds,
+            this.searchEl?.value || "",
+            pageNo
+        );
+
+        const rows = result.rows || [];
+
+        const totalCount =
+            result.totalCount ?? rows.length;
+
+        this.visibleCount[sectionKey] =
+            totalCount;
+
+        if (pageNo === 1) {
+
+            this.clientRenderLimit[sectionKey] =
+                this.clientChunkSize;
+
+            this.store[sectionKey] =
+                this.sortLatest(rows);
+
+            // IMPORTANT
+            this.loaded[sectionKey] = true;
+
+            this.buildAccordion();
+
+        } else {
+
+            const appendStart =
+                this.store[sectionKey]?.length || 0;
+
+            this.store[sectionKey] = [
+                ...(this.store[sectionKey] || []),
+                ...rows
+            ];
+
+            this.clientRenderLimit[sectionKey] =
+                this.store[sectionKey].length;
+
+            this.loaded[sectionKey] = true;
+
+            // existing append code...
+        }
+
+        this.hasMore[sectionKey] =
+            this.store[sectionKey].length <
+            totalCount &&
+            rows.length > 0;
+
+    } catch (error) {
+
+        console.error(
+            `Failed loading ${sectionKey}`,
+            error
+        );
+
+    } finally {
+
+        this.loading[sectionKey] = false;
+    }
+}
+            debounce(callback, delay) {
+
+                let timer;
+
+                return (...args) => {
+
+                    clearTimeout(timer);
+
+                    timer = setTimeout(() => {
+
+                        callback.apply(this, args);
+
+                    }, delay);
+                };
+            }
+
+            async loadChatHistory(toUser) {
+
+                try {
+
+                    const result = await this.fetchDS(
+                        "ds_chathistory",
+                        "",
+                        1,
+                        {
+                            uname: parent.mainUserName,
+                            touser: toUser
+                        }
+                    );
+
+                    const rows = result.rows || [];
+
+                    rows.sort((a, b) =>
+                        (a.eventdatetime || "").localeCompare(
+                            b.eventdatetime || ""
+                        )
+                    );
+
+                    this.renderChatHistory(rows, toUser);
+
+                } catch (ex) {
+                    console.error(ex);
+                }
+            }
+
+            startChatPolling() {
+
+                clearInterval(this.chatPoller);
+
+                this.chatPoller = setInterval(() => {
+
+                    if (!this.activeConversationItem) return;
+
+                    const toUser =
+                        this.activeConversationItem.uname ||
+                        this.activeConversationItem.username ||
+                        this.activeConversationItem.name;
+
+                    this.loadChatHistory(toUser);
+                    this.startChatPolling();
+
+                }, 2000); // every 3 sec
+            }
+            //         renderChatHistory(messages, toUser) {
+
+            //             const currentUser =
+            //                 (parent.mainUserName || "").toLowerCase();
+
+            //             const html = messages.map(msg => {
+
+            //                 const sender =
+            //                     (msg.fromuser || "").toLowerCase();
+
+            //                 const isMine =
+            //                     sender === currentUser;
+
+            //                 return `
+            //         <div class="chat-message ${isMine ? "self" : ""}">
+
+            //             <div class="chat-avatar-sm">
+            //                 ${(msg.fromuser || "?")
+            //                         .substring(0, 2)
+            //                         .toUpperCase()}
+            //             </div>
+
+            //             <div>
+            //                 <div class="chat-bubble">
+            //                     ${msg.message || ""}
+            //                 </div>
+
+            //                 <div class="chat-message-meta">
+            //                     <span>
+            //                         ${this.formatChatTime(
+            //                             msg.eventdatetime
+            //                         )}
+            //                     </span>
+            //                 </div>
+            //             </div>
+
+            //         </div>
+            //     `;
+            //             }).join("");
+
+            //             const panel = `
+            //     <div class="chat-shell">
+
+            //         <div class="chat-shell-header">
+            //             <div class="chat-profile">
+            //                 <div class="chat-avatar">
+            //                     ${toUser.substring(0, 2).toUpperCase()}
+            //                 </div>
+
+            //                 <div>
+            //                     <div class="chat-name">
+            //                         ${toUser}
+            //                     </div>
+            //                 </div>
+            //             </div>
+            //         </div>
+
+            //         <div class="chat-feed" id="chatFeed">
+            //             ${html}
+            //         </div>
+
+            //     </div>
+            // `;
+
+            //             // this.showDirectoryChatPanel(panel);
+
+            //             setTimeout(() => {
+
+            //                 const feed =
+            //                     document.getElementById("chatFeed");
+
+            //                 if (feed) {
+            //                     feed.scrollTop =
+            //                         feed.scrollHeight;
+            //                 }
+
+            //             }, 100);
+            //         }
+
+            renderChatHistory(messages, toUser) {
+
+                // No history
+                if (!messages || messages.length === 0) {
+
+                    this.showDirectoryChatPanel(
+                        this.renderChatPanel(
+                            this.activeConversationItem,
+                            this.activeConversationSection
+                        )
+                    );
+
+                    this.bindChatComposer();
+                    return;
+                }
+
+                const currentUser =
+                    (parent.mainUserName || "").toLowerCase();
+
+                const html = messages.map(msg => {
+
+                    const sender =
+                        (msg.fromuser || "").toLowerCase();
+
+                    const isMine =
+                        sender === currentUser;
+
+                    return `
+            <div class="chat-message ${isMine ? "self" : ""}">
+                
+                <div class="chat-avatar-sm">
+                    ${(msg.fromuser || "?")
+                            .substring(0, 2)
+                            .toUpperCase()}
+                </div>
+
+                <div>
+                    <div class="chat-bubble">
+                        ${msg.message || ""}
+                    </div>
+
+                    <div class="chat-message-meta">
+                        <span>
+                            ${this.formatChatTime(
+                                msg.eventdatetime
+                            )}
+                        </span>
+                    </div>
+                </div>
+
+            </div>
+        `;
+                }).join("");
+
+                // Update only the feed
+                const feed = document.getElementById("chatFeed");
+
+                if (feed) {
+                    feed.innerHTML = html;
+                    feed.scrollTop = feed.scrollHeight;
+                }
+            }
+            formatChatTime(ts) {
+
+                if (!ts) return "";
+
+                const year = ts.substr(0, 4);
+                const month = ts.substr(4, 2);
+                const day = ts.substr(6, 2);
+
+                const hour = ts.substr(8, 2);
+                const min = ts.substr(10, 2);
+
+                const dt = new Date(
+                    `${year}-${month}-${day}T${hour}:${min}:00`
+                );
+
+                return dt.toLocaleString("en-IN", {
+                    day: "2-digit",
+                    month: "short",
+                    hour: "2-digit",
+                    minute: "2-digit"
+                });
+            }
+
+            // Add this method inside the InboxV2 class
+            initTooltips() {
+                if (typeof bootstrap !== "undefined" && bootstrap.Tooltip) {
+                    // Dispose existing tooltips to avoid duplicate listeners
+                    const existingTooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+                    existingTooltips.forEach(el => {
+                        const instance = bootstrap.Tooltip.getInstance(el);
+                        if (instance) instance.dispose();
+                        new bootstrap.Tooltip(el);
+                    });
+                } else if (typeof $ !== "undefined" && $.fn.tooltip) {
+                    // jQuery fallback if Metronic/Bootstrap jQuery plugin is used
+                    $('[data-bs-toggle="tooltip"]').tooltip({ trigger: 'hover' });
+                }
+            }
+        }
+
+        window.addEventListener(
+            "DOMContentLoaded",
+            () => {
+
+                window.inboxV2 =
+                    new InboxV2();
+            }
+        );
+
+        function getTaskId(item) {
+            const pattern = /\b(?:TSK|TASK|TKT)-\d+\b|\bTask ID-\d+\b/i;
+            // 1️⃣ First try hlink_params
+            if (item.hlink_params) {
+                const match = item.hlink_params.match(pattern);
+                if (match) return match[0];
+            }
+            // 2️⃣ Try displaytitle
+            if (item.displaytitle) {
+                const match = item.displaytitle.match(pattern);
+                if (match) return match[0];
+            }
+            // 3️⃣ Try displaycontent
+            if (item.displaycontent) {
+                const match = item.displaycontent.match(pattern);
+                if (match) return match[0];
+            }
+            if (item.taskid) {
+                return item.taskid
+            }
+            return null;
+        }
+
+
+    </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	<script type="text/javascript" src="../../devpgbase114/HTMLPages/Js/axi_inboxlt_manual3js_1790752748406.js?v=1790752815914"></script>
+</body></html>
+

@@ -6,9 +6,127 @@ var isAutocomBlur = true;
 var isSelectedValFocus = false;
 var isRefreshClick = false;
 var isDataStoreInLs = "";
+var _arabicSel = /[\u0600-\u06FF]/;
 
-function createFormSelect(fld) {
+var ddlMemoryCache = new Map();
+var ddlIndexedDB = null;
+var ddlIndexedDBReady = false;
+var ddlIndexedDBReadyPromise = null;
+var DDL_IDB_NAME = "AxDropdownCacheDB";
+var DDL_IDB_STORE = "dropdowns";
+var DDL_IDB_VERSION = 1;
+function initDdlIndexedDBCache() {
+    if (ddlIndexedDBReadyPromise)
+        return ddlIndexedDBReadyPromise;
+    ddlIndexedDBReadyPromise = new Promise(function (resolve) {
+        if (typeof indexedDB == "undefined") {
+            resolve(false);
+            return;
+        }
+        try {
+            var request = indexedDB.open(DDL_IDB_NAME, DDL_IDB_VERSION);
+            request.onupgradeneeded = function (event) {
+                var db = event.target.result;
+                if (!db.objectStoreNames.contains(DDL_IDB_STORE)) {
+                    var store = db.createObjectStore(DDL_IDB_STORE, { keyPath: "key" });
+                    store.createIndex("timestamp", "timestamp", { unique: false });
+                }
+            };
+            request.onsuccess = function (event) {
+                ddlIndexedDB = event.target.result;
+                ddlIndexedDBReady = true;
+                ddlIndexedDB.onversionchange = function () {
+                    ddlIndexedDB.close();
+                    ddlIndexedDBReady = false;
+                };
+                var ddlCachePrefix = "tstDDFVal♠" + parent.mainProject + "♦" + transid + "♦";
+                var tx = ddlIndexedDB.transaction(DDL_IDB_STORE, "readonly");
+                var store = tx.objectStore(DDL_IDB_STORE);
+                var cursorRequest = store.openCursor();
+                cursorRequest.onsuccess = function (e) {
+                    var cursor = e.target.result;
+                    if (cursor) {
+                        var record = cursor.value;
+                        if (record && record.key !== undefined && record.data !== undefined && typeof record.key === "string" && record.key.startsWith(ddlCachePrefix)) {
+                            ddlMemoryCache.set(record.key, record.data);
+                        }
+                        cursor.continue();
+                    }
+                };
+                tx.oncomplete = function () {
+                    resolve(true);
+                };
+                tx.onerror = function () {
+                    resolve(true);
+                };
+            };
+            request.onerror = function () {
+                resolve(false);
+            };
+        } catch (ex) {
+            resolve(false);
+        }
+    });
+    return ddlIndexedDBReadyPromise;
+}
+function getDdlKeysWithPrefix(prefix) {
+    var matchingKeys = [];
+    ddlMemoryCache.forEach(function (value, key) {
+        if (key.startsWith(prefix))
+            matchingKeys.push(key);
+    });
+    return matchingKeys;
+}
+function getDdlMemoryKey(fieldName, fldNameAc, parentFldVal) {
+    var appSUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
+    var prefix = "tstDDFVal♠" + proj + "♦" + transid + "♦" + fieldName + "♦" + fldNameAc + "♦" + parentFldVal + "♦" + appSUrl + "♥";
+    var foundKey = null;
+    ddlMemoryCache.forEach(function (value, key) {
+        if (foundKey === null && typeof key === "string" && key.toLowerCase() == prefix.toLowerCase()) {
+            foundKey = key;
+        }
+    });
+    return foundKey;
+}
+function setDdlMemoryData(key, data) {
+    ddlMemoryCache.set(key, data);
+}
+function deleteDdlMemoryData(key) {
+    ddlMemoryCache.delete(key);
+}
+function setDropdownDatafromLS(ddlStoreKey, ddlData) {
+    var appSUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
+    var cacheKey = ddlStoreKey + "♦" + appSUrl + "♥";
+    ddlMemoryCache.set(cacheKey, ddlData);
+    try {
+        if (typeof indexedDB == "undefined")
+            return;
+        initDdlIndexedDBCache().then(function (ready) {
+            if (!ready || !ddlIndexedDB)
+                return;
+            try {
+                var jsonString = typeof ddlData == "string" ? ddlData : JSON.stringify(ddlData);
+                var record = {
+                    key: cacheKey,
+                    data: jsonString,
+                    timestamp: Date.now(),
+                    size: new Blob([jsonString]).size
+                };
+                var tx = ddlIndexedDB.transaction(DDL_IDB_STORE, "readwrite");
+                tx.objectStore(DDL_IDB_STORE).put(record);
+                tx.onerror = function () {
+                };
+            } catch (ex) {
+            }
+        });
+    } catch (ex) { }
+}
+
+initDdlIndexedDBCache();
+function createFormSelect(fld, cachedDropdownData, cachedDropdownKey) {
     const formSelect = $(fld);
+    let activeCachedDropdownData = cachedDropdownData || null;
+    let isacddFromAjax = false;
     var fldNameAc = "",
         fieldName = "",
         fastdll = "",
@@ -27,11 +145,26 @@ function createFormSelect(fld) {
             type: "POST",
             dataType: "json",
             contentType: "application/json; charset=utf-8",
-            delay: (typeof params.term == "undefined" || params.term == "") ? 50 : 250,
+            delay: (typeof params.term == "undefined" || params.term == "") ? 50 : 250,//delay: 50,
             data: function (params) {
+                //console.log("Open Data");
+                termVal = String(params.term || "");
                 iscalled = true;
                 isLSNotExist = false;
                 fldNameAc = $(this).attr("id");
+                //console.log("select2 data", fldNameAc, params.term, select2EventType, select2IsFocused);
+                //console.log("select2 data 1:" + activeCachedDropdownData + " cachedDropdownData:" + cachedDropdownData);
+                if (isacddFromAjax && activeCachedDropdownData != null) {
+                    isacddFromAjax = false;
+                    //console.log("isacddFromAjax:");
+                } else
+                    activeCachedDropdownData = cachedDropdownData || null;
+                isacddFromAjax = false;
+                //console.log("select2 data 2:" + activeCachedDropdownData + " cachedDropdownData:" + cachedDropdownData);
+                if (activeCachedDropdownData) {
+                    termVal = typeof params.term === "undefined" ? "" : params.term;
+                    return "{}";
+                }
                 GetCurrentTime("Tstruct " + fldNameAc + " Dropdown click(ws call)");
                 let _$this = $(this);
                 if (select2IsOpened && (typeof params.term == "undefined" || params.term == "")) {
@@ -39,8 +172,9 @@ function createFormSelect(fld) {
                         isAddRowWsCalled = _$this.attr("id");
                         select2EventType = "tab";
                         select2IsFocused = true;
+                        //console.log("select2 close in data");
                         _$this.select2('close');
-                        return;
+                        return { skipRequest: true };
                     } else
                         termVal = "";
                 }
@@ -90,20 +224,29 @@ function createFormSelect(fld) {
                             _cacheTrue = false;
                     }
 
-                    /*if (fastdll == true && typeof localStorage != "undefined" && typeof localStorage["tstDDFVal♠" + transid + "♦" + fieldName + "♦" + parentFldVal] != "undefined" && !isRefreshClick && !_$this.hasClass('multiFldChk') && _cacheTrue && isApifld != "true") {*/
-                    if (isDataStoreInLs == "") {
-                        checkDevOptDdlStoreLS();
-                    }
                     let _ddlappSUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
                     let ddlrefreshsave = $("#" + fldNameAc).hasClass('isrefreshsave');
-                    if (isDataStoreInLs == "true" && fastdll == true && typeof localStorage != "undefined" && getDdlKeysWithPrefix("tstDDFVal♠" + proj + "♦" + transid + "♦" + fieldName + "♦" + ddlrefreshsave + "♦" + parentFldVal + "♦" + _ddlappSUrl + "♥").length > 0 && !isRefreshClick && !_$this.hasClass('multiFldChk') && _cacheTrue && isApifld != "true") {
-                        IsBindData = true;
+                    let cacheKeyPrefix = "tstDDFVal♠" + proj + "♦" + transid + "♦" + fieldName + "♦" + ddlrefreshsave + "♦" + parentFldVal + "♦" + _ddlappSUrl + "♥";
+                    let cacheKeys = getDdlKeysWithPrefix(cacheKeyPrefix);
+                    let canUseCache = cacheKeys.length > 0 && !isRefreshClick && !_$this.hasClass('multiFldChk') && _cacheTrue && isApifld != "true";
+                    let cachedData = canUseCache ? ddlMemoryCache.get(cacheKeys[0]) : null;
+                    if (cachedData) {
+                        try {
+                            cachedData = typeof cachedData == "string" ? $.parseJSON(cachedData) : cachedData;
+                        } catch (ex) {
+                            cachedData = null;
+                        }
                     }
-                    else if (FldListParents.length > 0 && FldListParents.indexOf(fieldName + "♦" + fldNameAc + "♦" + parentFldVal) > -1 && termVal == "" && !isRefreshClick && !_$this.hasClass('multiFldChk') && _cacheTrue && isApifld != "true") {//&& $(this).val() != null
+                    if (cachedData) {
+                        cachedDropdownData = cachedData;
+                        activeCachedDropdownData = cachedData;
                         IsBindData = true;
-                    } else {
-                        GetProcessTime();
+                        return "{}";
+                    }
+                    else {
+                        //console.log("Ajax Call");
                         let _stermVal = termVal;
+                        GetProcessTime();
                         IsBindData = false;
                         isRefreshClick = false;
                         let _isDupTab = callParentNew('isDuplicateTab');
@@ -131,23 +274,382 @@ function createFormSelect(fld) {
                         });
                     }
                 } else {
+                    //console.log("Ajax else Call");
                     IsBindData = false;
                     rcount = 0;
                     isPickMinChar = true;
-
+                    var isrefreshsave = $(this).hasClass('isrefreshsave');
                     let _fieldName = fldNameAc.substring(0, fldNameAc.lastIndexOf("F") - 3);
-                    if (FldListParents.indexOf(_fieldName + "♦" + fldNameAc + "♦" + parentFldVal) > -1 || FldListParents.some(item => item.startsWith(_fieldName + "♦"))) {
-                        let _tIdn = FldListParents.indexOf(_fieldName + "♦" + fldNameAc + "♦" + parentFldVal) > -1 ? FldListParents.indexOf(_fieldName + "♦" + fldNameAc + "♦" + parentFldVal) : FldListParents.findIndex((account) => { return account.startsWith(_fieldName + "♦"); }, _fieldName + "♦");
-                        FldListParents.splice(_tIdn, 1);
-                        FldListData.splice(_tIdn, 1);
+                    var _memoryKey = getDdlMemoryKey(_fieldName, isrefreshsave, parentFldVal);
+                    if (_memoryKey !== null) {
+                        deleteDdlMemoryData(_memoryKey);
+                        //console.log("Ajax deleteDdlMemoryData");
                     }
                 }
             },
+            transport: function (params, success, failure) {
+                //console.log("select2 transport", fldNameAc, params.term, select2EventType, select2IsFocused);
+                isacddFromAjax = false;
+                isNavigation = false;
+                if (params.data && params.data.skipRequest) {
+                    success({ results: [] });
+                    return { abort: function () { } };
+                }
+                if (activeCachedDropdownData) {
+                    //console.log("transport activeCachedDropdownData");
+                    isRefreshClick = false;
+                    var cachedItems =
+                        activeCachedDropdownData.pickdata &&
+                            activeCachedDropdownData.pickdata[3] &&
+                            Array.isArray(activeCachedDropdownData.pickdata[3].data)
+                            ? activeCachedDropdownData.pickdata[3].data
+                            : [];
+                    var $select = $("#" + fldNameAc);
+                    fastdll = $select.hasClass('multiFldChk') ? true : $select.hasClass('fastdll');
+                    var termValue = typeof params.term !== "undefined"
+                        ? String(params.term || "")
+                        : String(termVal || "");
+
+                    termValue = termValue.replace(/"/g, "&quot;");
+
+                    $select.data("dropdownSearchTerm", termValue);
+                    var searchTerm = termValue.toLowerCase();
+                    if (!fastdll && searchTerm !== "" && searchTerm.length < 2) {
+                        isPickMinChar = true;
+                        success({
+                            results: []
+                        });
+                        return {
+                            abort: function () { }
+                        };
+                    }
+                    isPickMinChar = false;
+                    var matchingData = [];
+                    if (fastdll) {
+                        if (searchTerm === "") {
+                            matchingData = cachedItems;
+                        } else {
+                            matchingData = $.grep(
+                                cachedItems,
+                                function (item) {
+
+                                    var itemValue =
+                                        item.i == null
+                                            ? ""
+                                            : String(item.i).replace(
+                                                /\^\^dq/g,
+                                                "&quot;"
+                                            );
+
+                                    var lowerValue =
+                                        itemValue.toLowerCase();
+
+                                    // STARTS WITH
+                                    if (
+                                        typeof DropdownSStartsWith !== "undefined" &&
+                                        DropdownSStartsWith !== "" &&
+                                        DropdownSStartsWith === "starts with"
+                                    ) {
+
+                                        // _arabicSel
+                                        if (
+                                            _arabicSel.test(lowerValue) &&
+                                            lowerValue.endsWith(searchTerm)
+                                        ) {
+                                            return true;
+                                        }
+
+                                        return lowerValue.startsWith(searchTerm);
+                                    }
+
+                                    // CONTAINS
+                                    if (termValue.indexOf("%") > -1) {
+
+                                        var isMatched = false;
+
+                                        var termParts =
+                                            termValue.split("%");
+
+                                        $.each(
+                                            termParts,
+                                            function (_index, value) {
+
+                                                var valueParts =
+                                                    value.split("_");
+
+                                                $.each(
+                                                    valueParts,
+                                                    function (_ind, val) {
+
+                                                        var compareValue =
+                                                            String(val).toLowerCase();
+
+                                                        if (
+                                                            lowerValue.indexOf(
+                                                                compareValue
+                                                            ) >= 0
+                                                        ) {
+                                                            isMatched = true;
+                                                        }
+                                                    }
+                                                );
+                                            }
+                                        );
+
+                                        return isMatched;
+                                    }
+
+                                    return lowerValue.indexOf(searchTerm) >= 0;
+                                }
+                            );
+                        }
+                        var fastPageData = $select.hasClass('multiFldChk')
+                            ? matchingData
+                            : matchingData.slice(0, AutPageSize);
+                        var result = $.map(
+                            fastPageData,
+                            function (item) {
+
+                                var itemValue =
+                                    item.i == null
+                                        ? ""
+                                        : String(item.i).replace(
+                                            /\^\^dq/g,
+                                            "&quot;"
+                                        );
+
+                                return {
+                                    id: itemValue,
+                                    text: itemValue,
+                                    dep: item.d
+                                };
+                            }
+                        );
+
+                        if (AxRulesDefFilter == "true") {
+                            result = AxFilterDropDownResult(
+                                fldNameAc,
+                                result
+                            );
+                        }
+
+                        $select.data(
+                            "rowcount",
+                            matchingData.length
+                        );
+
+                        $select.data(
+                            "depFldMap",
+                            activeCachedDropdownData.pickdata[2].dfname || ""
+                        );
+
+                        searchResult = result;
+
+                        success({
+                            results: result
+                        });
+
+                        return {
+                            abort: function () { }
+                        };
+                    }
+                    if (searchTerm === "") {
+                        matchingData = cachedItems;
+                    }
+                    else {
+                        matchingData = $.grep(
+                            cachedItems,
+                            function (item) {
+
+                                var itemValue =
+                                    item.i == null
+                                        ? ""
+                                        : String(item.i).replace(
+                                            /\^\^dq/g,
+                                            "&quot;"
+                                        );
+
+                                var lowerValue =
+                                    itemValue.toLowerCase();
+                                if (
+                                    typeof DropdownSStartsWith !== "undefined" &&
+                                    DropdownSStartsWith !== "" &&
+                                    DropdownSStartsWith === "starts with"
+                                ) {
+
+                                    if (
+                                        _arabicSel.test(lowerValue) &&
+                                        lowerValue.endsWith(searchTerm)
+                                    ) {
+                                        return true;
+                                    }
+
+                                    return lowerValue.startsWith(searchTerm);
+                                }
+                                if (termValue.indexOf("%") > -1) {
+
+                                    var isMatched = false;
+
+                                    var termParts =
+                                        termValue.split("%");
+
+                                    $.each(
+                                        termParts,
+                                        function (_index, value) {
+
+                                            var valueParts =
+                                                value.split("_");
+
+                                            $.each(
+                                                valueParts,
+                                                function (_ind, val) {
+
+                                                    var compareValue =
+                                                        String(val).toLowerCase();
+
+                                                    if (
+                                                        lowerValue.indexOf(
+                                                            compareValue
+                                                        ) >= 0
+                                                    ) {
+                                                        isMatched = true;
+                                                    }
+                                                }
+                                            );
+                                        }
+                                    );
+
+                                    return isMatched;
+                                }
+                                return lowerValue.indexOf(searchTerm) >= 0;
+                            }
+                        );
+                    }
+                    rcount = matchingData.length;
+                    if (AutPageSize > 0) {
+                        PageCount = Math.ceil(
+                            rcount / AutPageSize
+                        );
+                    } else {
+                        PageCount = 1;
+                    }
+
+                    if (PageCount === 0) {
+                        PageCount = 1;
+                    }
+                    countPerPage = rcount;
+
+                    if (!AutPageNo || AutPageNo < 1) {
+                        AutPageNo = 1;
+                    }
+                    if (AutPageNo > PageCount) {
+                        AutPageNo = PageCount;
+                    }
+                    if (AutPageNo === 1) {
+
+                        $("#autoleft" + fldNameAc)
+                            .prop("disabled", true)
+                            .addClass("disabled");
+
+                        if (PageCount === 1) {
+
+                            $("#autoright" + fldNameAc)
+                                .prop("disabled", true)
+                                .addClass("disabled");
+
+                        } else {
+
+                            $("#autoright" + fldNameAc)
+                                .prop("disabled", false)
+                                .removeClass("disabled");
+                        }
+
+                    } else if (AutPageNo >= PageCount) {
+
+                        $("#autoleft" + fldNameAc)
+                            .prop("disabled", false)
+                            .removeClass("disabled");
+
+                        $("#autoright" + fldNameAc)
+                            .prop("disabled", true)
+                            .addClass("disabled");
+
+                    } else {
+
+                        $("#autoleft" + fldNameAc)
+                            .prop("disabled", false)
+                            .removeClass("disabled");
+
+                        $("#autoright" + fldNameAc)
+                            .prop("disabled", false)
+                            .removeClass("disabled");
+                    }
+                    var startIndex =
+                        (AutPageNo - 1) * AutPageSize;
+
+                    var pageData =
+                        matchingData.slice(
+                            startIndex,
+                            startIndex + AutPageSize
+                        );
+                    var result = $.map(
+                        pageData,
+                        function (item) {
+
+                            var itemValue =
+                                item.i == null
+                                    ? ""
+                                    : String(item.i).replace(
+                                        /\^\^dq/g,
+                                        "&quot;"
+                                    );
+
+                            return {
+                                id: itemValue,
+                                text: itemValue,
+                                dep: item.d
+                            };
+                        }
+                    );
+
+                    if (AxRulesDefFilter == "true") {
+                        result = AxFilterDropDownResult(
+                            fldNameAc,
+                            result
+                        );
+                    }
+                    $select.data(
+                        "rowcount",
+                        rcount
+                    );
+
+                    $select.data(
+                        "depFldMap",
+                        activeCachedDropdownData.pickdata[2].dfname || ""
+                    );
+
+                    searchResult = result;
+
+                    success({
+                        results: result
+                    });
+
+                    return {
+                        abort: function () { }
+                    };
+                }
+                //console.log("transport not activeCachedDropdownData");
+                return $.ajax(params).done(success).fail(failure);
+            },
             processResults: function (data) {
+                //console.log("processResults");
+                if (activeCachedDropdownData) {
+                    return data;
+                }
+                //console.log("processResults 2");
                 IsBindData = false;
                 select2EventType = "open";
                 refreshAC = false;
-                const arabic = /[\u0600-\u06FF]/;
                 try {
                     var result = data.d.toString().replace(new RegExp("\\n", "g"), "");
                     if (result != "") {
@@ -232,31 +734,10 @@ function createFormSelect(fld) {
                             if (!$("#" + fldNameAc).hasClass('multiFldChk')) {
                                 let _fieldName = fldNameAc.substring(0, fldNameAc.lastIndexOf("F") - 3);
                                 let ddlrefreshsave = $("#" + fldNameAc).hasClass('isrefreshsave');
-                                if (isDataStoreInLs == "") {
-                                    checkDevOptDdlStoreLS();
-                                }
-                                if (fastdll == true && isDataStoreInLs == "true") {
-                                    setDropdownDatafromLS("tstDDFVal♠" + proj + "♦" + transid + "♦" + _fieldName + "♦" + ddlrefreshsave + "♦" + parentFldVal, JSON.stringify(serResult));
-                                } else {
-                                    if (termVal == "") {
-                                        /* let _fieldName = fldNameAc.substring(0, fldNameAc.lastIndexOf("F") - 3);*/
-                                        if (FldListParents.indexOf(_fieldName + "♦" + fldNameAc + "♦" + parentFldVal) > -1 || FldListParents.some(item => item.startsWith(_fieldName + "♦"))) {
-                                            let _tIdn = FldListParents.indexOf(_fieldName + "♦" + fldNameAc + "♦" + parentFldVal) > -1 ? FldListParents.indexOf(_fieldName + "♦" + fldNameAc + "♦" + parentFldVal) : FldListParents.findIndex((account) => { return account.startsWith(_fieldName + "♦"); }, _fieldName + "♦");
-                                            FldListParents[_tIdn] = _fieldName + "♦" + fldNameAc + "♦" + parentFldVal;
-                                            FldListData[_tIdn] = serResult;
-                                        } else {
-                                            FldListParents.push(_fieldName + "♦" + fldNameAc + "♦" + parentFldVal);
-                                            FldListData.push(serResult);
-                                        }
-                                    } else {
-                                        /*let _fieldName = fldNameAc.substring(0, fldNameAc.lastIndexOf("F") - 3);*/
-                                        if (FldListParents.indexOf(_fieldName + "♦" + fldNameAc + "♦" + parentFldVal) > -1 || FldListParents.some(item => item.startsWith(_fieldName + "♦"))) {
-                                            let _tIdn = FldListParents.indexOf(_fieldName + "♦" + fldNameAc + "♦" + parentFldVal) > -1 ? FldListParents.indexOf(_fieldName + "♦" + fldNameAc + "♦" + parentFldVal) : FldListParents.findIndex((account) => { return account.startsWith(_fieldName + "♦"); }, _fieldName + "♦");
-                                            FldListParents.splice(_tIdn, 1);
-                                            FldListData.splice(_tIdn, 1);
-                                        }
-                                    }
-                                }                              
+                                //console.log("activeCachedDropdownData setting data");
+                                isacddFromAjax = true;
+                                activeCachedDropdownData = serResult;
+                                setDropdownDatafromLS("tstDDFVal♠" + proj + "♦" + transid + "♦" + _fieldName + "♦" + ddlrefreshsave + "♦" + parentFldVal, JSON.stringify(serResult));
                             }
 
                             if ($(this.$element).hasClass('multiFldChk'))
@@ -267,9 +748,11 @@ function createFormSelect(fld) {
                                 termVal = String(termVal || "").replace(/"/g, '&quot;');
 
                                 $(dtAssoc).each(function (iIndex, sElement) {
-                                    sElement.i = sElement.i.replace(/\^\^dq/g, '&quot;');
+                                    sElement.i = sElement.i == null
+                                        ? ""
+                                        : String(sElement.i).replace(/\^\^dq/g, '&quot;');
                                     if (typeof DropdownSStartsWith != "undefined" && DropdownSStartsWith != "" && DropdownSStartsWith == "starts with") {
-                                        if (arabic.test(sElement.i.toLowerCase()) && sElement.i.toLowerCase().endsWith(termVal.toLowerCase()))
+                                        if (_arabicSel.test(sElement.i.toLowerCase()) && sElement.i.toLowerCase().endsWith(termVal.toLowerCase()))
                                             aSearch.push(sElement);
                                         else if (sElement.i.toLowerCase().startsWith(termVal.toLowerCase())) {
                                             aSearch.push(sElement);
@@ -282,8 +765,11 @@ function createFormSelect(fld) {
                                 });
                                 $("#" + fldNameAc).data("rowcount", aSearch.length);
                                 if (aSearch.length != 0) {
-                                    var result = ($.map(aSearch, function (item) {
-                                        item.i = item.i.replace(/\^\^dq/g, '&quot;');
+                                    var aPage = $(this.$element).hasClass('multiFldChk') ? aSearch : aSearch.slice(0, AutPageSize);
+                                    var result = ($.map(aPage, function (item) {
+                                        item.i = item.i == null
+                                            ? ""
+                                            : String(item.i).replace(/\^\^dq/g, '&quot;');
                                         return {
                                             //id: item.v == "" ? item.i : item.v,
                                             id: item.i,
@@ -301,83 +787,60 @@ function createFormSelect(fld) {
                                     if ($(this.$element).hasClass('multiFldChk'))
                                         $(".msSelectAllOption").addClass("d-none");
                                     else {
+                                        let ddlrefreshsave = $("#" + fldNameAc).hasClass('isrefreshsave');
                                         let _fieldName = fldNameAc.substring(0, fldNameAc.lastIndexOf("F") - 3);
-                                        if (FldListParents.indexOf(_fieldName + "♦" + fldNameAc + "♦" + parentFldVal) > -1 || FldListParents.some(item => item.startsWith(_fieldName + "♦"))) {
-                                            let _tIdn = FldListParents.indexOf(_fieldName + "♦" + fldNameAc + "♦" + parentFldVal) > -1 ? FldListParents.indexOf(_fieldName + "♦" + fldNameAc + "♦" + parentFldVal) : FldListParents.findIndex((account) => { return account.startsWith(_fieldName + "♦"); }, _fieldName + "♦");
-                                            FldListParents.splice(_tIdn, 1);
-                                            FldListData.splice(_tIdn, 1);
-                                        }
+                                        var _memoryKey = getDdlMemoryKey(_fieldName, ddlrefreshsave, parentFldVal);
+                                        if (_memoryKey !== null)
+                                            deleteDdlMemoryData(_memoryKey);
                                     }
                                     AxFldBlurFromSelect = "";
                                     var cutMsg = eval(callParent('lcm[0]'));
                                     return { results: "", noResults: cutMsg };
                                 }
-                            } else {
-                                var result = ($.map(dtAssoc, function (item) {
-                                    if (termVal != "") {
-                                        termVal = termVal.replace(/"/g, '&quot;');
-                                        item.i = item.i.replace(/\^\^dq/g, '&quot;');
-                                        if (typeof DropdownSStartsWith != "undefined" && DropdownSStartsWith != "" && DropdownSStartsWith == "starts with") {
-                                            if (arabic.test(item.i.toLowerCase()) && item.i.toLowerCase().endsWith(termVal.toLowerCase())) {
-                                                return {
-                                                    //id: item.v == "" ? item.i : item.v,
-                                                    id: item.i,
-                                                    text: item.i,
-                                                    dep: item.d
-                                                }
+                             } else {
+                                termVal = String(termVal || "").replace(/"/g, '&quot;');
+                                let searchTerm = termVal.toLowerCase();
+                                let matchingData = [];
+                                if (searchTerm === "") {
+                                    matchingData = dtAssoc.slice(0, AutPageSize);
+                                } else {
+                                    matchingData = $.grep(dtAssoc, function (item) {
+                                        let itemValue = item.i == null
+                                            ? ""
+                                            : String(item.i).replace(/\^\^dq/g, "&quot;");
+                                        let lowerValue = itemValue.toLowerCase();
+                                        if (typeof DropdownSStartsWith !== "undefined" && DropdownSStartsWith !== "" && DropdownSStartsWith === "starts with") {
+                                            if (_arabicSel.test(lowerValue) && lowerValue.endsWith(searchTerm)) {
+                                                return true;
                                             }
-                                            else if (item.i.toLowerCase().startsWith(termVal.toLowerCase())) {
-                                                return {
-                                                    //id: item.v == "" ? item.i : item.v,
-                                                    id: item.i,
-                                                    text: item.i,
-                                                    dep: item.d
-                                                }
-                                            }
-                                        } else {
-                                            if (termVal.indexOf('%') > -1) {
-                                                let _thisTrue = false;
-                                                let _termVal = termVal.split('%');
-                                                $.each(_termVal, function (_index, _value) {
-                                                    let _thistermVal = _value.split('_');
-                                                    $.each(_thistermVal, function (_ind, _val) {
-                                                        if (item.i.toLowerCase().indexOf(_val.toLowerCase()) >= 0) {
-                                                            _thisTrue = true;
-                                                        }
-                                                    });
+                                            return lowerValue.startsWith(searchTerm);
+                                        }
+                                        if (termVal.indexOf("%") > -1) {
+                                            let isMatched = false;
+                                            let termParts = termVal.split("%");
+                                            $.each(termParts, function (_index, value) {
+                                                let valueParts = value.split("_");
+                                                $.each(valueParts, function (_ind, val) {
+                                                    let compareValue = String(val).toLowerCase();
+                                                    if (lowerValue.indexOf(compareValue) >= 0) {
+                                                        isMatched = true;
+                                                    }
                                                 });
-
-                                                if (_thisTrue) {
-                                                    //item.i = item.i.replace(/\^\^dq/g, '&quot;');
-                                                    return {
-                                                        //id: item.v == "" ? item.i : item.v,
-                                                        id: item.i,
-                                                        text: item.i,
-                                                        dep: item.d
-                                                    }
-                                                }
-                                            } else {
-                                                if (item.i.toLowerCase().indexOf(termVal.toLowerCase()) >= 0) {
-                                                    //item.i = item.i.replace(/\^\^dq/g, '&quot;');
-                                                    return {
-                                                        //id: item.v == "" ? item.i : item.v,
-                                                        id: item.i,
-                                                        text: item.i,
-                                                        dep: item.d
-                                                    }
-                                                }
-                                            }
+                                            });
+                                            return isMatched;
                                         }
-                                    } else {
-                                        item.i = item.i.replace(/\^\^dq/g, '&quot;');
-                                        return {
-                                            //id: item.v == "" ? item.i : item.v,
-                                            id: item.i,
-                                            text: item.i,
-                                            dep: item.d
-                                        }
-                                    }
-                                }));
+                                        return lowerValue.indexOf(searchTerm) >= 0;
+                                    });
+                                    matchingData = matchingData.slice(0, AutPageSize);
+                                }
+                                let result = $.map(matchingData, function (item) {
+                                    let itemValue = item.i == null ? "" : String(item.i).replace(/\^\^dq/g, "&quot;");
+                                    return {
+                                        id: itemValue,
+                                        text: itemValue,
+                                        dep: item.d
+                                    };
+                                });
                                 if (AxRulesDefFilter == "true")
                                     result = AxFilterDropDownResult(fldNameAc, result);
                                 searchResult = result;
@@ -389,12 +852,11 @@ function createFormSelect(fld) {
                             if ($(this.$element).hasClass('multiFldChk'))
                                 $(".msSelectAllOption").addClass("d-none");
                             else {
+                                let ddlrefreshsave = $("#" + fldNameAc).hasClass('isrefreshsave');
                                 let _fieldName = fldNameAc.substring(0, fldNameAc.lastIndexOf("F") - 3);
-                                if (FldListParents.indexOf(_fieldName + "♦" + fldNameAc + "♦" + parentFldVal) > -1 || FldListParents.some(item => item.startsWith(_fieldName + "♦"))) {
-                                    let _tIdn = FldListParents.indexOf(_fieldName + "♦" + fldNameAc + "♦" + parentFldVal) > -1 ? FldListParents.indexOf(_fieldName + "♦" + fldNameAc + "♦" + parentFldVal) : FldListParents.findIndex((account) => { return account.startsWith(_fieldName + "♦"); }, _fieldName + "♦");
-                                    FldListParents.splice(_tIdn, 1);
-                                    FldListData.splice(_tIdn, 1);
-                                }
+                                var _memoryKey = getDdlMemoryKey(_fieldName, ddlrefreshsave, parentFldVal);
+                                if (_memoryKey !== null)
+                                    deleteDdlMemoryData(_memoryKey);
                             }
                             AxFldBlurFromSelect = "";
                             var cutMsg = eval(callParent('lcm[0]'));
@@ -416,100 +878,7 @@ function createFormSelect(fld) {
                 }
             },
             error: function (data) {
-                if (IsBindData) {
-                    let _ddlappSUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
-                    let _fieldName = fldNameAc.substring(0, fldNameAc.lastIndexOf("F") - 3);
-                    let ddlrefreshsave = $("#" + fldNameAc).hasClass('isrefreshsave');
-                    if (FldListParents.length > 0 && FldListParents.indexOf(_fieldName + "♦" + fldNameAc + "♦" + parentFldVal) > -1) {
-                        var _thisIdx = FldListParents.indexOf(_fieldName + "♦" + fldNameAc + "♦" + parentFldVal);
-                        _depFldName = FldListData[_thisIdx].pickdata[2].dfname;
-                        var _ArrData = FldListData[_thisIdx].pickdata[3].data;
-                        var result = ($.map(_ArrData, function (item) {
-                            item.i = item.i.replace(/\^\^dq/g, '&quot;');
-                            return {
-                                id: item.i,
-                                text: item.i,
-                                dep: item.d
-                            }
-                        }))
-                        $(".select2-results__options li:eq(0)").remove();
-                        console.clear();
-                        $("#" + fldNameAc).select2("data", result, true);
-                        $("#" + fldNameAc).select2("updateResults");
-                        $("#" + fldNameAc).data('depFldMap', _depFldName);
-                    }
-                    else if (isDataStoreInLs == "true" && typeof localStorage != "undefined" && getDdlKeysWithPrefix("tstDDFVal♠" + proj + "♦" + transid + "♦" + _fieldName + "♦" + ddlrefreshsave + "♦" + parentFldVal + "♦" + _ddlappSUrl + "♥").length > 0) {
-                        let _keyPrefix = "tstDDFVal♠" + proj + "♦" + transid + "♦" + _fieldName + "♦" + ddlrefreshsave + "♦" + parentFldVal + "♦" + _ddlappSUrl + "♥";
-                        let _thisKey = getDdlKeysWithPrefix(_keyPrefix);
-                        if (_thisKey.length > 0) {
-                            let resData = localStorage[_thisKey[0]];
-                            if (!resData) return;
-                            resData = $.parseJSON(resData);
-                            _depFldName = resData.pickdata[2].dfname;
-                            let _ArrData = resData.pickdata[3].data;
-                            let result = $.map(_ArrData, function (item) {
-                                item.i = item.i.replace(/\^\^dq/g, '&quot;');
-                                return {
-                                    id: item.i,
-                                    text: item.i,
-                                    dep: item.d
-                                };
-                            });
-                            let depMap = {};
-                            let $select = $("#" + fldNameAc);
-                            let fldAcValue = $select.val();
-                            $select.empty();
-                            $.each(result, function (_, item) {
-                                $select.append($('<option>', {
-                                    value: item.id,
-                                    text: item.text
-                                }));
-                                depMap[item.id] = item.dep;
-                            });
-                            $select.val(fldAcValue);
-                            $select.select2();
-                            $select.data('depMap', depMap);
-                            $select.data('depFldMap', _depFldName);
-                            $select.select2('open');
-
-                            let addOption = typeof $select.attr("data-addoption") == "undefined" ? "" : $select.attr("data-addoption");
-                            let dataRefresh = typeof $select.attr("data-refresh") == "undefined" ? "" : $select.attr("data-refresh");
-                            let _thisId = fldNameAc;
-                            let isApiFld = "";
-                            try {
-                                let _thisfldInd = GetFieldIndex(GetFieldsName(_thisId));
-                                if (_thisfldInd > -1)
-                                    isApiFld = FldIsAPI[_thisfldInd];
-                            } catch (ex) {
-                                isApiFld = "";
-                            }
-                            let iconBtn = "";
-                            if (!$(this).hasClass('multiFldChk')) {
-                                if (typeof dataRefresh != "undefined" && dataRefresh != "" && dataRefresh == "true") {
-                                    iconBtn += '<a class="btn btn-sm btn-icon btn-white btn-color-gray-600 btn-active-primary me-2 shadow-sm ms-2 fsautorefresh" id="autorefresh' + _thisId + '" title="Refresh" data-refresh=' + _thisId + '><span class="material-icons material-icons-style material-icons-3">refresh</span></a>';
-                                }
-                                else if (typeof dataRefresh != "undefined" && dataRefresh != "" && dataRefresh == "false") {
-                                    iconBtn += '<a class="btn btn-sm btn-icon btn-white btn-color-gray-600 btn-active-primary me-2 shadow-sm ms-2 disabled" id="autoleft' + _thisId + '" title="Previous" data-fldname=' + _thisId + '><span class="material-icons material-icons-style material-icons-3">navigate_before</span></a><a class="btn btn-sm btn-icon btn-white btn-color-gray-500 btn-active-primary me-2 shadow-sm disabled" id="autoright' + _thisId + '" title="Next" data-fldname=' + _thisId + '><span class="material-icons material-icons-style material-icons-3">navigate_next</span></a>';
-                                }
-                                if (isApiFld == "")
-                                    iconBtn += '<a class="btn btn-sm btn-icon btn-white btn-color-gray-500 btn-active-primary me-2 shadow-sm float-end" id="advSearch' + _thisId + '" title="adv. search" data-ids=' + _thisId + '><span class="material-icons material-icons-style material-icons-3">search</span></a><input type=hidden id="pickIdVal_' + _thisId + '" value=\"\" />';
-
-                                iconBtn += '<a class="btn btn-sm btn-icon btn-white btn-color-gray-500 btn-active-primary me-2 shadow-sm float-end" id="copySelVal' + _thisId + '" title="Copy Selected Value" data-ids=' + _thisId + '><span class="material-icons material-icons-style material-icons-3">copy</span></a>';
-                            } else {
-                                $(".select2-results a.fsautorefresh").remove();
-                                if (isApiFld == "")
-                                    iconBtn += '<a class="btn btn-sm btn-icon btn-white btn-color-gray-500 btn-active-primary me-2 shadow-sm float-end" id="advSearch' + _thisId + '" title="adv. search" data-ids=' + _thisId + '><span class="material-icons material-icons-style material-icons-3">search</span></a><input type=hidden id="pickIdVal_' + _thisId + '" value=\"\" />';
-                            }
-                            if (typeof addOption != "undefined" && addOption != "") {
-                                iconBtn += '<a class="btn btn-sm btn-icon btn-primary btn-color-gray-600--- btn-active-primary--- me-2 shadow-sm float-end" id="addOption' + _thisId + '" data-ids=' + _thisId + ' title="Add Master Data"><span class="material-icons material-icons-style material-icons-3">add</span></a>';
-                            }
-
-                            $(".select2-results:not(:has(a))").append(iconBtn);
-                            clickEvents(_thisId);
-                            console.clear();
-                        }
-                    }
-                }
+                console.log("error event");
             }
         },
         placeholder: 'Search for a repository',
@@ -518,6 +887,11 @@ function createFormSelect(fld) {
             return markup;
         },
         language: {
+            noResults: function () {
+                return isPickMinChar
+                    ? 'Required to search minimum 2 characters'
+                    : 'No results found';
+            },
             errorLoading: function () {
                 if (isPickMinChar)
                     return 'Required to search minimum 2 characters';
@@ -580,7 +954,7 @@ function createFormSelect(fld) {
                         if (_thisfInd > -1) {
                             let _ffapi = FldFillFromAPI[_thisfInd];
                             if (_ffapi != "" && _ffapi == fName) {
-                                var depfldValue = value;                               
+                                var depfldValue = value;
                                 rcID = rcID.substring(0, rcID.lastIndexOf('F') + 1) + GetDcNo(depfldId);
                                 if (depfldValue != "")
                                     depfldValue = depfldValue.replace(new RegExp("<br>", "g"), "\n");
@@ -678,7 +1052,7 @@ function createFormSelect(fld) {
         AxDoBlur = true;
         MainBlur($j("#" + fldNamesf));
     }).on('select2:open', function (e) {
-
+        //console.log("select2 open event start");
         const evt = "scroll.select2";
         $(e.target).parents().off(evt);
         $(window).off(evt);
@@ -689,6 +1063,7 @@ function createFormSelect(fld) {
             if (recordid != "0" && select2EventType != "click" && !$(this).hasClass('multiFldChk')) {
                 select2EventType = "tab";
                 select2IsFocused = true;
+                //console.log("select2 close in open event");
                 $(this).select2('close');
                 return;
             } else {
@@ -774,7 +1149,8 @@ function createFormSelect(fld) {
                 iconBtn += '<a class="btn btn-sm btn-icon btn-white btn-color-gray-600 btn-active-primary me-2 shadow-sm ms-2 fsautorefresh" id="autorefresh' + _thisId + '" title="Refresh" data-refresh=' + _thisId + '><span class="material-icons material-icons-style material-icons-3">refresh</span></a>';
             }
             else if (typeof dataRefresh != "undefined" && dataRefresh != "" && dataRefresh == "false") {
-                iconBtn += '<a class="btn btn-sm btn-icon btn-white btn-color-gray-600 btn-active-primary me-2 shadow-sm ms-2 disabled" id="autoleft' + _thisId + '" title="Previous" data-fldname=' + _thisId + '><span class="material-icons material-icons-style material-icons-3">navigate_before</span></a><a class="btn btn-sm btn-icon btn-white btn-color-gray-500 btn-active-primary me-2 shadow-sm disabled" id="autoright' + _thisId + '" title="Next" data-fldname=' + _thisId + '><span class="material-icons material-icons-style material-icons-3">navigate_next</span></a>';
+                iconBtn += '<a class="btn btn-sm btn-icon btn-white btn-color-gray-600 btn-active-primary me-2 shadow-sm ms-2 disabled" id="autoleft' + _thisId + '" title="Previous" data-fldname=' + _thisId + '><span class="material-icons material-icons-style material-icons-3">navigate_before</span></a><a class="btn btn-sm btn-icon btn-white btn-color-gray-600 btn-active-primary me-2 shadow-sm disabled" id="autoright' + _thisId + '" title="Next" data-fldname=' + _thisId + '><span class="material-icons material-icons-style material-icons-3">navigate_next</span></a>';
+                iconBtn += '<a class="btn btn-sm btn-icon btn-white btn-color-gray-600 btn-active-primary me-2 shadow-sm fsautorefresh" id="autorefresh' + _thisId + '" title="Refresh" data-refresh=' + _thisId + '><span class="material-icons material-icons-style material-icons-3">refresh</span></a>';
             }
             if (isApiFld == "")
                 iconBtn += '<a class="btn btn-sm btn-icon btn-white btn-color-gray-500 btn-active-primary me-2 shadow-sm float-end" id="advSearch' + _thisId + '" title="adv. search" data-ids=' + _thisId + '><span class="material-icons material-icons-style material-icons-3">search</span></a><input type=hidden id="pickIdVal_' + _thisId + '" value=\"\" />';
@@ -825,104 +1201,73 @@ function createFormSelect(fld) {
         }
         if (!isNavigation)
             AutPageNo = 1;
-        isNavigation = false;
+        //isNavigation = false;
         try {
             if ($("#" + fldNameAc).val() != null && $("#" + fldNameAc).val() != "") {
                 let _thisTfName = GetFieldsName(fldNameAc);
                 ShowTooltip(_thisTfName, $("#" + fldNameAc));
             }
         } catch (ex) { }
-        clickEvents(_thisId);
+        clickEventsNew(_thisId);
 
-        if (isDataStoreInLs == "") {
-            checkDevOptDdlStoreLS();
+        isacddFromAjax = false;
+        let currentFieldName = fldNameAc.substring(0, fldNameAc.lastIndexOf("F") - 3);
+        let ddlrefreshsave = $("#" + fldNameAc).hasClass("isrefreshsave");
+        parentFldVal = "";
+        if (typeof wsPerfEnabled != "undefined" && wsPerfEnabled) {
+            parentFldVal = ISBoundAutoCom(currentFieldName, fldNameAc);
+        } else {
+            parentFldVal = ISBoundNew(currentFieldName, fldNameAc);
         }
-        if (isDataStoreInLs == "true" && !isLSNotExist) {
-            let _ddlappSUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
-            let _fieldName = fldNameAc.substring(0, fldNameAc.lastIndexOf("F") - 3);
-            let ddlrefreshsave = $("#" + fldNameAc).hasClass('isrefreshsave');
-            parentFldVal = "";
-            if (typeof wsPerfEnabled != "undefined" && wsPerfEnabled)
-                parentFldVal = ISBoundAutoCom(_fieldName, fldNameAc);
-            else
-                parentFldVal = ISBoundNew(fieldName, fldNameAc);
-            let _keyPrefix = "tstDDFVal♠" + proj + "♦" + transid + "♦" + _fieldName + "♦" + ddlrefreshsave + "♦" + parentFldVal + "♦" + _ddlappSUrl + "♥";//"tstDDFVal♠tdepd♦field2♦♦http://localhost/aw11.4df♥";//
-            let _thisKey = getDdlKeysWithPrefix(_keyPrefix);
-            if (_thisKey.length > 0) {
-                isLSNotExist = false;
-                iscalled = false;
-                let resData = localStorage[_thisKey[0]];
-                if (!resData) return;
-                resData = $.parseJSON(resData);
-                _depFldName = resData.pickdata[2].dfname;
-                let _ArrData = resData.pickdata[3].data;
-                let result = $.map(_ArrData, function (item) {
-                    item.i = item.i.replace(/\^\^dq/g, '&quot;');
-                    return {
-                        id: item.i,
-                        text: item.i,
-                        dep: item.d
-                    };
-                });
-                let $select = $("#" + fldNameAc);
-                let fldAcValue = $select.val();
-                $select.empty();
-                let depMap = {};
-                $.each(result, function (_, item) {
-                    $select.append($('<option>', {
-                        value: item.id,
-                        text: item.text
-                    }));
-                    depMap[item.id] = item.dep;
-                });
-                $select.data('depMap', depMap);
-                $select.data('depFldMap', _depFldName);
-                $select.val(fldAcValue);
-            } else {
-                let $select = $("#" + fldNameAc);
-                setTimeout(function () {
-                    if (!iscalled) {
-                        /* isLSNotExist = true;*/
-                        refreshAC = true;
-                        AutPageNo = 1;
-                        rcount = 0;
-                        CangefldName = '';
-                        PageCount = 0;
-                        isSelectedValFocus = false;
-                        select2IsFocused = false;
-                        select2IsOpened = true;
-                        isRefreshClick = true;
-                        select2EventType = "click";
-
-                        isLSNotExist = true;
-                        let selectedVal = $select.val();
-                        if ($select.data('select2')) {
-                            $select.off();
-                            $select.select2('destroy');
-                        }
-                        $select.empty();
-                        if (selectedVal) {
-                            $select.append(new Option(selectedVal, selectedVal, true, true));
-                        }
-                        createFormSelect($select);
-                        setTimeout(() => {
-                            if ($select.data('select2')) {
-                                isLSNotExist = false;
-                                $select.select2('open');
-                            }
-                        }, 0);
-                    }
-                    iscalled = false;
-                }, 10);
+        let ddlAppUrl = top.window.location.href.toLowerCase().substring(0, top.window.location.href.indexOf("/aspx/"));
+        let cacheKeyPrefix = "tstDDFVal♠" + proj + "♦" + transid + "♦" + currentFieldName + "♦" + ddlrefreshsave + "♦" + parentFldVal + "♦" + ddlAppUrl + "♥";
+        let currentCacheKeys = getDdlKeysWithPrefix(cacheKeyPrefix);
+        //console.log("select2 open event before cachedDropdownData");
+        if (!isLSNotExist && !cachedDropdownData && !isRefreshClick && currentCacheKeys.length > 0) {
+            //console.log("Open Logic ");
+            let currentCacheKey = currentCacheKeys[0];
+            let currentCacheData = ddlMemoryCache.get(currentCacheKey);
+            if (!currentCacheData) {
+                return;
             }
-        } 
+            //console.log("Open Logic 2");
+            currentCacheData = $.parseJSON(currentCacheData);
+            let $select = $("#" + fldNameAc);
+            let selectedValue = $select.val();
+            if ($select.data("select2")) {
+                $select.off();
+                $select.select2("destroy");
+            }
+            $select.empty();
+            if (selectedValue) {
+                $select.append(new Option(selectedValue, selectedValue, true, true));
+            }
+            isLSNotExist = true;
+            refreshAC = false;
+            isRefreshClick = false;
+            createFormSelect(
+                $select,
+                currentCacheData,
+                currentCacheKey
+            );
+            setTimeout(function () {
+                isLSNotExist = false;
+                if ($select.data("select2")) {
+                    $select.select2("open");
+                }
+            }, 0);
+        }
     }).on("select2:close", function (e) {
+        cachedDropdownData = undefined;
+        isacddFromAjax = false;
         isOnCLose = false;
         isSelectedValFocus = false;
         select2IsFocused = true;
         select2EventType = "";
         AxFldBlurFromSelect = "";
     }).on("select2:closing", function (e) {
+        cachedDropdownData = undefined;
+        isacddFromAjax = false;
         isOnCLose = true;
         select2EventType = "";
     }).on("select2:clear", function (e) {
@@ -1026,6 +1371,167 @@ function checkNextSelExpFld(_thisNSEfld, _fldInd) {
     } catch (ex) { }
 }
 
+function clickEventsNew(fsFldName) {
+    function restoreDropdownSearchTerm(fldName) {
+        var $select = $("#" + fldName);
+        var savedSearchTerm = $select.data("dropdownSearchTerm") || "";
+        savedSearchTerm = String(savedSearchTerm);
+        termVal = savedSearchTerm;
+        setTimeout(function () {
+            var $searchBox = $(".select2-container--open .select2-search__field");
+            if ($searchBox.length > 0) {
+                $searchBox.val(savedSearchTerm);
+            }
+        }, 0);
+        return savedSearchTerm;
+    }
+    $(document).off("click", "#autorefresh" + fsFldName);
+    $(document).on("click", "#autorefresh" + fsFldName, function (e) {
+        refreshAC = true;
+        isRefreshClick = true;
+        AutPageNo = 1;
+        rcount = 0;
+        CangefldName = "";
+        PageCount = 0;
+        isSelectedValFocus = false;
+        select2IsFocused = false;
+        select2IsOpened = true;
+        select2EventType = "click";
+        const $sel = $("#" + $(e.currentTarget).data("refresh"));
+        if (!$sel.length) {
+            return;
+        }
+        $sel.removeData("dropdownSearchTerm");
+        if ($sel.data("select2")) {
+            $sel.select2("destroy");
+        }
+        $sel.empty();
+        createFormSelect($sel);
+        $sel.select2("open");
+    });
+    $(document).off("click", "#autoleft" + fsFldName);
+    $(document).on("click", "#autoleft" + fsFldName, function (e) {
+        isNavigation = true;
+        pickarrow = true;
+        var fldName = $(e.currentTarget).data("fldname");
+        restoreDropdownSearchTerm(fldName);
+        AutPageNo--;
+        if (AutPageNo < 1) {
+            AutPageNo = 1;
+        }
+        isSelectedValFocus = false;
+        $("#autoright" + fsFldName).prop("disabled", false).removeClass("disabled");
+        if (AutPageNo == 1) {
+            $("#autoleft" + fsFldName).prop("disabled", true).addClass("disabled");
+        }
+        select2IsFocused = false;
+        select2IsOpened = true;
+        isRefreshClick = false;
+        select2EventType = "click";
+        if (typeof $(".select2-dropdown--below") != "undefined" && $(".select2-dropdown--below").length > 0) {
+            $(".select2-dropdown--below").find(".select2-search__field").trigger($.Event("input", { which: 13 }));
+        }
+        else {
+            $("#" + fldName).select2("close");
+            $("#" + fldName).select2("open");
+        }
+    });
+    $(document).off("click", "#autoright" + fsFldName);
+    $(document).on("click", "#autoright" + fsFldName, function (e) {
+        isNavigation = true;
+        pickarrow = true;
+        var fldName =            $(e.currentTarget).data("fldname");
+        restoreDropdownSearchTerm(fldName);
+        AutPageNo++;
+        isSelectedValFocus = false;
+        $("#autoleft" + fsFldName)            .prop("disabled", false)            .removeClass("disabled");
+        if (PageCount <= AutPageNo) {
+            $("#autoright" + fsFldName).prop("disabled", true).addClass("disabled");
+        }
+        select2IsFocused = false;
+        select2IsOpened = true;
+        isRefreshClick = false;
+        select2EventType = "click";
+        if (typeof $(".select2-dropdown--below") != "undefined" && $(".select2-dropdown--below").length > 0) {
+            $(".select2-dropdown--below").find(".select2-search__field").trigger($.Event("input", { which: 13 }));
+        }
+        else {
+            $("#" + fldName).select2("close");
+            $("#" + fldName).select2("open");
+        }
+    });
+
+    $(document).off("click", "#advSearch" + fsFldName);
+    $(document).on("click", "#advSearch" + fsFldName, function () {
+        $("#" + $(this).data("ids")).select2("close");
+        isSelectedValFocus = false;
+        SearchOpenNew($(this).data("ids"));
+    });
+
+    $(document).off("click", "#addOption" + fsFldName);
+    $(document).on("click", "#addOption" + fsFldName, function () {
+        $("#" + $(this).data("ids")).select2("close");
+        let mstFldId = $(this).data("ids");
+        let mstFldDetails = $("#" + mstFldId).data("addoption");
+        var fieldName = mstFldId.substring(0, mstFldId.lastIndexOf("F") - 3);
+        let na = `tstruct.aspx?transid=` + mstFldDetails.split('~')[0] + `&AxPop=true&AxRefSelect=true&AxRefSelectID=` + fieldName + `&AxSrcSelectID=` + mstFldDetails.split('~')[1] + `&AxRefType=` + mstFldDetails.split('~')[2];
+        isSelectedValFocus = false;
+        let myModal = new BSModal("modalIdNewItem", "", "<iframe class='col-12 h-100' src='" + na + "'></iframe>", () => {
+            //shown callback
+        }, () => {
+            //hide callback
+        });
+        myModal.changeSize("fullscreen");
+        myModal.hideFooter();
+        myModal.hideHeader();
+        myModal.showFloatingClose();
+    });
+
+    $(document).off("keydown", "input.select2-search__field");
+    $(document).on("keydown", "input.select2-search__field", function (event) {
+        if (isSelectedValFocus) {
+            isSelectedValFocus = false;
+        }
+        if (event.originalEvent.keyCode == "9") {
+            let _fldTarget = $(event.currentTarget).attr('aria-controls');
+            if (typeof _fldTarget != "undefined") {
+                _fldTarget = _fldTarget.replace("select2-", "").replace("-results", "");
+                $("#" + _fldTarget).select2("close");
+            }
+        }
+    });
+
+    $(document).off("keypress", "input.select2-search__field");
+    $(document).on("keypress", "input.select2-search__field", function (event) {
+        if (isSelectedValFocus) {
+            isSelectedValFocus = false;
+        }
+    });
+
+    $(document).off("click", "#copySelVal" + fsFldName);
+    $(document).on("click", "#copySelVal" + fsFldName, function () {
+        try {
+            if ($("#" + $(this).data("ids")).val() != null)
+                navigator.clipboard.writeText($("#" + $(this).data("ids")).val());
+            else
+                navigator.clipboard.writeText("");
+        } catch (ex) {
+            if (typeof navigator.clipboard == "undefined" && $("#" + $(this).data("ids")).val() != null) {
+                const copyText = document.createElement('textarea');
+                copyText.value = $("#" + $(this).data("ids")).val();
+                document.body.prepend(copyText);
+                copyText.select();
+                try {
+                    document.execCommand('copy');
+                } catch (err) {
+                } finally {
+                    copyText.remove();
+                }
+            } else if (typeof navigator.clipboard != "undefined")
+                navigator.clipboard.writeText("");
+        }
+    });
+}
 function clickEvents(fsFldName) {
 
     $(document).off("click", "#autorefresh" + fsFldName);
@@ -1074,8 +1580,10 @@ function clickEvents(fsFldName) {
         if (typeof $(".select2-dropdown--below") != "undefined" && $(".select2-dropdown--below").length > 0)
             $(".select2-dropdown--below").find('.select2-search__field').trigger($.Event('input', { which: 13 }));
         else {
-            $("#" + $(e.currentTarget).data('refresh')).select2('close');
-            $("#" + $(e.currentTarget).data('refresh')).select2('open');
+            //$("#" + $(e.currentTarget).data('refresh')).select2('close');
+            //$("#" + $(e.currentTarget).data('refresh')).select2('open');
+            $("#" + $(e.currentTarget).data('fldname')).select2('close');
+            $("#" + $(e.currentTarget).data('fldname')).select2('open');
         }
     });
 
@@ -1098,8 +1606,10 @@ function clickEvents(fsFldName) {
         if (typeof $(".select2-dropdown--below") != "undefined" && $(".select2-dropdown--below").length > 0)
             $(".select2-dropdown--below").find('.select2-search__field').trigger($.Event('input', { which: 13 }));
         else {
-            $("#" + $(e.currentTarget).data('refresh')).select2('close');
-            $("#" + $(e.currentTarget).data('refresh')).select2('open');
+            //$("#" + $(e.currentTarget).data('refresh')).select2('close');
+            //$("#" + $(e.currentTarget).data('refresh')).select2('open');
+            $("#" + $(e.currentTarget).data('fldname')).select2('close');
+            $("#" + $(e.currentTarget).data('fldname')).select2('open');
         }
     });
 
@@ -2305,63 +2815,3 @@ function checkDevOptDdlStoreLS() {
     }
 }
 
-function getDdlKeysWithPrefix(prefix) {
-    var allKeys = Object.keys(localStorage);
-    var matchingKeys = allKeys.filter(function (key) {
-        return key.startsWith(prefix);
-    });
-    return matchingKeys;
-}
-function setDropdownDatafromLS(ddlStoreKey, ddlData) {
-    let appSUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
-    try {
-        let _thisKey = getDdlKeysWithPrefix(ddlStoreKey + "♦" + appSUrl + "♥");
-        if (_thisKey.length > 0) {
-            for (const val of _thisKey) {
-                localStorage.removeItem(val);
-            }
-        }
-        var _time = new Date();
-        var _localTime = _time.getTime();
-        localStorage.setItem(ddlStoreKey + "♦" + appSUrl + "♥" + _localTime, ddlData);
-    } catch (ex) {
-        if (ex.message.indexOf('exceeded the quota') > -1) {
-            var jsonString = JSON.stringify(ddlData);
-            var sizeInBytes = new Blob([jsonString]).size;
-            var _thisKeys = getDdlKeysWithPrefix("tstDDFVal♠");
-            if (_thisKeys.length > 0) {
-                var ascOrderKeys = _thisKeys
-                    .filter(x => x.split('♥')[1])
-                    .sort((a, b) => {
-                        const numA = parseInt(a.split('♥')[1], 10);
-                        const numB = parseInt(b.split('♥')[1], 10);
-                        return numA - numB;
-                    });
-
-                var totalSpace = 10 * 1024 * 1024;
-                for (const val of ascOrderKeys) {
-                    localStorage.removeItem(val);
-                    var _usedMemory = getUsedDdlLocalStorageSpace();
-                    if ((totalSpace - _usedMemory) > sizeInBytes) {
-                        break;
-                    }
-                }
-                try {
-                    var _ttime = new Date();
-                    let _tlocalTime = _ttime.getTime();
-                    localStorage.setItem(ddlStoreKey + "♦" + appSUrl + "♥" + _tlocalTime, ddlData);
-                } catch (ex) { }
-            }
-        }
-    }
-}
-
-function getUsedDdlLocalStorageSpace() {
-    var usedSpace = 0;
-    for (var key in localStorage) {
-        if (localStorage.hasOwnProperty(key)) {
-            usedSpace += (key.length + localStorage[key].length) * 2;
-        }
-    }
-    return usedSpace;
-}

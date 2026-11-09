@@ -150,6 +150,18 @@ INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, p
 >>
 
 <<
+INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active, is_system) VALUES ('cfg_configure_product', 'Configure', 'product', 'product', 'commandsetting', NULL, NULL, NULL, 'T', 'T') ON CONFLICT (config_id) DO UPDATE SET is_system = 'T'
+>>
+
+<<
+INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active, is_system) VALUES ('cfg_configure_plugin', 'Configure', 'plugin', 'plugin', 'commandsetting', NULL, NULL, NULL, 'T', 'T') ON CONFLICT (config_id) DO UPDATE SET is_system = 'T'
+>>
+
+<<
+INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active, is_system) VALUES ('cfg_configure_changerequest', 'Configure', 'changerequest', 'changerequest', 'commandsetting', NULL, NULL, NULL, 'T', 'T') ON CONFLICT (config_id) DO UPDATE SET is_system = 'T'
+>>
+
+<<
 INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active, is_system) VALUES ('cfg_sdk_ads', 'SDK', 'axpert data sources', 'b_sql', 'tstruct', 'sqlname', NULL, 'act=load&dummyload=false?', 'T', 'T') ON CONFLICT (config_id) DO UPDATE SET is_system = 'T'
 >>
 
