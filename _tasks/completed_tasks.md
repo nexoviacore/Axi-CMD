@@ -4,6 +4,8 @@
 
 3. TKT-1387 - ! The data is not being filtered correctly. On the Entity/Listing page, the records are displayed according to the applied filter.In Axi Command, all the data is visible instead of showing only the filtered records. Customer - BDF
 
+param10 holds the session variables, used by the form’s view filter (<transid>_filter, e.g. and Form11.branch=:branch). Without it in the key, a user on branch=Chennai could get the cached rows of branch=Mumbai.
+
 4. TSK-0896 - Show "User Activation" under the Configure command based on axusers.licactivation: a user, admin included, sees it only when their licactivation is true (true / T, any case). A missing row, null or a failed lookup hides it. New ADS axi_userlicactivation (Postgres and Oracle) is read through loadList before the commands are built.
 Issue #288
 
