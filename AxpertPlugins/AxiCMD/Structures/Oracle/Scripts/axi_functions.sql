@@ -316,8 +316,18 @@ BEGIN
 
         BEGIN
 
-            SELECT LOWER(view_includedc || view_includeflds),
-                   LOWER(view_excludedc || view_excludeflds),
+            -- old code: the dc list and the field list were joined without a comma ('dc1,dc2' + 'fld1,fld2' =
+            -- 'dc1,dc2fld1,fld2'), so the first included / excluded field never matched
+            -- SELECT LOWER(view_includedc || view_includeflds),
+            --        LOWER(view_excludedc || view_excludeflds),
+            -- new code: a comma between them, only when both lists have a value (a leading empty item would put
+            -- NULL into the NOT IN list below and hide every field)
+            SELECT LOWER(view_includedc
+                         || CASE WHEN view_includedc IS NOT NULL AND view_includeflds IS NOT NULL THEN ',' END
+                         || view_includeflds),
+                   LOWER(view_excludedc
+                         || CASE WHEN view_excludedc IS NOT NULL AND view_excludeflds IS NOT NULL THEN ',' END
+                         || view_excludeflds),
                    viewctrl,
                    editctrl,
                    fullcontrol

@@ -1263,7 +1263,11 @@ end if;
 -----Get included and excluded dcs, fields
 if ppermission = 'T' then 
 
- SELECT lower(concat(view_includedc,view_includeflds)),lower(concat(view_excludedc,view_excludeflds)),viewctrl,editctrl,fullcontrol
+ -- old code: the dc list and the field list were joined without a comma ('dc1,dc2' + 'fld1,fld2' = 'dc1,dc2fld1,fld2'),
+ -- so the first included / excluded field never matched
+ -- SELECT lower(concat(view_includedc,view_includeflds)),lower(concat(view_excludedc,view_excludeflds)),viewctrl,editctrl,fullcontrol
+ -- new code: join with a comma (concat_ws skips a null list)
+ SELECT lower(concat_ws(',',view_includedc,view_includeflds)),lower(concat_ws(',',view_excludedc,view_excludeflds)),viewctrl,editctrl,fullcontrol
  into v_includedcomps,v_excludedcomps,v_viewctrl,v_editctrl ,v_fullcontrol
  from fn_permissions_getpermission('axi', ptransid, pusername, puserrole, v_globalvars_dim);
 

@@ -5345,7 +5345,10 @@ if (typeof document !== "undefined") {
             else if (groupKey.toLowerCase() === "configure" && tokens.length > 2) {
                 // new code
                 if (isCommandSettingOption(tokens[1])) {
-                    const csOptions = shouldOfferCommandSettingGo(tokens) ? [goOption] : [];
+                    // old code
+                    // const csOptions = shouldOfferCommandSettingGo(tokens) ? [goOption] : [];
+                    // new code: configure product / plugin / changerequest saves a setting, so Save is offered instead of Go
+                    const csOptions = shouldOfferCommandSettingGo(tokens) ? [saveOption] : [];
                     filteredObjects = csOptions;
                     return csOptions;
                 }
@@ -5390,7 +5393,10 @@ if (typeof document !== "undefined") {
         // }
         // new code
         if (groupKey.toLowerCase() === "configure" && tokens.length > 3 && isCommandSettingOption(tokens[1])) {
-            const csOptions = shouldOfferCommandSettingGo(tokens) ? [goOption] : [];
+            // old code
+            // const csOptions = shouldOfferCommandSettingGo(tokens) ? [goOption] : [];
+            // new code: Save instead of Go for configure product / plugin / changerequest
+            const csOptions = shouldOfferCommandSettingGo(tokens) ? [saveOption] : [];
             filteredObjects = csOptions;
             return csOptions;
         }
@@ -7266,6 +7272,18 @@ if (typeof document !== "undefined") {
             }
             if (shouldRestoreInput) {
                 input.value = rawInput + " ";
+            }
+            return;
+        }
+        // new code: Save on configure product / plugin / changerequest runs the command (saves the account / repo setting)
+        else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Save_ACTION"
+            && saveGroupKeyCheck.toLowerCase() === "configure" && isCommandSettingOption(checkTokens[1])) {
+            hide();
+            isProgrammaticExecution = true;
+            try {
+                executeCommandsV2();
+            } finally {
+                isProgrammaticExecution = false;
             }
             return;
         }
@@ -9767,6 +9785,18 @@ if (typeof document !== "undefined") {
 
             if (e.ctrlKey && e.key.toLowerCase() === "s") {
                 e.preventDefault();
+                // new code: Ctrl + S on configure product / plugin / changerequest saves the setting, when Save is offered
+                if (grpKey && grpKey.toLowerCase() === "configure" && isCommandSettingOption(normalizedTokens[1])) {
+                    if (!shouldOfferCommandSettingGo(normalizedTokens)) return;
+                    hide();
+                    isProgrammaticExecution = true;
+                    try {
+                        executeCommandsV2();
+                    } finally {
+                        isProgrammaticExecution = false;
+                    }
+                    return;
+                }
                 // console.log("Save Option Selected...Submitting Data...");
                 hide();
                 if (grpKey.toLowerCase() === "create")
@@ -11956,8 +11986,17 @@ if (typeof document !== "undefined") {
         // only the account name / repo name hint and Go are shown
 
         if (shouldOfferCommandSettingGo(tokens)) {
-            list.unshift(goOption);
-            filteredObjects.unshift(goOption);
+            // old code
+            // list.unshift(goOption);
+            // filteredObjects.unshift(goOption);
+            // new code: Save instead of Go (the command saves the account / repo setting)
+            list.unshift(saveOption);
+            filteredObjects.unshift(saveOption);
+        }
+        // new code: nothing to pick yet, so say what to type instead of "No Data"
+        if (list.length === 0) {
+            if (wordNo === 3) list = ["Type GitHub account name"];
+            else if (wordNo === 4) list = ["Type GitHub repository name"];
         }
         return list;
     }
@@ -12585,12 +12624,19 @@ if (typeof document !== "undefined") {
         }
 
         const dir = dirs.find(d => String(d.name).toLowerCase() === String(words[2]).trim().toLowerCase());
-        if (!dir) return [];
+        // old code
+        // if (!dir) return [];
+        // new code: an unknown directory cannot run, so the hint must not say "Ready to Run" (set by the null prompt above)
+        if (!dir) { hintDiv.textContent = ""; return []; }
         const versions = Array.isArray(dir.versions) ? dir.versions : [];
 
         if (versions.length === 0) {
             // no versions: Go right after the directory, anything else typed is an extra word
             if (words.length === 4 && words[3] === "") { filteredObjects = [goOption]; return [goOption]; }
+            // old code
+            // return [];
+            // new code: extra word after a directory without versions: not runnable, no "Ready to Run"
+            hintDiv.textContent = "";
             return [];
         }
         if (words.length === 4) {
@@ -12615,6 +12661,10 @@ if (typeof document !== "undefined") {
             filteredObjects = [goOption];
             return [goOption];
         }
+        // old code
+        // return [];
+        // new code: an invalid version or extra words: not runnable, no "Ready to Run"
+        hintDiv.textContent = "";
         return [];
     }
 
@@ -15539,6 +15589,8 @@ if (typeof document !== "undefined") {
             text.startsWith("Fetching") ||
             text.startsWith("Searching") ||
             text.startsWith("Type at least") ||
+            // new code: "Type GitHub account name" / "Type GitHub repository name" (configure product / plugin / changerequest)
+            text.startsWith("Type GitHub") ||
             text.startsWith("No matching") ||
             text.startsWith("Run configure ") ||
             text.startsWith("No directories") ||
