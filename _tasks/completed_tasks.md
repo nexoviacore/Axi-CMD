@@ -33,6 +33,7 @@ Issue #281 (tickets #282 - #287)
 
 
 
+Release Notes: 
 1. Install command implementation
 2. AxiCmdConfiguration Page
 3. Pagination support Axi cmd
@@ -68,16 +69,18 @@ axi_axi_structmetalist_param1:salmansheriff9944|param2:default|param3:default|pa
 
 
 
- const MAX_CACHED_SEARCH_KEYS = 20;  reverify the use of this variable 
+ 1. const MAX_CACHED_SEARCH_KEYS = 20; ->
+When there are more than 20, the oldest entry is deleted, along with its paging state (axPageState).
+ 2. const CACHE_KEY_MAX_VALUE_CHARS = 40; 
+ 40 characters or fewer (and no @@VARS@@): the value goes into the key unchanged, e.g. param4:tmmsg|.
+Longer, or containing @@VARS@@: the value becomes h plus about 11 characters of hash.
 
-  const CACHE_KEY_MAX_VALUE_CHARS = 40; if
+  3. purgeLongListCacheKeys - This function may not be needed. 
+  function remove
 
-  purgeLongListCacheKeys - This function may not be needed. 
+  4. Lookpage size should be configure  const LOOKUP_PAGE_SIZE = 50;
 
-  Load with metadata. sdk iview, sdk tstruct. 
-
-
-  Lookpage size should be configure  const LOOKUP_PAGE_SIZE = 50;
+  const LOOKUP_PAGE_SIZE = getPageSize()
 
 
 
