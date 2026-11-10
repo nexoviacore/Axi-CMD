@@ -551,6 +551,12 @@ BEGIN
 
     END IF;
 
+    -- new code: no field list means the permission gives this user no view access (e.g. viewctrl '4'): list nothing.
+    -- Before, the SQL built below had an empty part and failed with a syntax error.
+    IF pselectedfield = '0' AND v_fieldlist_sql IS NULL THEN
+        RETURN;
+    END IF;
+
     IF pselectedfield = '0' THEN
 
         -- old code: records first, field rows last. AxList pages the whole result, so a form with more records than

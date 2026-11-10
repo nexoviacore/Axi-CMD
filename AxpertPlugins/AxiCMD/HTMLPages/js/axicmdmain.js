@@ -5356,6 +5356,11 @@ if (typeof document !== "undefined") {
                     filteredObjects = [goOption];
                     return [goOption];
                 }
+                // new code: Trace On / Trace Off / Trace Files run in the shell, a pop-up makes no sense: Go only
+                if (isShellActionOption(tokens)) {
+                    filteredObjects = [goOption];
+                    return [goOption];
+                }
                 else {
                     filteredObjects = [goOption, popOption];
                     return [goOption, popOption];
@@ -5399,6 +5404,11 @@ if (typeof document !== "undefined") {
             const csOptions = shouldOfferCommandSettingGo(tokens) ? [saveOption] : [];
             filteredObjects = csOptions;
             return csOptions;
+        }
+        // new code: Trace On / Trace Off / Trace Files: Go only, no Pop-Up
+        if (groupKey.toLowerCase() === "configure" && tokens.length > 2 && isShellActionOption(tokens)) {
+            filteredObjects = [goOption];
+            return [goOption];
         }
         if (groupKey.toLowerCase() === "configure" && tokens.length > 3 && tokens[1].toLowerCase() != "keyfield") {
             filteredObjects = [goOption, popOption];
@@ -5863,7 +5873,14 @@ if (typeof document !== "undefined") {
                 const isUserPerm = (subCmdFull === "user permissions" || subCmdFirst === "user permissions");
                 const isRolePerm = (subCmdFull === "role permissions" || subCmdFirst === "role permissions");
 
-                if (!isKeyfield && !isUserPerm && !isRolePerm && !isResp) {
+                // old code
+                // if (!isKeyfield && !isUserPerm && !isRolePerm && !isResp) {
+                // new code: Trace On / Trace Off / Trace Files get Go only, no Pop-Up
+                if (isShellActionOption(tokens)) {
+                    resultList.unshift(goOption);
+                    filteredObjects.unshift(goOption);
+                }
+                else if (!isKeyfield && !isUserPerm && !isRolePerm && !isResp) {
                     resultList.unshift(goOption, popOption);
                     filteredObjects.unshift(goOption, popOption);
                 }
@@ -11857,6 +11874,22 @@ if (typeof document !== "undefined") {
     }
 
     /**
+     * True when the configure option typed is a "shellaction" one (Trace On, Trace Off, Trace Files). The option may
+     * be one quoted token ("Trace On") or two words (Trace On), so both forms are checked.
+     * @param {string[]} tokens - Command tokens (tokens[0] is "configure").
+     * @returns {boolean}
+     */
+    function isShellActionOption(tokens) {
+        if (!Array.isArray(tokens) || tokens.length < 2) return false;
+        const single = cleanCommandToken(tokens[1] || "");
+        const joined = tokens.slice(1).map(t => cleanCommandToken(t || "")).filter(Boolean).join(" ");
+        return [single, joined].some(opt => {
+            const row = opt ? getCommandConfigRow("Configure", opt) : null;
+            return !!row && (row.promptOptionType || row.prompt_option_type || row.PromptOptionType || "").toLowerCase() === "shellaction";
+        });
+    }
+
+    /**
      * Go is offered only once both the account and the repo name are present and valid.
      * @param {string[]} tokens - Command tokens.
      * @returns {boolean}
@@ -12415,7 +12448,14 @@ if (typeof document !== "undefined") {
     function refreshInstallSuggestions() {
         try {
             if (installModal) return;
-            if (!megaDropdown || getComputedStyle(megaDropdown).display === "none") return;
+            // old code
+            // if (!megaDropdown || getComputedStyle(megaDropdown).display === "none") return;
+            // new code: the dropdown was closed while loading (Esc, click away): drop the "Loading..." hint, which would
+            // otherwise stay until the next keystroke
+            if (!megaDropdown || getComputedStyle(megaDropdown).display === "none") {
+                if (hintDiv && hintDiv.textContent === hintText("Loading") + "...") hintDiv.textContent = "";
+                return;
+            }
             if (input && (tokenizeInstallCommand(input.value)[0] || "").toLowerCase() === "install") handleInput();
         } catch (e) { }
     }
