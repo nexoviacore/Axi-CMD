@@ -45,3 +45,40 @@ Note to QA
 discussion points
 1. In Axicmdconfig.html rename the Title to Axi Commandline Configuration. 
 
+
+
+
+Fieldname issuee.
+
+
+axi_axi_getstructsdata_param1:Edit|param2:salmansheriff9944|param3:default|param4:tmmsg|param5:0|param6:F|param7:F|param8:msgid|param9:tmmsg1|param10:h28kd0nq2sua|page:1|size:100_ent_v2  -> Edit
+
+axi_axi_getstructsdata_param1:View|param2:salmansheriff9944|param3:default|param4:tmmsg|param5:0|param6:F|param7:F|param8:msgid|param9:tmmsg1|param10:h28kd0nq2sua|page:1|size:100_ent_v2 -> View
+
+axi_axi_structmetalist_param1:salmansheriff9944|param2:default|param3:default|param4:all|param5:all|page:1|size:100_v2 -> All Records (tstruct,iview,ads, pages)
+
+
+
+
+axi_axi_structmetalist_param1:salmansheriff9944|param2:default|param3:default|param4:dev|param5:i|page:1|size:100_v2 -> Sdk iview ()
+
+axi_axi_structmetalist_param1:salmansheriff9944|param2:default|param3:default|param4:dev|param5:t|page:1|size:100_v2 -> sdk tstruct ()
+
+axi_axi_structmetalist_param1:salmansheriff9944|param2:default|param3:default|param4:run|param5:t|page:1|size:100_v2 -> run 
+
+
+
+ const MAX_CACHED_SEARCH_KEYS = 20;  reverify the use of this variable 
+
+  const CACHE_KEY_MAX_VALUE_CHARS = 40; if
+
+  purgeLongListCacheKeys - This function may not be needed. 
+
+  Load with metadata. sdk iview, sdk tstruct. 
+
+
+  Lookpage size should be configure  const LOOKUP_PAGE_SIZE = 50;
+
+
+
+
