@@ -81,6 +81,7 @@ Longer, or containing @@VARS@@: the value becomes h plus about 11 characters of 
   4. Lookpage size should be configure  const LOOKUP_PAGE_SIZE = 50;
 
   const LOOKUP_PAGE_SIZE = getPageSize()
+  5. Fields names were not listing. 
 
 
 
