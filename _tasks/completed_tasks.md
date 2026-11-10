@@ -19,7 +19,8 @@ Validate the complete installation workflow, including dependency handling, data
 6. TKT-1301 
 Issue1: Cost Centre Mapping View "Rent Expenses",getting "Error: 42703: column p.rent expenses does not exist" on click of "Rent Expenses"  Issue2: Cost Centre Mapping Edit "Rent Expenses",getting "Error: 42703: column p.rent expenses does not exist" on click of "Rent Expens
 
-7. The entire command is not visible in the cmd line.'Ready to run' label is overlapped with the command.-Arabic language login #266
+7. The entire command is not visible in the cmd line.'Ready to run' label is overlapped with the command.-Arabic language login #266  
+Backlog: Records should be in Arabic 
 
 8. 	In cmd line,"clear all" button is overlapped-Arabic language login
 
@@ -32,6 +33,15 @@ Issue #281 (tickets #282 - #287)
 
 
 
+1. Install command implementation
+2. AxiCmdConfiguration Page
+3. Pagination support Axi cmd
+4. Axi CMD Arabic compatiblity. 
+
+Note to QA 
+1. There will be a Product release for Settings button and header css changes
 
 
+discussion points
+1. In Axicmdconfig.html rename the Title to Axi Commandline Configuration. 
 

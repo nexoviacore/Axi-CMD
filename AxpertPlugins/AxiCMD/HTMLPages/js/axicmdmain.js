@@ -7656,6 +7656,7 @@ if (typeof document !== "undefined") {
     const AXI_HINT_TEXT_AR = {
         "next": "التالي",
         "ready to run": "جاهز للتشغيل",
+        "loading": "جارٍ التحميل",
         "value": "القيمة",
         "tstruct name": "اسم النموذج",
         "search value": "قيمة البحث",
@@ -12634,6 +12635,16 @@ if (typeof document !== "undefined") {
     }
 
     /**
+     * Grey "Loading..." hint in the command bar while the install settings or the AxiGit directories are fetched.
+     * @returns {void}
+     */
+    function setInstallLoadingHint() {
+        hintDiv.dir = isArabicUi() ? "rtl" : "";
+        hintDiv.textContent = hintText("Loading") + "...";
+        hintDiv.style.color = "#94a3b8";
+    }
+
+    /**
      * Suggestions for "install <type> <directory> [version]" from the third word on: directories, versions or Go.
      * @param {string} text - Raw input text.
      * @returns {Array} Suggestion list (strings and goOption); filteredObjects is set to match.
@@ -12645,16 +12656,29 @@ if (typeof document !== "undefined") {
         updateDynamicHintFromPrompt(null);
         if (!type || !getAccessPermissions().buildAccess) return [];
 
+        // old code
+        // const repoState = getInstallRepoState(type);
+        // if (repoState.loading) return ["Fetching repository settings..."];
+        // if (!repoState.value) return [`Run configure ${type} <account> <repo> first`];
+        // const { account, repo } = repoState.value;
+        //
+        // const dirsState = getInstallDirsState(type, account, repo);
+        // if (dirsState.loading) return ["Fetching directories..."];
+        // if (dirsState.error) return [`Error: ${dirsState.error}`];
+        // const dirs = (dirsState.data && dirsState.data.directories) || [];
+        // if (dirs.length === 0) return [`No directories found in ${account}/${repo}`];
+        // new code: while the settings / AxiGit directories load, or when they could not be loaded, the hint must
+        // not say "Ready to Run" (the null prompt above sets it): show "Loading..." while fetching, nothing otherwise
         const repoState = getInstallRepoState(type);
-        if (repoState.loading) return ["Fetching repository settings..."];
-        if (!repoState.value) return [`Run configure ${type} <account> <repo> first`];
+        if (repoState.loading) { setInstallLoadingHint(); return ["Fetching repository settings..."]; }
+        if (!repoState.value) { hintDiv.textContent = ""; return [`Run configure ${type} <account> <repo> first`]; }
         const { account, repo } = repoState.value;
 
         const dirsState = getInstallDirsState(type, account, repo);
-        if (dirsState.loading) return ["Fetching directories..."];
-        if (dirsState.error) return [`Error: ${dirsState.error}`];
+        if (dirsState.loading) { setInstallLoadingHint(); return ["Fetching directories..."]; }
+        if (dirsState.error) { hintDiv.textContent = ""; return [`Error: ${dirsState.error}`]; }
         const dirs = (dirsState.data && dirsState.data.directories) || [];
-        if (dirs.length === 0) return [`No directories found in ${account}/${repo}`];
+        if (dirs.length === 0) { hintDiv.textContent = ""; return [`No directories found in ${account}/${repo}`]; }
 
         const asObjects = (names) => names.map(n => ({ name: n, displaydata: n }));
 
