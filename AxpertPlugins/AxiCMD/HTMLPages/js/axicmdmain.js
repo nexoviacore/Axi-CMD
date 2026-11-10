@@ -7982,14 +7982,18 @@ if (typeof document !== "undefined") {
      */
     async function getAxListAsync(data, signal) {
         if (!axicmdenabled) return null;
-        const direct = await callArmAxListDirect(data, signal);
-        if (direct !== undefined) return direct;
-        // The direct route could not be used and the server fallback is off: tell the user once in a while,
-        // instead of silently showing empty lists.
-        if (Date.now() - lastDirectFailToast > 30000) {
-            lastDirectFailToast = Date.now();
-            try { showToast("AxiCMD could not reach the data service. Please try again or contact your administrator."); } catch (e) { }
-        }
+        // old code
+        // const direct = await callArmAxListDirect(data, signal);
+        // if (direct !== undefined) return direct;
+        // // The direct route could not be used and the server fallback is off: tell the user once in a while,
+        // // instead of silently showing empty lists.
+        // if (Date.now() - lastDirectFailToast > 30000) {
+        //     lastDirectFailToast = Date.now();
+        //     try { showToast("AxiCMD could not reach the data service. Please try again or contact your administrator."); } catch (e) { }
+        // }
+        // new code: lists are loaded through the Axpert server (AxInterface.js GetDataFromAxList -> AxPEG.aspx ->
+        // ARM /AxList) instead of calling ARM AxList directly. The server keeps the ARM session itself.
+        return getAxListViaServer(data, signal);
         // The fallback through AxPEG.aspx/GetDataFromAxList is switched off on purpose (it must not be called).
         // Kept commented out in case it is needed again; when the direct route fails, the caller gets null (empty list).
         // return new Promise((resolve, reject) => {
@@ -8004,8 +8008,81 @@ if (typeof document !== "undefined") {
         //         }
         //     );
         // });
-        return null;
+        // return null;
 
+    }
+
+    /**
+     * Fetches list data through GetDataFromAxList (Js/AxInterface.js), which posts to AxPEG.aspx/GetDataFromAxList.
+     * The request built by getList is mapped to the parameters that web method takes (adsNames, refreshCache,
+     * keyField, keyValue, sqlParams, props); paging goes in props.PageNo / props.PageSize.
+     * @async
+     * @param {object} data - Request in the shape built by getList (adsNames, sqlParams, props ...).
+     * @param {AbortSignal} [signal] - When aborted, the answer is dropped and an AbortError is thrown.
+     * @returns {Promise<object|string|null>} AxList response (JSON string or object), or null when it failed.
+     */
+    function getAxListViaServer(data, signal) {
+        const p = data.props || {};
+        const payload = {
+            adsNames: data.adsNames,
+            refreshCache: !!data.refreshCache,
+            keyField: data.keyField || "",
+            keyValue: data.keyValue || "",
+            sqlParams: data.sqlParams || {},
+            props: {
+                action: data.action || "view",
+                trace: true,
+                ADS: p.ADS !== false,
+                getallrecordscount: !!p.getallrecordscount,
+                CachePermissions: p.CachePermissions !== false,
+                PageNo: p.pageno !== undefined ? p.pageno : 1,
+                PageSize: p.pagesize !== undefined ? p.pagesize : getPageSize(),
+                keyfield: data.keyField || "",
+                keyvalue: data.keyValue || "",
+                select_columns: p.select_columns || [],
+                aggregations: p.aggregations || {},
+                groupby_columns: p.groupby_columns || [],
+                sorting: p.sorting || [],
+                filters: p.filters || []
+            }
+        };
+        const caller = (typeof window.GetDataFromAxList === "function") ? window
+            : (top.window && typeof top.window.GetDataFromAxList === "function") ? top.window : null;
+        if (!caller) {
+            console.error("[AxiCMD] GetDataFromAxList is not available (Js/AxInterface.js not loaded).");
+            return Promise.resolve(null);
+        }
+        const abortError = () => {
+            const e = new Error("Aborted");
+            e.name = "AbortError";
+            return e;
+        };
+        return new Promise((resolve, reject) => {
+            if (signal && signal.aborted) return reject(abortError());
+            caller.GetDataFromAxList(
+                payload,
+                res => {
+                    if (signal && signal.aborted) return reject(abortError());
+                    try {
+                        // AxPEG answers "SESSION_TIMEOUT" when the Axpert session is gone
+                        if (res === "SESSION_TIMEOUT" || isSessionInvalidResponse(res)) redirectToSessionExpired();
+                    } catch (e) { return reject(e); }
+                    resolve(res);
+                },
+                err => {
+                    if (signal && signal.aborted) return reject(abortError());
+                    // The server route can also report the dead session through its error callback
+                    try { if (isSessionInvalidResponse(err) || isSessionInvalidResponse(err && err.responseText)) redirectToSessionExpired(); }
+                    catch (e) { return reject(e); }
+                    console.error("[AxiCMD] GetDataFromAxList failed:", err);
+                    if (Date.now() - lastDirectFailToast > 30000) {
+                        lastDirectFailToast = Date.now();
+                        try { showToast("AxiCMD could not reach the data service. Please try again or contact your administrator."); } catch (e) { }
+                    }
+                    resolve(null);
+                }
+            );
+        });
     }
 
     // ---- View records: view filter applied by fn_axi_getstructs_obj (TKT-1387) -----------------------------------------
