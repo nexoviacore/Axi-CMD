@@ -15,22 +15,21 @@ Implement the Install command in Axi Command Line to support installing Products
 
 Validate the complete installation workflow, including dependency handling, data object processing, and error handling, while maintaining compatibility with the existing Axi Command Line architecture.
 
-6. Issue1: Cost Centre Mapping View "Rent Expenses",getting "Error: 42703: column p.rent expenses does not exist" on click of "Rent Expenses"
 
-7. Issue2: Cost Centre Mapping Edit "Rent Expenses",getting "Error: 42703: column p.rent expenses does not exist" on click of "Rent Expens
+6. TKT-1301 
+Issue1: Cost Centre Mapping View "Rent Expenses",getting "Error: 42703: column p.rent expenses does not exist" on click of "Rent Expenses"  Issue2: Cost Centre Mapping Edit "Rent Expenses",getting "Error: 42703: column p.rent expenses does not exist" on click of "Rent Expens
 
-8. The entire command is not visible in the cmd line.'Ready to run' label is overlapped with the command.-Arabic language login #266
+7. The entire command is not visible in the cmd line.'Ready to run' label is overlapped with the command.-Arabic language login #266
 
-9. 	In cmd line,"clear all" button is overlapped-Arabic language login
+8. 	In cmd line,"clear all" button is overlapped-Arabic language login
 
-10. Setting trace on or off and viewing the files should be available through configure command.
+9. Setting trace on or off and viewing the files should be available through configure command.
 Issue #30  showTraceFileDialog(), 
 
-11. Make axi_command_config configurable by the user: new AxiCMDConfig.html page (opened from the AxiCMD gear menu "Configure", only for users with Configure Access) to turn Built-in Options of the configure and sdk commands on/off and add, edit or deactivate Custom Options, through new AxiApi command-config endpoints. Custom Options survive re-installs (axi_command_prompts is no longer dropped). New configure/sdk options are added only through this page, not SQL.
+10. Make axi_command_config configurable by the user: new AxiCMDConfig.html page (opened from the AxiCMD gear menu "Configure", only for users with Configure Access) to turn Built-in Options of the configure and sdk commands on/off and add, edit or deactivate Custom Options, through new AxiApi command-config endpoints. Custom Options survive re-installs (axi_command_prompts is no longer dropped). New configure/sdk options are added only through this page, not SQL.
 Issue #281 (tickets #282 - #287)
 
-12. Two tstructs with the same caption but different transids (e.g. Test Form2 (ytdf) and Test Form2 (tst2)): "Test Form2" view opened the wrong form. The palette now keeps the form picked from the suggestions, keeps "(transid)" in the input when another structure of the same type shares the caption ("Test Form2 (tst2)" view), recognises "Caption (transid)" when typed, and blocks a shared caption typed by hand with a toast listing the choices.
-Issue #289
+
 
 
 
