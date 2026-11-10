@@ -667,11 +667,16 @@ if (typeof document !== "undefined") {
         const request = fetchServerPageSize().then(remote => {
             if (remote === undefined) return;               // unreachable: keep the local value
             if (remote === null) {
-                // The server has no value for this user. A value saved in this browser then never reached the server
-                // (the save failed, or the API was down): keep it and send it again instead of deleting it (#271).
-                let hasLocalValue = false;
-                try { hasLocalValue = localStorage.getItem(pageSizeStorageKey()) !== null; } catch (e) { }
-                if (hasLocalValue) savePageSizeToServer(getPageSize());
+                // old code
+                // // The server has no value for this user. A value saved in this browser then never reached the server
+                // // (the save failed, or the API was down): keep it and send it again instead of deleting it (#271).
+                // let hasLocalValue = false;
+                // try { hasLocalValue = localStorage.getItem(pageSizeStorageKey()) !== null; } catch (e) { }
+                // if (hasLocalValue) savePageSizeToServer(getPageSize());
+                // new code: the backend decides. No value saved there means the user never set one, so the default
+                // (100) applies. A value left in this browser (an old test, a failed save) is dropped instead of being
+                // pushed to the server, where it would have become this user's setting without them choosing it.
+                try { localStorage.removeItem(pageSizeStorageKey()); } catch (e) { }
             } else {
                 setPageSize(remote);
             }
@@ -9216,7 +9221,10 @@ if (typeof document !== "undefined") {
                     panel.axiSyncDial();
                     closeSettingsPanel();
                     savePageSizeToServer(size).then(ok => {
-                        if (!ok) showToast("Saved on this browser only (server unreachable)", 4000);
+                        // old code
+                        // if (!ok) showToast("Saved on this browser only (server unreachable)", 4000);
+                        // new code: the server value is the one that counts at the next login, so say the save did not stick
+                        if (!ok) showToast("Could not save on the server. Records per load goes back to the saved value at the next login.", 5000);
                     });
                     if (size !== previous) {
                         showToast("Records to load at a time set to " + size, 3000, true);
@@ -9333,8 +9341,21 @@ if (typeof document !== "undefined") {
                 // and reload the lists with it so the box and the loaded rows match
                 if (axiSettingsUrl && window.mainUserName) {
                     fetchServerPageSize().then(remote => {
-                        if (remote === undefined || remote === null || remote === getPageSize()) return;
-                        setPageSize(remote);
+                        // old code
+                        // if (remote === undefined || remote === null || remote === getPageSize()) return;
+                        // setPageSize(remote);
+                        // settingsPanel.querySelector("#axiPageSizeInput").value = remote;
+                        // new code: nothing saved on the server = the default (100); a value left in this browser is dropped
+                        if (remote === undefined) return;
+                        if (remote === null) {
+                            let hadLocal = false;
+                            try { hadLocal = localStorage.getItem(pageSizeStorageKey()) !== null; localStorage.removeItem(pageSizeStorageKey()); } catch (e) { }
+                            if (!hadLocal) return;
+                            remote = DEFAULT_PAGE_SIZE;
+                        } else {
+                            if (remote === getPageSize()) return;
+                            setPageSize(remote);
+                        }
                         settingsPanel.querySelector("#axiPageSizeInput").value = remote;
                         settingsPanel.axiSyncDial();
                         btnRefresh.click();
