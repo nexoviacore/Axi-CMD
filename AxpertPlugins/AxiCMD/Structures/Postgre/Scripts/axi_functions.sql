@@ -1283,11 +1283,15 @@ if ppermission = 'T' then
          $sql$,
          ptransid);
  elsif coalesce(v_fullcontrol,'F') = 'F' and v_viewctrl = '1' then
+  -- old code: the field list had an extra column "2::numeric ord" (6 columns against 5 in the record list),
+  -- so the union failed and no rows came back for users with an "include fields" permission
+  --                't'::text AS isfield,2::numeric ord ,0 transrecordid
+  -- new code: same 5 columns as the record list
   v_fieldlist_sql := format($sql$
            SELECT (caption || ' (' || fname || ')' || ' [' || 'field' || ']')::text AS displaydata,
                  '0'::text AS id,
                  caption::text AS caption,
-                 't'::text AS isfield,2::numeric ord ,0 transrecordid
+                 't'::text AS isfield,0 transrecordid
             FROM axpflds
             WHERE tstruct = %L
          and dcname='dc1'
@@ -1498,7 +1502,15 @@ end if;
 
 
 if pselectedfield='0' then
-v_sql := concat(' select * from(',v_keyfield_sql,')a',' union all',v_fieldlist_sql);
+-- old code: records first, field rows last. AxList pages the whole result, so a form with more records than one
+-- page never had its field rows on page 1 (view / edit showed no fields)
+-- v_sql := concat(' select * from(',v_keyfield_sql,')a',' union all',v_fieldlist_sql);
+-- new code: field rows first, then the records (newest first, as before)
+v_sql := concat('select displaydata,id,caption,isfield,transrecordid from (',
+                ' select f.*,1 axi_grp,row_number() over () axi_rn from (',v_fieldlist_sql,') f',
+                ' union all',
+                ' select a.*,2 axi_grp,row_number() over () axi_rn from (',v_keyfield_sql,') a',
+                ') x order by axi_grp,axi_rn');
 else
 v_sql := v_selectedfld_sql;
 end if;

@@ -543,11 +543,22 @@ BEGIN
 
     IF pselectedfield = '0' THEN
 
+        -- old code: records first, field rows last. AxList pages the whole result, so a form with more records than
+        -- one page never had its field rows on page 1 (view / edit showed no fields)
+        -- v_sql :=
+        --        'SELECT * FROM ('
+        --     || v_keyfield_sql
+        --     || ') UNION ALL '
+        --     || v_fieldlist_sql;
+        -- new code: field rows first, then the records (newest first, as before)
         v_sql :=
-               'SELECT * FROM ('
+               'SELECT displaydata, id, caption, isfield, transrecordid FROM ('
+            || 'SELECT f.*, 1 axi_grp, ROWNUM axi_rn FROM ('
+            || v_fieldlist_sql
+            || ') f UNION ALL '
+            || 'SELECT a.*, 2 axi_grp, ROWNUM axi_rn FROM ('
             || v_keyfield_sql
-            || ') UNION ALL '
-            || v_fieldlist_sql;
+            || ') a) ORDER BY axi_grp, axi_rn';
 
     ELSE
 

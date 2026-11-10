@@ -1,5 +1,3 @@
-console.log("%c[AxiCMD] axicmdmain.js loaded (Debounce ADS Debugger active)", "background: #0284c7; color: #fff; padding: 3px 6px; border-radius: 3px; font-weight: bold;");
-
 /**
  * Safely parses boolean values from boolean, string ("true"/"false"), or number.
  * Ensures string 'false' evaluates to false (unlike JavaScript's native Boolean('false')).
@@ -784,22 +782,6 @@ if (typeof document !== "undefined") {
     }
 
     /**
-     * Removes list cache entries saved under the old long keys (full session variables in the key), which only used up
-     * localStorage space. Runs once at start-up; the new short keys never contain "@@VARS@@".
-     * @returns {void}
-     */
-    function purgeLongListCacheKeys() {
-        try {
-            const drop = [];
-            for (let i = 0; i < localStorage.length; i++) {
-                const k = localStorage.key(i);
-                if (k && k.startsWith("axi_") && k.toUpperCase().indexOf("@@VARS@@") !== -1) drop.push(k);
-            }
-            drop.forEach(k => localStorage.removeItem(k));
-        } catch (e) { }
-    }
-
-    /**
      * Reads rows back from a localStorage entry written by writeListCache. Also accepts a plain array
      * (older format). Returns an empty array for anything unreadable.
      * @param {string} raw - Raw localStorage string.
@@ -1190,8 +1172,6 @@ if (typeof document !== "undefined") {
 
 
         if (axicmdenabled) {
-            // new code: free the space taken by list cache entries saved under the old long keys
-            purgeLongListCacheKeys();
             // The commands load at once with the page size known in this browser. The value saved on the server is
             // checked in the background and reloads the lists only if it differs (#275).
             syncPageSizeFromServer();
@@ -1205,35 +1185,6 @@ if (typeof document !== "undefined") {
 
     if (typeof window !== "undefined") {
         window.initAxiCmd = init;
-        window.axiDebug = {
-            getDataSourceCache: () => axDatasourceObj,
-            getActiveFetches: () => Array.from(activeFetches),
-            getFailedFetches: () => Array.from(failedFetches),
-            // Prints what "load more" works from, to explain a scroll that fetches nothing:
-            // run window.axiDebug.paging() in the console after scrolling to the end of the list.
-            paging: () => {
-                const info = {
-                    scriptPageSize: getPageSize(),
-                    activePagedContext: activePagedContext,
-                    footerPagedContext: footerPagedContext,
-                    footerOnScreen: !!list.querySelector(".axi-load-more"),
-                    structKeyNow: "axi_structmetalist_" + getStructParam().toLowerCase(),
-                    pageStates: JSON.parse(JSON.stringify(axPageState)),
-                    activeFetches: Array.from(activeFetches),
-                    failedFetches: Array.from(failedFetches),
-                    loadedRows: Object.keys(axDatasourceObj).filter(k => k.startsWith("axi_structmetalist")).map(k => [k, (axDatasourceObj[k] || []).length])
-                };
-                console.log("[AxiCMD paging state]", info);
-                return info;
-            },
-            loadList: loadList,
-            getList: getList,
-            testDebounceAds: async function (adsName = "axi_getstructsdata", params = "", searchTerm = "abc") {
-                console.log("%c[axiDebug.testDebounceAds] Triggering test ADS search directly...", "color: #9333ea; font-weight: bold;", { adsName, params, searchTerm });
-                return await loadList(adsName, params, searchTerm, 1, getPageSize());
-            }
-        };
-        console.log("%c[AxiCMD] window.axiDebug registered. Run window.axiDebug.testDebounceAds('axi_getstructsdata', 'your_struct_param', 'search_text') in console to test.", "color: #0284c7;");
     }
 
     /**
@@ -1441,7 +1392,6 @@ if (typeof document !== "undefined") {
             suppressFocusSuggestions = true;
             input.disabled = false;
             input.placeholder = "Axpert AI";
-            console.log("commands: ", JSON.stringify(commands));
         }
     }
 
@@ -1917,14 +1867,13 @@ if (typeof document !== "undefined") {
         // suggestion pass, so between that and the next render it is null while the old footer still shows;
         // a scroll in that window used to be dropped silently (no request at all).
         const ctx = footerPagedContext || activePagedContext;
-        // Skips are logged at "verbose" level in the console so a scroll that does nothing can be explained
-        if (!ctx) { console.debug("[AxiCMD paging] skipped: no paged list on screen"); return; }
+        if (!ctx) return;
         const state = axPageState[ctx.listKey];
-        if (!state) { console.debug("[AxiCMD paging] skipped: no page state for", ctx.listKey); return; }
-        if (!state.hasMore) { console.debug("[AxiCMD paging] skipped: no more pages for", ctx.listKey); return; }
+        if (!state) return;
+        if (!state.hasMore) return;
         const nextPage = state.page + 1;
         if (activeFetches.has(`${ctx.listKey}_p${nextPage}`)) return;
-        if ((axDatasourceObj[ctx.listKey] || []).length >= MAX_RENDERED_ITEMS) { console.debug("[AxiCMD paging] skipped: render cap reached"); return; }
+        if ((axDatasourceObj[ctx.listKey] || []).length >= MAX_RENDERED_ITEMS) return;
 
         // Re-render happens when the page arrives; remember where the user was scrolled to
         pendingScrollRestore = { top: list.scrollTop, left: list.scrollLeft };
@@ -2301,11 +2250,9 @@ if (typeof document !== "undefined") {
                 if (popUpOption) {
                     const sep = url.includes("?") ? "&" : "?";
                     url += `${sep}tname=${encodeURIComponent(caption)}&AxIsPop=true`;
-                    logTargetUrl("executeDynamicNavigation", url);
                     openPopOption(url);
                 } else {
                     setCommandRoutes(input.value.trim(), url);
-                    logTargetUrl("executeDynamicNavigation", url);
                     loadIframeFn(url);
                 }
             } else {
@@ -2357,11 +2304,9 @@ if (typeof document !== "undefined") {
                 if (popUpOption) {
                     const sep = url.includes("?") ? "&" : "?";
                     url += `${sep}tname=${encodeURIComponent(caption)}&AxIsPop=true`;
-                    logTargetUrl("executeDynamicNavigation", url);
                     openPopOption(url);
                 } else {
                     setCommandRoutes(input.value.trim(), url);
-                    logTargetUrl("executeDynamicNavigation", url);
                     loadIframeFn(url);
                 }
                 return true;
@@ -2387,11 +2332,9 @@ if (typeof document !== "undefined") {
             if (popUpOption) {
                 const sep = url.includes("?") ? "&" : "?";
                 url += `${sep}tname=${encodeURIComponent(caption)}&AxIsPop=true`;
-                logTargetUrl("executeDynamicNavigation", url);
                 openPopOption(url);
             } else {
                 setCommandRoutes(input.value.trim(), url);
-                logTargetUrl("executeDynamicNavigation", url);
                 loadIframeFn(url);
             }
             return true;
@@ -2418,11 +2361,9 @@ if (typeof document !== "undefined") {
             if (popUpOption) {
                 const sep = url.includes("?") ? "&" : "?";
                 url += `${sep}tname=${encodeURIComponent(caption)}&AxIsPop=true`;
-                logTargetUrl("executeDynamicNavigation", url);
                 openPopOption(url);
             } else {
                 setCommandRoutes(input.value.trim(), url);
-                logTargetUrl("executeDynamicNavigation", url);
                 loadIframeFn(url);
             }
             return true;
@@ -2559,11 +2500,9 @@ if (typeof document !== "undefined") {
             targetUrl += "&AxIsPop=true";
 
             targetUrl += `&tname=${encodeURIComponent(adsName)}`;
-            logTargetUrl("redirectToSmartView", targetUrl);
             openPopOption(targetUrl)
         }
         else {
-            logTargetUrl("redirectToSmartView", targetUrl);
             top.window.LoadIframe(targetUrl);
         }
 
@@ -2616,7 +2555,6 @@ if (typeof document !== "undefined") {
         setCommandRoutes(input.value.trim(), targetUrl);
 
 
-        logTargetUrl("redirectToPermissionScreeen", targetUrl);
         top.window.LoadIframe(targetUrl);
 
     }
@@ -2738,12 +2676,10 @@ if (typeof document !== "undefined") {
             // Query string only ever has one '?': a stray one breaks the contenturl parsing in PopupContainer.html
             targetUrl += `&tname=${encodeURIComponent(tstructCaption)}`;
             targetUrl += "&AxPop=true";
-            logTargetUrl("redirectToTstruct", targetUrl);
             openPopOption(targetUrl);
         }
         else {
             setCommandRoutes(input.value.trim(), targetUrl);
-            logTargetUrl("redirectToTstruct", targetUrl);
             top.window.LoadIframe(targetUrl);
         }
     }
@@ -2792,11 +2728,9 @@ if (typeof document !== "undefined") {
         if (popUpOption) {
             targetUrl += `&tname=${encodeURIComponent(tstructCaption)}`;
             targetUrl += "&AxPop=true";
-            logTargetUrl("redirectToIvtstload", targetUrl);
             openPopOption(targetUrl);
         } else {
             setCommandRoutes(input.value.trim(), targetUrl);
-            logTargetUrl("redirectToIvtstload", targetUrl);
             top.window.LoadIframe(targetUrl);
         }
     }
@@ -2846,11 +2780,9 @@ if (typeof document !== "undefined") {
         if (popUpOption) {
             targetUrl += `&tname=${encodeURIComponent(tstructCaption)}`;
             targetUrl += "&AxPop=true";
-            logTargetUrl("redirectToTstructRecord", targetUrl);
             openPopOption(targetUrl);
         } else {
             setCommandRoutes(input.value.trim(), targetUrl);
-            logTargetUrl("redirectToTstructRecord", targetUrl);
             top.window.LoadIframe(targetUrl);
         }
     }
@@ -2879,7 +2811,6 @@ if (typeof document !== "undefined") {
 
 
         setCommandRoutes(input.value.trim(), targetUrl);
-        logTargetUrl("redirectToResponsibilitiesPage", targetUrl);
         top.window.LoadIframe(targetUrl);
     }
 
@@ -2899,13 +2830,11 @@ if (typeof document !== "undefined") {
             // setCommandRoutes(input.value.trim(), targetUrl);
             targetUrl += `&tname=${encodeURIComponent(iViewCaption)}`;
             targetUrl += "&AxIsPop=true&isDupTab=true";
-            logTargetUrl("redirectToIView", targetUrl);
             openPopOption(targetUrl)
         }
         else {
             let targetUrl = `../aspx/iview.aspx?ivname=${iViewName}`;
             setCommandRoutes(input.value.trim(), targetUrl);
-            logTargetUrl("redirectToIView", targetUrl);
             window.LoadIframe(targetUrl);
         }
 
@@ -2943,12 +2872,10 @@ if (typeof document !== "undefined") {
             targetUrl += `&tname=${encodeURIComponent(tstructCaption)}`;
             targetUrl += "&AxIsPop=true";
 
-            logTargetUrl("redirectToProcessFlow", targetUrl);
             openPopOption(targetUrl)
         }
         else {
             setCommandRoutes(input.value.trim(), targetUrl);
-            logTargetUrl("redirectToProcessFlow", targetUrl);
             top.window.LoadIframe(targetUrl);
         }
     }
@@ -5781,35 +5708,21 @@ if (typeof document !== "undefined") {
                 }
                 : null;
 
-            console.log("%c[AxiCMD Suggest] Remote suggestion check:", "color: #0284c7; font-weight: bold;", {
-                apiSourceName,
-                paramValue,
-                sourceKey,
-                partialTyped,
-                cleanSearch,
-                isDynamicSource,
-                cachedBaseCount: (axDatasourceObj[sourceKey] || []).length
-            });
-
             if (isDynamicSource) {
                 if (cleanSearch.length >= 3) {
                     const searchKey = `${sourceKey}_q_${cleanSearch}`;
-                    console.log(`%c[AxiCMD Debounce] Search term '${cleanSearch}' >= 3 chars. Checking searchKey: ${searchKey}`, "color: #d97706;");
                     if (axDatasourceObj[searchKey] !== undefined) {
                         dataList = axDatasourceObj[searchKey];
-                        console.log("%c[AxiCMD Debounce] Found cached results for term. Count:", "color: #16a34a;", dataList.length);
                     } else if (refineFromCompleteList(sourceKey, cleanSearch)) {
                         // A shorter search (or the base list) already holds every match, so no server call is needed
                         clearTimeout(dynamicSearchDebounceTimer);
                         dynamicSearchPending = false;
                         dataList = axDatasourceObj[searchKey];
                     } else {
-                        console.log(`%c[AxiCMD Debounce] Scheduling ${SEARCH_DEBOUNCE_MS}ms debounce ADS call for '${cleanSearch}'...`, "color: #e11d48; font-weight: bold;");
                         clearTimeout(dynamicSearchDebounceTimer);
                         dynamicSearchPending = true;
                         dynamicSearchDebounceTimer = setTimeout(() => {
                             dynamicSearchPending = false;
-                            console.log(`%c[AxiCMD Debounce] >>> TIMER FIRED! Calling loadList with search '${cleanSearch}' <<<`, "background: #7c3aed; color: #fff; padding: 2px 6px; border-radius: 2px; font-weight: bold;");
                             loadList(apiSourceName, paramValue, cleanSearch, 1, getPageSize());
                         }, SEARCH_DEBOUNCE_MS);
 
@@ -5819,16 +5732,13 @@ if (typeof document !== "undefined") {
                         });
 
                         if (localMatches.length > 0) {
-                            console.log("%c[AxiCMD Debounce] Showing local cached matches while fetching:", "color: #0284c7;", localMatches.length);
                             dataList = localMatches;
                         } else {
-                            console.log("%c[AxiCMD Debounce] No local matches found, displaying 'Searching...'", "color: #64748b;");
                             filteredObjects = [];
                             return ["Searching..."];
                         }
                     }
                 } else {
-                    console.log(`[AxiCMD Debounce] Search length (${cleanSearch.length}) < 3. Clearing pending debounce timer.`);
                     clearTimeout(dynamicSearchDebounceTimer);
                     dynamicSearchPending = false;
                 }
@@ -8300,7 +8210,6 @@ if (typeof document !== "undefined") {
             // are not persisted at all (see below), so nothing stale or huge is parsed here.
             const cachedRows = readListCache(cacheKey);
             if (cachedRows) {
-                console.log(`%c[AxiCMD getList / ADS] LocalStorage cache HIT for: ${cacheKey}`, "color: #16a34a; font-weight: bold;");
                 return cachedRows;
             }
 
@@ -8335,21 +8244,11 @@ if (typeof document !== "undefined") {
                 ];
             }
 
-            console.log("%c[AxiCMD getList / ADS] Dispatching ADS request payload:", "color: #ea580c; font-weight: bold;", {
-                axDatasourceName,
-                searchTerm: cleanTerm,
-                pageNo,
-                pageSize: effectivePageSize,
-                payload: JSON.parse(JSON.stringify(requestBody))
-            });
-
             // // View records: page 1 still asks AxList for the field rows; later pages are records only, so the
             // // Entity API alone answers them.
             // const skipAxList = viewFromEntity && effectivePageNo > 1;
             // const res = skipAxList ? null : await getAxListAsync(requestBody, signal);
             const res = await getAxListAsync(requestBody, signal);
-
-            console.log("%c[AxiCMD getList / ADS] Server response received for " + axDatasourceName + ":", "color: #059669; font-weight: bold;", res);
 
             // console.log("Get List data: " + JSON.stringify(res));
 
@@ -9318,7 +9217,6 @@ if (typeof document !== "undefined") {
                     `&appmgraccess=${perms.appMgrAccess ? 1 : 0}` +
                     `&buildaccess=${perms.buildAccess ? 1 : 0}`;
                 const loadFn = (top && top.window && top.window.LoadIframe) || window.LoadIframe;
-                logTargetUrl("setupEventListeners", targetUrl);
                 if (typeof loadFn === "function") loadFn(targetUrl);
             };
 
@@ -10407,11 +10305,9 @@ if (typeof document !== "undefined") {
         // LoadIframe('htmlpages.aspx?inbox=t')
         if (typeof top !== "undefined" && top.window && typeof top.window.LoadIframe === "function") {
             // top.window.LoadIframe('../aspx/processflow.aspx?activelist=t');
-            logTargetUrl("handleViewInbox", 'htmlpages.aspx?inbox=t');
             top.window.LoadIframe('htmlpages.aspx?inbox=t');
         } else {
             // window.LoadIframe('../aspx/processflow.aspx?activelist=t');
-            logTargetUrl("handleViewInbox", 'htmlpages.aspx?inbox=t');
             window.LoadIframe('htmlpages.aspx?inbox=t');
         }
     }
@@ -10497,7 +10393,10 @@ if (typeof document !== "undefined") {
      * @returns {Promise<object|null>} The matching record, or null if the server really has none.
      */
     async function lookupRecordOnServer(lookupParams, searchText, candidates) {
-        const LOOKUP_PAGE_SIZE = 50;
+        // old code
+        // const LOOKUP_PAGE_SIZE = 50;
+        // new code: the user's page size setting (also used by the "last page" check below)
+        const LOOKUP_PAGE_SIZE = getPageSize();
         const MAX_LOOKUP_PAGES = 6;
         let matched = null;
 
@@ -10518,7 +10417,10 @@ if (typeof document !== "undefined") {
 
                 matched = findMatchingRecordItem(rows, candidates);
                 // A page shorter than the page size is the last one
-                if (!matched && rows.filter(r => String(r?.isfield ?? "").toLowerCase() !== "t").length < LOOKUP_PAGE_SIZE) break;
+                // old code
+                // if (!matched && rows.filter(r => String(r?.isfield ?? "").toLowerCase() !== "t").length < LOOKUP_PAGE_SIZE) break;
+                // new code: the field rows now come first on page 1 and take part of the page, so every row is counted
+                if (!matched && rows.length < LOOKUP_PAGE_SIZE) break;
             }
             if (matched) break;
         }
@@ -11119,14 +11021,11 @@ if (typeof document !== "undefined") {
 
         if (popUpOption) {
             targetUrl += `&tname=${encodeURIComponent(formCaption)}`;
-            logTargetUrl("redirectToEntityForm", targetUrl);
             openPopOption(targetUrl);
         } else {
             if (typeof top !== "undefined" && top.window && typeof top.window.LoadIframe === "function") {
-                logTargetUrl("redirectToEntityForm", targetUrl);
                 top.window.LoadIframe(targetUrl);
             } else {
-                logTargetUrl("redirectToEntityForm", targetUrl);
                 window.LoadIframe(targetUrl);
             }
         }
@@ -11155,15 +11054,12 @@ if (typeof document !== "undefined") {
         setCommandRoutes(input.value.trim(), targetUrl);
         if (popUpOption) {
             targetUrl += `&tname=${encodeURIComponent(formCaption)}`;
-            logTargetUrl("redirectToEntity", targetUrl);
             openPopOption(targetUrl);
         }
         else {
             if (typeof top !== "undefined" && top.window && typeof top.window.LoadIframe === "function") {
-                logTargetUrl("redirectToEntity", targetUrl);
                 top.window.LoadIframe(targetUrl);
             } else {
-                logTargetUrl("redirectToEntity", targetUrl);
                 window.LoadIframe(targetUrl);
             }
         }
@@ -11210,7 +11106,6 @@ if (typeof document !== "undefined") {
         targetUrl += "&dummyload=false?";
         // setCommandRoutes(input.value.trim(), targetUrl);
 
-        logTargetUrl("handleViewSourceAds", targetUrl);
         window.LoadIframe(targetUrl);
 
         // }
@@ -11271,7 +11166,6 @@ if (typeof document !== "undefined") {
                     showToast(`User '${window.mainUserName}' has no access for Page source`);
                     return;
                 }
-                logTargetUrl("handleViewSource", `../aspx/tstruct.aspx?transid=sect&pagename=${encodeURIComponent(structName.name)}&act=load&dummyload=false?`);
                 top.window.LoadIframe(`../aspx/tstruct.aspx?transid=sect&pagename=${encodeURIComponent(structName.name)}&act=load&dummyload=false?`);
                 break;
 
@@ -11334,7 +11228,6 @@ if (typeof document !== "undefined") {
                 return;
             }
             targetUrl = `../aspx/tstruct.aspx?transid=sect&pagename=${encodeURIComponent(name)}&act=load&dummyload=false?`;
-            logTargetUrl("handleSourceCommand", targetUrl);
             top.window.LoadIframe(targetUrl);
         } else {
             showToast("Unknown source type: " + name);
@@ -14055,11 +13948,9 @@ if (typeof document !== "undefined") {
 
         if (popUpOption) {
 
-            logTargetUrl("redirectToHtmlPages", requestUrl + `&caption=${encodeURIComponent(bestMatch.caption)}`);
             openPopOption(requestUrl + `&caption=${encodeURIComponent(bestMatch.caption)}`)
         }
         else {
-            logTargetUrl("redirectToHtmlPages", requestUrl);
             window.LoadIframe(requestUrl);
         }
 
@@ -14094,14 +13985,12 @@ if (typeof document !== "undefined") {
             if (rawName && rawName.toLowerCase() === "create new") {
                 const targetUrl = `../aspx/tstruct.aspx?transid=sect&hltype=open&createaxiflag=true&isDupTab=false&dummyload=false?`;
                 setCommandRoutes(input.value.trim(), targetUrl);
-                logTargetUrl("handleOpenSource", targetUrl);
                 top.window.LoadIframe(targetUrl);
                 return;
             }
             let { value: resolvedName } = tryResolveToken(2, rawName, commandConfig, false);
             const targetUrl = `../aspx/tstruct.aspx?transid=sect&pagename=${encodeURIComponent(resolvedName || rawName)}&act=load&dummyload=false?`;
             setCommandRoutes(input.value.trim(), targetUrl);
-            logTargetUrl("handleOpenSource", targetUrl);
             top.window.LoadIframe(targetUrl);
             return;
         }
@@ -15717,7 +15606,6 @@ if (typeof document !== "undefined") {
 
         setCommandRoutes(input.value.trim(), targetUrl);
         // console.log("Target URL from analyse command : " + targetUrl);
-        logTargetUrl("handleAnalyse", targetUrl);
         window.LoadIframe(targetUrl);
     }
 
@@ -18249,7 +18137,6 @@ if (typeof document !== "undefined") {
 
 
         setCommandRoutes(input.value.trim(), targetUrl);
-        logTargetUrl("redirectToAxibot", targetUrl);
         top.window.LoadIframe(targetUrl);
 
 
@@ -18406,7 +18293,6 @@ if (typeof document !== "undefined") {
         mode = "";
         cachedCommands = localStorage.getItem("axi_commands_v1");
         initCommands();
-        logTargetUrl("handleAiEnd", "loadhomepage");
         window.LoadIframe("loadhomepage");
         // console.log(JSON.stringify(commands));
     }
@@ -18908,7 +18794,6 @@ if (typeof document !== "undefined") {
             if (transId) {
                 setEditSessionState(transId);
             }
-            logTargetUrl("executeFavorite", favObj.targetUrl);
             top.window.LoadIframe(favObj.targetUrl);
         } else if (favObj.targetUrl && favObj.targetUrl.startsWith("developerstudio:")) {
             // console.log("Executing Favorite via Developer Studio custom target URL:", favObj.targetUrl);
@@ -18938,10 +18823,8 @@ if (typeof document !== "undefined") {
                 } else if (secondToken === "iview") {
                     safeOpenDeveloperStudio("ivreact", resolvedName, true);
                 } else if (secondToken === "page") {
-                    logTargetUrl("executeFavorite", "../aspx/tstruct.aspx?transid=sect");
                     top.window.LoadIframe("../aspx/tstruct.aspx?transid=sect");
                 } else if (secondToken === "ads" || (secondToken === "axpert" && tokens[1].toLowerCase() === "axpert data sources")) {
-                    logTargetUrl("executeFavorite", "../aspx/tstruct.aspx?transid=b_sql");
                     top.window.LoadIframe("../aspx/tstruct.aspx?transid=b_sql");
                 }
             }
@@ -18953,17 +18836,6 @@ if (typeof document !== "undefined") {
 
 
 
-    }
-
-    // new code
-    /**
-     * Logs a URL the palette is about to open (main frame or popup), to trace what each command loads.
-     * @param {string} source - Function that opens the URL.
-     * @param {string} url - Target URL.
-     * @returns {void}
-     */
-    function logTargetUrl(source, url) {
-        console.log(`[AxiCMD] ${source} targetUrl:`, url);
     }
 
     /**
