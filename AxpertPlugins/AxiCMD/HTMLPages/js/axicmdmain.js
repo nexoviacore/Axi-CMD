@@ -20115,14 +20115,15 @@ if (typeof document !== "undefined") {
                         '<p>Select this when something you just created is missing from the suggestions. It reloads forms, reports and commands.</p>'),
                     position: 'bottom'
                 },
-                {
-                    element: '#axiSettingsBtn',
-                    intro: tourStep('settings', 'Choose how many records load',
-                        '<p>Set how many records each list loads at a time. Lists with more records load the rest as you scroll.</p>' +
-                        '<p>Pick a number from 100 to 5000, then select <strong>Save</strong>. The lists reload to use the new number.</p>' +
-                        '<div class="axi-tour-note">A smaller number loads faster. A larger number shows more records at once.</div>'),
-                    position: 'bottom'
-                },
+                // old code: the settings button step is left out of the help tour for this release
+                // {
+                //     element: '#axiSettingsBtn',
+                //     intro: tourStep('settings', 'Choose how many records load',
+                //         '<p>Set how many records each list loads at a time. Lists with more records load the rest as you scroll.</p>' +
+                //         '<p>Pick a number from 100 to 5000, then select <strong>Save</strong>. The lists reload to use the new number.</p>' +
+                //         '<div class="axi-tour-note">A smaller number loads faster. A larger number shows more records at once.</div>'),
+                //     position: 'bottom'
+                // },
                 {
                     element: '.searchwrap-AXI',
                     intro: tourStep('keyboard', 'Shortcuts',
