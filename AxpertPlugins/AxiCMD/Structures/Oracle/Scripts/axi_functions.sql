@@ -92,6 +92,17 @@ is
 
     v_dimension_filter          CLOB;
 
+    v_globalvars_dim            VARCHAR2(4000);
+    v_vars_part                 VARCHAR2(4000);
+    v_rest                      VARCHAR2(4000);
+    v_pair                      VARCHAR2(4000);
+    v_pos                       NUMBER;
+    v_eq                        NUMBER;
+    v_varname                   VARCHAR2(200);
+    v_varvalue                  VARCHAR2(4000);
+    v_view_filter               CLOB;
+    v_view_check                CLOB;
+
     v_includedcomps             CLOB;
     v_excludedcomps             CLOB;
 
@@ -114,6 +125,20 @@ is
     r_transrecordid NUMBER; 
 
 BEGIN
+
+    -- pglobalvars = <dimension part>[@@VARS@@name=value~~name=value]; the second part carries the session variables
+    -- used by the form's view filter (axvarcore <transid>_filter, e.g. ':branch'). The dimension part is used as before.
+    IF INSTR(NVL(pglobalvars,'-'),'@@VARS@@') > 0 THEN
+        v_globalvars_dim := SUBSTR(pglobalvars,1,INSTR(pglobalvars,'@@VARS@@') - 1);
+        v_vars_part      := SUBSTR(pglobalvars,INSTR(pglobalvars,'@@VARS@@') + 8);
+    ELSE
+        v_globalvars_dim := pglobalvars;
+        v_vars_part      := NULL;
+    END IF;
+
+    IF v_globalvars_dim IS NULL THEN
+        v_globalvars_dim := 'NA';
+    END IF;
 
     SELECT srckey,
            LOWER(srctf),
@@ -156,7 +181,7 @@ BEGIN
                     ptransid,
                     pusername,
                     puserrole,
-                    pglobalvars
+                    v_globalvars_dim
                 )
             )
             WHERE ROWNUM = 1;
@@ -180,12 +205,129 @@ BEGIN
 
     END IF;
 
+    -- The form's view filter (record lists of 'view' / 'edit' only; the field rows are not filtered).
+    -- axvarcore.vpname = '<transid>_filter', vpvalue = e.g. 'and Form11.branch=:branch'. No row = list as it is.
+    IF LOWER(pcmd) IN ('view','edit') THEN
+
+        BEGIN
+
+            SELECT vpvalue
+            INTO v_view_filter
+            FROM axvarcore
+            WHERE LOWER(vpname) = LOWER(ptransid || '_filter')
+              AND NVL(cancel,'F') = 'F'
+              AND ROWNUM = 1;
+
+        EXCEPTION
+            WHEN NO_DATA_FOUND THEN
+                v_view_filter := NULL;
+        END;
+
+        IF v_view_filter IS NOT NULL AND LENGTH(TRIM(v_view_filter)) > 0 THEN
+
+            -- the primary table is aliased 'p' in the queries below
+            v_view_filter := REPLACE(v_view_filter,'{primarytable.}','p.');
+            v_view_filter := REGEXP_REPLACE(
+                                 v_view_filter,
+                                 '(^|[^A-Za-z0-9_])' || REGEXP_REPLACE(NVL(pprimarytable,'-'),'[^A-Za-z0-9_]','') || '[.]',
+                                 '\1p.',
+                                 1, 0, 'i');
+
+            -- The same text with every placeholder that has a value removed: what is left in it has no value. Checked on
+            -- this copy so that a ':x' inside a substituted value (for example a user name with a colon) is not taken for one.
+            v_view_check := v_view_filter;
+            FOR i IN 1..2 LOOP
+                v_view_check := REGEXP_REPLACE(v_view_check,'(^|[^:A-Za-z0-9_]):username([^A-Za-z0-9_]|$)','\1\2',1,0,'i');
+                v_view_check := REGEXP_REPLACE(v_view_check,'(^|[^:A-Za-z0-9_]):userrole([^A-Za-z0-9_]|$)','\1\2',1,0,'i');
+            END LOOP;
+
+            -- :username and :userrole (run twice so that two neighbouring placeholders are both replaced)
+            FOR i IN 1..2 LOOP
+                v_view_filter := REGEXP_REPLACE(
+                                     v_view_filter,
+                                     '(^|[^:A-Za-z0-9_]):username([^A-Za-z0-9_]|$)',
+                                     '\1''' || REPLACE(REPLACE(NVL(pusername,''),'''',''''''),'\','\\') || '''\2',
+                                     1, 0, 'i');
+                v_view_filter := REGEXP_REPLACE(
+                                     v_view_filter,
+                                     '(^|[^:A-Za-z0-9_]):userrole([^A-Za-z0-9_]|$)',
+                                     '\1''' || REPLACE(REPLACE(NVL(puserrole,''),'''',''''''),'\','\\') || '''\2',
+                                     1, 0, 'i');
+            END LOOP;
+
+            -- session variables, e.g. ':branch' (only plain values are accepted)
+            v_rest := v_vars_part;
+
+            WHILE v_rest IS NOT NULL LOOP
+
+                v_pos := INSTR(v_rest,'~~');
+
+                IF v_pos > 0 THEN
+                    v_pair := SUBSTR(v_rest,1,v_pos - 1);
+                    v_rest := SUBSTR(v_rest,v_pos + 2);
+                ELSE
+                    v_pair := v_rest;
+                    v_rest := NULL;
+                END IF;
+
+                v_eq := INSTR(v_pair,'=');
+
+                IF v_eq > 1 THEN
+
+                    v_varname  := LOWER(REGEXP_REPLACE(SUBSTR(v_pair,1,v_eq - 1),'[^A-Za-z0-9_]',''));
+                    v_varvalue := REGEXP_REPLACE(SUBSTR(v_pair,v_eq + 1),'[^A-Za-z0-9_. -]','');
+
+                    IF v_varname IS NOT NULL THEN
+                        FOR i IN 1..2 LOOP
+                            v_view_filter := REGEXP_REPLACE(
+                                                 v_view_filter,
+                                                 '(^|[^:A-Za-z0-9_]):' || v_varname || '([^A-Za-z0-9_]|$)',
+                                                 '\1''' || v_varvalue || '''\2',
+                                                 1, 0, 'i');
+                            v_view_check := REGEXP_REPLACE(
+                                                 v_view_check,
+                                                 '(^|[^:A-Za-z0-9_]):' || v_varname || '([^A-Za-z0-9_]|$)',
+                                                 '\1\2',
+                                                 1, 0, 'i');
+                        END LOOP;
+                    END IF;
+
+                END IF;
+
+            END LOOP;
+
+            -- a placeholder without a value cannot be resolved. The filter exists to hide records, so it must not be
+            -- dropped (that would list every record): list no records at all until the variable is available.
+            IF REGEXP_LIKE(v_view_check,'(^|[^:]):[A-Za-z_]') THEN
+                v_view_filter := ' AND 1=0';
+            ELSE
+                v_view_filter := ' AND (' || REGEXP_REPLACE(TRIM(v_view_filter),'^and[[:space:]]+','',1,1,'i') || ')';
+            END IF;
+
+        ELSE
+            v_view_filter := NULL;
+        END IF;
+
+        v_dimension_filter := v_dimension_filter || v_view_filter;
+
+    END IF;
+
     IF ppermission = 'T' THEN
 
         BEGIN
 
-            SELECT LOWER(view_includedc || view_includeflds),
-                   LOWER(view_excludedc || view_excludeflds),
+            -- old code: the dc list and the field list were joined without a comma ('dc1,dc2' + 'fld1,fld2' =
+            -- 'dc1,dc2fld1,fld2'), so the first included / excluded field never matched
+            -- SELECT LOWER(view_includedc || view_includeflds),
+            --        LOWER(view_excludedc || view_excludeflds),
+            -- new code: a comma between them, only when both lists have a value (a leading empty item would put
+            -- NULL into the NOT IN list below and hide every field)
+            SELECT LOWER(view_includedc
+                         || CASE WHEN view_includedc IS NOT NULL AND view_includeflds IS NOT NULL THEN ',' END
+                         || view_includeflds),
+                   LOWER(view_excludedc
+                         || CASE WHEN view_excludedc IS NOT NULL AND view_excludeflds IS NOT NULL THEN ',' END
+                         || view_excludeflds),
                    viewctrl,
                    editctrl,
                    fullcontrol
@@ -200,7 +342,7 @@ BEGIN
                     ptransid,
                     pusername,
                     puserrole,
-                    pglobalvars
+                    v_globalvars_dim
                 )
             )
             WHERE ROWNUM = 1;
@@ -409,13 +551,30 @@ BEGIN
 
     END IF;
 
+    -- new code: no field list means the permission gives this user no view access (e.g. viewctrl '4'): list nothing.
+    -- Before, the SQL built below had an empty part and failed with a syntax error.
+    IF pselectedfield = '0' AND v_fieldlist_sql IS NULL THEN
+        RETURN;
+    END IF;
+
     IF pselectedfield = '0' THEN
 
+        -- old code: records first, field rows last. AxList pages the whole result, so a form with more records than
+        -- one page never had its field rows on page 1 (view / edit showed no fields)
+        -- v_sql :=
+        --        'SELECT * FROM ('
+        --     || v_keyfield_sql
+        --     || ') UNION ALL '
+        --     || v_fieldlist_sql;
+        -- new code: field rows first, then the records (newest first, as before)
         v_sql :=
-               'SELECT * FROM ('
+               'SELECT displaydata, id, caption, isfield, transrecordid FROM ('
+            || 'SELECT f.*, 1 axi_grp, ROWNUM axi_rn FROM ('
+            || v_fieldlist_sql
+            || ') f UNION ALL '
+            || 'SELECT a.*, 2 axi_grp, ROWNUM axi_rn FROM ('
             || v_keyfield_sql
-            || ') UNION ALL '
-            || v_fieldlist_sql;
+            || ') a) ORDER BY axi_grp, axi_rn';
 
     ELSE
 

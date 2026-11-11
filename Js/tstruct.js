@@ -2684,6 +2684,9 @@ function GridDcAddEmptyRows() {
                                 if ($("#gridHd" + dcID + " tbody tr").length == 0) {
                                     editTheRow("", dcID, "", event);
                                     UpdateAxpRowVldInArray(dcID, "001", "1");
+                                    gridDummyRowVal.push(dcID + "~" + lastRow);
+                                    gridDummyRows = false;
+                                    gridRowEditOnLoad = true;
                                 }
                             } else {
                                 editTheRow("", dcID, lastRow, "event");
@@ -3109,8 +3112,9 @@ function MainBlur(fldObj) {
 
         if (fldType == "Numeric") {
             let maskType = "";
+            const isPermMasked = IsPermissionMaskedField(fName);
             try {
-                if (typeof FldMaskType != "undefined" || typeof ScriptMaskFields != "undefined") {                   
+                if (!isPermMasked && (typeof FldMaskType != "undefined" || typeof ScriptMaskFields != "undefined")) {                   
                     if (ScriptMaskFields.length > 0) {
                         var idx = $j.inArray(fName, ScriptMaskFields);
                         if (idx != -1)
@@ -3126,6 +3130,12 @@ function MainBlur(fldObj) {
                     }
                 }
             } catch (ex) { }
+            if (isPermMasked) {
+                let permFldValue = GetFieldValue(fldId);
+                if (AxOldValue == newFldValue && permFldValue != "")
+                    newFldValue = permFldValue;
+                maskType = "permission";
+            }
             newFldValue = NumericFldOnBlur(newFldValue, fldIndex);
             var oldValue = removeCommas(AxOldValue);
             var newValue = removeCommas(newFldValue);
@@ -3168,7 +3178,11 @@ function MainBlur(fldObj) {
                 AxOldValue = $("#" + fldId).val();
         }
         if (AxOldValue == newFldValue && typeof fldObj.attr("type") !="undefined" && (fldObj.attr("type") != "checkbox" && fldObj.data("type") != "checkbox")) { //&& !fldId.toLowerCase().startsWith("axptm_")
-            if (typeof FldMaskType != "undefined" || typeof ScriptMaskFields != "undefined") {
+            // Permission level mask has priority; structure level mask is checked only when absent
+            if (IsPermissionMaskedField(fName)) {
+                if (newFldValue != "")
+                    SetFieldValue(fldId, newFldValue, true);
+            } else if (typeof FldMaskType != "undefined" || typeof ScriptMaskFields != "undefined") {
                 let maskType = "";
                 if (ScriptMaskFields.length > 0) {
                     var idx = $j.inArray(fName, ScriptMaskFields);
@@ -3713,7 +3727,8 @@ function validatedwbfieldtype(value, dwbfldtype, flname) {
                     }
                     break;
                 case 'IP Address':
-                    vregex = "^[0-9]\+\.[0-9]\+\.[0-9]\+\.[0-9]\+$";
+                    /*vregex = "^[0-9]\+\.[0-9]\+\.[0-9]\+\.[0-9]\+$";*/
+                    vregex = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/;
                     if (!CheckIsvalidfield(value, vregex)) {
                         var cutMsg = eval(callParent('lcm[493]'));
                         patternErrMsg = (tmpFldCaption == "" ? tmpFldCaption : tmpFldCaption + ": ") + cutMsg;
@@ -3847,19 +3862,19 @@ function EvaluatePattern(fld, pattrn, fldIndex) {
                     patternErrMsg = (tmpFldCaption == "" ? tmpFldCaption : tmpFldCaption + ": ") + cutMsg;
                 }
                 break;
-                case 'Initcaps':
+            case 'Initcaps':
                 if (!CheckIsInit(value)) {
                     var cutMsg = eval(callParent('lcm[525]'));
                     patternErrMsg = (tmpFldCaption == "" ? tmpFldCaption : tmpFldCaption + ": ") + cutMsg;
                 }
                 break;
-                   case 'Caps':
+            case 'Caps':
                 if (!CheckIsCaps(value)) {
                     var cutMsg = eval(callParent('lcm[526]'));
                     patternErrMsg = (tmpFldCaption == "" ? tmpFldCaption : tmpFldCaption + ": ") + cutMsg;
                 }
                 break;
-                   case 'small':
+            case 'small':
                 if (!CheckIsSmall(value)) {
                     var cutMsg = eval(callParent('lcm[527]'));
                     patternErrMsg = (tmpFldCaption == "" ? tmpFldCaption : tmpFldCaption + ": ") + cutMsg;
@@ -3870,9 +3885,16 @@ function EvaluatePattern(fld, pattrn, fldIndex) {
         }
     }
     if (patternErrMsg != "") {
-        var cutMsg = eval(callParent('lcm[58]'));
-        if (!confirm(patternErrMsg + cutMsg))
-            return false;
+        //var cutMsg = eval(callParent('lcm[58]'));
+        //if (!confirm(patternErrMsg + cutMsg))
+        //    return false;
+        alert(patternErrMsg);
+
+        SetFieldValue(fld, FldOldValue);
+        let _dRowNo = GetDbRowNo(GetFieldsRowNo(fld), GetFieldsDcNo(fld));
+        UpdateFieldArray(fld, _dRowNo, FldOldValue, "parent", "");
+
+        return false;
     } else {
         return true;
     }
@@ -3887,20 +3909,21 @@ function CheckIsPhone(phone) {
 }
 
 function CheckIsInit(str) {
-    var strsplit =str.split(' ')
-    var checkInit ="";
+    var strsplit = str.split(' ')
+    var checkInit = "";
     strsplit.forEach(myFunction);
     function myFunction(item) {
-     checkInit += isUppercase(item).toString();
+        checkInit += isUppercase(item).toString();
     }
-    if(checkInit.indexOf("false") != -1)
+    if (checkInit.indexOf("false") != -1)
         return false;
-     else
+    else
         return true;
-        }
-function isUppercase(word){
-	 return /^\p{Lu}/u.test( word );
-    }
+}
+function isUppercase(word) {
+    // First letter uppercase, remaining letters must not be uppercase
+    return /^\p{Lu}[^\p{Lu}]*$/u.test(word);
+}
 function CheckIsCaps(str) {
     //var strsplit =str.split(' ')
     //var CheckIsCaps ="";
@@ -3908,27 +3931,27 @@ function CheckIsCaps(str) {
     //function checkCaps(item) {
     // CheckIsCaps += /^[A-Z]+$/.test(item);
     //}
-   var CheckIsCaps = /^[A-Z ]+$/.test(str);
-   //if(CheckIsCaps.indexOf("false") != -1)
-   if(!CheckIsCaps)
+    var CheckIsCaps = /^[A-Z ]+$/.test(str);
+    //if(CheckIsCaps.indexOf("false") != -1)
+    if (!CheckIsCaps)
         return false;
     else
         return true;
-    }
+}
 
 function CheckIsSmall(str) {
     //var strsplit =str.split(' ')
     //var CheckIsSmall ="";
     //strsplit.forEach(checkSmall);
     //function checkSmall(item) {
-     var CheckIsSmall = /^[a-z ]+$/.test(str);;
+    var CheckIsSmall = /^[a-z ]+$/.test(str);;
     //}
     // if(CheckIsSmall.indexOf("false") != -1)
-    if(!CheckIsSmall)
+    if (!CheckIsSmall)
         return false;
     else
         return true;
-        }
+}
 //Function to check for custom fields regexp.
 function CheckIsvalidfield(fieldv, regexv) {
 
@@ -6637,7 +6660,16 @@ function AssignJQueryEvents(dcArray,_calledFrom="") {
                         var fName = GetFieldsName(fldId);
                         var fldIndex = $j.inArray(fName, FNames);
                         if (fldIndex != undefined && fldIndex > -1) {
-                            if (typeof FldMaskType != "undefined" || typeof ScriptMaskFields != "undefined") {
+                            // Permission level mask has priority; structure level mask is checked only when absent
+                            const isPermMasked = IsPermissionMaskedField(fName);
+                            if (isPermMasked) {
+                                let permFldValue = GetFieldValue(fldId);
+                                if (permFldValue != "" && permFldValue != '0.00' && permFldValue != '0') {
+                                    $j(this).val(permFldValue);
+                                    $j(this).attr("value", permFldValue);
+                                }
+                            }
+                            if (!isPermMasked && (typeof FldMaskType != "undefined" || typeof ScriptMaskFields != "undefined")) {
                                 let maskType = "";
                                 if (ScriptMaskFields.length > 0) {
                                     var idx = $j.inArray(fName, ScriptMaskFields);
@@ -21645,14 +21677,62 @@ function getDevOptionValue() {
     return _hideCancelButton;
 }
 
+//function ClearRefreshOnSaveListLS() {
+//    try {
+//        const appUrl = top.window.location.href.toLowerCase().substring(0, top.window.location.href.indexOf("/aspx/"));
+//        const escapedUrl = appUrl.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+//        const pattern = new RegExp("^tstDDFVal♠" + proj + "♦" + transid + "♦[^♦]+♦true♦.*♦" + escapedUrl + "♥");
+//        Object.keys(localStorage).forEach(function (key) {
+//            if (pattern.test(key)) {
+//                localStorage.removeItem(key);
+//            }
+//        });
+//    } catch (ex) { }
+//}
 function ClearRefreshOnSaveListLS() {
     try {
         const appUrl = top.window.location.href.toLowerCase().substring(0, top.window.location.href.indexOf("/aspx/"));
         const escapedUrl = appUrl.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        const pattern = new RegExp("^tstDDFVal♠" + proj + "♦" + transid + "♦[^♦]+♦true♦.*♦" + escapedUrl + "♥");
-        Object.keys(localStorage).forEach(function (key) {
-            if (pattern.test(key)) {
-                localStorage.removeItem(key);
+        const escapedProj = String(proj).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const escapedTransid = String(transid).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const pattern = new RegExp("^tstDDFVal♠" + escapedProj + "♦" + escapedTransid + "♦[^♦]+♦true♦.*♦" + escapedUrl + "♥");
+        if (typeof ddlMemoryCache != "undefined" && ddlMemoryCache) {
+            for (const key of ddlMemoryCache.keys()) {
+                if (pattern.test(key)) {
+                    ddlMemoryCache.delete(key);
+                }
+            }
+        }
+        if (typeof indexedDB == "undefined")
+            return;
+        initDdlIndexedDBCache().then(function (ready) {
+            if (!ready || !ddlIndexedDB)
+                return;
+            try {
+                const tx = ddlIndexedDB.transaction(DDL_IDB_STORE, "readwrite");
+                const store = tx.objectStore(DDL_IDB_STORE);
+                const request = store.openCursor();
+                request.onsuccess = function (event) {
+                    const cursor = event.target.result;
+                    if (cursor) {
+                        const key = cursor.primaryKey;
+                        if (typeof key == "string" && pattern.test(key)) {
+                            cursor.delete();
+                            if (typeof ddlMemoryCache != "undefined" && ddlMemoryCache) {
+                                ddlMemoryCache.delete(key);
+                            }
+                        }
+                        cursor.continue();
+                    } 
+                };
+                request.onerror = function (event) {
+                };
+                tx.oncomplete = function () {
+                };
+                tx.onerror = function (event) {
+                };
+
+            } catch (ex) {
             }
         });
     } catch (ex) {

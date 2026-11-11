@@ -1,0 +1,3291 @@
+<html lang="en"><head>
+   <meta charset="utf-8">
+   <meta name="viewport" content="width=device-width,initial-scale=1">
+   <title>Axi Export Product Configuration</title>
+   <style>
+      input#packageCreatedBy,
+      #repository {
+         background-color: #e4e0e059;
+      }
+
+      :root {
+         --accent: #5856d6;
+         --accent-dark: #4140b2;
+         --accent-soft: #f1f1ff;
+         --ink: #172033;
+         --muted: #667085;
+         --line: #e5e8ef;
+         --surface: #fff;
+         --canvas: #f6f7fa;
+         --success: #087a55;
+         --success-bg: #e9f8f1;
+         --warning: #9a6700;
+         --warning-bg: #fff6d8;
+         --danger: #b42318;
+         --shadow: 0 18px 50px rgba(17, 24, 39, .14);
+         font-family: Inter, "Segoe UI", Arial, sans-serif;
+         color: var(--ink)
+      }
+
+      * {
+         box-sizing: border-box
+      }
+
+      body {
+         margin: 0;
+         background: var(--canvas);
+         font-size: 13px;
+         overflow: hidden;
+         height: 100vh
+      }
+
+      button,
+      input,
+      select,
+      textarea {
+         font: inherit
+      }
+
+      button {
+         cursor: pointer
+      }
+
+      button:disabled {
+         cursor: not-allowed;
+         opacity: .55
+      }
+
+      .app-shell {
+         min-height: 100vh
+      }
+
+      .page {
+         max-width: 1500px;
+         margin: auto;
+         padding: 10px;
+      }
+
+      .page-header {
+         display: flex;
+         align-items: flex-end;
+         justify-content: space-between;
+         gap: 24px;
+         margin-bottom: 5px
+      }
+
+      .eyebrow {
+         display: block;
+         color: var(--accent);
+         font-size: 11px;
+         font-weight: 800;
+         letter-spacing: .08em;
+         text-transform: uppercase;
+         margin-bottom: 7px
+      }
+
+      .page-header h1 {
+         margin: 0;
+         font-size: 28px;
+         letter-spacing: -.03em
+      }
+
+      .page-header p {
+         margin: 7px 0 0;
+         color: var(--muted);
+         font-size: 14px
+      }
+
+      .header-actions,
+      .button-row {
+         display: flex;
+         align-items: center;
+         gap: 9px;
+         flex-wrap: wrap
+      }
+
+      .btn {
+         border: 1px solid transparent;
+         border-radius: 9px;
+         min-height: 38px;
+         padding: 0 14px;
+         font-weight: 750;
+         color: #344054;
+         background: #fff;
+         display: inline-flex;
+         align-items: center;
+         justify-content: center;
+         gap: 7px
+      }
+
+      .btn.primary {
+         background: var(--accent);
+         color: #fff;
+         border-color: var(--accent)
+      }
+
+      .btn.primary:hover {
+         background: var(--accent-dark)
+      }
+
+      .btn.secondary {
+         border-color: #d7dce5
+      }
+
+      .btn.ghost {
+         background: transparent
+      }
+
+      .icon-btn {
+         width: 34px;
+         height: 34px;
+         border: 1px solid var(--line);
+         border-radius: 9px;
+         background: #fff;
+         color: #667085
+      }
+
+      .panel {
+         background: var(--surface);
+         border: 1px solid var(--line);
+         border-radius: 14px;
+         box-shadow: 0 1px 2px rgba(16, 24, 40, .03)
+      }
+
+      .filter-panel {
+         padding: 5px;
+         margin-bottom: 5px
+      }
+
+      .filter-row {
+         display: grid;
+         grid-template-columns: minmax(240px, 2fr) repeat(1, minmax(130px, 1fr)) repeat(2, minmax(140px, 1fr)) minmax(185px, 1fr);
+         gap: 9px
+      }
+
+      .field-control,
+      .field input,
+      .field select,
+      .field textarea {
+         width: 100%;
+         border: 1px solid #d6dae3;
+         border-radius: 9px;
+         background: #fff;
+         color: #25304a;
+         outline: none
+      }
+
+      .field-control {
+         height: 38px;
+         padding: 0 11px
+      }
+
+      .field-control:focus,
+      .field input:focus,
+      .field select:focus,
+      .field textarea:focus {
+         border-color: #a9a8ee;
+         box-shadow: 0 0 0 3px rgba(88, 86, 214, .1)
+      }
+
+      .filter-bottom {
+         display: flex;
+         align-items: center;
+         justify-content: space-between;
+         gap: 12px;
+         margin-top: 11px
+      }
+
+      .status-chips,
+      .type-chips {
+         display: flex;
+         gap: 7px;
+         flex-wrap: wrap
+      }
+
+      .chip {
+         border: 1px solid #d9dde6;
+         background: #fff;
+         color: #596174;
+         border-radius: 999px;
+         min-height: 30px;
+         padding: 0 11px;
+         font-size: 12px;
+         font-weight: 700
+      }
+
+      .chip.active {
+         border-color: #b7b6ef;
+         background: var(--accent-soft);
+         color: var(--accent-dark)
+      }
+
+      .result-label {
+         color: var(--muted);
+         font-size: 12px
+      }
+
+      .table-wrap {
+         width: 100%;
+         overflow-x: hidden;
+         overflow-y: auto;
+         max-height: calc(100vh - 205px);
+         min-height: 0
+      }
+
+      .package-table {
+         width: 100%;
+         max-width: 100%;
+         table-layout: fixed;
+         border-collapse: separate;
+         border-spacing: 0;
+         min-width: 0
+      }
+
+      .package-table th {
+         position: sticky;
+         top: 0;
+         z-index: 2;
+         padding: 11px 14px;
+         text-align: left;
+         background: #fafbfc;
+         color: #667085;
+         border-bottom: 1px solid var(--line);
+         font-size: 11px;
+         text-transform: uppercase;
+         letter-spacing: .045em;
+         white-space: nowrap
+      }
+
+      .package-table td {
+         padding: 10px;
+         border-bottom: 1px solid #edf0f4;
+         vertical-align: middle;
+         overflow: hidden
+      }
+
+      .package-table th:nth-child(1) {
+         width: 20%
+      }
+
+      .package-table th:nth-child(2) {
+         width: 8%
+      }
+
+      .package-table th:nth-child(3) {
+         width: 10%
+      }
+
+      .package-table th:nth-child(4) {
+         width: 11%
+      }
+
+      .package-table th:nth-child(5) {
+         width: 10%
+      }
+
+      .package-table th:nth-child(6) {
+         width: 13%
+      }
+
+      .package-table th:nth-child(7) {
+         width: 11%
+      }
+
+      .package-table th:nth-child(8) {
+         width: 5%
+      }
+
+      .package-table tr:last-child td {
+         border-bottom: 0
+      }
+
+      .package-table tbody tr:hover {
+         background: #fbfbfe
+      }
+
+      .name-cell {
+         display: flex;
+         gap: 10px;
+         align-items: center;
+         min-width: 0
+      }
+
+      .name-cell>span:last-child,
+      .repo-cell {
+         min-width: 0;
+         max-width: 100%
+      }
+
+      .package-mark {
+         width: 34px;
+         height: 34px;
+         border-radius: 9px;
+         background: var(--accent-soft);
+         color: var(--accent);
+         display: grid;
+         place-items: center;
+         font-weight: 850
+      }
+
+      .name-cell strong,
+      .repo-cell strong {
+         display: block;
+         overflow: hidden;
+         text-overflow: ellipsis;
+         white-space: nowrap
+      }
+
+      .name-cell small,
+      .repo-cell small,
+      .date-cell small {
+         display: block;
+         color: var(--muted);
+         margin-top: 3px;
+         max-width: 280px;
+         overflow: hidden;
+         text-overflow: ellipsis;
+         white-space: nowrap
+      }
+
+      .badge {
+         display: inline-flex;
+         align-items: center;
+         border-radius: 999px;
+         padding: 5px 9px;
+         font-size: 11px;
+         font-weight: 800;
+         white-space: nowrap
+      }
+
+      .badge.published {
+         color: var(--success);
+         background: var(--success-bg)
+      }
+
+      .badge.draft {
+         color: var(--warning);
+         background: var(--warning-bg)
+      }
+
+      .actions {
+         display: flex;
+         gap: 5px
+      }
+
+      .action-btn {
+         border: 1px solid #dfe3ea;
+         border-radius: 8px;
+         background: #fff;
+         min-height: 30px;
+         padding: 0 9px;
+         color: #475467;
+         font-weight: 700;
+         font-size: 11px
+      }
+
+      .action-btn.publish {
+         color: var(--accent-dark);
+         border-color: #cfcff5;
+         background: #f8f8ff
+      }
+
+      .empty-state {
+         padding: 58px 20px;
+         text-align: center;
+         color: var(--muted)
+      }
+
+      .empty-state strong {
+         display: block;
+         color: #344054;
+         font-size: 15px;
+         margin-bottom: 6px
+      }
+
+      .empty-icon {
+         width: 42px;
+         height: 42px;
+         border-radius: 12px;
+         background: var(--accent-soft);
+         color: var(--accent);
+         display: grid;
+         place-items: center;
+         font-weight: 850;
+         margin: 0 auto 12px
+      }
+
+      .modal-layer,
+      .wizard-surface {
+         position: fixed;
+         inset: 0;
+         background: rgba(15, 23, 42, .46);
+         z-index: 60;
+         display: none;
+         padding: 24px
+      }
+
+      .modal-layer.open,
+      .wizard-surface.open {
+         display: grid;
+         place-items: center
+      }
+
+      .modal {
+         width: min(600px, 100%);
+         max-height: calc(100vh - 48px);
+         overflow: auto;
+         background: #fff;
+         border-radius: 16px;
+         box-shadow: var(--shadow)
+      }
+
+      .modal-head,
+      .wizard-header {
+         padding: 5px 10px;
+         border-bottom: 1px solid var(--line);
+         display: flex;
+         justify-content: space-between;
+         align-items: flex-start;
+         gap: 20px
+      }
+
+      .modal-head h2,
+      .wizard-header h2 {
+         margin: 0;
+         font-size: 19px
+      }
+
+      .modal-head p,
+      .wizard-header p {
+         margin: 5px 0 0;
+         color: var(--muted)
+      }
+
+      .modal-body {
+         padding: 22px
+      }
+
+      .modal-footer,
+      .wizard-footer {
+         border-top: 1px solid var(--line);
+         padding: 5px 10px;
+         display: flex;
+         justify-content: flex-end;
+         align-items: center;
+         gap: 9px
+      }
+
+      .wizard-shell {
+   width: min(1320px, 100%);
+   height: min(900px, calc(100vh - 34px));
+   background: #fff;
+   border-radius: 17px;
+   box-shadow: var(--shadow);
+
+   display: flex;
+   flex-direction: column;
+
+   /* Important */
+   overflow: hidden;
+}
+
+      .wizard-header {
+   flex: 0 0 auto;
+   padding: 5px 10px;
+   border-bottom: 1px solid var(--line);
+
+   display: flex;
+   justify-content: space-between;
+   align-items: flex-start;
+   gap: 20px;
+
+   background: #fff;
+   z-index: 10;
+}
+
+
+
+      .wizard-header-copy {
+         display: flex;
+         gap: 18px;
+         align-items: flex-start
+      }
+
+      .stepper {
+         display: flex;
+         gap: 6px;
+         margin-top: 3px
+      }
+
+      .step-dot {
+         width: 28px;
+         height: 28px;
+         border-radius: 50%;
+         background: #eef0f4;
+         color: #7a8292;
+         display: grid;
+         place-items: center;
+         font-weight: 800
+      }
+
+      .step-dot.active,
+      .step-dot.complete {
+         background: var(--accent);
+         color: #fff
+      }
+
+     
+.wizard-body {
+   flex: 1 1 auto;
+
+   /* IMPORTANT:
+      Do NOT allow wizard body itself to scroll */
+   min-height: 0;
+   overflow: hidden;
+
+   padding: 10px;
+}
+
+
+/* =========================
+   WIZARD PANELS
+   ========================= */
+
+.wizard-panel {
+   display: none;
+}
+
+
+     .wizard-panel.active {
+   display: block;
+}
+
+
+/* Step 2 panel should use
+   the available body height */
+.wizard-panel.active[data-panel="components"] {
+   height: 100%;
+   min-height: 0;
+}
+
+      .section-heading {
+         display: flex;
+         justify-content: space-between;
+         align-items: flex-start;
+         gap: 20px;
+         margin-bottom: 17px
+      }
+
+      .section-heading h3 {
+         font-size: 17px;
+         margin: 0
+      }
+
+      .section-heading p {
+         margin: 5px 0 0;
+         color: var(--muted)
+      }
+
+      .step-label {
+         margin-right: auto;
+         color: var(--muted);
+         font-weight: 700
+      }
+
+      .details-grid {
+         display: grid;
+         grid-template-columns: repeat(2, minmax(0, 1fr));
+         gap: 15px
+      }
+
+      .field {
+         display: grid;
+         gap: 6px
+      }
+
+      .field.wide {
+         grid-column: 1/-1
+      }
+
+      .field label {
+         font-size: 12px;
+         font-weight: 750;
+         color: #475467
+      }
+
+      .field label.required:after {
+         content: " *";
+         color: var(--danger)
+      }
+
+      .field input,
+      .field select {
+         height: 41px;
+         padding: 0 11px
+      }
+
+      .field textarea {
+         min-height: 90px;
+         padding: 10px 11px;
+         resize: vertical
+      }
+
+      .git-config-grid {
+         display: grid;
+         grid-template-columns: repeat(2, minmax(0, 1fr));
+         gap: 15px;
+         margin-bottom: 8px
+      }
+
+      .git-config-grid .field {
+         min-width: 0
+      }
+
+      @media (max-width: 700px) {
+         .git-config-grid {
+            grid-template-columns: 1fr
+         }
+      }
+
+      .help {
+         font-size: 11px;
+         color: var(--muted);
+         line-height: 1.4
+      }
+
+      .inline-note {
+         padding: 12px;
+         border: 1px solid #ddddf6;
+         background: #f9f9ff;
+         color: #56569e;
+         border-radius: 10px;
+         line-height: 1.5
+      }
+
+      .git-status {
+         margin-top: 12px;
+         padding: 11px;
+         border-radius: 9px;
+         background: #f7f8fa;
+         color: var(--muted);
+         display: none
+      }
+
+      .git-status.show {
+         display: block
+      }
+
+      .git-status.error {
+         background: #fff1f0;
+         color: var(--danger)
+      }
+
+      .component-layout {
+   display: grid;
+   gap: 15px;
+
+   /* Do not force 520px */
+   height: 100%;
+   min-height: 0;
+}
+.component-pane {
+   display: flex;
+   flex-direction: column;
+
+   min-height: 0;
+   height: 100%;
+
+   border: 1px solid var(--line);
+   border-radius: 13px;
+
+   /* Prevent pane itself from scrolling */
+   overflow: hidden;
+
+   background: #fff;
+}
+.component-pane .pane-head {
+   flex: 0 0 auto;
+
+   padding: 5px 10px;
+   border-bottom: 1px solid var(--line);
+
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   gap: 10px;
+
+   background: #fff;
+}
+.component-table-head {
+   flex: 0 0 auto;
+
+   padding: 8px 13px;
+
+   background: #fafbfc;
+   border-bottom: 1px solid var(--line);
+
+   color: #667085;
+   font-size: 10px;
+   font-weight: 800;
+   text-transform: uppercase;
+   letter-spacing: .045em;
+
+   white-space: nowrap;
+}
+
+
+/* =========================
+   COMPONENT LIST
+   ONLY THIS AREA SCROLLS
+   ========================= */
+
+.component-list {
+   flex: 1 1 auto;
+
+   min-height: 0;
+   max-height: none;
+
+   overflow-y: auto;
+   overflow-x: hidden;
+
+   /* Smooth scrollbar area */
+   scrollbar-width: thin;
+}
+
+
+/* =========================
+   COMPONENT ROW
+   ========================= */
+
+.component-row {
+   padding: 10px 13px;
+
+   border-bottom: 1px solid #edf0f4;
+   background: #fff;
+
+   cursor: grab;
+}
+
+
+/* =========================
+   WIZARD FOOTER
+   ========================= */
+
+.wizard-footer {
+   flex: 0 0 auto;
+
+   border-top: 1px solid var(--line);
+
+   padding: 5px 10px;
+
+   display: flex;
+   justify-content: flex-end;
+   align-items: center;
+   gap: 9px;
+
+   background: #fff;
+
+   /* Always stay above content */
+   position: relative;
+   z-index: 20;
+}
+
+      .component-pane,
+      .preview-pane {
+         border: 1px solid var(--line);
+         border-radius: 13px;
+         overflow: hidden
+      }
+
+      .pane-head {
+         padding: 5px 10px;
+         border-bottom: 1px solid var(--line);
+         display: flex;
+         justify-content: space-between;
+         align-items: center;
+         gap: 10px
+      }
+
+      .pane-head h4 {
+         margin: 0
+      }
+
+      .pane-head span {
+         font-size: 11px;
+         color: var(--muted)
+      }
+
+      .component-list {
+         max-height: 350px;
+         overflow: auto
+      }
+
+      .component-table-head,
+      .component-row {
+         display: grid;
+         grid-template-columns: 30px minmax(220px, 1.7fr) 110px minmax(145px, .9fr) minmax(150px, 1fr);
+         gap: 10px;
+         align-items: center;
+      }
+
+      .component-table-head {
+         padding: 8px 13px;
+         background: #fafbfc;
+         border-bottom: 1px solid var(--line);
+         color: #667085;
+         font-size: 10px;
+         font-weight: 800;
+         text-transform: uppercase;
+         letter-spacing: .045em;
+         white-space: nowrap;
+      }
+
+      .component-row {
+         padding: 10px 13px;
+         border-bottom: 1px solid #edf0f4;
+         background: #fff;
+         cursor: default
+      }
+
+      .component-row:hover,
+      .component-row.selected {
+         background: #fafaff
+      }
+
+      .component-row strong {
+         display: block;
+         overflow: hidden;
+         text-overflow: ellipsis;
+         white-space: nowrap
+      }
+
+      .component-row small {
+         display: block;
+         color: var(--muted);
+         margin-top: 2px;
+         overflow: hidden;
+         text-overflow: ellipsis;
+         white-space: nowrap
+      }
+
+      .component-date,
+      .component-modified-by {
+         min-width: 0;
+         overflow: hidden;
+         text-overflow: ellipsis;
+         white-space: nowrap;
+         color: #475467;
+         font-size: 11px;
+      }
+
+      .component-pane .pane-head {
+         align-items: center;
+      }
+
+      .component-head-main {
+         min-width: 0;
+      }
+
+      .component-head-main h4 {
+         margin-bottom: 3px;
+      }
+
+      .component-head-controls {
+         display: flex;
+         align-items: center;
+         justify-content: flex-end;
+         gap: 7px;
+         flex: 1;
+         min-width: 0;
+      }
+
+      .component-head-controls .field-control {
+         height: 32px;
+         min-width: 0;
+      }
+
+      #componentSearch {
+         width: min(260px, 28vw);
+      }
+
+      #componentSort {
+         width: 120px;
+      }
+
+      .component-head-controls .selected-only {
+         padding: 0 4px;
+      }
+
+      .type-pill {
+         display: inline-flex;
+         justify-content: center;
+         border-radius: 999px;
+         background: #f1f3f6;
+         color: #596174;
+         padding: 5px 8px;
+         font-size: 10px;
+         font-weight: 750
+      }
+
+      .check {
+         width: 16px;
+         height: 16px;
+         accent-color: var(--accent)
+      }
+
+      .preview-pane {
+         background: #fbfbfd;
+         display: flex;
+         flex-direction: column
+      }
+
+      .preview-pane.drag-over {
+         border-color: var(--accent);
+         box-shadow: inset 0 0 0 2px rgba(88, 86, 214, .12)
+      }
+
+      .preview-content {
+         padding: 12px;
+         overflow: auto;
+         max-height: 545px
+      }
+
+      .preview-empty {
+         text-align: center;
+         color: var(--muted);
+         padding: 70px 25px;
+         line-height: 1.5
+      }
+
+      .preview-group {
+         background: #fff;
+         border: 1px solid var(--line);
+         border-radius: 10px;
+         margin-bottom: 9px;
+         overflow: hidden
+      }
+
+      .preview-group-title {
+         padding: 9px 10px;
+         background: #f7f8fa;
+         display: flex;
+         justify-content: space-between;
+         font-weight: 800
+      }
+
+      .preview-item {
+         padding: 8px 10px;
+         border-top: 1px solid #eef0f3;
+         display: flex;
+         justify-content: space-between;
+         align-items: center;
+         gap: 8px
+      }
+
+      .preview-item small {
+         color: var(--muted)
+      }
+
+      .remove-item {
+         border: 0;
+         background: transparent;
+         color: #98a2b3;
+         font-size: 17px
+      }
+
+      .selected-only {
+         display: flex;
+         align-items: center;
+         gap: 5px;
+         font-size: 11px;
+         color: #667085;
+         white-space: nowrap
+      }
+
+      .destination-grid {
+         display: grid;
+         grid-template-columns: 1.15fr .85fr;
+         gap: 15px
+      }
+
+      .review-card {
+         border: 1px solid var(--line);
+         border-radius: 13px;
+         padding: 17px
+      }
+
+      .review-card h4 {
+         margin: 0 0 13px
+      }
+
+      .review-list {
+         display: grid;
+         gap: 10px
+      }
+
+      .review-line {
+         display: flex;
+         justify-content: space-between;
+         gap: 20px;
+         padding-bottom: 9px;
+         border-bottom: 1px solid #edf0f4
+      }
+
+      .review-line:last-child {
+         border: 0
+      }
+
+      .review-line span {
+         color: var(--muted)
+      }
+
+      .review-line strong {
+         text-align: right
+      }
+
+      .branch-chips {
+         display: flex;
+         gap: 6px;
+         flex-wrap: wrap;
+         margin-top: 9px
+      }
+
+      .branch-chip {
+         border: 1px solid #dfe3ea;
+         background: #fff;
+         border-radius: 999px;
+         padding: 5px 8px;
+         font-size: 10px;
+         color: #667085
+      }
+
+      .branch-chip.active {
+         color: var(--accent-dark);
+         background: var(--accent-soft);
+         border-color: #cdcdf3
+      }
+
+      .drop-help {
+         margin-top: 10px;
+         font-size: 11px;
+         color: var(--muted)
+      }
+
+      .toast {
+         position: fixed;
+         right: 24px;
+         bottom: 24px;
+         z-index: 100;
+         max-width: 420px;
+         border-radius: 11px;
+         padding: 13px 16px;
+         background: #182230;
+         color: #fff;
+         box-shadow: var(--shadow);
+         transform: translateY(80px);
+         opacity: 0;
+         transition: .2s
+      }
+
+      .toast.show {
+         transform: none;
+         opacity: 1
+      }
+
+      .toast.success {
+         background: #076447
+      }
+
+      .toast.error {
+         background: #9f251c
+      }
+
+      .loading {
+         display: inline-block;
+         width: 15px;
+         height: 15px;
+         border: 2px solid currentColor;
+         border-right-color: transparent;
+         border-radius: 50%;
+         animation: spin .7s linear infinite
+      }
+
+      @keyframes spin {
+         to {
+            transform: rotate(360deg)
+         }
+      }
+
+      @media(max-width:1050px) {
+         .filter-row {
+            grid-template-columns: repeat(3, minmax(0, 1fr))
+         }
+
+         .component-layout,
+         .destination-grid {
+            grid-template-columns: 1fr
+         }
+
+         .preview-content {
+            max-height: 360px
+         }
+
+         .preview-pane {
+            min-height: 260px
+         }
+      }
+
+      @media(max-width:720px) {
+         .page {
+            padding: 19px 14px 40px
+         }
+
+         .page-header {
+            align-items: flex-start;
+            flex-direction: column
+         }
+
+         .header-actions {
+            width: 100%
+         }
+
+         .header-actions .btn {
+            flex: 1
+         }
+
+         .filter-row {
+            grid-template-columns: 1fr 1fr
+         }
+
+         .filter-row>*:first-child {
+            grid-column: 1/-1
+         }
+
+         .filter-bottom {
+            align-items: flex-start;
+            flex-direction: column
+         }
+
+         .wizard-surface,
+         .modal-layer {
+            padding: 0
+         }
+
+         .wizard-shell,
+         .modal {
+            height: 100vh;
+            max-height: none;
+            border-radius: 0;
+            width: 100%
+         }
+
+         .wizard-header {
+            padding: 15px
+         }
+
+         .wizard-header-copy {
+            display: block
+         }
+
+         .stepper {
+            margin-top: 11px
+         }
+
+         .wizard-body {
+            padding: 15px
+         }
+
+         .details-grid {
+            grid-template-columns: 1fr
+         }
+
+         .field.wide {
+            grid-column: auto
+         }
+
+         .component-head-controls {
+            flex-wrap: wrap;
+         }
+
+         #componentSearch {
+            width: 220px;
+         }
+
+         .component-table-head,
+         .component-row {
+            grid-template-columns: 28px minmax(150px, 1.5fr) 90px minmax(115px, .9fr) minmax(125px, 1fr);
+         }
+
+         .wizard-footer {
+            padding: 10px;
+            flex-wrap: wrap
+         }
+
+         .step-label {
+            width: 100%;
+            margin: 0
+         }
+
+         .wizard-footer .btn {
+            flex: 1
+         }
+
+         .modal-footer {
+            flex-wrap: wrap
+         }
+
+         .modal-footer .btn {
+            flex: 1
+         }
+      }
+
+      @media(max-width:450px) {
+         .filter-row {
+            grid-template-columns: 1fr
+         }
+
+         .filter-row>*:first-child {
+            grid-column: auto
+         }
+
+         .page-header h1 {
+            font-size: 24px
+         }
+
+         .component-head-controls {
+            width: 100%;
+            justify-content: flex-start;
+         }
+
+         #componentSearch {
+            width: 100%;
+            flex: 1 1 180px;
+         }
+
+         .component-table-head {
+            display: none;
+         }
+
+         .component-row {
+            grid-template-columns: 28px minmax(0, 1fr);
+         }
+
+         .component-row .type-pill,
+         .component-row .component-modified-by,
+         .component-row .component-date {
+            grid-column: 2;
+            justify-self: start;
+         }
+      }
+   </style>
+</head>
+
+<body>
+   <div class="app-shell">
+      <main class="page">
+         <header class="page-header">
+            <div><span class="eyebrow">Product management</span>
+               <h1>Configure Products</h1>
+               <p>Create, configure, version and publish application Products.</p>
+            </div>
+            <div class="header-actions" style="display:flex; flex-direction:column; align-items:flex-start; gap:8px;">
+               <div style="display:flex; gap:8px;">
+                  <button class="btn secondary" id="configureGitBtn" type="button">
+                     Configure Git
+                  </button>
+
+                  <button class="btn primary" id="createPackageBtn" type="button">
+                     ＋ Create New Product
+                  </button>
+               </div>
+               <div style="font-size:14px; color:#4b5563;margin-left: 10px;">
+                  Repository:
+                  <strong style="color:#1f2937;">AxiProductVersions</strong>
+               </div>
+
+
+
+            </div>
+         </header>
+         <section class="panel filter-panel" aria-label="Product filters">
+            <div class="filter-row"><input class="field-control" id="packageSearch" placeholder="Search product name"><input class="field-control" id="createdByFilter" placeholder="Created by"><input class="field-control" id="createdDateFilter" type="date" title="Created on"><input class="field-control" id="modifiedDateFilter" type="date" title="Modified on"><select class="field-control" id="packageSort">
+                  <option value="updated-desc">Last Modified — Newest</option>
+                  <option value="updated-asc">Last Modified — Oldest</option>
+                  <option value="created-desc">Created Date — Newest</option>
+                  <option value="created-asc">Created Date — Oldest</option>
+                  <option value="name-asc">Product Name</option>
+               </select></div>
+            <div class="filter-bottom">
+               <div class="status-chips" id="statusFilters"><button class="chip active" data-status="all" type="button">All</button><button class="chip" data-status="published" type="button">Published</button><button class="chip" data-status="draft" type="button">Draft / Not
+                     Published</button></div><span class="result-label" id="packageResultCount">0 packages</span>
+            </div>
+         </section>
+         <section class="panel">
+            <div class="table-wrap">
+               <table class="package-table">
+                  <thead>
+                     <tr>
+                        <th>Product Name</th>
+                        <th>Version</th>
+                        <th>Category</th>
+                        <th>Created By</th>
+                        <th>Last Updated On</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                     </tr>
+                  </thead>
+                  <tbody id="packageRows"></tbody>
+               </table>
+            </div>
+            <div class="empty-state" id="packageEmpty" hidden="">
+               <div class="empty-icon">PK</div><strong>No Products found</strong><span id="packageEmptyText">Create your
+                  first Product to get started.</span>
+            </div>
+         </section>
+      </main>
+   </div>
+   <div class="wizard-surface" id="wizardSurface" role="dialog" aria-modal="true" aria-labelledby="wizardTitle">
+      <div class="wizard-shell">
+         <header class="wizard-header">
+            <div class="wizard-header-copy">
+               <div>
+                  <!-- <span class="eyebrow">Product setup</span> -->
+                  <h2 id="wizardTitle">Create New Product</h2>
+                  <p id="wizardSubtitle">Add Product details and save a draft.</p>
+               </div>
+               <div class="stepper" id="wizardStepper"></div>
+            </div>
+
+             <button class="icon-btn" id="closeWizardBtn" type="button" aria-label="Close">✕</button>
+         </header>
+         <div class="wizard-body">
+            <section class="wizard-panel" data-panel="git">
+               <div class="section-heading">
+                  <div>
+                     <h3>Configure Git</h3>
+                     <p>Connect a public GitHub account before creating your first Product.</p>
+                  </div>
+               </div>
+               <div class="details-grid">
+                  <div class="field">
+                     <label class="required" for="wizardGitAccount">Git Account Name</label>
+                     <input id="wizardGitAccount" type="text" placeholder="Enter GitHub account name" autocomplete="username">
+                     <span class="help">GitHub account name is fetched from saved Git configuration.</span>
+                  </div>
+                  <div class="field">
+                     <label class="required" for="wizardGitToken">Git Token</label>
+                     <input id="wizardGitToken" type="password" placeholder="Enter GitHub personal access token" autocomplete="current-password">
+                  </div>
+                  <div class="field">
+                     <label class="required" for="wizardGitRepo">Git Repository</label>
+                     <input id="wizardGitRepo" type="text" placeholder="AxiProductVersions">
+                  </div>
+                  <div class="inline-note wide" id="wizardGitLoadedNote"><strong>Git configuration</strong>
+Saved details are loaded from Axi_GitAuth for the logged-in user.</div>
+               </div>
+               <div class="git-status" id="wizardGitStatus"></div>
+            </section>
+            <section class="wizard-panel" data-panel="details">
+               <!-- <div class="section-heading">
+                  <div>
+                     <h3>Product Details</h3>
+                     <p id="detailsHelp">Create the Product identity and save it as a draft.</p>
+                  </div>
+               </div> -->
+               <div class="details-grid">
+                  <div class="field"><label class="required" for="packageName">Product Name</label><input id="packageName" maxlength="100" placeholder="Example: ERP Foundation"></div>
+                  <div class="field"><label for="packageVersion">Product Version</label><input id="packageVersion" value="1" placeholder="1"></div>
+                  <div class="field wide"><label for="packageDescription">Product Description</label><textarea id="packageDescription" maxlength="500" placeholder="Describe the purpose and scope of this package."></textarea></div>
+                  <div class="field"><label for="packageCategory">Category</label><input id="packageCategory" value="Enterprise"></div>
+                  <div class="field"><label for="repository">Repository</label><input id="repository" value="AxiProductVersions" readonly=""></div>
+                  <div class="field"><label for="packageCreatedBy">Created By</label><input id="packageCreatedBy" readonly=""></div>
+               </div>
+            </section>
+            <section class="wizard-panel" data-panel="components">
+               <!-- <div class="section-heading">
+                  <div>
+                     <h3>Select Product Components</h3>
+                     <p>Choose components from <b>axi_packagemetalist</b> using checkboxes.</p>
+                  </div><strong id="selectedCount">0 selected</strong>
+               </div> -->
+
+               <div class="component-layout" style="margin-top:11px">
+                   <div class="component-pane">
+                      <div class="pane-head">
+                         <div class="component-head-main">
+                            <h4>Available Components</h4>
+                            <span id="componentResultCount">0 components</span>
+                         </div>
+                         <div class="component-head-controls">
+                            <span id="selectedCount" class="result-label">0 selected</span>
+                            <input class="field-control" id="componentSearch" placeholder="Search name" aria-label="Search component name">
+                            <select id="componentTypeFilters" class="component-type-select field-control" style="width:15%;">
+               <option value="all">All</option>
+            </select>
+                            <select class="field-control" id="componentSort" aria-label="Sort components">
+                               <option value="modifiedOn-desc" selected="">Modified On — Newest</option>
+                               <option value="modifiedOn-asc">Modified On — Oldest</option>
+                               <option value="name">Name</option>
+                               <option value="type">Type</option>
+                               <option value="code">Code</option>
+                            </select>
+                            <label class="selected-only"><input id="selectedOnly" type="checkbox"> Selected only</label>
+                         </div>
+                      </div>
+                      <div class="component-table-head" aria-hidden="true">
+                         <span></span><span>Component</span><span>Modified By</span><span>Modified On</span><span>Type</span>
+                      </div>
+                      <div class="component-list" id="componentRows"></div>
+                   </div>
+                  <!-- <aside class="preview-pane" id="livePreview">
+                     <div class="pane-head">
+                        <div>
+                           <h4>Live Product Preview</h4><span id="previewCount">0 components</span>
+                        </div>
+                     </div>
+                     <div class="preview-content" id="previewContent"></div>
+                  </aside> -->
+               </div>
+            </section>
+            <section class="wizard-panel" data-panel="destination">
+               <div class="section-heading">
+                  <div>
+                     <h3>Git Destination &amp; Publish</h3>
+                     <p>Review the selected destination before publishing through the Axpert export queue.</p>
+                  </div>
+               </div>
+               <div class="destination-grid">
+                  <div class="review-card">
+                     <h4>Publish Summary</h4>
+                     <div class="review-list">
+                        <div class="review-line"><span>Product Name</span><strong id="reviewName">—</strong></div>
+                        <div class="review-line"><span>Version</span><strong id="reviewVersion">—</strong></div>
+                        <div class="review-line"><span>Repository</span><strong id="reviewRepository">—</strong></div>
+                        
+                        <div class="review-line"><span>Selected Components</span><strong id="reviewComponentCount">0</strong></div>
+                     </div>
+                  </div>
+                  <select id="publishRepository" hidden="" aria-hidden="true"></select>
+               </div>
+            </section>
+         </div>
+         <footer class="wizard-footer"><span class="step-label" id="wizardStepLabel"></span><button class="btn ghost" id="cancelWizardBtn" type="button">Cancel</button><button class="btn secondary" id="wizardBackBtn" type="button">Back</button><button class="btn primary" id="wizardNextBtn" type="button">Continue</button>
+         </footer>
+      </div>
+   </div>
+   <div class="modal-layer" id="gitModal" role="dialog" aria-modal="true" aria-labelledby="gitModalTitle">
+      <div class="modal">
+         <header class="modal-head">
+            <div>
+               <h2 id="gitModalTitle">Configure Git</h2>
+               <p>Update the reusable GitHub account configuration.</p>
+            </div><button class="icon-btn" data-close-modal="gitModal" type="button">✕</button>
+         </header>
+         <div class="modal-body">
+            <div class="git-config-grid">
+               <div class="field">
+                  <label class="required" for="gitAccount">Git Account</label>
+                  <input id="gitAccount" placeholder="Enter GitHub account name" autocomplete="username">
+               </div>
+               <div class="field">
+                  <label class="required" for="gitToken">Git Token</label>
+                  <input id="gitToken" type="password" placeholder="Enter GitHub personal access token" autocomplete="new-password">
+               </div>
+               <div class="field">
+                  <label class="required" for="gitRepo">Git Repository</label>
+                  <input id="gitRepo" type="text" placeholder="AxiProductVersions">
+               </div>
+            </div>
+            <span class="help" id="gitLoadedNote">Git details are loaded from Axi_GitAuth for the logged-in user.</span>
+            <div class="git-status" id="gitModalStatus"></div>
+         </div>
+         <footer class="modal-footer"><button class="btn secondary" data-close-modal="gitModal" type="button">Cancel</button><button class="btn primary" id="saveGitBtn" type="button">Save Git
+               Configuration</button></footer>
+      </div>
+   </div>
+   <div class="toast" id="appToast" role="status"></div>
+   <script>
+
+      "use strict";
+      const AXI_EXPORT_CONFIG = {
+         productDataSource: "axi_productmetalist",
+         gitAuthDataSource: "Axi_GitAuth",
+         repositoryDataSource: "", // TODO: set the repository ADS/DS name when shared by the backend team.
+         componentDataSource: "axi_packagemetalist",
+         nextVersionDataSource: "", // TODO: set when the next-version API/ADS is provided.
+         queueName: "axiexportpackagesqueue",
+         apiName: "axipackages",
+         defaultRepository: "AxiProductVersions",
+         manifestFileName: "axiPackages.json",
+         repositoryCacheMinutes: 15,
+         backgroundRefreshIntervalMs: 60000,
+         showConfigureGitButton: true,
+         developmentStorageFallback: true,
+         axPutPath: "/AxTStructData/api/v1/AxPut"
+      };
+
+      // Reuse the ARM session and token already created by the host product.
+      // Do not sign in with hardcoded credentials or generate a separate session.
+      let armAuthCache = null;
+
+      function getAppBaseUrl() {
+         const href = top.window.location.href;
+         const aspxIndex = href.toLowerCase().indexOf("/aspx/");
+         if (aspxIndex === -1) {
+            throw new Error(`Cannot resolve app base URL. '/aspx/' not found in: ${href}`);
+         }
+         return href.substring(0, aspxIndex);
+      }
+
+      async function getArmAuth(force = false) {
+         if (armAuthCache && !force) return armAuthCache;
+
+         try {
+            const res = await fetch(getAppBaseUrl() + "/aspx/axinterface.aspx/GetGlobalVar", {
+               method: "POST",
+               headers: { "Content-Type": "application/json" },
+               body: "{}"
+            });
+
+            if (!res.ok) {
+               throw new Error(`GetGlobalVar failed (${res.status})`);
+            }
+
+            const outer = await res.json();
+            const responseData = typeof outer.d === "string"
+               ? JSON.parse(outer.d || "{}")
+               : (outer.d || {});
+            const vars = responseData.globalVars || [];
+
+            const read = key => {
+               const hit = vars.find(o => o && o[key] !== undefined);
+               return hit ? String(hit[key] || "") : "";
+            };
+
+            const sessionId = read("ARM_SessionId");
+            const token = read("ARM_Token");
+
+            armAuthCache = (sessionId && token)
+               ? { sessionId, token, read }
+               : null;
+         } catch (e) {
+            console.error("Unable to retrieve ARM authentication from GetGlobalVar:", e);
+            armAuthCache = null;
+         }
+
+         if (!armAuthCache) {
+            throw new Error("ARM_SessionId or ARM_Token was not found in GetGlobalVar.");
+         }
+
+         return armAuthCache;
+      }
+
+      const STORAGE_KEYS = { git: "axi_package_git_config_v2", packages: "axi_package_drafts_v2", components: "axi_package_components_v2", repoCache: "axi_github_package_repositories_v2", repoCacheTime: "axi_github_package_repositories_time_v2", repoCacheOwner: "axi_github_package_repositories_owner_v2" };
+      initializeGitLocalStorage();
+      const COMPONENT_GROUPS = ["TStructs", "iViews", "Custom Pages", "DB Objects", "Other Components"];
+      const objectGroup = { "TStructs": "TStructs", "iViews": "iViews", "Pages": "Custom Pages", "Tables": "DB Objects", "Views": "DB Objects", "Materialized Views": "DB Objects", "Functions": "DB Objects", "Procedures": "DB Objects", "Triggers": "DB Objects", "Index": "DB Objects", "Sequences": "DB Objects", "Constraints": "DB Objects", "Cards": "Other Components", "Data Sources": "Other Components", "Developer Options": "Other Components", "AXVars": "Other Components", "User Roles": "Other Components", "User Groups": "Other Components", "Others": "Other Components" };
+      const appState = { gitConfig: null, packages: [], repositories: [], objects: [], activePackage: null, wizardMode: "", wizardSteps: [], wizardIndex: 0, selectedComponents: new Set(), componentFilter: "all", statusFilter: "all", copySourceId: null, repositoryLoadError: "" };
+      function hostWindow() { try { return window.parent || window } catch (_) { return window } }
+      function initializeGitLocalStorage() {
+         try {
+            const storage = hostWindow().localStorage;
+            const stored = safeJson(storage.getItem(STORAGE_KEYS.git), null);
+
+            // Do not create a default/fake Git configuration.
+            // Remove the legacy seeded configuration from older builds.
+            if (stored && stored.account === "Agileaxpert" && !stored.configuredOn) {
+               storage.removeItem(STORAGE_KEYS.git);
+            }
+         } catch (error) {
+            console.error("Unable to initialize Git localStorage:", error);
+         }
+      }
+            function currentUser() { return String(hostWindow().mainUserName || "admin") }
+      function escapeHtml(value) {
+         var text = String(value ?? "");
+         text = text.replace(/&/g, String.fromCharCode(38, 97, 109, 112, 59));
+         text = text.replace(/</g, String.fromCharCode(38, 108, 116, 59));
+         text = text.replace(/>/g, String.fromCharCode(38, 103, 116, 59));
+         text = text.replaceAll(String.fromCharCode(34), String.fromCharCode(38, 113, 117, 111, 116, 59));
+         text = text.replaceAll(String.fromCharCode(39), String.fromCharCode(38, 35, 48, 51, 57, 59));
+         return text;
+      }
+      function safeJson(value, fallback) { if (value == null || value === "") return fallback; if (typeof value === "object") return value; try { return JSON.parse(value) } catch (_) { return fallback } }
+      function uid() { return `pkg_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 9)}` }
+      function showToast(type, message) { const toast = document.getElementById("appToast"); toast.className = `toast ${type || ""} show`; toast.textContent = message; clearTimeout(showToast.timer); showToast.timer = setTimeout(() => toast.classList.remove("show"), 4300) }
+      function hostAlert(type, message) { try { if (typeof hostWindow().showAlertDialog === "function") return hostWindow().showAlertDialog(type, message) } catch (_) { } showToast(type, message) }
+      function setText(id, value) { const el = document.getElementById(id); if (el) el.textContent = value ?? "" } function setValue(id, value) { const el = document.getElementById(id); if (el) el.value = value ?? "" } function getValue(id) { return document.getElementById(id)?.value || "" }
+      function setLoading(button, loading, label) { if (!button) return; if (loading) { button.dataset.label = button.textContent; button.disabled = true; button.innerHTML = `<span class="loading"></span>${escapeHtml(label)}` } else { button.disabled = false; button.textContent = label || button.dataset.label || ""; delete button.dataset.label } }
+      function initials(name) { return String(name || "PK").split(/\s+/).filter(Boolean).slice(0, 2).map(word => word[0]).join("").toUpperCase() || "PK" }
+      function dateValue(value) { const date = new Date(value); return Number.isNaN(date.getTime()) ? 0 : date.getTime() }
+      function localDateKey(value) { const date = new Date(value); if (Number.isNaN(date.getTime())) return ""; return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 10) }
+      function formatDate(value) { const date = new Date(value); return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString([], { year: "numeric", month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" }) }
+
+      /*
+       * DATA PROCESSOR / SERVICE LAYER
+       * ------------------------------------------------------------
+       * Temporary inline implementation. Later move this class to a
+       * separate ProductDataProcessor.js file without changing the UI
+       * class contract.
+       */
+      class ExportProductDataProcessor {
+         constructor(config) {
+            this.config = config;
+         }
+
+         host() {
+            try { return window.parent || window; } catch (_) { return window; }
+         }
+
+         async callAxList(adsName, sqlParams = {}, props = {}, refreshCache = false) {
+            return new Promise((resolve, reject) => {
+               const host = this.host();
+               if (!adsName || typeof host.GetDataFromAxList !== "function") {
+                  reject(new Error("GetDataFromAxList is unavailable"));
+                  return;
+               }
+
+               const params = {
+                  adsNames: [adsName],
+                  refreshCache: refreshCache === true,
+                  sqlParams: sqlParams || {},
+                  props: { pageno: 1, pagesize: 5000, ...props }
+               };
+
+               try {
+                  host.GetDataFromAxList(
+                     params,
+                     response => {
+                        try {
+                           const parsed = typeof response === "string" ? JSON.parse(response) : response;
+                           resolve(parsed?.result?.data?.[0]?.data || []);
+                        } catch (error) { reject(error); }
+                     },
+                     error => reject(error instanceof Error ? error : new Error(String(error || "Datasource error")))
+                  );
+               } catch (error) { reject(error); }
+            });
+         }
+
+         externalPersistence() {
+            const api = window.axiPackagePersistence;
+            return api && typeof api === "object" ? api : null;
+         }
+
+         readLocal(key, fallback) {
+            if (!this.config.developmentStorageFallback) return fallback;
+            try { return safeJson(localStorage.getItem(key), fallback); } catch (_) { return fallback; }
+         }
+
+         writeLocal(key, value) {
+            if (!this.config.developmentStorageFallback) return;
+            try { localStorage.setItem(key, JSON.stringify(value)); } catch (error) { console.warn("Development persistence unavailable", error); }
+         }
+
+         async loadGitConfig() {
+            // Git credentials are user-specific and must come from Axi_GitAuth,
+            // not browser storage. ADS parameter name is exactly "username".
+            const username = currentUser();
+            let rows = [];
+            try {
+               rows = await this.callAxList(this.config.gitAuthDataSource || "Axi_GitAuth", { username }, {}, true);
+            } catch (error) {
+               console.warn("Axi_GitAuth lookup failed; first-time Git configuration will be available:", error);
+               return null;
+            }
+            const row = Array.isArray(rows) ? rows.find(item => item && (item.gitaccountname || item.gittoken)) : null;
+            if (!row) return null;
+            return {
+               account: String(row.gitaccountname || "").trim(),
+               owner: String(row.gitaccountname || "").trim(),
+               token: String(row.gittoken || "").trim(),
+               username: String(row.usern || username).trim(),
+               repo: String(row.gitrepo || this.config.defaultRepository || "AxiProductVersions").trim(),
+               url: String(row.gitrepo || this.config.defaultRepository || "AxiProductVersions").trim(),
+               provider: "GitHub",
+               exists: true,
+               loadedFromAds: true
+            };
+         }
+
+         async saveGitConfig(config) {
+            const auth = await getArmAuth();
+            const username = String(config.username || currentUser()).trim();
+            const account = String(config.account || config.owner || "").trim();
+            const token = String(config.token || "").trim();
+            const repo = String(config.repo || config.url || this.config.defaultRepository || "AxiProductVersions").trim();
+            if (!username || !account || !token || !repo) {
+               throw new Error("Git account, token, username and repository are required.");
+            }
+            const isEdit = config.exists === true;
+            const row = {
+               ...(isEdit ? { axrow_action: "edit" } : {}),
+               gitaccountname: account,
+               gittoken: token,
+               usern: username,
+               gitrepo: repo
+            };
+            const payload = {
+               ARMSessionId: auth.sessionId,
+               trace: true,
+               Project: "erpdemo",
+               UserName: "admin",
+               Trace: true,
+               ValidateOnly: false,
+               MilliSecsInTimeStamp: false,
+               data: [{
+                  transid: "axgit",
+                  action: isEdit ? "edit" : "create",
+                  ...(isEdit ? { keyfield: "usern", keyvalue: username } : {}),
+                  submitdata: { dc1: { row1: row } }
+               }]
+            };
+            const response = await fetch(`${this.getArmSiteUrl()}${this.config.axPutPath || "/AxTStructData/api/v1/AxPut"}`, {
+               method: "POST",
+               headers: { Accept: "application/json", "Content-Type": "application/json", Authorization: `Bearer ${auth.token}` },
+               body: JSON.stringify(payload)
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok || result?.success === false || result?.Success === false) {
+               throw new Error(result?.message || result?.Message || `Unable to save Git configuration (${response.status})`);
+            }
+            // Re-read from ADS so the UI reflects the persisted server record.
+            const saved = await this.loadGitConfig();
+            if (!saved) throw new Error("Git configuration was submitted, but Axi_GitAuth did not return the saved record.");
+            return saved;
+         }
+
+         normalizeProduct(item = {}) {
+            const tags = Array.isArray(item.tags)
+               ? item.tags
+               : String(item.tags || item.packageTags || "").split(",").map(v => v.trim()).filter(Boolean);
+            const rawStatus = String(item.status || item.Status || "").trim();
+            const statusText = rawStatus.toLowerCase().replace(/[\\s_-]/g, "");
+            // InQueue means the export request was accepted; show it as Published in the UI.
+            const published = item.published === true || item.Published === true ||
+               statusText === "published" || statusText === "publish" ||
+               statusText === "inqueue" || statusText === "queued";
+            return {
+               id: String(item.id || item.productId || item.productid || item.packageId || item.packageid || uid()),
+               packageName: item.packageName || item.package_name || item.packagename || item.productName || item.product_name || item.productname || item.name || "Untitled Package",
+               version: normalizeVersion(item.version || item.packageVersion || item.packageversion || "1"),
+               description: item.description || item.packageDescription || item.packagedescription || "",
+               repository: item.repository || item.repository_name || item.repositoryName || item.repositoryname || "",
+               repositoryUrl: item.repositoryUrl || item.repository_url || item.repositoryurl || "",
+               category: item.category || "Enterprise",
+               tags,
+               icon: item.icon || "inventory_2",
+               colorClass: item.colorClass || "indigo",
+               createdBy: item.createdBy || item.created_by || item.createdby || item.created_user || "admin",
+               createdOn: item.createdOn || item.created_on || item.createdon || item.createdAt || item.created_at || item.createdat || new Date().toISOString(),
+               modifiedBy: item.modifiedBy || item.modified_by || item.modifiedby || item.updatedBy || item.updated_by || item.updatedby || item.createdBy || item.created_by || "admin",
+               lastUpdatedOn: item.lastUpdatedOn || item.last_updated_on || item.lastupdatedon || item.updatedAt || item.updated_at || item.updatedat || item.createdOn || item.created_on || new Date().toISOString(),
+               published,
+               status: rawStatus,
+               publishedOn: item.publishedOn || item.published_on || item.publishedon || null,
+               branch: item.branch || item.gitBranch || item.git_branch || item.gitbranch || "main",
+               copiedFrom: item.copiedFrom || item.copiedfrom || null,
+               raw: item
+            };
+         }
+
+         async getProducts(options = {}) {
+            // Product list is re-read from axi_productmetalist after AxPut status edits.
+            const rows = await this.callAxList(this.config.productDataSource, {
+               param1: currentUser(),
+               param2: this.host().mainProject || "default",
+               param3: "default",
+               param4: "app",
+               param5: "all"
+            }, {}, options.refreshCache === true);
+            return rows.map(row => this.normalizeProduct(row));
+         }
+
+         async getComponents() {
+            const rows = await this.callAxList(this.config.componentDataSource, {
+               param1: currentUser(),
+               param2: this.host().mainProject || "default",
+               param3: "default",
+               param4: "app",
+               param5: "all"
+            });
+            return rows;
+         }
+
+         async getProduct(id) {
+            const api = this.externalPersistence();
+            if (api?.loadPackage) {
+               const row = await api.loadPackage(id);
+               if (row) return this.normalizeProduct(row);
+            }
+            const rows = await this.getProducts();
+            return rows.find(item => String(item.id) === String(id)) || null;
+         }
+
+         // AxPut/Signin endpoints are hosted under ARM_Site.
+         // host.armUrl can be either the server root or already end with /ARM_Site.
+         // Normalize it once so we never generate /ARM_Site/ARM_Site/... URLs.
+         getArmSiteUrl() {
+            const host = this.host();
+            const armUrl = String(host.armUrl || getAppBaseUrl()).trim().replace(/\/$/, "");
+            if (!armUrl) return "";
+            // return /\/ARM_Site$/i.test(armUrl) ? armUrl : `${armUrl}/ARM_Site`;
+            return armUrl; 
+         }
+
+         async axPutCreatePackage(pkg) {
+            const armSiteUrl = this.getArmSiteUrl();
+            if (!armSiteUrl) throw new Error("ARM URL is unavailable");
+
+            // AxPut is used only for a NEW Product record.
+            const auth = await getArmAuth();
+
+            // repository_name is NOT NULL in axi_export_products, so always send a value.
+            const repositoryName = String(pkg.repository || "").trim() || "AxiProductVersions";
+            const repositoryUrl = String(pkg.repositoryUrl || "").trim() || "https://github.com/Agileaxpert/AxiProductVersions";
+
+            const payload = {
+               ARMSessionId: auth.sessionId,
+               trace: true,
+               validateonly: false,
+               axclient_dateformat: "dd/MM/yyyy",
+               millisecsintimestamp: true,
+               data: [
+                  {
+                     transid: "axipr",
+                     action: "create",
+                     submitdata: {
+                        dc1: {
+                           row1: {
+                              package_name: String(pkg.packageName || "").trim(),
+                              description: pkg.description || "",
+                              version: displayVersion(pkg.version),
+                              repository_name: repositoryName,
+                              repository_url: repositoryUrl,
+                              category: pkg.category || "Enterprise",
+                              created_by: pkg.createdBy || currentUser(),
+                              modified_by: pkg.modifiedBy || currentUser(),
+                              status: "Draft / Not Published"
+                           }
+                        }
+                     }
+                  }
+               ]
+            };
+
+
+            const response = await fetch(`${armSiteUrl}${this.config.axPutPath || "/AxTStructData/api/v1/AxPut"}`, {
+               method: "POST",
+               headers: {
+                  Accept: "application/json",
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${auth.token}`
+               },
+               body: JSON.stringify(payload)
+            });
+
+            let data = await response.json().catch(() => null);
+
+            if (typeof data === "string") {
+               try {
+                  data = JSON.parse(data);
+               } catch (_) {
+                  data = {};
+               }
+            }
+
+            const result = data?.result || data || {};
+            console.log("AxPut response:", data);
+
+            if (!response.ok || result?.success === false) {
+               const trace = result?.trace ? ` Trace: ${result.trace}` : "";
+               throw new Error(
+                  (result?.message || data?.message || `AxPut failed (${response.status})`) + trace
+               );
+            }
+
+            return result;
+         }
+
+         async axPutCreateVersion(pkg) {
+            const armSiteUrl = this.getArmSiteUrl();
+            if (!armSiteUrl) throw new Error("ARM URL is unavailable");
+
+            const auth = await getArmAuth();
+
+            const repositoryName =
+               String(pkg.repository || "").trim() || "AxiProductVersions";
+
+            const repositoryUrl =
+               String(pkg.repositoryUrl || "").trim() ||
+               "https://github.com/Agileaxpert/AxiProductVersions";
+
+            const payload = {
+               ARMSessionId: auth.sessionId,
+               trace: true,
+               validateonly: false,
+               axclient_dateformat: "dd/MM/yyyy",
+               millisecsintimestamp: true,
+               data: [
+                  {
+                     transid: "axipr",
+                     action: "create",
+                     submitdata: {
+                        dc1: {
+                           row1: {
+                              package_name: String(pkg.packageName || "").trim(),
+                              description: pkg.description || "",
+                              version: displayVersion(pkg.version),
+                              repository_name: repositoryName,
+                              repository_url: repositoryUrl,
+                              category: pkg.category || "Enterprise",
+                              created_by: pkg.createdBy || currentUser(),
+                              modified_by: pkg.modifiedBy || currentUser(),
+                              status: "Published"
+                           }
+                        }
+                     }
+                  }
+               ]
+            };
+
+
+            const response = await fetch(
+               `${armSiteUrl}${this.config.axPutPath || "/AxTStructData/api/v1/AxPut"}`,
+               {
+                  method: "POST",
+                  headers: {
+                     Accept: "application/json",
+                     "Content-Type": "application/json",
+                     Authorization: `Bearer ${auth.token}`
+                  },
+                  body: JSON.stringify(payload)
+               }
+            );
+
+            let data = await response.json().catch(() => null);
+
+            if (typeof data === "string") {
+               try {
+                  data = JSON.parse(data);
+               } catch (_) {
+                  data = {};
+               }
+            }
+
+            const result = data?.result || data || {};
+
+            console.log("AxPut Version response:", data);
+
+            if (!response.ok || result?.success === false) {
+               const trace = result?.trace
+                  ? ` Trace: ${result.trace}`
+                  : "";
+
+               throw new Error(
+                  (result?.message ||
+                     data?.message ||
+                     `AxPut failed (${response.status})`) + trace
+               );
+            }
+
+            return result;
+         }
+
+         async axPutUpdateProductStatus(pkg, status = "InQueue") {
+            const armSiteUrl = this.getArmSiteUrl();
+            if (!armSiteUrl) throw new Error("ARM URL is unavailable");
+
+            const auth = await getArmAuth();
+            const packageName = String(pkg.packageName || pkg.package_name || "").trim();
+            if (!packageName) throw new Error("Product Name is required to update its status.");
+
+            const payload = {
+               ARMSessionId: auth.sessionId,
+               trace: true,
+               validateonly: false,
+               axclient_dateformat: "dd/MM/yyyy",
+               millisecsintimestamp: true,
+               data: [
+                  {
+                     transid: "axipr",
+                     action: "edit",
+                     keyfield: "package_name",
+                     keyvalue: packageName,
+                     submitdata: {
+                        dc1: {
+                           row1: {
+                              axrow_action: "edit",
+                              package_name: packageName,
+                              description: pkg.description || "",
+                              version: displayVersion(pkg.version),
+                              repository_name: String(pkg.repository || pkg.repository_name || "AxiProductVersions").trim() || "AxiProductVersions",
+                              repository_url: pkg.repositoryUrl || pkg.repository_url || "",
+                              category: pkg.category || "Enterprise",
+                              created_by: pkg.createdBy || pkg.created_by || currentUser(),
+                              modified_by: currentUser(),
+                              status: status
+                           }
+                        }
+                     }
+                  }
+               ]
+            };
+
+            const response = await fetch(`${armSiteUrl}${this.config.axPutPath || "/AxTStructData/api/v1/AxPut"}`, {
+               method: "POST",
+               headers: {
+                  Accept: "application/json",
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${auth.token}`
+               },
+               body: JSON.stringify(payload)
+            });
+
+            let data = await response.json().catch(() => null);
+            if (typeof data === "string") {
+               try { data = JSON.parse(data); } catch (_) { data = {}; }
+            }
+
+            const result = data?.result || data || {};
+            if (!response.ok || result?.success === false) {
+               const trace = result?.trace ? ` Trace: ${result.trace}` : "";
+               throw new Error(
+                  (result?.message || data?.message || `AxPut status update failed (${response.status})`) + trace
+               );
+            }
+
+            return result;
+         }
+
+         async saveProduct(product) {
+            const api = this.externalPersistence();
+            if (api?.savePackage) {
+               await api.savePackage(product);
+               return product;
+            }
+            const rows = this.readLocal(STORAGE_KEYS.packages, []);
+            const index = rows.findIndex(item => String(item.id) === String(product.id));
+            if (index >= 0) rows[index] = product; else rows.push(product);
+            this.writeLocal(STORAGE_KEYS.packages, rows);
+            return product;
+         }
+
+         async saveProductComponents(id, components) {
+            const api = this.externalPersistence();
+            if (api?.savePackageComponents) await api.savePackageComponents(id, components);
+            else {
+               const map = this.readLocal(STORAGE_KEYS.components, {});
+               map[id] = components;
+               this.writeLocal(STORAGE_KEYS.components, map);
+            }
+            return components;
+         }
+
+         async getProductComponents(id) {
+            const api = this.externalPersistence();
+            if (api?.loadPackageComponents) return (await api.loadPackageComponents(id)) || [];
+            return this.readLocal(STORAGE_KEYS.components, {})[id] || [];
+         }
+
+         async deleteProduct(id) {
+            const api = this.externalPersistence();
+            if (api?.deletePackage) return api.deletePackage(id);
+            const rows = this.readLocal(STORAGE_KEYS.packages, []).filter(item => String(item.id) !== String(id));
+            this.writeLocal(STORAGE_KEYS.packages, rows);
+            const map = this.readLocal(STORAGE_KEYS.components, {});
+            delete map[id];
+            this.writeLocal(STORAGE_KEYS.components, map);
+         }
+
+         normalizeRepository(item = {}) {
+            const fullName = item.fullName || item.full_name || item.repositoryFullName || item.repository_full_name || "";
+            const defaultBranch = item.defaultBranch || item.default_branch || item.branch || "main";
+            return {
+               id: String(item.id || item.repositoryId || item.repositoryid || fullName || item.url || item.repositoryUrl || item.name || ""),
+               fullName,
+               name: item.name || item.repositoryName || item.repositoryname || "Git Repository",
+               url: item.url || item.html_url || item.repositoryUrl || item.repository_url || item.repositoryurl || "",
+               defaultBranch,
+               branches: Array.isArray(item.branches) && item.branches.length ? item.branches : [defaultBranch],
+               branchesLoaded: Boolean(item.branchesLoaded),
+               branchLoadError: item.branchLoadError || "",
+               manifestPath: item.manifestPath || this.config.manifestFileName,
+               manifestUrl: item.manifestUrl || ""
+            };
+         }
+
+         async getRepositories() {
+
+            const account = "Agileaxpert";
+            // old code: the GitHub token was hard-coded here (removed; never commit tokens)
+            // new code: read the token saved for this user (Axi_GitAuth), like getRepositoryBranches does
+            const gitConfig = await this.loadGitConfig();
+            const token = String(gitConfig?.token || "").trim();
+
+            const apiUrl = "http://localhost/axi_git/api/git/listrepositories";
+
+            try {
+
+               console.log("Calling repository API:", apiUrl);
+
+               const response = await fetch(apiUrl, {
+                  method: "POST",
+                  headers: {
+                     "Content-Type": "application/json",
+                     "Accept": "application/json"
+                  },
+                  body: JSON.stringify({
+                     account: account,
+                     token: token,
+                     managerType: "Product"
+                  })
+               });
+
+               const raw = await response.text();
+
+               console.log("Raw repository API response:", raw);
+
+               let result = {};
+
+               try {
+                  result = raw ? JSON.parse(raw) : {};
+               } catch (error) {
+                  throw new Error("Invalid repository API response: " + raw);
+               }
+
+               if (!response.ok) {
+                  throw new Error(
+                     result?.message ||
+                     result?.error ||
+                     `Repository API failed: ${response.status} ${response.statusText}`
+                  );
+               }
+
+               const repoNames =
+                  Array.isArray(result?.repoNames)
+                     ? result.repoNames
+                     : Array.isArray(result?.repositories)
+                        ? result.repositories
+                           .map(item =>
+                              item?.name ||
+                              item?.repositoryName ||
+                              item?.repoName
+                           )
+                           .filter(Boolean)
+                        : Array.isArray(result?.data)
+                           ? result.data
+                              .map(item =>
+                                 typeof item === "string"
+                                    ? item
+                                    : (
+                                       item?.name ||
+                                       item?.repositoryName ||
+                                       item?.repoName
+                                    )
+                              )
+                              .filter(Boolean)
+                           : [];
+
+               console.log("Repository names:", repoNames);
+
+               const repositories = repoNames
+                  .map(repoName => String(repoName || "").trim())
+                  .filter(Boolean)
+                  .map(repoName => ({
+                     id: repoName,
+                     fullName: `${account}/${repoName}`,
+                     name: repoName,
+                     url: `https://github.com/${account}/${repoName}`,
+                     defaultBranch: "main",
+                     branches: ["main"],
+                     branchesLoaded: true
+                  }));
+
+               repositories.sort((a, b) =>
+                  a.name.localeCompare(b.name)
+               );
+
+               console.log("List repositories response:", result);
+               console.log("Repositories for dropdown:", repositories);
+
+               return repositories;
+
+            } catch (error) {
+
+               console.error(
+                  "Failed to load Git repositories:",
+                  error
+               );
+
+               throw error;
+            }
+         }
+         async getRepositoryBranches(repo) {
+            if (repo.branchesLoaded && Array.isArray(repo.branches) && repo.branches.length) return repo.branches;
+            if (Array.isArray(repo.branches) && repo.branches.length > 1) return repo.branches;
+            if (!repo.fullName) return [...new Set([repo.defaultBranch || "main", "main"])];
+            const branches = [];
+            for (let page = 1; page <= 5; page++) {
+               const gitConfig = await this.loadGitConfig();
+               const token = String(gitConfig?.token || "").trim();
+               const response = await fetch(`https://api.github.com/repos/${repo.fullName}/branches?per_page=100&page=${page}`, {
+                  headers: {
+                     Accept: "application/vnd.github+json",
+                     Authorization: `Bearer ${token}`,
+                     "X-GitHub-Api-Version": "2022-11-28"
+                  }
+               });
+               if (!response.ok) throw new Error(`GitHub branch request failed (${response.status})`);
+               const rows = await response.json();
+               if (!Array.isArray(rows)) break;
+               branches.push(...rows.map(item => item.name).filter(Boolean));
+               if (rows.length < 100) break;
+            }
+            return [...new Set(branches.length ? branches : [repo.defaultBranch || "main"])];
+         }
+
+         async validateGitAccount(owner) {
+            const response = await fetch(`https://api.github.com/users/${encodeURIComponent(owner)}`, { headers: { Accept: "application/vnd.github+json" } });
+            if (!response.ok) {
+               const data = await response.json().catch(() => ({}));
+               throw new Error(data.message || `GitHub request failed (${response.status})`);
+            }
+            return true;
+         }
+
+         async getNextVersion(pkg) {
+            if (this.config.nextVersionDataSource) {
+               const rows = await this.callAxList(this.config.nextVersionDataSource, {
+                  param1: pkg.id,
+                  param2: pkg.packageName,
+                  param3: pkg.version
+               });
+               const row = rows[0] || {};
+               return row.nextVersion || row.nextversion || row.version || incrementVersion(pkg.version);
+            }
+            return incrementVersion(pkg.version);
+         }
+
+         buildExportObjects(selected) {
+            const out = { tstruct: [], iview: [], custompage: [], cards: [], ads: [], developeroption: [], axvars: [], userrole: [], usergroup: [], tables: [], views: [], materializedview: [], functions: [], procedures: [], triggers: [], index: [], sequence: [], constraint: [] };
+            selected.forEach(item => {
+               switch (item.type) {
+                  case "TStructs": out.tstruct.push(item.code); break;
+                  case "iViews": out.iview.push(item.code); break;
+                  case "Cards": out.cards.push(item.code); break;
+                  case "Pages": out.custompage.push(item.raw?.caption || item.name); break;
+                  case "Data Sources": out.ads.push(item.code); break;
+                  case "Developer Options": out.developeroption.push(item.code); break;
+                  case "AXVars": out.axvars.push(item.code); break;
+                  case "User Roles": out.userrole.push(item.code); break;
+                  case "User Groups": out.usergroup.push(item.code); break;
+                  case "Tables": out.tables.push(item.code); break;
+                  case "Views": out.views.push(item.code); break;
+                  case "Materialized Views": out.materializedview.push(item.code); break;
+                  case "Functions": out.functions.push(item.code); break;
+                  case "Procedures": out.procedures.push(item.code); break;
+                  case "Triggers": out.triggers.push(item.code); break;
+                  case "Index": out.index.push(item.code); break;
+                  case "Sequences": out.sequence.push(item.code); break;
+                  case "Constraints": out.constraint.push(item.code); break;
+               }
+            });
+            return out;
+         }
+
+         async pushToQueue(info, gitConfig) {
+            const host = this.host();
+            const stamp = new Date().toISOString().replace(/[-:T]/g, "").slice(0, 14);
+            const queueData = {
+               requestId: `PKG-${stamp}-${Math.floor(Math.random() * 1000)}`,
+               appName: host.mainProject || "default",
+               packageName: info.packageName,
+               packageVersion: Number(queueVersion(info.packageVersion)),
+               previousVersion: info.previousVersion ? Number(queueVersion(info.previousVersion)) : "",
+               sourcePackageId: info.sourcePackageId || "",
+               requestedBy: host.mainUserName || "admin",
+               objects: this.buildExportObjects(info.objects || []),
+               publish: {
+                  repository: info.repository?.name || "AxpertPackages",
+                  repositoryUrl: info.repository?.url || "",
+                  gitAccountUrl: gitConfig?.url || "",
+                  manifestFile: info.repository?.manifestPath || this.config.manifestFileName,
+                  branch: info.gitBranch || "main",
+                  packageDescription: info.packageDescription,
+                  packageAuthor: host.mainUserName || "admin",
+                  tags: info.packageTags,
+                  category: info.packageCategory,
+                  icon: info.packageIcon,
+                  colorClass: info.packageColorClass
+               }
+            };
+
+            const payload = {
+               queuename: this.config.queueName,
+               apiname: this.config.apiName,
+               queuedata: JSON.stringify(queueData),
+               timespandelay: "0"
+            };
+
+            const armUrl = host.armUrl || "";
+            if (!armUrl) {
+               console.info("ARM URL is unavailable; simulated queue payload:", payload);
+               return { simulated: true, payload };
+            }
+
+            const response = await fetch(`${armUrl}/ARM_APIs/api/v1/ARMPushToQueue`, {
+               method: "POST",
+               headers: { "Content-Type": "application/json" },
+               body: JSON.stringify(payload)
+            });
+            if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+            return response.json();
+         }
+      }
+
+      function normalizeVersion(version) {
+         const major = Number.parseInt(String(version ?? "").split(".")[0], 10);
+         return major === 2 ? "2" : "1";
+      }
+
+      function displayVersion(version) {
+         const major = Number.parseInt(String(version ?? "").split(".")[0], 10);
+         return major === 2 ? "V2" : "V1";
+      }
+
+      function queueVersion(version) {
+         const major = Number.parseInt(String(version ?? "").split(".")[0], 10);
+         return major === 2 ? 2 : 1;
+      }
+
+      function incrementVersion(version) {
+         const normalized = normalizeVersion(version);
+         const major = Number(normalized.split(".")[0]) || 1;
+         return `${major + 1}.0`;
+      }
+
+   </script>
+   <script>
+
+
+
+
+      /* UI layer + event handling */
+      class ExportProductManager {
+         constructor() {
+            this.dataProcessor = new ExportProductDataProcessor(AXI_EXPORT_CONFIG);
+            this.refreshTimer = null;
+            this.refreshInProgress = false;
+         }
+
+         async loadGitConfig() { return this.dataProcessor.loadGitConfig(); }
+         async saveGitConfig(config) { return this.dataProcessor.saveGitConfig(config); }
+         async loadPackages() { return this.dataProcessor.getProducts(); }
+         async loadPackage(id) { return this.dataProcessor.getProduct(id); }
+         async savePackage(pkg) { return this.dataProcessor.saveProduct(pkg); }
+         async savePackageComponents(id, items) { return this.dataProcessor.saveProductComponents(id, items); }
+         async loadPackageComponents(id) { return this.dataProcessor.getProductComponents(id); }
+         async deletePackage(id) { return this.dataProcessor.deleteProduct(id); }
+
+         callAxList(adsName, sqlParams, props = {}) { return this.dataProcessor.callAxList(adsName, sqlParams, props) }
+         async getMetaData() {
+            try {
+               const rows = await this.dataProcessor.getComponents();
+               appState.objects = rows.map((item, index) => {
+                  const code = item.name || item.caption || item.code || `object_${index + 1}`;
+                  const modifiedBy = item.modifiedBy || item.modified_by || item.modifiedby || item.updatedBy || item.updated_by || item.updatedby || item.modified_user || item.modifieduser || item.createdBy || item.created_by || item.createdby || "—";
+                  const modifiedOn = item.modifiedOn || item.modified_on || item.modifiedon || item.lastUpdatedOn || item.last_updated_on || item.lastupdatedon || item.updatedOn || item.updated_on || item.updatedon || item.updatedAt || item.updated_at || item.updatedat || item.createdOn || item.created_on || item.createdon || "";
+                  return {
+                     id: `${String(item.stype || item.type || "obj").toLowerCase()}:${String(code).toLowerCase()}`,
+                     name: item.caption || item.name || `Object ${index + 1}`,
+                     code,
+                     type: mapObjectType(item.stype || item.type),
+                     modifiedBy,
+                     modifiedOn,
+                     raw: item
+                  };
+               });
+            } catch (error) {
+               console.warn("Metadata datasource unavailable in this context:", error);
+               appState.objects = [];
+            }
+         }
+         mapObjectType(stype) { const map = { t: "TStructs", ts: "TStructs", i: "iViews", iv: "iViews", p: "Pages", pg: "Pages", ads: "Data Sources", ds: "Data Sources", card: "Cards", c: "Cards", developeroption: "Developer Options", devopt: "Developer Options", axvars: "AXVars", axv: "AXVars", r: "User Roles", role: "User Roles", userrole: "User Roles", usergroup: "User Groups", ug: "User Groups", tbl: "Tables", table: "Tables", vw: "Views", view: "Views", views: "Views", mvw: "Materialized Views", matview: "Materialized Views", mview: "Materialized Views", fn: "Functions", func: "Functions", function: "Functions", functions: "Functions", sp: "Procedures", proc: "Procedures", procedure: "Procedures", procedures: "Procedures", trg: "Triggers", trigger: "Triggers", triggers: "Triggers", idx: "Index", index: "Index", seq: "Sequences", sequence: "Sequences", sequences: "Sequences", cons: "Constraints", constraint: "Constraints", constraints: "Constraints" }; return map[String(stype || "").toLowerCase().trim()] || "Others" }
+         extractGitHubOwner(value) { try { const url = new URL(String(value || "").trim()); if (!/^https?:$/.test(url.protocol) || !/(^|\.)github\.com$/i.test(url.hostname)) return ""; return url.pathname.split("/").filter(Boolean)[0] || "" } catch (_) { return "" } }
+         normalizeGitUrl(value, owner) { return `https://github.com/${owner}?tab=repositories` }
+         normalizeRepository(item = {}) { const fullName = item.fullName || item.full_name || "", defaultBranch = item.defaultBranch || item.default_branch || "main"; return { id: String(item.id || fullName || item.url), fullName, name: item.name || "Git Repository", url: item.url || item.html_url || "", defaultBranch, branches: Array.isArray(item.branches) && item.branches.length ? item.branches : [defaultBranch], branchesLoaded: Boolean(item.branchesLoaded), branchLoadError: item.branchLoadError || "", manifestPath: item.manifestPath || AXI_EXPORT_CONFIG.manifestFileName, manifestUrl: item.manifestUrl || "" } }
+         async githubFetch(url) { const response = await fetch(url, { headers: { Accept: "application/vnd.github+json" } }); if (!response.ok) { const data = await response.json().catch(() => ({})); throw new Error(data.message || `GitHub request failed (${response.status})`) } return response }
+         async fetchAllPublicRepositories(owner) { const all = []; for (let page = 1; page <= 10; page++) { const rows = await (await githubFetch(`https://api.github.com/users/${encodeURIComponent(owner)}/repos?type=owner&sort=updated&per_page=100&page=${page}`)).json(); if (!Array.isArray(rows)) throw new Error("Unexpected GitHub repository response"); all.push(...rows); if (rows.length < 100) break } return all }
+         async mapWithConcurrency(items, limit, mapper) { const results = new Array(items.length); let next = 0; async function worker() { while (next < items.length) { const index = next++; results[index] = await mapper(items[index], index) } } await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker)); return results }
+         async discoverPackageRepository(repo) { try { const root = await (await githubFetch(`https://api.github.com/repos/${repo.full_name}/contents`)).json(); const manifest = Array.isArray(root) ? root.find(item => item.type === "file" && String(item.name).toLowerCase() === AXI_EXPORT_CONFIG.manifestFileName.toLowerCase()) : null; if (!manifest) return null; return normalizeRepository({ id: repo.full_name, fullName: repo.full_name, name: repo.name, url: repo.html_url, defaultBranch: repo.default_branch || "main", branches: [repo.default_branch || "main"], manifestPath: manifest.path, manifestUrl: manifest.download_url }) } catch (_) { return null } }
+         async loadRepositories(force = false) {
+            try {
+               appState.repositories = await this.dataProcessor.getRepositories(force);
+               appState.repositoryLoadError = "";
+            } catch (error) {
+               console.error("Repository datasource loading failed:", error);
+               appState.repositoryLoadError = error.message || "Repository loading failed.";
+               if (!appState.repositories.length) appState.repositories = [];
+            }
+            return appState.repositories;
+         }
+         async ensureRepositoryBranches(repo) {
+            if (!repo) return [];
+            try {
+               repo.branches = await this.dataProcessor.getRepositoryBranches(repo);
+               repo.branchesLoaded = true;
+               repo.branchLoadError = "";
+            } catch (error) {
+               repo.branches = [...new Set([repo.defaultBranch || "main", "main"])];
+               repo.branchesLoaded = true;
+               repo.branchLoadError = error.message || "Branch loading failed.";
+            }
+            return repo.branches;
+         }
+         preferredBranch(repo) { return repo?.branches?.find(item => String(item).toLowerCase() === "main") || repo?.defaultBranch || repo?.branches?.[0] || "main" }
+         async init() {
+            bindEvents();
+            const configureGitButton = document.getElementById("configureGitBtn");
+            if (configureGitButton) configureGitButton.hidden = !AXI_EXPORT_CONFIG.showConfigureGitButton;
+
+            try {
+               const [git, packages] = await Promise.all([
+                  this.dataProcessor.loadGitConfig(),
+                  this.dataProcessor.getProducts()
+               ]);
+
+               appState.gitConfig = git && (git.owner || git.account) ? git : null;
+               if (appState.gitConfig) {
+                  setValue("wizardGitAccount", appState.gitConfig.account || "");
+                  setValue("wizardGitToken", appState.gitConfig.token || "");
+                  setValue("wizardGitRepo", appState.gitConfig.repo || AXI_EXPORT_CONFIG.defaultRepository);
+                  setText("wizardGitLoadedNote", `Git configuration loaded from Axi_GitAuth for ${appState.gitConfig.username}.`);
+               } else {
+                  setText("wizardGitLoadedNote", `First-time Git setup: enter account, token and repository for ${currentUser()}.`);
+                  setValue("wizardGitRepo", AXI_EXPORT_CONFIG.defaultRepository);
+               }
+               appState.packages = packages.map(normalizeDraft);
+               renderPackages();
+
+               await Promise.allSettled([
+                  getMetaData(),
+                  loadRepositories()
+               ]);
+
+               renderRepositoryOptions();
+               this.startBackgroundRefresh();
+
+            } catch (error) {
+               console.error("Export Product Manager initialization failed:", error);
+               appState.packages = [];
+               renderPackages();
+               hostAlert("error", error.message || "Unable to load Product data.");
+            }
+         }
+
+         startBackgroundRefresh() {
+            if (this.refreshTimer) clearInterval(this.refreshTimer);
+            this.refreshTimer = setInterval(() => this.refreshPackageList(true), AXI_EXPORT_CONFIG.backgroundRefreshIntervalMs);
+         }
+
+         async refreshPackageList(silent = true, forceDatasourceRefresh = false) {
+            if (this.refreshInProgress && !forceDatasourceRefresh) return;
+            this.refreshInProgress = true;
+            try {
+               // Force a fresh datasource read after AxPut so the updated InQueue
+               // status, rather than a cached Draft status, drives the UI actions.
+               const packages = await this.dataProcessor.getProducts({
+                  refreshCache: forceDatasourceRefresh
+               });
+               appState.packages = packages.map(normalizeDraft);
+               renderPackages();
+            } catch (error) {
+               console.warn("Product datasource refresh failed:", error);
+               if (!silent) hostAlert("error", error.message || "Unable to refresh Products.");
+            } finally {
+               this.refreshInProgress = false;
+            }
+         }
+
+         normalizeDraft(pkg) {
+            const statusText = String(pkg.status || pkg.Status || "").trim().toLowerCase().replace(/[\\s_-]/g, "");
+            const isPublished = Boolean(pkg.published) ||
+               statusText === "published" || statusText === "publish" ||
+               statusText === "inqueue" || statusText === "queued";
+            return {
+               id: String(pkg.id || uid()),
+               packageName: pkg.packageName || pkg.name || "Untitled Package",
+               version: normalizeVersion(pkg.version || pkg.packageVersion || "1"),
+               description: pkg.description || pkg.packageDescription || "",
+               repository: pkg.repository || "",
+               repositoryUrl: pkg.repositoryUrl || "",
+               category: pkg.category || "Enterprise",
+               tags: Array.isArray(pkg.tags) ? pkg.tags : [],
+               icon: pkg.icon || "inventory_2",
+               colorClass: pkg.colorClass || "indigo",
+               createdBy: pkg.createdBy || "admin",
+               createdOn: pkg.createdOn || new Date().toISOString(),
+               modifiedBy: pkg.modifiedBy || pkg.createdBy || "admin",
+               lastUpdatedOn: pkg.lastUpdatedOn || pkg.updatedAt || pkg.createdOn || new Date().toISOString(),
+               published: isPublished,
+               status: pkg.status || pkg.Status || "",
+               publishedOn: pkg.publishedOn || null,
+               branch: pkg.branch || "main",
+               copiedFrom: pkg.copiedFrom || null
+            };
+         }
+         bindEvents() {
+            document.getElementById("createPackageBtn").addEventListener("click", () => { openCreateWizard(false).catch(error => hostAlert("error", error.message || "Unable to open Product wizard.")); }); document.getElementById("configureGitBtn").addEventListener("click", () => { openGitModal().catch(error => hostAlert("error", error.message || "Unable to open Git configuration.")); }); document.getElementById("closeWizardBtn").addEventListener("click", closeWizard); document.getElementById("cancelWizardBtn").addEventListener("click", closeWizard); document.getElementById("wizardBackBtn").addEventListener("click", wizardBack); document.getElementById("wizardNextBtn").addEventListener("click", wizardNext); document.getElementById("saveGitBtn").addEventListener("click", saveGitFromModal); document.querySelectorAll("[data-close-modal]").forEach(btn => btn.addEventListener("click", () => closeModal(btn.dataset.closeModal)));
+            ["packageSearch", "createdByFilter", "createdDateFilter", "modifiedDateFilter"].forEach(id => document.getElementById(id).addEventListener("input", renderPackages)); document.getElementById("packageSort").addEventListener("change", renderPackages); document.getElementById("statusFilters").addEventListener("click", event => { const chip = event.target.closest("[data-status]"); if (!chip) return; appState.statusFilter = chip.dataset.status; document.querySelectorAll("#statusFilters .chip").forEach(item => item.classList.toggle("active", item === chip)); renderPackages() }); document.getElementById("packageRows").addEventListener("click", handlePackageAction);
+            document.getElementById("componentSearch").addEventListener("input", renderComponents); document.getElementById("componentSort").addEventListener("change", renderComponents); document.getElementById("selectedOnly").addEventListener("change", renderComponents);
+            document.getElementById("componentTypeFilters").addEventListener("change", event => {
+               appState.componentFilter = event.target.value || "all";
+               renderComponents();
+            });
+            document.getElementById("componentRows").addEventListener("change", event => { const input = event.target.closest("[data-component-id]"); if (input) toggleComponent(input.dataset.componentId, input.checked) }); document.getElementById("previewContent")?.addEventListener("click", event => { const button = event.target.closest("[data-remove-component]"); if (button) toggleComponent(button.dataset.removeComponent, false) });
+            document.getElementById("publishRepository").addEventListener("change", handlePublishRepositoryChange); document.addEventListener("keydown", event => { if (event.key === "Escape") { if (document.getElementById("gitModal").classList.contains("open")) closeModal("gitModal"); else if (document.getElementById("wizardSurface").classList.contains("open")) closeWizard() } })
+         }
+         packageFilters() { return { search: getValue("packageSearch").trim().toLowerCase(), createdBy: getValue("createdByFilter").trim().toLowerCase(), createdDate: getValue("createdDateFilter"), modifiedDate: getValue("modifiedDateFilter"), sort: getValue("packageSort") } }
+         renderPackages() { const f = packageFilters(); let rows = appState.packages.filter(pkg => { const status = appState.statusFilter === "all" || (appState.statusFilter === "published" ? pkg.published : !pkg.published); return status && String(pkg.packageName).toLowerCase().includes(f.search) && String(pkg.createdBy).toLowerCase().includes(f.createdBy) && (!f.createdDate || localDateKey(pkg.createdOn) === f.createdDate) && (!f.modifiedDate || localDateKey(pkg.lastUpdatedOn) === f.modifiedDate) }); rows.sort((a, b) => { if (f.sort === "updated-asc") return dateValue(a.lastUpdatedOn) - dateValue(b.lastUpdatedOn); if (f.sort === "created-desc") return dateValue(b.createdOn) - dateValue(a.createdOn); if (f.sort === "created-asc") return dateValue(a.createdOn) - dateValue(b.createdOn); if (f.sort === "name-asc") return a.packageName.localeCompare(b.packageName); return dateValue(b.lastUpdatedOn) - dateValue(a.lastUpdatedOn) }); setText("packageResultCount", `${rows.length} Product${rows.length === 1 ? "" : "s"}`); document.getElementById("packageRows").innerHTML = rows.map(packageRow).join(""); document.getElementById("packageEmpty").hidden = rows.length > 0; if (!rows.length) setText("packageEmptyText", appState.packages.length ? "No Products match the current filters." : "Create your first Product to get started.") }
+         packageRow(pkg) {
+            const action = pkg.published
+               ? `<button class="action-btn" data-action="version" title="Create a new version of this Product" type="button">Version+</button><button class="action-btn" data-action="copy" title="Copy this Product" type="button">Copy</button>`
+               : `<button class="action-btn publish" data-action="publish" type="button" title="Publish this Product">Publish</button>`;
+            const packageName = pkg.packageName || "Untitled Product";
+            const description = pkg.description || "No description";
+            const repository = pkg.repository || "Not configured";
+            const repositoryUrl = pkg.repositoryUrl || "—";
+            const createdBy = pkg.createdBy || "—";
+            const modifiedBy = pkg.modifiedBy || pkg.createdBy || "—";
+
+            return `<tr data-package-id="${escapeHtml(pkg.id)}"><td><div class="name-cell"><span class="package-mark">${escapeHtml(initials(packageName))}</span><span><strong title="${escapeHtml(packageName)}">${escapeHtml(packageName)}</strong><small title="${escapeHtml(description)}">${escapeHtml(description)}</small></span></div></td><td>${escapeHtml(displayVersion(pkg.version))}</td><td title="${escapeHtml(pkg.category || "—")}">${escapeHtml(pkg.category || "—")}</td><td title="${escapeHtml(createdBy)}">${escapeHtml(createdBy)}</td><td><span class="date-cell"><span title="${escapeHtml(formatDate(pkg.lastUpdatedOn))}">${escapeHtml(formatDate(pkg.lastUpdatedOn))}</span><small title="by ${escapeHtml(modifiedBy)}">by ${escapeHtml(modifiedBy)}</small></span></td><td><span class="badge ${pkg.published ? "published" : "draft"}" title="${pkg.published ? "Published" : "Draft / Not Published"}">${pkg.published ? "Published" : "Draft / Not Published"}</span></td><td><div class="actions">${action}</div></td></tr>`;
+         }
+         handlePackageAction(event) {
+            const action = event.target.closest("[data-action]"), row = event.target.closest("[data-package-id]");
+            if (!action || !row) return;
+            if (action.dataset.action === "edit") openEditWizard(row.dataset.packageId);
+            if (action.dataset.action === "publish") openPublishWizard(row.dataset.packageId);
+            if (action.dataset.action === "version") openNewVersionWizard(row.dataset.packageId);
+            if (action.dataset.action === "copy") openCopyWizard(row.dataset.packageId);
+         }
+         configureWizard(mode, steps, title, subtitle) { appState.wizardMode = mode; appState.wizardSteps = steps; appState.wizardIndex = 0; setText("wizardTitle", title); setText("wizardSubtitle", subtitle); document.getElementById("wizardSurface").classList.add("open"); document.documentElement.style.overflow = "hidden"; renderWizard() }
+         async openCreateWizard() {
+            appState.activePackage = null;
+            appState.copySourceId = null;
+            appState.selectedComponents.clear();
+            resetDetails();
+
+            const hasGitConfig = Boolean(
+               appState.gitConfig &&
+               (appState.gitConfig.account || appState.gitConfig.owner) &&
+               appState.gitConfig.token
+            );
+
+            // Keep the Git page as Step 1 in the wizard even after configuration.
+            // When Git is already configured, open directly on Step 2 (Product Details).
+            configureWizard(
+               "create",
+               ["git", "details"],
+               "Create New Product",
+               hasGitConfig
+                  ? "Add Product details and save a new draft."
+                  : "Complete the initial Git setup and create your first Product draft."
+            );
+
+            if (hasGitConfig) {
+               appState.wizardIndex = 1;
+               renderWizard();
+            }
+         }
+         async openEditWizard(id) {
+            const pkg = await loadPackage(id);
+            if (!pkg) return hostAlert("error", "Product could not be loaded.");
+            const nextVersion = await this.dataProcessor.getNextVersion(pkg);
+            appState.activePackage = normalizeDraft({ ...pkg, version: nextVersion });
+            appState.copySourceId = id;
+            // Refresh repositories and component metadata every time the edit wizard is opened.
+            await Promise.allSettled([loadRepositories(true), getMetaData()]);
+            fillDetails(appState.activePackage);
+            setValue("packageVersion", nextVersion);
+            await restoreComponents(id);
+            configureWizard("edit", ["details", "components", "destination"], "Edit Product", "Changes will be published as a new Product record with the next version.");
+         }
+
+         async openNewVersionWizard(id) {
+            const pkg = await loadPackage(id);
+            if (!pkg) return hostAlert("error", "Product could not be loaded.");
+            const nextVersion = await this.dataProcessor.getNextVersion(pkg);
+            appState.activePackage = normalizeDraft({ ...pkg, version: nextVersion });
+            appState.copySourceId = id;
+            await Promise.allSettled([loadRepositories(true), getMetaData()]);
+            fillDetails(appState.activePackage);
+            setValue("packageVersion", nextVersion);
+            await restoreComponents(id);
+            configureWizard("version", ["details", "components", "destination"], "Create New Version", "Create a new Product version and publish it.");
+         }
+         async openCopyWizard(id) { const source = await loadPackage(id); if (!source) return hostAlert("error", "Source Product could not be loaded."); appState.activePackage = null; appState.copySourceId = id; fillDetails({ ...normalizeDraft(source), packageName: `${source.packageName || source.name} Copy`, createdBy: currentUser() }); await restoreComponents(id); configureWizard("copy", ["details"], "Copy Product", "Review reusable metadata and enter a new Product name.") }
+         async openPublishWizard(id) {
+            const pkg = await loadPackage(id);
+            if (!pkg) return hostAlert("error", "Product could not be loaded.");
+            appState.activePackage = normalizeDraft(pkg);
+            appState.copySourceId = id;
+            await Promise.allSettled([loadRepositories(true), getMetaData()]);
+            fillDetails(appState.activePackage);
+            await restoreComponents(id);
+            configureWizard("publish", ["details", "components", "destination"], "Publish Product", "Review the Product details, select components, then publish.");
+            appState.wizardIndex = 1;
+            renderWizard();
+            document.querySelector(".wizard-body").scrollTop = 0;
+         }
+         closeWizard() { document.getElementById("wizardSurface").classList.remove("open"); document.documentElement.style.overflow = ""; appState.activePackage = null; appState.copySourceId = null }
+         resetDetails() { ["packageName", "packageDescription"].forEach(id => setValue(id, "")); setValue("packageVersion", "1"); setValue("packageCategory", "Enterprise"); setValue("packageCreatedBy", currentUser()); }
+         fillDetails(pkg) { setValue("packageName", pkg.packageName); setValue("packageVersion", pkg.version); setValue("packageDescription", pkg.description); setValue("packageCategory", pkg.category); setValue("packageCreatedBy", pkg.createdBy || currentUser()); }
+         async restoreComponents(id) { const stored = await loadPackageComponents(id); appState.selectedComponents = new Set((Array.isArray(stored) ? stored : []).map(item => typeof item === "string" ? item : item.id).filter(Boolean)) }
+         renderWizard() {
+            const step = appState.wizardSteps[appState.wizardIndex];
+            document.querySelectorAll("[data-panel]").forEach(panel => panel.classList.toggle("active", panel.dataset.panel === step));
+            document.getElementById("wizardStepper").innerHTML = appState.wizardSteps.map((_, index) => `<span class="step-dot ${index === appState.wizardIndex ? "active" : index < appState.wizardIndex ? "complete" : ""}">${index + 1}</span>`).join("");
+            setText("wizardStepLabel", `Step ${appState.wizardIndex + 1} of ${appState.wizardSteps.length}`);
+            document.getElementById("wizardBackBtn").hidden = appState.wizardIndex === 0;
+            document.getElementById("wizardNextBtn").textContent = finalActionLabel();
+
+            if (step === "git") {
+               const storedGit = appState.gitConfig || null;
+               setValue("wizardGitAccount", storedGit?.account || "");
+               setValue("wizardGitToken", storedGit?.token || "");
+               setValue("wizardGitRepo", storedGit?.repo || AXI_EXPORT_CONFIG.defaultRepository);
+               setText("wizardGitLoadedNote", storedGit
+                  ? `Git configuration loaded from Axi_GitAuth for ${storedGit.username}.`
+                  : `No Git configuration found for ${currentUser()}. Enter Git account, token and repository to configure it for the first time.`);
+            }
+            if (step === "components") { renderComponentFilters(); renderComponents(); renderPreview(); }
+            if (step === "destination") {
+               renderRepositoryOptions(appState.activePackage?.repositoryUrl || appState.activePackage?.repository);
+               prepareDestination();
+            }
+
+            setText("detailsHelp",
+               appState.wizardMode === "edit"
+                  ? "Changes will be published as a new Product record; the current record is not updated directly."
+                  : appState.wizardMode === "version"
+                     ? "A new Product record will be created using the next version number; the existing version remains unchanged."
+                     : appState.wizardMode === "copy"
+                        ? "The copy is saved with a new Product identity and Draft status."
+                        : "Create the Product identity and save it as a draft.");
+
+            const restrictedFields = ["packageCreatedBy"];
+            restrictedFields.forEach(id => {
+               const el = document.getElementById(id);
+               if (el) {
+                  el.readOnly = true;
+                  el.disabled = false;
+               }
+            });
+            const versionInput = document.getElementById("packageVersion");
+            if (versionInput) {
+               versionInput.readOnly = appState.wizardMode === "version";
+               versionInput.title = appState.wizardMode === "version" ? "Version is automatically incremented and cannot be edited." : "";
+            }
+         }
+         finalActionLabel() {
+            if (appState.wizardIndex < appState.wizardSteps.length - 1) return "Continue";
+            if (appState.wizardMode === "publish" || appState.wizardMode === "edit" || appState.wizardMode === "version") return "Publish";
+            if (appState.wizardMode === "copy") return "Create Copy";
+            return "Create Product";
+         }
+         async wizardNext() {
+            const step = appState.wizardSteps[appState.wizardIndex];
+            const button = document.getElementById("wizardNextBtn");
+            try {
+               if (step === "git") {
+                  if (!await saveGitFromWizard()) return;
+                  await loadRepositories(true);
+                  renderRepositoryOptions();
+               } else if (step === "details" && !validateDetails()) {
+                  return;
+               } else if (step === "components" && (appState.wizardMode === "publish" || appState.wizardMode === "edit" || appState.wizardMode === "version") && !appState.selectedComponents.size) {
+                  hostAlert("warn", "Select at least one component to continue.");
+                  return;
+               }
+
+               if (appState.wizardIndex < appState.wizardSteps.length - 1) {
+                  appState.wizardIndex++;
+                  renderWizard();
+                  document.querySelector(".wizard-body").scrollTop = 0;
+                  return;
+               }
+
+               setLoading(button, true, (appState.wizardMode === "publish" || appState.wizardMode === "edit" || appState.wizardMode === "version") ? "Publishing..." : "Saving...");
+               if (appState.wizardMode === "create") await createPackageDraft();
+               else if (appState.wizardMode === "copy") await copyPackageDraft();
+               else if (appState.wizardMode === "edit") await publishEditedPackage();
+               else if (appState.wizardMode === "version") await publishNewVersion();
+               else if (appState.wizardMode === "publish") await publishPackage();
+            } catch (error) {
+               console.error(error);
+               hostAlert("error", error.message || "The operation could not be completed.");
+            } finally {
+               setLoading(button, false, finalActionLabel());
+            }
+         }
+         wizardBack() { if (appState.wizardIndex > 0) { appState.wizardIndex--; renderWizard() } }
+         validateDetails() { const name = getValue("packageName").trim(), version = getValue("packageVersion").trim(); if (!name) { hostAlert("warn", "Product Name is required."); document.getElementById("packageName").focus(); return false } if (!/^[12]$/.test(version)) { hostAlert("warn", "Version must be 1 or 2."); document.getElementById("packageVersion").focus(); return false } return true }
+         detailsPayload() { return { packageName: getValue("packageName").trim(), version: normalizeVersion(getValue("packageVersion").trim()), description: getValue("packageDescription").trim(), repository: "AxiProductVersions", repositoryUrl: "", category: getValue("packageCategory").trim() || "Enterprise", createdBy: getValue("packageCreatedBy").trim() || currentUser() } }
+         async createPackageDraft() {
+            const now = new Date().toISOString();
+            const pkg = normalizeDraft({
+               id: uid(),
+               ...detailsPayload(),
+               createdOn: now,
+               lastUpdatedOn: now,
+               modifiedBy: currentUser(),
+               published: false
+            });
+
+            // AxPut is used only when creating a new Product record.
+            const result = await this.dataProcessor.axPutCreatePackage(pkg);
+            const recordId = result?.recordid || result?.recordId || result?.recordID;
+            if (recordId && String(recordId) !== "0") pkg.id = String(recordId);
+
+            // Keep existing client-side persistence as the UI cache only.
+            await savePackage(pkg);
+            await savePackageComponents(pkg.id, []);
+            closeWizard();
+            await refreshPackageList(false);
+            hostAlert("success", "Product created successfully and is ready to publish.");
+         }
+
+         async copyPackageDraft() { const now = new Date().toISOString(), pkg = normalizeDraft({ id: uid(), ...detailsPayload(), createdBy: currentUser(), createdOn: now, modifiedBy: currentUser(), lastUpdatedOn: now, published: false, publishedOn: null, copiedFrom: appState.copySourceId }), components = [...appState.selectedComponents]; await savePackage(pkg); await savePackageComponents(pkg.id, components); upsertLocalPackage(pkg); closeWizard(); renderPackages(); hostAlert("success", "Product copied successfully and saved as a draft.") }
+         async updatePackageDraft() {
+            return publishEditedPackage();
+         }
+
+         async publishEditedPackage() {
+            if (!appState.selectedComponents.size) {
+               throw new Error("Select at least one component before publishing.");
+            }
+
+            const original = appState.activePackage;
+            const repo = this.getDefaultPublishRepository();
+
+            const payload = normalizeDraft({
+               ...original,
+               ...detailsPayload(),
+               id: uid(),
+               createdBy: original.createdBy,
+               createdOn: new Date().toISOString(),
+               modifiedBy: currentUser(),
+               lastUpdatedOn: new Date().toISOString(),
+               published: true,
+               publishedOn: new Date().toISOString(),
+               copiedFrom: original.id,
+               repository: "AxiProductVersions",
+               repositoryUrl: repo.url || "",
+               branch: "main"
+            });
+
+            await pushToQueue({
+               ...payload,
+               packageName: payload.packageName,
+               packageVersion: payload.version,
+               packageDescription: payload.description,
+               packageCategory: payload.category,
+               packageTags: payload.tags,
+               packageIcon: payload.icon,
+               packageColorClass: payload.colorClass,
+               gitBranch: "main",
+               repository: repo,
+               objects: selectedObjectRows(),
+               previousVersion: original.version,
+               sourcePackageId: original.id
+            });
+
+            await this.dataProcessor.axPutUpdateProductStatus(payload, "InQueue");
+
+            await savePackage(payload);
+            await savePackageComponents(payload.id, [...appState.selectedComponents]);
+            closeWizard();
+            await refreshPackageList(false, true);
+
+            hostAlert(
+               "success",
+               `${payload.packageName} ${displayVersion(payload.version)} was queued successfully.`
+            );
+         }
+
+         async publishNewVersion() {
+            if (!appState.selectedComponents.size) {
+               throw new Error("Select at least one component before publishing.");
+            }
+
+            const original = appState.activePackage;
+            const repo = this.getDefaultPublishRepository();
+
+            const payload = normalizeDraft({
+               ...original,
+               ...detailsPayload(),
+               id: uid(),
+               version: normalizeVersion(getValue("packageVersion")),
+               createdBy: currentUser(),
+               createdOn: new Date().toISOString(),
+               modifiedBy: currentUser(),
+               lastUpdatedOn: new Date().toISOString(),
+               published: true,
+               publishedOn: new Date().toISOString(),
+               copiedFrom: original.id,
+               repository: "AxiProductVersions",
+               repositoryUrl: repo.url || "",
+               branch: "main"
+            });
+
+            // Create the new version in DB through AxPut first.
+            const result = await this.dataProcessor.axPutCreateVersion(payload);
+
+            const recordId =
+               result?.recordid ||
+               result?.recordId ||
+               result?.recordID;
+
+            if (recordId && String(recordId) !== "0") {
+               payload.id = String(recordId);
+            }
+
+            await pushToQueue({
+               ...payload,
+               packageName: payload.packageName,
+               packageVersion: payload.version,
+               packageDescription: payload.description,
+               packageCategory: payload.category,
+               packageTags: payload.tags,
+               packageIcon: payload.icon,
+               packageColorClass: payload.colorClass,
+               gitBranch: "main",
+               repository: repo,
+               objects: selectedObjectRows(),
+               previousVersion: original.version,
+               sourcePackageId: original.id
+            });
+
+            await this.dataProcessor.axPutUpdateProductStatus(payload, "InQueue");
+
+            await savePackageComponents(
+               payload.id,
+               [...appState.selectedComponents]
+            );
+
+            upsertLocalPackage(payload);
+            closeWizard();
+            await refreshPackageList(false, true);
+
+            hostAlert(
+               "success",
+               `${payload.packageName} ${displayVersion(payload.version)} was published successfully.`
+            );
+         }
+         upsertLocalPackage(pkg) { const index = appState.packages.findIndex(item => String(item.id) === String(pkg.id)); if (index >= 0) appState.packages[index] = pkg; else appState.packages.push(pkg) }
+         componentGroupsPresent() { return COMPONENT_GROUPS }
+         initializeComponentFilters() {
+            const sort = document.getElementById("componentSort");
+            if (sort) sort.value = "modifiedOn-desc";
+         }
+         renderComponentFilters() {
+            const groups = componentGroupsPresent();
+            const select = document.getElementById("componentTypeFilters");
+
+            if (!select) return;
+
+            select.innerHTML = [
+               `<option value="all">All</option>`,
+               ...groups.map(group =>
+                  `<option value="${escapeHtml(group)}">${escapeHtml(group)}</option>`
+               )
+            ].join("");
+
+            select.value = appState.componentFilter || "all";
+         } filteredComponents() {
+            const search = getValue("componentSearch").trim().toLowerCase();
+            const selectedOnly = document.getElementById("selectedOnly").checked;
+            const sort = getValue("componentSort") || "modifiedOn-desc";
+            const rows = appState.objects.filter(obj =>
+               (appState.componentFilter === "all" || objectGroup[obj.type] === appState.componentFilter) &&
+               (!selectedOnly || appState.selectedComponents.has(obj.id)) &&
+               [obj.name, obj.code, obj.type].some(value => String(value || "").toLowerCase().includes(search))
+            );
+
+            rows.sort((a, b) => {
+               if (sort === "modifiedOn-desc") return dateValue(b.modifiedOn) - dateValue(a.modifiedOn);
+               if (sort === "modifiedOn-asc") return dateValue(a.modifiedOn) - dateValue(b.modifiedOn);
+               if (sort === "type") return String(a.type || "").localeCompare(String(b.type || ""));
+               if (sort === "code") return String(a.code || "").localeCompare(String(b.code || ""));
+               return String(a.name || "").localeCompare(String(b.name || ""));
+            });
+            return rows;
+         }
+         renderComponents() {
+            renderComponentFilters();
+            const rows = filteredComponents();
+            setText("componentResultCount", `${rows.length} component${rows.length === 1 ? "" : "s"}`);
+            setText("selectedCount", `${appState.selectedComponents.size} selected`);
+
+            const target = document.getElementById("componentRows");
+            if (!target) {
+               console.warn("componentRows container was not found.");
+               return;
+            }
+
+            if (!appState.objects.length) {
+               target.innerHTML = `<div class="empty-state"><div class="empty-icon">DB</div><strong>No components available</strong><span>The axi_packagemetalist datasource did not return records in this context.</span></div>`;
+               return;
+            }
+            if (!rows.length) {
+               target.innerHTML = `<div class="empty-state"><strong>No matching components</strong><span>Clear search or select another type.</span></div>`;
+               return;
+            }
+            target.innerHTML = rows.map(obj => {
+               const selected = appState.selectedComponents.has(obj.id);
+               const modifiedOn = obj.modifiedOn ? formatDate(obj.modifiedOn) : "—";
+               const modifiedBy = obj.modifiedBy || "—";
+               return `<label class="component-row ${selected ? "selected" : ""}"><input class="check" type="checkbox" data-component-id="${escapeHtml(obj.id)}" ${selected ? "checked" : ""}><span><strong>${escapeHtml(obj.name)}</strong><small>${escapeHtml(obj.code)}</small></span><span class="component-modified-by">${escapeHtml(modifiedBy)}</span><span class="component-date">${escapeHtml(modifiedOn)}</span><span class="type-pill">${escapeHtml(obj.type)}</span></label>`;
+            }).join("");
+         }
+         toggleComponent(id, selected) { if (selected) appState.selectedComponents.add(id); else appState.selectedComponents.delete(id); renderComponents(); renderPreview(); queueComponentPersistence() }
+         queueComponentPersistence() { clearTimeout(queueComponentPersistence.timer); if (!appState.activePackage?.id) return; queueComponentPersistence.timer = setTimeout(() => savePackageComponents(appState.activePackage.id, [...appState.selectedComponents]).catch(error => console.error("Component persistence failed:", error)), 250) }
+         selectedObjectRows() { return appState.objects.filter(obj => appState.selectedComponents.has(obj.id)) }
+         renderPreview() {
+            const selected = selectedObjectRows();
+            setText("selectedCount", `${selected.length} selected`);
+            setText("previewCount", `${selected.length} component${selected.length === 1 ? "" : "s"}`);
+
+            const target = document.getElementById("previewContent");
+            if (!target) {
+               // Preview is optional in the component-selection layout.
+               // Do not stop the wizard if the preview container is not rendered.
+               return;
+            }
+
+            if (!selected.length) {
+               target.innerHTML = `<div class="preview-empty"><div class="empty-icon">＋</div><strong>Build your Product</strong>
+Select components using the checkbox.</div>`;
+               return;
+            }
+
+            const groups = COMPONENT_GROUPS
+               .map(group => ({
+                  group,
+                  items: selected.filter(obj => objectGroup[obj.type] === group)
+               }))
+               .filter(item => item.items.length);
+
+            target.innerHTML = groups.map(({ group, items }) =>
+               `<section class="preview-group"><div class="preview-group-title"><span>${escapeHtml(group)}</span><span>${items.length}</span></div>${items.map(obj =>
+                  `<div class="preview-item"><span><strong>${escapeHtml(obj.name)}</strong>
+<small>${escapeHtml(obj.type)}</small></span><button class="remove-item" type="button" data-remove-component="${escapeHtml(obj.id)}" aria-label="Remove ${escapeHtml(obj.name)}">×</button></div>`
+               ).join("")}</section>`
+            ).join("");
+         }
+
+         renderRepositoryOptions(selected) {
+            const repos = [...appState.repositories].sort((a, b) =>
+               String(a.name).trim().toLowerCase() === AXI_EXPORT_CONFIG.defaultRepository.toLowerCase() ? -1 :
+               String(b.name).trim().toLowerCase() === AXI_EXPORT_CONFIG.defaultRepository.toLowerCase() ? 1 : 0
+            );
+            const preferred = repos.find(repo =>
+               String(repo.name).trim().toLowerCase() === AXI_EXPORT_CONFIG.defaultRepository.toLowerCase()
+            );
+            const preferredId = preferred?.id || selected;
+            const options = repos.length
+               ? repos.map(repo =>
+                  `<option value="${escapeHtml(repo.id)}" ${(String(preferredId) === String(repo.id) || selected === repo.url || selected === repo.name) ? "selected" : ""}>${escapeHtml(repo.name)}</option>`
+               ).join("")
+               : `<option value="">${appState.gitConfig ? "No Product repositories discovered" : "Configure Git first"}</option>`;
+
+            ["packageRepository", "publishRepository"].forEach(id => {
+               const el = document.getElementById(id);
+               if (el) el.innerHTML = options;
+            });
+         }
+         findSelectedDetailsRepository() { const id = getValue("packageRepository"); return appState.repositories.find(repo => String(repo.id) === String(id)) || null }
+         async prepareDestination() { const pkg = appState.activePackage, select = document.getElementById("publishRepository"), repo = appState.repositories.find(item => String(item.name).trim().toLowerCase() === AXI_EXPORT_CONFIG.defaultRepository.toLowerCase()) || appState.repositories.find(item => item.url === pkg.repositoryUrl || item.name === pkg.repository); if (repo) { select.value = repo.id; await updateDestination(repo); } else { select.value = ""; setText("reviewName", pkg?.packageName || "—"); setText("reviewVersion", displayVersion(pkg?.version)); setText("reviewRepository", "AxiProductVersions"); setText("reviewComponentCount", appState.selectedComponents.size); } }
+         async handlePublishRepositoryChange(event) { await updateDestination(appState.repositories.find(item => String(item.id) === String(event.target.value))) }
+         async updateDestination(repo) { if (repo) await ensureRepositoryBranches(repo); const branch = preferredBranch(repo); setText("reviewName", appState.activePackage?.packageName || "—"); setText("reviewVersion", displayVersion(appState.activePackage?.version)); setText("reviewRepository", repo?.name || "—"); setText("reviewComponentCount", appState.selectedComponents.size) }
+         getDefaultPublishRepository() {
+            const repo = appState.repositories.find(
+               item => String(item.name || "").trim().toLowerCase() === AXI_EXPORT_CONFIG.defaultRepository.toLowerCase()
+            );
+
+            if (repo) return repo;
+
+            return {
+               id: "AxiProductVersions",
+               name: "AxiProductVersions",
+               url: "",
+               branches: ["main"],
+               defaultBranch: "main"
+            };
+         }
+
+         async publishPackage() {
+            if (!appState.selectedComponents.size) {
+               throw new Error("Select at least one component before publishing.");
+            }
+
+            const original = appState.activePackage;
+            const repo = this.getDefaultPublishRepository();
+
+            const packageInfo = {
+               packageName: original.packageName,
+               packageVersion: original.version,
+               packageDescription: original.description,
+               packageCategory: original.category,
+               packageTags: original.tags,
+               packageIcon: original.icon,
+               packageColorClass: original.colorClass,
+               gitBranch: "main",
+               repository: repo,
+               objects: selectedObjectRows(),
+               previousVersion: original.published ? original.version : "",
+               sourcePackageId: original.id
+            };
+
+            await pushToQueue(packageInfo);
+
+            // Mark the product as queued only after the export request is accepted.
+            await this.dataProcessor.axPutUpdateProductStatus(original, "InQueue");
+
+            const now = new Date().toISOString();
+            const updated = normalizeDraft({
+               ...original,
+               repository: "AxiProductVersions",
+               repositoryUrl: repo.url || "",
+               branch: "main",
+               published: true,
+               publishedOn: now,
+               modifiedBy: currentUser(),
+               lastUpdatedOn: now
+            });
+
+            await savePackageComponents(updated.id, [...appState.selectedComponents]);
+            await savePackage(updated);
+            upsertLocalPackage(updated);
+            closeWizard();
+            await refreshPackageList(false, true);
+
+            hostAlert(
+               "success",
+               `${updated.packageName} ${displayVersion(updated.version)} was queued successfully and marked Published.`
+            );
+         }
+
+         /* Existing export mapping and ARMPushToQueue payload compatibility retained. */
+         buildExportObjects(selected) { return this.dataProcessor.buildExportObjects(selected); }
+         pushToQueue(info) { return this.dataProcessor.pushToQueue(info, appState.gitConfig); }
+         async openGitModal() {
+            try {
+               const storedGit = await this.dataProcessor.loadGitConfig();
+               appState.gitConfig = storedGit;
+               setValue("gitAccount", storedGit?.account || "");
+               setValue("gitToken", storedGit?.token || "");
+               setValue("gitRepo", storedGit?.repo || AXI_EXPORT_CONFIG.defaultRepository);
+               setText("gitLoadedNote", storedGit ? `Git configuration loaded from Axi_GitAuth for ${storedGit.username}.` : `No Git configuration found for ${currentUser()}. Enter the details to create the first-time configuration.`);
+            } catch (error) {
+               console.error("Unable to load Git configuration from Axi_GitAuth:", error);
+               appState.gitConfig = null;
+               setValue("gitAccount", ""); setValue("gitToken", "");
+               setValue("gitRepo", AXI_EXPORT_CONFIG.defaultRepository);
+               setText("gitLoadedNote", "Unable to load Git configuration. Please retry or enter the details.");
+            }
+            setGitStatus("gitModalStatus", "", false);
+            document.getElementById("gitModal").classList.add("open");
+         }
+         closeModal(id) { document.getElementById(id)?.classList.remove("open") }
+         setGitStatus(id, message, error) { const el = document.getElementById(id); el.textContent = message; el.className = `git-status ${message ? "show" : ""} ${error ? "error" : ""}` }
+         async validateAndSaveGit(url, statusId, button) {
+            const owner = extractGitHubOwner(url);
+            if (!owner) {
+               setGitStatus(statusId, "Enter a valid public GitHub URL.", true);
+               return false;
+            }
+
+            setGitStatus(statusId, `Validating GitHub account ${owner}…`, false);
+            if (button) setLoading(button, true, "Validating...");
+            try {
+               await this.dataProcessor.validateGitAccount(owner);
+               const config = {
+                  url: normalizeGitUrl(url, owner),
+                  owner,
+                  provider: "GitHub",
+                  configuredOn: new Date().toISOString(),
+                  configuredBy: currentUser()
+               };
+               await this.dataProcessor.saveGitConfig(config);
+               appState.gitConfig = config;
+               await loadRepositories(true);
+               renderRepositoryOptions();
+               setGitStatus(statusId, appState.repositories.length ? `${appState.repositories.length} repositories found.` : "Git configuration saved. Repository list is controlled by the repository datasource.", false);
+               return true;
+            } catch (error) {
+               setGitStatus(statusId, error.message || "GitHub validation failed.", true);
+               return false;
+            } finally {
+               if (button) setLoading(button, false, "Save Git Configuration");
+            }
+         }
+         async saveGitFromWizard() {
+            const account = getValue("wizardGitAccount").trim();
+            const token = getValue("wizardGitToken").trim();
+            const repo = getValue("wizardGitRepo").trim() || AXI_EXPORT_CONFIG.defaultRepository;
+            return this.validateAndSaveGitCredentials(account, token, "wizardGitStatus", null, repo);
+         }
+         async validateAndSaveGitCredentials(account, token, statusId, button, repoValue) {
+            account = String(account || "").trim();
+            token = String(token || "").trim();
+
+            if (!account || !token) {
+               setGitStatus(statusId, "Git account and token are required.", true);
+               return false;
+            }
+
+            if (!/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38}[A-Za-z0-9])?$/.test(account)) {
+               setGitStatus(statusId, "Enter a valid GitHub account name.", true);
+               return false;
+            }
+
+            setGitStatus(statusId, `Validating GitHub account ${account}…`, false);
+            if (button) setLoading(button, true, "Validating...");
+
+            try {
+               const response = await fetch(`https://api.github.com/users/${encodeURIComponent(account)}`, {
+                  headers: {
+                     Accept: "application/vnd.github+json",
+                     Authorization: `Bearer ${token}`
+                  }
+               });
+
+               if (!response.ok) {
+                  const data = await response.json().catch(() => ({}));
+                  throw new Error(data.message || `GitHub request failed (${response.status})`);
+               }
+
+               const config = {
+                  account, owner: account, token,
+                  username: currentUser(),
+                  repo: String(repoValue || getValue("gitRepo") || AXI_EXPORT_CONFIG.defaultRepository).trim(),
+                  url: String(repoValue || getValue("gitRepo") || AXI_EXPORT_CONFIG.defaultRepository).trim(),
+                  provider: "GitHub",
+                  exists: appState.gitConfig?.exists === true,
+                  configuredOn: new Date().toISOString(),
+                  configuredBy: currentUser()
+               };
+               const savedConfig = await this.dataProcessor.saveGitConfig(config);
+               appState.gitConfig = savedConfig;
+               await loadRepositories(true);
+               renderRepositoryOptions();
+               setGitStatus(statusId, appState.repositories.length ? `${appState.repositories.length} repositories found.` : "Git configuration saved. Repository list is controlled by the repository datasource.", false);
+               return true;
+            } catch (error) {
+               setGitStatus(statusId, error.message || "GitHub validation failed.", true);
+               return false;
+            } finally {
+               if (button) setLoading(button, false, "Save Git Configuration");
+            }
+         }
+         async saveGitFromModal() {
+            const button = document.getElementById("saveGitBtn");
+            if (await this.validateAndSaveGitCredentials(getValue("gitAccount").trim(), getValue("gitToken").trim(), "gitModalStatus", button, getValue("gitRepo").trim())) {
+               setTimeout(() => closeModal("gitModal"), 500);
+               showToast("success", "Git configuration saved successfully.");
+            }
+         }
+      }
+
+      /* UI facade: temporary compatibility wrappers. The UI event handlers stay unchanged while
+         all application behavior is owned by ExportProductManager. */
+      const productManager = new ExportProductManager();
+      productManager.initializeComponentFilters();
+      const loadGitConfig = (...args) => productManager.loadGitConfig(...args);
+      const saveGitConfig = (...args) => productManager.saveGitConfig(...args);
+      const loadPackages = (...args) => productManager.loadPackages(...args);
+      const loadPackage = (...args) => productManager.loadPackage(...args);
+      const savePackage = (...args) => productManager.savePackage(...args);
+      const savePackageComponents = (...args) => productManager.savePackageComponents(...args);
+      const axPutCreatePackage = (...args) => productManager.dataProcessor.axPutCreatePackage(...args);
+      const loadPackageComponents = (...args) => productManager.loadPackageComponents(...args);
+      const deletePackage = (...args) => productManager.deletePackage(...args);
+      const callAxList = (...args) => productManager.callAxList(...args);
+      const getMetaData = (...args) => productManager.getMetaData(...args);
+      const mapObjectType = (...args) => productManager.mapObjectType(...args);
+      const extractGitHubOwner = (...args) => productManager.extractGitHubOwner(...args);
+      const normalizeGitUrl = (...args) => productManager.normalizeGitUrl(...args);
+      const normalizeRepository = (...args) => productManager.normalizeRepository(...args);
+      const githubFetch = (...args) => productManager.githubFetch(...args);
+      const fetchAllPublicRepositories = (...args) => productManager.fetchAllPublicRepositories(...args);
+      const mapWithConcurrency = (...args) => productManager.mapWithConcurrency(...args);
+      const discoverPackageRepository = (...args) => productManager.discoverPackageRepository(...args);
+      const loadRepositories = (...args) => productManager.loadRepositories(...args);
+      const ensureRepositoryBranches = (...args) => productManager.ensureRepositoryBranches(...args);
+      const preferredBranch = (...args) => productManager.preferredBranch(...args);
+      const init = (...args) => productManager.init(...args);
+      const startBackgroundRefresh = (...args) => productManager.startBackgroundRefresh(...args);
+      const refreshPackageList = (...args) => productManager.refreshPackageList(...args);
+      const normalizeDraft = (...args) => productManager.normalizeDraft(...args);
+      const bindEvents = (...args) => productManager.bindEvents(...args);
+      const packageFilters = (...args) => productManager.packageFilters(...args);
+      const renderPackages = (...args) => productManager.renderPackages(...args);
+      const packageRow = (...args) => productManager.packageRow(...args);
+      const handlePackageAction = (...args) => productManager.handlePackageAction(...args);
+      const configureWizard = (...args) => productManager.configureWizard(...args);
+      const openCreateWizard = (...args) => productManager.openCreateWizard(...args);
+      const openEditWizard = (...args) => productManager.openEditWizard(...args);
+      const openNewVersionWizard = (...args) => productManager.openNewVersionWizard(...args);
+      const openCopyWizard = (...args) => productManager.openCopyWizard(...args);
+      const openPublishWizard = (...args) => productManager.openPublishWizard(...args);
+      const closeWizard = (...args) => productManager.closeWizard(...args);
+      const resetDetails = (...args) => productManager.resetDetails(...args);
+      const fillDetails = (...args) => productManager.fillDetails(...args);
+      const restoreComponents = (...args) => productManager.restoreComponents(...args);
+      const renderWizard = (...args) => productManager.renderWizard(...args);
+      const finalActionLabel = (...args) => productManager.finalActionLabel(...args);
+      const wizardNext = (...args) => productManager.wizardNext(...args);
+      const wizardBack = (...args) => productManager.wizardBack(...args);
+      const validateDetails = (...args) => productManager.validateDetails(...args);
+      const detailsPayload = (...args) => productManager.detailsPayload(...args);
+      const createPackageDraft = (...args) => productManager.createPackageDraft(...args);
+      const copyPackageDraft = (...args) => productManager.copyPackageDraft(...args);
+      const updatePackageDraft = (...args) => productManager.updatePackageDraft(...args);
+      const publishEditedPackage = (...args) => productManager.publishEditedPackage(...args);
+      const publishNewVersion = (...args) => productManager.publishNewVersion(...args);
+      const upsertLocalPackage = (...args) => productManager.upsertLocalPackage(...args);
+      const componentGroupsPresent = (...args) => productManager.componentGroupsPresent(...args);
+      const renderComponentFilters = (...args) => productManager.renderComponentFilters(...args);
+      const filteredComponents = (...args) => productManager.filteredComponents(...args);
+      const renderComponents = (...args) => productManager.renderComponents(...args);
+      const toggleComponent = (...args) => productManager.toggleComponent(...args);
+      const queueComponentPersistence = (...args) => productManager.queueComponentPersistence(...args);
+      const selectedObjectRows = (...args) => productManager.selectedObjectRows(...args);
+      const renderPreview = (...args) => productManager.renderPreview(...args);
+      const renderRepositoryOptions = (...args) => productManager.renderRepositoryOptions(...args);
+      const findSelectedDetailsRepository = (...args) => productManager.findSelectedDetailsRepository(...args);
+      const prepareDestination = (...args) => productManager.prepareDestination(...args);
+      const handlePublishRepositoryChange = (...args) => productManager.handlePublishRepositoryChange(...args);
+      const updateDestination = (...args) => productManager.updateDestination(...args);
+      const publishPackage = (...args) => productManager.publishPackage(...args);
+      const buildExportObjects = (...args) => productManager.buildExportObjects(...args);
+      const pushToQueue = (...args) => productManager.pushToQueue(...args);
+      const openGitModal = (...args) => productManager.openGitModal(...args);
+      const closeModal = (...args) => productManager.closeModal(...args);
+      const setGitStatus = (...args) => productManager.setGitStatus(...args);
+      const validateAndSaveGit = (...args) => productManager.validateAndSaveGit(...args);
+      const saveGitFromWizard = (...args) => productManager.saveGitFromWizard(...args);
+      const saveGitFromModal = (...args) => productManager.saveGitFromModal(...args);
+      document.addEventListener("DOMContentLoaded", init);
+   </script>
+
+
+
+
+
+
+
+
+</body></html>

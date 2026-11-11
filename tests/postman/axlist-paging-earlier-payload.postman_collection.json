@@ -1,0 +1,593 @@
+{
+  "info": {
+    "name": "AxList paging and filters (axi_structmetalist, earlier payload)",
+    "description": "Same checks as \"AxList paging and filters (axi_structmetalist)\", sent with the payload of the first AxList\npaging collection: CachePermissions true and only ADS / getallrecordscount / pageno / pagesize (+ filters) in props.\n\nChecks that the AxList API pages and filters the AxiCMD structure list (ADS axi_structmetalist) through\nAxPEG.aspx/GetDataFromAxList, the endpoint behind GetDataFromAxList() in Js/AxInterface.js.\n\nSet the collection variables before running:\n- baseUrl: the app root, e.g. https://host/AxpertWeb (no trailing slash)\n- cookie: the ASP.NET_SessionId cookie of a logged-in session (browser DevTools > Application > Cookies)\n- username / userRoles / userResp: the values the palette sends (window.mainUserName, AxUserRoles, userResp)\n- term: a word that appears in some structure captions (3+ characters)\n- pageSize: rows per page for the paging checks\n\nRun the requests in order: later requests compare against rows saved by earlier ones.\nPaging only works when the ADS SQL carries the --ax_pagination marker, and filters need --ax_ui_filter_withwhere;\nwithout them every row comes back and the size checks fail.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://YOUR-HOST/YOUR-APP"
+    },
+    {
+      "key": "cookie",
+      "value": "ASP.NET_SessionId=PASTE_FROM_BROWSER"
+    },
+    {
+      "key": "username",
+      "value": "admin"
+    },
+    {
+      "key": "userRoles",
+      "value": "default"
+    },
+    {
+      "key": "userResp",
+      "value": "default"
+    },
+    {
+      "key": "term",
+      "value": "user"
+    },
+    {
+      "key": "pageSize",
+      "value": "10"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. All rows (pagesize 0) - baseline",
+      "request": {
+        "method": "POST",
+        "description": "pagesize 0 returns every row; its count is the baseline for the paging checks.",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Cookie",
+            "value": "{{cookie}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/aspx/AxPEG.aspx/GetDataFromAxList",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "aspx",
+            "AxPEG.aspx",
+            "GetDataFromAxList"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"adsNames\": [\n    \"axi_structmetalist\"\n  ],\n  \"refreshCache\": true,\n  \"keyField\": \"\",\n  \"keyValue\": \"\",\n  \"sqlParams\": {\n    \"param1\": \"{{username}}\",\n    \"param2\": \"{{userRoles}}\",\n    \"param3\": \"{{userResp}}\",\n    \"param4\": \"all\",\n    \"param5\": \"all\"\n  },\n  \"props\": {\n    \"ADS\": true,\n    \"CachePermissions\": true,\n    \"getallrecordscount\": false,\n    \"pageno\": 1,\n    \"pagesize\": 0\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const outer = pm.response.json();",
+              "let inner = outer && outer.d !== undefined ? outer.d : outer;",
+              "if (typeof inner === 'string') { try { inner = JSON.parse(inner); } catch (e) { inner = { raw: inner }; } }",
+              "const result = (inner && inner.result) || {};",
+              "const block = (Array.isArray(result.data) && result.data[0]) || {};",
+              "const rows = Array.isArray(block.data) ? block.data : [];",
+              "const keyOf = r => String(r.transid || r.name || r.displaydata || JSON.stringify(r)).toLowerCase();",
+              "console.log(pm.info.requestName + ': ' + rows.length + ' rows');",
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('AxList reports success', () => pm.expect(result.success, JSON.stringify(inner).slice(0, 400)).to.eql(true));",
+              "pm.collectionVariables.set('allCount', String(rows.length));",
+              "pm.collectionVariables.set('allKeys', JSON.stringify(rows.map(keyOf)));",
+              "pm.test('returns rows', () => pm.expect(rows.length).to.be.above(0));",
+              "pm.test('more rows than one page, so paging can be seen', () => pm.expect(rows.length).to.be.above(Number(pm.collectionVariables.get('pageSize'))));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Total count (getallrecordscount)",
+      "request": {
+        "method": "POST",
+        "description": "getallrecordscount true: the response should report the full count while returning one page.",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Cookie",
+            "value": "{{cookie}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/aspx/AxPEG.aspx/GetDataFromAxList",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "aspx",
+            "AxPEG.aspx",
+            "GetDataFromAxList"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"adsNames\": [\n    \"axi_structmetalist\"\n  ],\n  \"refreshCache\": true,\n  \"keyField\": \"\",\n  \"keyValue\": \"\",\n  \"sqlParams\": {\n    \"param1\": \"{{username}}\",\n    \"param2\": \"{{userRoles}}\",\n    \"param3\": \"{{userResp}}\",\n    \"param4\": \"all\",\n    \"param5\": \"all\"\n  },\n  \"props\": {\n    \"ADS\": true,\n    \"CachePermissions\": true,\n    \"getallrecordscount\": true,\n    \"pageno\": 1,\n    \"pagesize\": {{pageSize}}\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const outer = pm.response.json();",
+              "let inner = outer && outer.d !== undefined ? outer.d : outer;",
+              "if (typeof inner === 'string') { try { inner = JSON.parse(inner); } catch (e) { inner = { raw: inner }; } }",
+              "const result = (inner && inner.result) || {};",
+              "const block = (Array.isArray(result.data) && result.data[0]) || {};",
+              "const rows = Array.isArray(block.data) ? block.data : [];",
+              "const keyOf = r => String(r.transid || r.name || r.displaydata || JSON.stringify(r)).toLowerCase();",
+              "console.log(pm.info.requestName + ': ' + rows.length + ' rows');",
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('AxList reports success', () => pm.expect(result.success, JSON.stringify(inner).slice(0, 400)).to.eql(true));",
+              "const all = Number(pm.collectionVariables.get('allCount'));",
+              "const counts = [block.recordcount, block.totalrecords, block.totalcount, block.count, result.recordcount, result.totalrecords, result.totalcount].filter(v => v !== undefined && v !== null && v !== '');",
+              "console.log('count fields: ' + JSON.stringify(counts) + ' | block keys: ' + Object.keys(block).join(',') + ' | result keys: ' + Object.keys(result).join(','));",
+              "pm.test('a total count is reported', () => pm.expect(counts.length, 'no count field found; see the console for the keys').to.be.above(0));",
+              "pm.test('the total count equals the all-rows count', () => pm.expect(Number(counts[0])).to.eql(all));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Page 1",
+      "request": {
+        "method": "POST",
+        "description": "pageno 1, pagesize {{pageSize}}.",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Cookie",
+            "value": "{{cookie}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/aspx/AxPEG.aspx/GetDataFromAxList",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "aspx",
+            "AxPEG.aspx",
+            "GetDataFromAxList"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"adsNames\": [\n    \"axi_structmetalist\"\n  ],\n  \"refreshCache\": true,\n  \"keyField\": \"\",\n  \"keyValue\": \"\",\n  \"sqlParams\": {\n    \"param1\": \"{{username}}\",\n    \"param2\": \"{{userRoles}}\",\n    \"param3\": \"{{userResp}}\",\n    \"param4\": \"all\",\n    \"param5\": \"all\"\n  },\n  \"props\": {\n    \"ADS\": true,\n    \"CachePermissions\": true,\n    \"getallrecordscount\": false,\n    \"pageno\": 1,\n    \"pagesize\": {{pageSize}}\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const outer = pm.response.json();",
+              "let inner = outer && outer.d !== undefined ? outer.d : outer;",
+              "if (typeof inner === 'string') { try { inner = JSON.parse(inner); } catch (e) { inner = { raw: inner }; } }",
+              "const result = (inner && inner.result) || {};",
+              "const block = (Array.isArray(result.data) && result.data[0]) || {};",
+              "const rows = Array.isArray(block.data) ? block.data : [];",
+              "const keyOf = r => String(r.transid || r.name || r.displaydata || JSON.stringify(r)).toLowerCase();",
+              "console.log(pm.info.requestName + ': ' + rows.length + ' rows');",
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('AxList reports success', () => pm.expect(result.success, JSON.stringify(inner).slice(0, 400)).to.eql(true));",
+              "const size = Number(pm.collectionVariables.get('pageSize'));",
+              "const all = Number(pm.collectionVariables.get('allCount'));",
+              "pm.collectionVariables.set('page1Keys', JSON.stringify(rows.map(keyOf)));",
+              "pm.test('returns at most one page (if this fails, the ADS has no --ax_pagination marker)', () => pm.expect(rows.length).to.be.at.most(size));",
+              "pm.test('returns a full page when there are enough rows', () => pm.expect(rows.length).to.eql(Math.min(size, all)));",
+              "pm.test('page 1 rows are rows of the full list', () => { const allKeys = new Set(JSON.parse(pm.collectionVariables.get('allKeys') || '[]')); rows.forEach(r => pm.expect(allKeys.has(keyOf(r)), keyOf(r)).to.eql(true)); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Page 2",
+      "request": {
+        "method": "POST",
+        "description": "pageno 2, pagesize {{pageSize}}: must not repeat any row of page 1.",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Cookie",
+            "value": "{{cookie}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/aspx/AxPEG.aspx/GetDataFromAxList",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "aspx",
+            "AxPEG.aspx",
+            "GetDataFromAxList"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"adsNames\": [\n    \"axi_structmetalist\"\n  ],\n  \"refreshCache\": true,\n  \"keyField\": \"\",\n  \"keyValue\": \"\",\n  \"sqlParams\": {\n    \"param1\": \"{{username}}\",\n    \"param2\": \"{{userRoles}}\",\n    \"param3\": \"{{userResp}}\",\n    \"param4\": \"all\",\n    \"param5\": \"all\"\n  },\n  \"props\": {\n    \"ADS\": true,\n    \"CachePermissions\": true,\n    \"getallrecordscount\": false,\n    \"pageno\": 2,\n    \"pagesize\": {{pageSize}}\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const outer = pm.response.json();",
+              "let inner = outer && outer.d !== undefined ? outer.d : outer;",
+              "if (typeof inner === 'string') { try { inner = JSON.parse(inner); } catch (e) { inner = { raw: inner }; } }",
+              "const result = (inner && inner.result) || {};",
+              "const block = (Array.isArray(result.data) && result.data[0]) || {};",
+              "const rows = Array.isArray(block.data) ? block.data : [];",
+              "const keyOf = r => String(r.transid || r.name || r.displaydata || JSON.stringify(r)).toLowerCase();",
+              "console.log(pm.info.requestName + ': ' + rows.length + ' rows');",
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('AxList reports success', () => pm.expect(result.success, JSON.stringify(inner).slice(0, 400)).to.eql(true));",
+              "const size = Number(pm.collectionVariables.get('pageSize'));",
+              "const all = Number(pm.collectionVariables.get('allCount'));",
+              "const page1 = new Set(JSON.parse(pm.collectionVariables.get('page1Keys') || '[]'));",
+              "pm.test('returns at most one page', () => pm.expect(rows.length).to.be.at.most(size));",
+              "pm.test('returns the expected number of rows for page 2', () => pm.expect(rows.length).to.eql(Math.max(0, Math.min(size, all - size))));",
+              "pm.test('no row of page 1 comes back on page 2', () => rows.forEach(r => pm.expect(page1.has(keyOf(r)), keyOf(r)).to.eql(false)));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Page past the end",
+      "request": {
+        "method": "POST",
+        "description": "A page number past the last page should return no rows.",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Cookie",
+            "value": "{{cookie}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/aspx/AxPEG.aspx/GetDataFromAxList",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "aspx",
+            "AxPEG.aspx",
+            "GetDataFromAxList"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"adsNames\": [\n    \"axi_structmetalist\"\n  ],\n  \"refreshCache\": true,\n  \"keyField\": \"\",\n  \"keyValue\": \"\",\n  \"sqlParams\": {\n    \"param1\": \"{{username}}\",\n    \"param2\": \"{{userRoles}}\",\n    \"param3\": \"{{userResp}}\",\n    \"param4\": \"all\",\n    \"param5\": \"all\"\n  },\n  \"props\": {\n    \"ADS\": true,\n    \"CachePermissions\": true,\n    \"getallrecordscount\": false,\n    \"pageno\": 100000,\n    \"pagesize\": {{pageSize}}\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const outer = pm.response.json();",
+              "let inner = outer && outer.d !== undefined ? outer.d : outer;",
+              "if (typeof inner === 'string') { try { inner = JSON.parse(inner); } catch (e) { inner = { raw: inner }; } }",
+              "const result = (inner && inner.result) || {};",
+              "const block = (Array.isArray(result.data) && result.data[0]) || {};",
+              "const rows = Array.isArray(block.data) ? block.data : [];",
+              "const keyOf = r => String(r.transid || r.name || r.displaydata || JSON.stringify(r)).toLowerCase();",
+              "console.log(pm.info.requestName + ': ' + rows.length + ' rows');",
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('AxList reports success', () => pm.expect(result.success, JSON.stringify(inner).slice(0, 400)).to.eql(true));",
+              "pm.test('returns no rows', () => pm.expect(rows.length).to.eql(0));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Filter, all rows",
+      "request": {
+        "method": "POST",
+        "description": "displaydata CONTAINS {{term}}, pagesize 0: every row contains the term and the list is shorter than the full list.",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Cookie",
+            "value": "{{cookie}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/aspx/AxPEG.aspx/GetDataFromAxList",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "aspx",
+            "AxPEG.aspx",
+            "GetDataFromAxList"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"adsNames\": [\n    \"axi_structmetalist\"\n  ],\n  \"refreshCache\": true,\n  \"keyField\": \"\",\n  \"keyValue\": \"\",\n  \"sqlParams\": {\n    \"param1\": \"{{username}}\",\n    \"param2\": \"{{userRoles}}\",\n    \"param3\": \"{{userResp}}\",\n    \"param4\": \"all\",\n    \"param5\": \"all\"\n  },\n  \"props\": {\n    \"ADS\": true,\n    \"CachePermissions\": true,\n    \"getallrecordscount\": false,\n    \"pageno\": 1,\n    \"pagesize\": 0,\n    \"filters\": [\n      {\n        \"fldname\": \"displaydata\",\n        \"condition\": \"CONTAINS\",\n        \"value\": \"{{term}}\",\n        \"datatype\": \"TEXT\"\n      }\n    ]\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const outer = pm.response.json();",
+              "let inner = outer && outer.d !== undefined ? outer.d : outer;",
+              "if (typeof inner === 'string') { try { inner = JSON.parse(inner); } catch (e) { inner = { raw: inner }; } }",
+              "const result = (inner && inner.result) || {};",
+              "const block = (Array.isArray(result.data) && result.data[0]) || {};",
+              "const rows = Array.isArray(block.data) ? block.data : [];",
+              "const keyOf = r => String(r.transid || r.name || r.displaydata || JSON.stringify(r)).toLowerCase();",
+              "console.log(pm.info.requestName + ': ' + rows.length + ' rows');",
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('AxList reports success', () => pm.expect(result.success, JSON.stringify(inner).slice(0, 400)).to.eql(true));",
+              "const term = pm.collectionVariables.get('term').toLowerCase();",
+              "const all = Number(pm.collectionVariables.get('allCount'));",
+              "pm.collectionVariables.set('filterCount', String(rows.length));",
+              "pm.test('returns rows for the term (pick a term that exists)', () => pm.expect(rows.length).to.be.above(0));",
+              "pm.test('every row contains the term (if this fails, the ADS has no --ax_ui_filter_withwhere marker)', () => rows.forEach(r => pm.expect(String(r.displaydata).toLowerCase()).to.include(term)));",
+              "pm.test('fewer rows than the full list', () => pm.expect(rows.length).to.be.below(all));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Filter + page 1 (size 2)",
+      "request": {
+        "method": "POST",
+        "description": "Filter and paging together: page 1 of the filtered rows, 2 per page.",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Cookie",
+            "value": "{{cookie}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/aspx/AxPEG.aspx/GetDataFromAxList",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "aspx",
+            "AxPEG.aspx",
+            "GetDataFromAxList"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"adsNames\": [\n    \"axi_structmetalist\"\n  ],\n  \"refreshCache\": true,\n  \"keyField\": \"\",\n  \"keyValue\": \"\",\n  \"sqlParams\": {\n    \"param1\": \"{{username}}\",\n    \"param2\": \"{{userRoles}}\",\n    \"param3\": \"{{userResp}}\",\n    \"param4\": \"all\",\n    \"param5\": \"all\"\n  },\n  \"props\": {\n    \"ADS\": true,\n    \"CachePermissions\": true,\n    \"getallrecordscount\": false,\n    \"pageno\": 1,\n    \"pagesize\": 2,\n    \"filters\": [\n      {\n        \"fldname\": \"displaydata\",\n        \"condition\": \"CONTAINS\",\n        \"value\": \"{{term}}\",\n        \"datatype\": \"TEXT\"\n      }\n    ]\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const outer = pm.response.json();",
+              "let inner = outer && outer.d !== undefined ? outer.d : outer;",
+              "if (typeof inner === 'string') { try { inner = JSON.parse(inner); } catch (e) { inner = { raw: inner }; } }",
+              "const result = (inner && inner.result) || {};",
+              "const block = (Array.isArray(result.data) && result.data[0]) || {};",
+              "const rows = Array.isArray(block.data) ? block.data : [];",
+              "const keyOf = r => String(r.transid || r.name || r.displaydata || JSON.stringify(r)).toLowerCase();",
+              "console.log(pm.info.requestName + ': ' + rows.length + ' rows');",
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('AxList reports success', () => pm.expect(result.success, JSON.stringify(inner).slice(0, 400)).to.eql(true));",
+              "const term = pm.collectionVariables.get('term').toLowerCase();",
+              "const filtered = Number(pm.collectionVariables.get('filterCount'));",
+              "pm.collectionVariables.set('filterPage1Keys', JSON.stringify(rows.map(keyOf)));",
+              "pm.test('returns at most 2 rows', () => pm.expect(rows.length).to.be.at.most(2));",
+              "pm.test('returns min(2, filtered count) rows', () => pm.expect(rows.length).to.eql(Math.min(2, filtered)));",
+              "pm.test('every row contains the term', () => rows.forEach(r => pm.expect(String(r.displaydata).toLowerCase()).to.include(term)));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Filter + page 2 (size 2)",
+      "request": {
+        "method": "POST",
+        "description": "Page 2 of the filtered rows: matching rows only, none repeated from filtered page 1.",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Cookie",
+            "value": "{{cookie}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/aspx/AxPEG.aspx/GetDataFromAxList",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "aspx",
+            "AxPEG.aspx",
+            "GetDataFromAxList"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"adsNames\": [\n    \"axi_structmetalist\"\n  ],\n  \"refreshCache\": true,\n  \"keyField\": \"\",\n  \"keyValue\": \"\",\n  \"sqlParams\": {\n    \"param1\": \"{{username}}\",\n    \"param2\": \"{{userRoles}}\",\n    \"param3\": \"{{userResp}}\",\n    \"param4\": \"all\",\n    \"param5\": \"all\"\n  },\n  \"props\": {\n    \"ADS\": true,\n    \"CachePermissions\": true,\n    \"getallrecordscount\": false,\n    \"pageno\": 2,\n    \"pagesize\": 2,\n    \"filters\": [\n      {\n        \"fldname\": \"displaydata\",\n        \"condition\": \"CONTAINS\",\n        \"value\": \"{{term}}\",\n        \"datatype\": \"TEXT\"\n      }\n    ]\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const outer = pm.response.json();",
+              "let inner = outer && outer.d !== undefined ? outer.d : outer;",
+              "if (typeof inner === 'string') { try { inner = JSON.parse(inner); } catch (e) { inner = { raw: inner }; } }",
+              "const result = (inner && inner.result) || {};",
+              "const block = (Array.isArray(result.data) && result.data[0]) || {};",
+              "const rows = Array.isArray(block.data) ? block.data : [];",
+              "const keyOf = r => String(r.transid || r.name || r.displaydata || JSON.stringify(r)).toLowerCase();",
+              "console.log(pm.info.requestName + ': ' + rows.length + ' rows');",
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('AxList reports success', () => pm.expect(result.success, JSON.stringify(inner).slice(0, 400)).to.eql(true));",
+              "const term = pm.collectionVariables.get('term').toLowerCase();",
+              "const filtered = Number(pm.collectionVariables.get('filterCount'));",
+              "const page1 = new Set(JSON.parse(pm.collectionVariables.get('filterPage1Keys') || '[]'));",
+              "pm.test('returns the expected number of rows for filtered page 2', () => pm.expect(rows.length).to.eql(Math.max(0, Math.min(2, filtered - 2))));",
+              "pm.test('every row contains the term', () => rows.forEach(r => pm.expect(String(r.displaydata).toLowerCase()).to.include(term)));",
+              "pm.test('no row of filtered page 1 comes back', () => rows.forEach(r => pm.expect(page1.has(keyOf(r)), keyOf(r)).to.eql(false)));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. Filter with no match",
+      "request": {
+        "method": "POST",
+        "description": "A term that matches nothing returns no rows.",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Cookie",
+            "value": "{{cookie}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/aspx/AxPEG.aspx/GetDataFromAxList",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "aspx",
+            "AxPEG.aspx",
+            "GetDataFromAxList"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"adsNames\": [\n    \"axi_structmetalist\"\n  ],\n  \"refreshCache\": true,\n  \"keyField\": \"\",\n  \"keyValue\": \"\",\n  \"sqlParams\": {\n    \"param1\": \"{{username}}\",\n    \"param2\": \"{{userRoles}}\",\n    \"param3\": \"{{userResp}}\",\n    \"param4\": \"all\",\n    \"param5\": \"all\"\n  },\n  \"props\": {\n    \"ADS\": true,\n    \"CachePermissions\": true,\n    \"getallrecordscount\": false,\n    \"pageno\": 1,\n    \"pagesize\": {{pageSize}},\n    \"filters\": [\n      {\n        \"fldname\": \"displaydata\",\n        \"condition\": \"CONTAINS\",\n        \"value\": \"zz_no_such_structure_zz\",\n        \"datatype\": \"TEXT\"\n      }\n    ]\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const outer = pm.response.json();",
+              "let inner = outer && outer.d !== undefined ? outer.d : outer;",
+              "if (typeof inner === 'string') { try { inner = JSON.parse(inner); } catch (e) { inner = { raw: inner }; } }",
+              "const result = (inner && inner.result) || {};",
+              "const block = (Array.isArray(result.data) && result.data[0]) || {};",
+              "const rows = Array.isArray(block.data) ? block.data : [];",
+              "const keyOf = r => String(r.transid || r.name || r.displaydata || JSON.stringify(r)).toLowerCase();",
+              "console.log(pm.info.requestName + ': ' + rows.length + ' rows');",
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+              "pm.test('AxList reports success', () => pm.expect(result.success, JSON.stringify(inner).slice(0, 400)).to.eql(true));",
+              "pm.test('returns no rows', () => pm.expect(rows.length).to.eql(0));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

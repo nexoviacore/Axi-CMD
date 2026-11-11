@@ -1,2 +1,0 @@
-* TKT-1046 - AXI CMD Line-Selected Axpert Developer Options are not reflected in Developer Studio,AXI CMD Line for schemas with AXI CMD Line
-* TSK-0520 - Introduce axi_command_config for Dynamic Command Line Navigation

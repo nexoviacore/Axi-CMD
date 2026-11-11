@@ -1,0 +1,32 @@
+---
+title: Decisions (ADR)
+description: Architecture decisions for AxiCMD and what replaced them.
+---
+
+The full records are in `docs/adr/`. Read them before changing how data is loaded.
+
+## 0001. Large dataset autocomplete
+
+**Decision (original):** support tables with 50,000 or more records by adding server-side paging and search to the SQL function `fn_axi_getstructs_obj` (three optional parameters `psearchterm`, `ppageno`, `ppagesize` mapped to `:param11` to `:param13`) with a debounced client query.
+
+**Why:** fetching every record on `<form> edit` caused a large payload, high database load and browser freezes.
+
+**What stayed:**
+
+- An initial page of 100 records, then a server search from 3 typed characters, with a debounce.
+- On-demand lookup of a typed or pasted record that is not in the loaded page.
+
+<Callout type="warn" title="Superseded in part">
+  Paging and search are no longer done inside the SQL function. The AxList API applies them through `props.pageno`,
+  `props.pagesize` and a `displaydata CONTAINS` filter, using marker comments in the ADS SQL. The function takes ten
+  parameters and no paging parameters. See [Data loading](/docs/data-loading). The ADR file itself has not been updated
+  and should be amended.
+</Callout>
+
+## Later changes worth recording
+
+| Change | Summary |
+| --- | --- |
+| Paging by AxList | Paged sources are listed in `PAGED_SOURCES`. No paging inside the SQL. |
+| Direct AxList route | The palette calls the ARM AxList API with the ARM session id and token. The `AxPEG.aspx` fallback is switched off. |
+| View filter in the database | The Entity API route (`GetEntityListPageLoadData`) was replaced by the `axvarcore` filter inside `fn_axi_getstructs_obj`. The old code is commented out. See [View filters](/docs/view-filters). |

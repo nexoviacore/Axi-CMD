@@ -1,0 +1,6 @@
+localResources:
+  collections:
+    - ../__bkp/AxpertPlugins/Axi/PluginAPIs/AxiAi/AxiAI-Chat-API.postman_collection.json
+    - ../__bkp/AxpertPlugins/Axi/PluginAPIs/AxiAi/publish/AxiAI-Chat-API.postman_collection.json
+workspace:
+  id: ''

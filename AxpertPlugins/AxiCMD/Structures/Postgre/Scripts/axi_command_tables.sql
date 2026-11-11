@@ -2,9 +2,10 @@
 DROP TABLE axi_commands
 >>
 
-<<
-DROP TABLE axi_command_prompts
->>
+-- axi_command_prompts is never dropped: it holds the Custom Option names added from the AxiCMD Config page.
+-- On a re-install its CREATE TABLE and the shipped INSERTs fail with "already exists" / duplicate key, which is expected.
+-- So a change to a shipped prompt row in a later release does not reach existing databases through its INSERT: add an UPDATE that keeps
+-- the Custom Option names already in the list.
 
 <<
 CREATE TABLE axi_commands (
@@ -22,14 +23,22 @@ CREATE TABLE axi_command_prompts (
 	cmdtoken int4 NULL,
 	wordpos int4 NULL,
 	prompt varchar(200) NULL,
-	promptsource varchar(500) NULL,
+	promptsource varchar(4000) NULL,
 	promptparams varchar(100) NULL,
-	promptvalues varchar(500) NULL,
+	promptvalues varchar(4000) NULL,
 	props varchar(100) NULL,
 	extraparams varchar(1000) NULL,
 	requesturl varchar(2000) NULL,
 	CONSTRAINT axi_command_prompts_pkey PRIMARY KEY (id)
 )
+>>
+
+<<
+ALTER TABLE axi_command_prompts ALTER COLUMN promptsource TYPE varchar(4000)
+>>
+
+<<
+ALTER TABLE axi_command_prompts ALTER COLUMN promptvalues TYPE varchar(4000)
 >>
 
 <<
@@ -152,13 +161,13 @@ VALUES('8faae09b-af52-4be8-b97c-de72815276f4'::uuid, 3, 4, 'object name', 'axi_g
 <<
 INSERT INTO axi_command_prompts
 (id, cmdtoken, wordpos, prompt, promptsource, promptparams, promptvalues, props, extraparams, requesturl)
-VALUES('10655119-ba93-42e8-8aef-0aefccae5a80'::uuid, 4, 2, 'object type', '', NULL, 'PEG,Form Notification,Scheduled Notification,Peg Form Notification,Rule,KeyField,User,User Listing,User Permission Setup,User Permissions,User Activation,User Group,Role,Role Listing,Role Permissions,Actor,Actor Listing,Publish Axpert API,Publish Config Studio,Card,Responsibility,Responsibility Listing,Dimension,Dimension Listing, Application Properties,Settings,Smart View Attributes,Smart View Listing', NULL, NULL, NULL)
+VALUES('10655119-ba93-42e8-8aef-0aefccae5a80'::uuid, 4, 2, 'object type', '', NULL, 'PEG,Form Notification,Scheduled Notification,Peg Form Notification,Rule,KeyField,User,User Listing,User Permission Setup,User Permissions,User Activation,User Group,Role,Role Listing,Role Permissions,Actor,Actor Listing,Publish Axpert API,Publish Config Studio,Card,Responsibility,Responsibility Listing,Dimension,Dimension Listing, Application Properties,Settings,Smart View Attributes,Smart View Listing,Trace On,Trace Off,Trace Files', NULL, NULL, NULL)
 >>
 
 <<
 INSERT INTO axi_command_prompts
 (id, cmdtoken, wordpos, prompt, promptsource, promptparams, promptvalues, props, extraparams, requesturl)
-VALUES('0f99d918-0caa-4523-9260-f18b5bd162bf'::uuid, 4, 3, 'object name', 'Axi_PegList,Axi_FormNotifyList,Axi_ScheduleNotifyList,Axi_PEGNotifyList,Axi_RuleNamesList,axi_structmetalist,Axi_Dummy,Axi_Dummy,axi_userlist,axi_userlist,axi_useractivation,axi_usergrouplist,Axi_Dummy,Axi_Dummy,axi_rolelist,axi_actorlist,Axi_Dummy,axi_publishapi,Axi_ServernameList,axi_cardlist,axi_resposibilitylist,Axi_Dummy,axi_dimensionlist,Axi_Dummy,Axi_Dummy,Axi_Dummy,axi_smartviewlist,Axi_Dummy', NULL, '', NULL, ':username,:userroles,:userresp,:mode,:structtype', NULL)
+VALUES('0f99d918-0caa-4523-9260-f18b5bd162bf'::uuid, 4, 3, 'object name', 'Axi_PegList,Axi_FormNotifyList,Axi_ScheduleNotifyList,Axi_PEGNotifyList,Axi_RuleNamesList,axi_structmetalist,Axi_Dummy,Axi_Dummy,axi_userlist,axi_userlist,axi_useractivation,axi_usergrouplist,Axi_Dummy,Axi_Dummy,axi_rolelist,axi_actorlist,Axi_Dummy,axi_publishapi,Axi_ServernameList,axi_cardlist,axi_resposibilitylist,Axi_Dummy,axi_dimensionlist,Axi_Dummy,Axi_Dummy,Axi_Dummy,axi_smartviewlist,Axi_Dummy,Axi_Dummy,Axi_Dummy,Axi_Dummy', NULL, '', NULL, ':username,:userroles,:userresp,:mode,:structtype', NULL)
 >>
 
 <<
@@ -197,3 +206,48 @@ INSERT INTO axi_command_prompts
 VALUES('8fbbe05b-af25-4be7-b97c-de71825267f6'::uuid, 8, 2, 'field name', 'Axi_SetFieldList', NULL, NULL, NULL, ':transid', NULL)
 >>
 
+
+-- Configure: Product, Plugin and ChangeRequest options (account/repo settings). Appended to the existing lists so Custom Option names are kept.
+-- old code: the sources were guarded on ChangeRequest not being in the names yet, so once the names got it first the sources never caught up
+-- (34 names, 31 sources: the AxiCMD Config page then fails with HTTP 409 "option and source lists ... out of step")
+-- -- Run twice it changes nothing (guarded on ChangeRequest already being in the wordpos 2 list). The wordpos 3 sources go first, because its
+-- -- guard reads the wordpos 2 row, which the next statement changes. Both lists stay index-aligned: 3 options on one side, 3 Axi_Dummy on the other.
+-- <<
+-- UPDATE axi_command_prompts SET promptsource = RTRIM(promptsource, ',') || ',Axi_Dummy,Axi_Dummy,Axi_Dummy' WHERE cmdtoken = 4 AND wordpos = 3 AND EXISTS (SELECT 1 FROM axi_command_prompts p2 WHERE p2.cmdtoken = 4 AND p2.wordpos = 2 AND p2.promptvalues NOT LIKE '%ChangeRequest%')
+-- >>
+
+-- new code: the names are added first (guarded on ChangeRequest, so a re-run changes nothing). The next statement then pads the source list
+-- with Axi_Dummy until it has as many entries as the names, which also repairs a database whose sources are already short.
+<<
+UPDATE axi_command_prompts SET promptvalues = RTRIM(promptvalues, ',') || ',Product,Plugin,ChangeRequest' WHERE cmdtoken = 4 AND wordpos = 2 AND promptvalues NOT LIKE '%ChangeRequest%'
+>>
+
+<<
+UPDATE axi_command_prompts s SET promptsource = RTRIM(s.promptsource, ', ') || repeat(',Axi_Dummy', n.cnt - array_length(string_to_array(RTRIM(s.promptsource, ', '), ','), 1)) FROM (SELECT array_length(string_to_array(RTRIM(promptvalues, ', '), ','), 1) AS cnt FROM axi_command_prompts WHERE cmdtoken = 4 AND wordpos = 2) n WHERE s.cmdtoken = 4 AND s.wordpos = 3 AND n.cnt > array_length(string_to_array(RTRIM(s.promptsource, ', '), ','), 1)
+>>
+
+-- Install: `install <product|plugin|changerequest> <directory> [version]` (build access only). Rows are added only when absent, so a re-run changes nothing.
+-- axi_git_directories and axi_git_versions are NOT axdirectsql rows: the palette resolves them from the AxiGit listdirectories API.
+<<
+INSERT INTO axi_commands
+(cmdtoken, command_group, command, active)
+SELECT 10, 'Install', '', 'T' WHERE NOT EXISTS (SELECT 1 FROM axi_commands WHERE cmdtoken = 10)
+>>
+
+<<
+INSERT INTO axi_command_prompts
+(id, cmdtoken, wordpos, prompt, promptsource, promptparams, promptvalues, props, extraparams, requesturl)
+SELECT '6474ef01-1554-4dd7-be1b-c41c8cdee0f4'::uuid, 10, 2, 'object type', NULL, NULL, 'Product,Plugin,ChangeRequest', NULL, NULL, NULL WHERE NOT EXISTS (SELECT 1 FROM axi_command_prompts WHERE cmdtoken = 10 AND wordpos = 2)
+>>
+
+<<
+INSERT INTO axi_command_prompts
+(id, cmdtoken, wordpos, prompt, promptsource, promptparams, promptvalues, props, extraparams, requesturl)
+SELECT 'eb7dce54-c332-404c-984d-c37aef8fb1eb'::uuid, 10, 3, 'directory', 'axi_git_directories', NULL, NULL, NULL, NULL, NULL WHERE NOT EXISTS (SELECT 1 FROM axi_command_prompts WHERE cmdtoken = 10 AND wordpos = 3)
+>>
+
+<<
+INSERT INTO axi_command_prompts
+(id, cmdtoken, wordpos, prompt, promptsource, promptparams, promptvalues, props, extraparams, requesturl)
+SELECT 'b3b2fea1-e894-496a-8f68-37fdcd76dde8'::uuid, 10, 4, 'version', 'axi_git_versions', NULL, NULL, NULL, NULL, NULL WHERE NOT EXISTS (SELECT 1 FROM axi_command_prompts WHERE cmdtoken = 10 AND wordpos = 4)
+>>

@@ -398,7 +398,7 @@ class EntityForm {
     }
 
     openNewTstruct() {
-        _entityCommon.loadHyperLink(`../aspx/tstruct.aspx?transid=${this.entityTransId}&dummyload=false`)
+        _entityCommon.loadHyperLink(`../aspx/tstruct.aspx?transid=${this.entityTransId}&isDupTab=${callParentNew('isDuplicateTab')}&dummyload=false`)
         return true;        
     }
 
@@ -409,18 +409,18 @@ class EntityForm {
             params = `act=open&${_this.subEntityMapping[transId]?.["mapfield"]}=${_this.subEntityMapping[transId]?.["mapsrcdata"]}`;
         }       
 
-        _entityCommon.loadHyperLink(`../aspx/tstruct.aspx?transid=${transId}&${params}&dummyload=false`)
+        _entityCommon.loadHyperLink(`../aspx/tstruct.aspx?transid=${transId}&${params}&isDupTab=${callParentNew('isDuplicateTab')}&dummyload=false`)
         return true;
 
     }
 
     editEntity() {
-        _entityCommon.loadHyperLink(`../aspx/tstruct.aspx?transid=${this.entityTransId}&act=load&recordid=${this.recordId}&dummyload=false`)
+        _entityCommon.loadHyperLink(`../aspx/tstruct.aspx?transid=${this.entityTransId}&act=load&recordid=${this.recordId}&isDupTab=${callParentNew('isDuplicateTab')}&dummyload=false`)
         return true;
     }
 
     editSubEntity(entityTransId, recordId) {
-        _entityCommon.loadHyperLink(`../aspx/tstruct.aspx?transid=${entityTransId}&act=load&recordid=${recordId}&dummyload=false`);
+        _entityCommon.loadHyperLink(`../aspx/tstruct.aspx?transid=${entityTransId}&act=load&recordid=${recordId}&isDupTab=${callParentNew('isDuplicateTab')}&dummyload=false`);
         return true;
     }
 
@@ -1376,10 +1376,12 @@ class EntityForm {
                         let cellContent = '';
 
                         if (field.customdatatype === 'Currency') {
-                            cellContent = _entityCommon.inValid(fieldValue) ? "--" : formmatingtoillions(fieldValue);
+                            cellContent = _entityCommon.inValid(fieldValue) ? "--" : formmatingtoillions(fieldValue, field);
+                            cellContent = this.applyFldMask(field.fname, cellContent);
                         } else if (field.customdatatype === 'Numeric') {
                             // For numeric values, you can add formatting if needed
                             cellContent = _entityCommon.inValid(fieldValue) ? "--" : fieldValue;
+                            cellContent = this.applyFldMask(field.fname, cellContent);
                         } else if (field.fname.startsWith("axpfile_")) {
                             const axpfilepathUploadObject = _entityForm.entityFormJson.data.find(i => i.n === field.fname.replace("axpfile_", "axpfilepath_"));
                             var pathVal = axpfilepathUploadObject ? axpfilepathUploadObject.v : "";
@@ -1394,6 +1396,7 @@ class EntityForm {
                             item["v"] = ReverseCheckSpecialChars(fieldValue);
                             item["filepath"] = pathVal;
                             cellContent = this.createAxpFileAttachmentHTML(item, index, field.fname);
+                            cellContent = this.applyFldMask(field.fname, cellContent);
                         }
                         else if (field.fname.startsWith("dc") && field.fname.endsWith("_image")) {
                             var item = {};
@@ -1401,6 +1404,7 @@ class EntityForm {
                             cellContent = this.createDCAttachmentHTML(item, index, "");
                         } else {
                             cellContent = ReverseCheckSpecialChars(fieldValue);
+                            cellContent = this.applyFldMask(field.fname, cellContent);
                         }
 
                         // Determine if the cell should be right aligned
@@ -1486,6 +1490,57 @@ class EntityForm {
         });
         return html;
     }
+    // Returns the masked value for display; MaskCharacter/RevMaskCharacter come from helper.js
+    applyFldMask(fieldName, fldVal) {
+        let permMask = '';
+        let fldMask;
+        if (tstPermissions) {
+            permMask = JSON.parse(tstPermissions);
+            permMask = permMask.result?.MaskedFields;
+        }
+        if (permMask)
+            fldMask = permMask.split(',').map(x => x.split('=')).find(x => x[0].trim().toLowerCase() == fieldName.toLowerCase() && x[1] !== undefined);
+        if (permMask && fldMask) {
+            if (fldVal === "" || fldVal === null || typeof fldVal === "undefined")
+                return fldVal;
+            const format = String(fldMask[1]).trim();
+            const chars = [...format];
+            // Digits other than 9 make the format invalid.
+            if (chars.some(ch => /\d/.test(ch) && ch !== "9"))
+                return fldVal;
+            const visibleCount = chars.filter(ch => ch === "9").length;
+            const maskSymbol = [...chars].reverse().find(ch => ch !== "9");
+            // A format containing only 9s has no mask symbol.
+            if (!maskSymbol)
+                return fldVal;
+            return [...String(fldVal)]
+                .map((ch, i) => i < visibleCount ? ch : maskSymbol)
+                .join("");
+        } else {
+            if (typeof FldMaskType === "undefined")
+                return fldVal;
+            let fldInd = GetFieldIndex(fieldName);
+            let maskType = FldMaskType[fldInd];
+            if (maskType != "Show few characters" && maskType != "Mask all characters")
+                return fldVal;
+
+            let maskDtls = FldMaskDetails[fldInd].split('♦');
+            let maskVal = fldVal;
+            if (maskVal === "" || maskVal == 0)
+                return fldVal;
+
+            if (maskType == "Show few characters") {
+                if (maskDtls[0] != "" && maskDtls[0] != 0)
+                    maskVal = MaskCharacter(maskVal.toString(), maskDtls[2], maskVal.toString().length - maskDtls[0]);
+                if (maskDtls[1] != "" && maskDtls[1] != 0)
+                    maskVal = RevMaskCharacter(maskVal.toString(), maskDtls[2], maskDtls[1]);
+            } else {
+                maskVal = MaskCharacter(maskVal.toString(), maskDtls[2], 0);
+            }
+            return maskVal;
+        }
+    }
+
     nongridDcHTML(fldjson, index, dcNo) {
         
         var fldName = fldjson.n;
@@ -1497,6 +1552,7 @@ class EntityForm {
         let fieldType = fldjson.t.toUpperCase();
         let fieldId = getFieldId(fldName, dcNo, false, fldjson.r)
         UpdateAllFieldValues(fieldId, fldVal);
+        fldVal = this.applyFldMask(fldName, fldVal);
         // Determine align-right class if customdatatype is Numeric or Currency
         let alignClass = "";
         if (this.flds && this.flds[fldName] && 
@@ -1558,7 +1614,7 @@ class EntityForm {
                             </div>`;
             } else {
                 if (this.flds[fldName].customdatatype === "Currency") {
-                    fldVal = _entityCommon.inValid(fldVal) ? "--" : formmatingtoillions(fldVal);                    
+                    fldVal = _entityCommon.inValid(fldVal) ? "--" : formmatingtoillions(fldVal, this.flds[fldName]);                    
                 }
                 componentHtml = `<div class="inputcontent" readonly>${fldVal}</div>`;
                 comphtml = `<div class="${colclassname} col-sm-12${alignClass}" data-type="${fieldType}" data-name="${fldName}" data-ctype="${this.flds[fldName].customdatatype}" id="{{fieldid}}"> 
@@ -2417,7 +2473,7 @@ class EntityForm {
 
                     // Apply formatting based on customdatatype
                     if (isCurrency) {
-                        cellValue = _entityCommon.inValid(cellValue) ? "--" : formmatingtoillions(cellValue);
+                        cellValue = _entityCommon.inValid(cellValue) ? "--" : formmatingtoillions(cellValue, fieldMeta);
                     } else if (isDate) {
                         cellValue = formatDateString(cellValue);
                     }
@@ -3171,6 +3227,7 @@ function generateHTMLBasedOnDataType(fld, rowData) {
                                             </div>`;
             break;
         case 'Currency':
+            fldValue = formmatingtoillions(fldValue, fld);
             html = `<div class=" Data-fields-items Department-field" data-toggle="tooltip" data-placement="top" title="${fCaption}" data-name="${fCaption.toLowerCase().replaceAll("*", "").replaceAll(" ", "")}">
                                                 <span class="material-icons material-icons-style material-icons-2 ">payments</span><span class="txt-bold Data-field-value">${fldValue}</span>
                                             </div>`;
@@ -3270,6 +3327,10 @@ function generateHTMLBasedForOtherData(fld, rowData) {
         return '';
 
     fldValue = fldValue?.toString().replace("T00:00:00", "");
+    if (fldtype === "Currency") {
+        fldValue = formmatingtoillions(fldValue, fld);
+    }
+
     let html = `<div class="" data-toggle="tooltip" data-placement="top" title="${fCaption}" data-name="${fCaption.toLowerCase().replaceAll("*", "").replaceAll(" ", "")}">
                 <span class="txt-bold Data-field-value">${fldValue}</span>
             </div>,&nbsp;`;
@@ -3650,109 +3711,140 @@ function searchFields() {
 }
 
 
-function formmatingtoillions(amount) {
-    let isMillions = ((Object.values(window.top.allGloblVars.globalVars)
+function formmatingtoillions(amount, fieldMeta) {
+    return formatCurrencyAmount(amount, fieldMeta, shouldUseMillionGrouping());
+}
+
+function shouldUseMillionGrouping() {
+    return ((Object.values(window.top.allGloblVars.globalVars)
         .map((gv) => gv)
         .filter((gv) => gv["millions"])).length !== 0 &&
         (Object.values(window.top.allGloblVars.globalVars)
         .map((gv) => gv)
         .filter((gv) => gv["millions"])[0].millions === "T")) || false;
-
-    if (isMillions) {
-        return InsertCommas(amount); 
-    } else {
-        return formatIndianNumber(amount); 
-    }
 }
 
-function InsertCommas(amount) {
-    var i = parseFloat(amount);
-    if (isNaN(i)) { i = 0.00; }
-    var minus = '';
-    if (i < 0) { minus = '-'; }
-    i = Math.abs(i);
-    i = parseInt((i + .005) * 100);
-    i = i / 100;
-    s = new String(i);
-    if (s.indexOf('.') < 0) { s += '.00'; }
-    if (s.indexOf('.') === (s.length - 2)) { s += '0'; }
-    s = minus + s;
-    var formattedamt = CommaFormatted(s);
-    return formattedamt;
+function formatCurrencyAmount(amount, fieldMeta, useMillionGrouping) {
+    const normalized = normalizeCurrencyValue(amount);
+    if (!normalized) return '';
+
+    const decimalPlaces = resolveCurrencyDecimalPlaces(fieldMeta, normalized.fractionPart);
+    let { integerPart, fractionPart, isNegative, numericValue } = normalized;
+
+    if (decimalPlaces !== fractionPart.length) {
+        const fixedValue = numericValue.toFixed(decimalPlaces);
+        const [fixedIntegerPart, fixedFractionPart = ""] = fixedValue.split(".");
+        integerPart = fixedIntegerPart.replace("-", "");
+        fractionPart = fixedFractionPart;
+        isNegative = fixedValue.startsWith("-");
+    }
+
+    const groupedInteger = useMillionGrouping
+        ? groupByThousands(integerPart)
+        : groupByIndianDigits(integerPart);
+
+    return `${isNegative ? "-" : ""}${groupedInteger}${fractionPart ? `.${fractionPart}` : ""}`;
+}
+
+function normalizeCurrencyValue(amount) {
+    if (amount === null || typeof amount === "undefined") return null;
+
+    const rawValue = amount.toString().trim().replace(/,/g, "");
+    if (rawValue === "" || !/^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(rawValue)) return null;
+
+    const isNegative = rawValue.startsWith("-");
+    const unsignedValue = rawValue.replace(/^[+-]/, "");
+    const [integerDigits = "0", fractionDigits = ""] = unsignedValue.split(".");
+    const integerPart = integerDigits.replace(/^0+(?=\d)/, "") || "0";
+    const numericValue = Number(`${isNegative ? "-" : ""}${integerPart}${fractionDigits ? `.${fractionDigits}` : ""}`);
+
+    if (!Number.isFinite(numericValue)) return null;
+
+    return {
+        integerPart,
+        fractionPart: fractionDigits,
+        isNegative,
+        numericValue
+    };
+}
+
+function resolveCurrencyDecimalPlaces(fieldMeta, fractionPart) {
+    const explicitDecimalPlaces = extractCurrencyDecimalPlaces(fieldMeta);
+    if (explicitDecimalPlaces !== null) {
+        return explicitDecimalPlaces;
+    }
+
+    return fractionPart.length;
+}
+
+function extractCurrencyDecimalPlaces(fieldMeta) {
+    if (!fieldMeta) return null;
+
+    const metadataKeys = [
+        "decimal",
+        "decimals",
+        "decimalplaces",
+        "decimaldigits",
+        "noofdecimals",
+        "numdecimals",
+        "fdecimal",
+        "flddecimal"
+    ];
+
+    for (const key of metadataKeys) {
+        const parsedValue = parseDecimalCount(fieldMeta[key]);
+        if (parsedValue !== null) {
+            return parsedValue;
+        }
+    }
+
+    return extractDecimalPlacesFromProps(fieldMeta.props);
+}
+
+function parseDecimalCount(value) {
+    if (value === null || typeof value === "undefined" || value === "") return null;
+
+    const parsedValue = parseInt(value, 10);
+    return Number.isFinite(parsedValue) && parsedValue >= 0 ? parsedValue : null;
+}
+
+function extractDecimalPlacesFromProps(props) {
+    if (!props) return null;
+
+    const propString = typeof props === "string" ? props : JSON.stringify(props);
+    const decimalMatch = propString.match(/(?:decimalplaces|decimals|decimaldigits|noofdecimals|numdecimals|fdecimal|flddecimal)[=:\s~"]+(\d+)/i);
+
+    return decimalMatch ? parseDecimalCount(decimalMatch[1]) : null;
+}
+
+function InsertCommas(amount, fieldMeta) {
+    return formatCurrencyAmount(amount, fieldMeta, true);
 }
 
 function CommaFormatted(amount) {
-    var delimiter = ","; 
-    var a = "";
-    if (amount.toString().indexOf(".") === -1)
-        amount = amount + ".";
+    const normalized = normalizeCurrencyValue(amount);
+    if (!normalized) return '';
 
-    a = amount.split('.');
-    var d = "";
-    if (a.length > 1)
-        d = a[1].toString();
-    var i = parseInt(a[0]);
-    if (isNaN(i)) { return ''; }
-    var minus = '';
-    if (amount < 0) { minus = '-'; }
-    i = Math.abs(i);
-    var n = new String(i);
-    var a = [];
-    try {
-        if (Parameters.length > 0 && Parameters.indexOf("millions~T") > -1) {
-            while (n.length > 3) {
-                var nn = n.substr(n.length - 3);
-                a.unshift(nn);
-                n = n.substr(0, n.length - 3);
-            }
-        } else {
-            if (n.length > 3) {
-                var nn = n.substr(n.length - 3);
-                a.unshift(nn);
-                n = n.substr(0, n.length - 3);
-            }
-            while (n.length > 2) {
-                var nn = n.substr(n.length - 2);
-                a.unshift(nn);
-                n = n.substr(0, n.length - 2);
-            }
-        }
-    } catch (ex) {
-        while (n.length > 3) {
-            var nn = n.substr(n.length - 3);
-            a.unshift(nn);
-            n = n.substr(0, n.length - 3);
-        }
-    }
-    if (n.length > 0) { a.unshift(n); }
-    n = a.join(delimiter);
-    if (d.length < 1) { amount = n; }
-    else { amount = n + '.' + d; }
-    amount = minus + amount;
-    return amount;
+    const groupedInteger = groupByThousands(normalized.integerPart);
+    return `${normalized.isNegative ? "-" : ""}${groupedInteger}${normalized.fractionPart ? `.${normalized.fractionPart}` : ""}`;
 }
 
-function formatIndianNumber(amount) {
-    if (isNaN(amount)) return '';
+function formatIndianNumber(amount, fieldMeta) {
+    return formatCurrencyAmount(amount, fieldMeta, false);
+}
 
-    let num = Math.abs(parseInt(amount, 10)).toString();
-    let result = '';
+function groupByThousands(integerPart) {
+    return integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
 
-    if (num.length > 3) {
-        result = ',' + num.slice(-3);
-        num = num.slice(0, -3);
+function groupByIndianDigits(integerPart) {
+    if (integerPart.length <= 3) {
+        return integerPart;
     }
 
-    while (num.length > 2) {
-        result = ',' + num.slice(-2) + result;
-        num = num.slice(0, -2);
-    }
-
-    if (num.length > 0) {
-        result = num + result;
-    }
-
-    return (amount < 0 ? '-' : '') + result;
+    const lastThreeDigits = integerPart.slice(-3);
+    const remainingDigits = integerPart.slice(0, -3).replace(/\B(?=(\d{2})+(?!\d))/g, ",");
+    return `${remainingDigits},${lastThreeDigits}`;
 }
 
 
