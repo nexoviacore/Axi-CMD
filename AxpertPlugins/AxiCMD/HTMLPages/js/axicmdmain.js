@@ -1807,12 +1807,18 @@ if (typeof document !== "undefined") {
         // A command word (create, edit, ...) is not a structure name
         if (["create", "edit", "view", "source"].includes(term) || getCommandConfig(term)) return;
         const askKey = baseKey + "|" + term;
+        // old code: if (structSearchAsked.has(askKey) || structSearchPendingTerm === askKey) return;
+        // new code: a term is asked again when its search result (and paging state) was dropped from the cache
+        // (LRU of MAX_CACHED_SEARCH_KEYS), otherwise the result could no longer be scrolled for more pages
+        const searchKey = `${baseKey}_q_${term}`;
+        if (structSearchAsked.has(askKey) && !axPageState[searchKey]) structSearchAsked.delete(askKey);
         if (structSearchAsked.has(askKey) || structSearchPendingTerm === askKey) return;
         structSearchPendingTerm = askKey;
         clearTimeout(structSearchTimer);
         structSearchTimer = setTimeout(() => {
             structSearchPendingTerm = null;
             structSearchAsked.add(askKey);
+            
             loadList("axi_structmetalist", param, term, 1, getPageSize());
         }, SEARCH_DEBOUNCE_MS);
     }
@@ -1834,6 +1840,22 @@ if (typeof document !== "undefined") {
     }
 
     /**
+     * Paging state of the list on screen. A search whose term was found in the cached rows is shown without a
+     * server call, so it has no state of its own yet: while the base list has more pages on the server, it is
+     * treated as "page 0, more to load", so scrolling down fetches page 1 of that search, then page 2, and so on.
+     * @param {object} ctx - Paged context ({ listKey, term, baseKey }).
+     * @returns {object|null} { page, hasMore } or null when the list is not paged.
+     */
+    function getSearchPageState(ctx) {
+        const state = axPageState[ctx.listKey];
+        if (state) return state;
+        if (ctx.term && ctx.baseKey && axPageState[ctx.baseKey] && axPageState[ctx.baseKey].hasMore) {
+            return { page: 0, hasMore: true };
+        }
+        return null;
+    }
+
+    /**
      * Builds the small non-selectable row shown under a paged list: a spinner while the next page is
      * loading, a hint when more rows can be loaded by scrolling, or a note when the render cap is reached.
      * It deliberately does not use the "axi-suggestion" class so keyboard navigation ignores it.
@@ -1843,7 +1865,9 @@ if (typeof document !== "undefined") {
     function buildLoadMoreFooter(renderedTotal) {
         const ctx = activePagedContext;
         if (!ctx) return null;
-        const state = axPageState[ctx.listKey];
+        // old code: const state = axPageState[ctx.listKey];
+        // new code: a search shown from cached rows has no state of its own yet (see getSearchPageState)
+        const state = getSearchPageState(ctx);
         if (!state || !state.hasMore) return null;
 
         // Remember which list this footer belongs to; loadNextPage loads the next page of exactly that list
@@ -1873,7 +1897,9 @@ if (typeof document !== "undefined") {
         // a scroll in that window used to be dropped silently (no request at all).
         const ctx = footerPagedContext || activePagedContext;
         if (!ctx) return;
-        const state = axPageState[ctx.listKey];
+        // old code: const state = axPageState[ctx.listKey];
+        // new code: for a search shown from cached rows this gives page 0, so the first server page is fetched
+        const state = getSearchPageState(ctx);
         if (!state) return;
         if (!state.hasMore) return;
         const nextPage = state.page + 1;
@@ -5725,7 +5751,9 @@ if (typeof document !== "undefined") {
                     source: apiSourceName,
                     param: paramValue,
                     term: cleanSearch.length >= 3 ? cleanSearch : "",
-                    listKey: cleanSearch.length >= 3 ? `${sourceKey}_q_${cleanSearch}` : sourceKey
+                    listKey: cleanSearch.length >= 3 ? `${sourceKey}_q_${cleanSearch}` : sourceKey,
+                    // new code: base list key, so a search shown from cached rows can still load more on scroll
+                    baseKey: sourceKey
                 }
                 : null;
 
@@ -5740,21 +5768,48 @@ if (typeof document !== "undefined") {
                         dynamicSearchPending = false;
                         dataList = axDatasourceObj[searchKey];
                     } else {
-                        clearTimeout(dynamicSearchDebounceTimer);
-                        dynamicSearchPending = true;
-                        dynamicSearchDebounceTimer = setTimeout(() => {
-                            dynamicSearchPending = false;
-                            loadList(apiSourceName, paramValue, cleanSearch, 1, getPageSize());
-                        }, SEARCH_DEBOUNCE_MS);
+                        // old code:
+                        // clearTimeout(dynamicSearchDebounceTimer);
+                        // dynamicSearchPending = true;
+                        // dynamicSearchDebounceTimer = setTimeout(() => {
+                        //     dynamicSearchPending = false;
+                        //     let findTerm = dataList.find(f => f.displaydata.includes(cleanSearch));
+                        //     if (!findTerm) {
+                        //          loadList(apiSourceName, paramValue, cleanSearch, 1, getPageSize());
+                        //     }
+                        // }, SEARCH_DEBOUNCE_MS);
+                        //
+                        // const localMatches = dataList.filter(item => {
+                        //     const display = item.displaydata || item.caption || item.name || "";
+                        //     return display.toLowerCase().includes(cleanSearch);
+                        // });
+                        //
+                        // if (localMatches.length > 0) {
+                        //     dataList = localMatches;
+                        // } else {
+                        //     filteredObjects = [];
+                        //     return ["Searching..."];
+                        // }
 
+                        // new code: the cached rows (memory / localStorage) are filtered first. When the term is found
+                        // there, no server call is made; the next page of the search is fetched only when the user
+                        // scrolls down (see loadNextPage). When it is not found, the server is searched.
                         const localMatches = dataList.filter(item => {
                             const display = item.displaydata || item.caption || item.name || "";
-                            return display.toLowerCase().includes(cleanSearch);
+                            return String(display).toLowerCase().includes(cleanSearch);
                         });
 
                         if (localMatches.length > 0) {
+                            clearTimeout(dynamicSearchDebounceTimer);
+                            dynamicSearchPending = false;
                             dataList = localMatches;
                         } else {
+                            clearTimeout(dynamicSearchDebounceTimer);
+                            dynamicSearchPending = true;
+                            dynamicSearchDebounceTimer = setTimeout(() => {
+                                dynamicSearchPending = false;
+                                loadList(apiSourceName, paramValue, cleanSearch, 1, getPageSize());
+                            }, SEARCH_DEBOUNCE_MS);
                             filteredObjects = [];
                             return ["Searching..."];
                         }
