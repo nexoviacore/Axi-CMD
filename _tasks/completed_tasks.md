@@ -95,6 +95,10 @@ Longer, or containing @@VARS@@: the value becomes h plus about 11 characters of 
 
 
 
+11/11/2026
+1. TSK-0926 - AxiCMDLine : Enhance Multilingual Support with User-Configurable Language Settings
+2. Duplicate field shoud not be allowed set as keyfield.
+
 
 
 
