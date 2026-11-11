@@ -240,7 +240,8 @@ INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, p
 <<
 INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active, is_system) VALUES ('cfg_download_default', 'Download', 'default', 'ExportNew.aspx', 'url', NULL, '../aspx/ExportNew.aspx', 'action=export', 'T', 'T') ON CONFLICT (config_id) DO UPDATE SET is_system = 'T'
 >>
->>
+-- old code: stray block end, no matching opening marker
+-- >>
 
 <<
 CREATE INDEX IF NOT EXISTS idx_axi_cmd_config_cmd ON axi_command_config(command)

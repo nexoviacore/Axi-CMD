@@ -3,7 +3,7 @@
 -- TODO: Remove this on next release. 
 <<
 DELETE FROM axiconfig where  mainpagetemplate = 'AxiCMDMainPage.html'
-<<
+>>
 
 
 -- TODO: Remove this on next release. 

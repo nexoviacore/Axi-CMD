@@ -171,14 +171,22 @@ INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PR
 >>
 
 -- Configure: Product, Plugin and ChangeRequest options (account/repo settings). Appended to the existing lists so Custom Option names are kept.
--- Run twice it changes nothing (guarded on ChangeRequest already being in the wordpos 2 list). The wordpos 3 sources go first, because its
--- guard reads the wordpos 2 row, which the next statement changes. Both lists stay index-aligned: 3 options on one side, 3 Axi_Dummy on the other.
+-- old code: the sources were guarded on ChangeRequest not being in the names yet, so once the names got it first the sources never caught up
+-- (34 names, 31 sources: the AxiCMD Config page then fails with HTTP 409 "option and source lists ... out of step")
+-- -- Run twice it changes nothing (guarded on ChangeRequest already being in the wordpos 2 list). The wordpos 3 sources go first, because its
+-- -- guard reads the wordpos 2 row, which the next statement changes. Both lists stay index-aligned: 3 options on one side, 3 Axi_Dummy on the other.
+-- <<
+-- UPDATE AXI_COMMAND_PROMPTS SET promptsource = RTRIM(promptsource, ',') || ',Axi_Dummy,Axi_Dummy,Axi_Dummy' WHERE cmdtoken = 4 AND wordpos = 3 AND EXISTS (SELECT 1 FROM AXI_COMMAND_PROMPTS p2 WHERE p2.cmdtoken = 4 AND p2.wordpos = 2 AND p2.promptvalues NOT LIKE '%ChangeRequest%')
+-- >>
+
+-- new code: the names are added first (guarded on ChangeRequest, so a re-run changes nothing). The next statement then pads the source list
+-- with Axi_Dummy (10 characters each, RPAD repeats it) until it has as many entries as the names, which also repairs a database whose sources are already short.
 <<
-UPDATE AXI_COMMAND_PROMPTS SET promptsource = RTRIM(promptsource, ',') || ',Axi_Dummy,Axi_Dummy,Axi_Dummy' WHERE cmdtoken = 4 AND wordpos = 3 AND EXISTS (SELECT 1 FROM AXI_COMMAND_PROMPTS p2 WHERE p2.cmdtoken = 4 AND p2.wordpos = 2 AND p2.promptvalues NOT LIKE '%ChangeRequest%')
+UPDATE AXI_COMMAND_PROMPTS SET promptvalues = RTRIM(promptvalues, ',') || ',Product,Plugin,ChangeRequest' WHERE cmdtoken = 4 AND wordpos = 2 AND promptvalues NOT LIKE '%ChangeRequest%'
 >>
 
 <<
-UPDATE AXI_COMMAND_PROMPTS SET promptvalues = RTRIM(promptvalues, ',') || ',Product,Plugin,ChangeRequest' WHERE cmdtoken = 4 AND wordpos = 2 AND promptvalues NOT LIKE '%ChangeRequest%'
+UPDATE AXI_COMMAND_PROMPTS s SET promptsource = RTRIM(s.promptsource, ', ') || RPAD(',Axi_Dummy', 10 * ((SELECT REGEXP_COUNT(RTRIM(p2.promptvalues, ', '), ',') + 1 FROM AXI_COMMAND_PROMPTS p2 WHERE p2.cmdtoken = 4 AND p2.wordpos = 2) - (REGEXP_COUNT(RTRIM(s.promptsource, ', '), ',') + 1)), ',Axi_Dummy') WHERE s.cmdtoken = 4 AND s.wordpos = 3 AND (SELECT REGEXP_COUNT(RTRIM(p2.promptvalues, ', '), ',') + 1 FROM AXI_COMMAND_PROMPTS p2 WHERE p2.cmdtoken = 4 AND p2.wordpos = 2) > REGEXP_COUNT(RTRIM(s.promptsource, ', '), ',') + 1
 >>
 
 -- Install: `install <product|plugin|changerequest> <directory> [version]` (build access only). Rows are added only when absent, so a re-run changes nothing.

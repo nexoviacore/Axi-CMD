@@ -3,7 +3,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp"
 >>
 
 --This may not be needed
-DROP TABLE Axi_UserFavourites
+-- DROP TABLE Axi_UserFavourites
 
 
 <<
@@ -24,7 +24,9 @@ ALTER TABLE axi_userfavourites ADD originalcommandtext varchar(500) NULL;
 
 <<
 --This may not be needed
-DROP TABLE axiconfig; 
+-- old code: DROP TABLE axiconfig;
+-- new code: no error when the table is already gone (re-run), and no trailing semicolon
+DROP TABLE IF EXISTS axiconfig
 >>
 
 -- TODO: Remove this in the next release
