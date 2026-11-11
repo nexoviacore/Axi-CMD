@@ -3307,6 +3307,22 @@ if (typeof document !== "undefined") {
     }
 
     /**
+     * The user's language for translated captions: the shell's gllangauge (e.g. "ARABIC"), lower-cased.
+     * The axi_structmetalist ADS compares it with axlanguage.dispname (lower-cased too). Never empty: getList drops
+     * empty params, which would shift them, so "english" is used when the shell does not provide one.
+     * @returns {string} Language name in lower case.
+     */
+    function getAxiLanguage() {
+        let lang = "";
+        try { lang = window.gllangauge || ""; } catch (e) { }
+        if (!lang) {
+            try { lang = (top && top.gllangauge) || ""; } catch (e) { }
+        }
+        lang = String(lang).trim().toLowerCase();
+        return lang || "english";
+    }
+
+    /**
      * Writes a command's words back into the input box. suggestLocal works on the words in verb-first order
      * ("edit Form ...") although the user typed them target-first ("Form edit ..."); when it swapped them
      * (commandTokensSwapped), the first two words are swapped back here so the box keeps the order the user typed.
@@ -3411,6 +3427,12 @@ if (typeof document !== "undefined") {
                 if (caption) namesSet.add(caption.toLowerCase());
                 // "Caption (transid)" names exactly one structure when several share a caption (#289)
                 if (caption && name) namesSet.add(`${caption} (${name})`.toLowerCase());
+
+                // new code: in another language caption is the translated one; the original caption (basecaption)
+                // still names the structure, so commands typed in English (history, favourites, habit) keep working
+                const basecaption = d.basecaption || d.BASECAPTION;
+                if (basecaption) namesSet.add(basecaption.toLowerCase());
+                if (basecaption && name) namesSet.add(`${basecaption} (${name})`.toLowerCase());
 
                 const displaydata = d.displaydata || d.DISPLAYDATA;
                 if (displaydata) {
@@ -4955,7 +4977,10 @@ if (typeof document !== "undefined") {
                 const cleanCaptionMatch = typeof item.displaydata === "string" &&
                     getCleanCaption(item).includes(prefix);
                 const captionMatch = item.caption && item.caption.toLowerCase().includes(prefix);
-                return nameMatch || displayMatch || cleanCaptionMatch || captionMatch;
+                // old code: return nameMatch || displayMatch || cleanCaptionMatch || captionMatch;
+                // new code: the original caption also matches when captions are shown in another language
+                const baseCaptionMatch = typeof item.basecaption === "string" && item.basecaption.toLowerCase().includes(prefix);
+                return nameMatch || displayMatch || cleanCaptionMatch || captionMatch || baseCaptionMatch;
             }
         });
 
@@ -4969,7 +4994,9 @@ if (typeof document !== "undefined") {
                 const starts = (item.name && item.name.toLowerCase().startsWith(prefix)) ||
                     (item.displaydata && item.displaydata.toLowerCase().startsWith(prefix)) ||
                     (typeof item.displaydata === "string" && getCleanCaption(item).startsWith(prefix)) ||
-                    (item.caption && item.caption.toLowerCase().startsWith(prefix));
+                    (item.caption && item.caption.toLowerCase().startsWith(prefix)) ||
+                    // new code: original caption (captions shown in another language)
+                    (typeof item.basecaption === "string" && item.basecaption.toLowerCase().startsWith(prefix));
                 if (starts) {
                     startsWithPrefix.push(item);
                 } else {
@@ -6086,12 +6113,23 @@ if (typeof document !== "undefined") {
         const same = v => v !== undefined && v !== null && String(v).trim().toLowerCase() === w;
         const typeOk = r => !preferredType || (r.stype || "").toLowerCase() === preferredType;
         // "Caption (transid)" names one structure among several sharing a caption (#289)
-        const captionAndName = r => r.caption && r.name && `${String(r.caption).trim()} (${r.name})`.toLowerCase() === w;
+        // old code:
+        // const captionAndName = r => r.caption && r.name && `${String(r.caption).trim()} (${r.name})`.toLowerCase() === w;
+        // return list.find(r => r && r.name === wanted && typeOk(r))
+        //     || list.find(r => r && r.name === wanted)
+        //     || list.find(r => r && captionAndName(r))
+        //     || list.find(r => r && (same(r.name) || same(r.caption) || same(r.displaydata)) && typeOk(r))
+        //     || list.find(r => r && (same(r.name) || same(r.caption) || same(r.displaydata)));
+        // new code: the original caption (basecaption, set when captions are shown in another language) also matches
+        const captionAndName = r => r.name && (
+            (r.caption && `${String(r.caption).trim()} (${r.name})`.toLowerCase() === w) ||
+            (r.basecaption && `${String(r.basecaption).trim()} (${r.name})`.toLowerCase() === w));
+        const sameAny = r => same(r.name) || same(r.caption) || same(r.displaydata) || same(r.basecaption);
         return list.find(r => r && r.name === wanted && typeOk(r))
             || list.find(r => r && r.name === wanted)
             || list.find(r => r && captionAndName(r))
-            || list.find(r => r && (same(r.name) || same(r.caption) || same(r.displaydata)) && typeOk(r))
-            || list.find(r => r && (same(r.name) || same(r.caption) || same(r.displaydata)));
+            || list.find(r => r && sameAny(r) && typeOk(r))
+            || list.find(r => r && sameAny(r));
     }
 
     function processParamforEditndView(tokens, commandConfig, paramValue, position) {
@@ -6813,7 +6851,10 @@ if (typeof document !== "undefined") {
                     (cleanString(item.caption) || "").toLowerCase() === tokenText.toLowerCase() ||
                     (cleanString(item.name) || "").toLowerCase() === tokenText.toLowerCase() ||
                     // "Caption (transid)" kept in the input for a caption that several structures share (#289)
-                    (item.caption && item.name && `${cleanString(item.caption)} (${cleanString(item.name)})`.toLowerCase() === tokenText.toLowerCase())
+                    (item.caption && item.name && `${cleanString(item.caption)} (${cleanString(item.name)})`.toLowerCase() === tokenText.toLowerCase()) ||
+                    // new code: the original caption (basecaption) when captions are shown in another language
+                    (item.basecaption && (cleanString(item.basecaption) || "").toLowerCase() === tokenText.toLowerCase()) ||
+                    (item.basecaption && item.name && `${cleanString(item.basecaption)} (${cleanString(item.name)})`.toLowerCase() === tokenText.toLowerCase())
                 );
 
                 if (matches.length > 0) {
@@ -8305,6 +8346,13 @@ if (typeof document !== "undefined") {
                     .split("$#$")
                     .map(v => v.trim())
                     .filter(Boolean);
+
+                // new code: the structure list shows captions in the user's language; the ADS takes the language as
+                // param6. Added here so every caller (getStructParam, processExtraParams) sends it, and the cache key
+                // below gets it too, so each language keeps its own cached lists.
+                if (String(axDatasourceName).toLowerCase() === "axi_structmetalist" && values.length === 5) {
+                    values.push(getAxiLanguage());
+                }
 
                 values.forEach((value, index) => {
                     const key = `param${index + 1}`;
