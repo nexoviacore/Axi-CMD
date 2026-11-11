@@ -864,6 +864,8 @@ if (typeof document !== "undefined") {
     let footerPagedContext = null;
     // The paged list currently shown in the dropdown: { source, param, term, listKey } or null
     let activePagedContext = null;
+    // True when suggestLocal swapped "Form edit ..." to "edit Form ..." for the current pass (see writeCommandTokensToInput)
+    let commandTokensSwapped = false;
 
     /**
      * Registers a search key as most recently used and drops the oldest ones beyond the limit.
@@ -3305,6 +3307,24 @@ if (typeof document !== "undefined") {
     }
 
     /**
+     * Writes a command's words back into the input box. suggestLocal works on the words in verb-first order
+     * ("edit Form ...") although the user typed them target-first ("Form edit ..."); when it swapped them
+     * (commandTokensSwapped), the first two words are swapped back here so the box keeps the order the user typed.
+     * Used by the create / edit / ADS-view handlers when they clear a wrong value or fill in a date.
+     * @param {string[]} tokens - Command words in verb-first order (the array itself is not changed).
+     * @returns {void}
+     */
+    function writeCommandTokensToInput(tokens) {
+        const words = [...tokens];
+        if (commandTokensSwapped && words.length >= 2) {
+            const temp = words[0];
+            words[0] = words[1];
+            words[1] = temp;
+        }
+        input.value = words.join(" ");
+    }
+
+    /**
      * Extracts structure parameters from session or active frame context.
      * @returns {string} Structure parameter string.
      */
@@ -3873,7 +3893,9 @@ if (typeof document !== "undefined") {
 
                         settokens[lastIndex] = date;
 
-                        input.value = settokens.join(" ");
+                        // old code: input.value = settokens.join(" ");
+                        // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                        writeCommandTokensToInput(settokens);
 
                         SET_COMMAND_STATE.currentFieldValue = date;
                         dateControlBoolean = false;
@@ -3891,7 +3913,9 @@ if (typeof document !== "undefined") {
 
                         settokens[lastIndex] = "";
 
-                        input.value = settokens.join(" ");
+                        // old code: input.value = settokens.join(" ");
+                        // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                        writeCommandTokensToInput(settokens);
 
                         showToast("Please Type the date", 5000, true);
                         updateDynamicHintFromPrompt({ prompt: "fieldValue" })
@@ -3975,7 +3999,9 @@ if (typeof document !== "undefined") {
                     let lastToken = tokens[lastIndex];
                     tokens[lastIndex] = "";
 
-                    input.value = tokens.join(" ");
+                    // old code: input.value = tokens.join(" ");
+                    // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                    writeCommandTokensToInput(tokens);
 
                     filtered = list;
                 }
@@ -4174,7 +4200,9 @@ if (typeof document !== "undefined") {
 
                     targetIndex = targetIndex - 1;
 
-                    input.value = settokens.join(" ");
+                    // old code: input.value = settokens.join(" ");
+                    // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                    writeCommandTokensToInput(settokens);
                     updateDynamicHintFromPrompt({ prompt: "fieldname" })
 
 
@@ -4330,7 +4358,9 @@ if (typeof document !== "undefined") {
                             let lastToken = tokens[lastIndex];
                             tokens[lastIndex] = "";
 
-                            input.value = tokens.join(" ");
+                            // old code: input.value = tokens.join(" ");
+                            // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                            writeCommandTokensToInput(tokens);
 
                             filtered = list;
                         }
@@ -5167,6 +5197,8 @@ if (typeof document !== "undefined") {
         }
 
         let tokens = [...rawTokens];
+        // new code: remember whether the words were swapped, so handlers that rewrite the input put them back in order
+        commandTokensSwapped = false;
         if (tokens.length >= 2) {
             const first = cleanString(tokens[0]).toLowerCase();
             const second = cleanString(tokens[1]).toLowerCase();
@@ -5174,6 +5206,7 @@ if (typeof document !== "undefined") {
                 const temp = tokens[0];
                 tokens[0] = tokens[1];
                 tokens[1] = temp;
+                commandTokensSwapped = true;
             }
         }
 
@@ -7372,6 +7405,12 @@ if (typeof document !== "undefined") {
             return;
         }
         else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Save_ACTION" && saveGroupKeyCheck.toLowerCase() === "edit") {
+            // new code (issue #295): nothing is saved while a typed value does not fit its field's data type
+            const invalidEditValue = findInvalidEditFieldValue(checkTokens, setCommandTransid);
+            if (invalidEditValue) {
+                showToast(invalidEditValue, 5000);
+                return;
+            }
             // console.log("Save Option Selected...Submitting Data...");
             hide();
             AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", false, checkTokens, saveCommandConfig);
@@ -9889,6 +9928,14 @@ if (typeof document !== "undefined") {
                         isProgrammaticExecution = false;
                     }
                     return;
+                }
+                // new code (issue #295): Ctrl + S on edit saves nothing while a typed value does not fit its field's data type
+                if (grpKey && grpKey.toLowerCase() === "edit") {
+                    const invalidEditValue = findInvalidEditFieldValue(tokens, setCommandTransid);
+                    if (invalidEditValue) {
+                        showToast(invalidEditValue, 5000);
+                        return;
+                    }
                 }
                 // console.log("Save Option Selected...Submitting Data...");
                 hide();
@@ -15712,6 +15759,8 @@ if (typeof document !== "undefined") {
             text.startsWith("No directories") ||
             text === "No Data" ||
             text === "Please type the value..." ||
+            // new code (issue #295): edit command, value does not fit a number field
+            text.startsWith("Please type a valid number") ||
             text === "Please type Valid date using / (ex: DD / MM / YYYY)" ||
             text === "Please Type the date";
 
@@ -15855,7 +15904,9 @@ if (typeof document !== "undefined") {
 
                         settokens[lastIndex] = date;
 
-                        input.value = settokens.join(" ");
+                        // old code: input.value = settokens.join(" ");
+                        // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                        writeCommandTokensToInput(settokens);
 
                         SET_COMMAND_STATE.currentFieldValue = date;
                         dateControlBoolean = false;
@@ -15873,7 +15924,9 @@ if (typeof document !== "undefined") {
 
                         settokens[lastIndex] = "";
 
-                        input.value = settokens.join(" ");
+                        // old code: input.value = settokens.join(" ");
+                        // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                        writeCommandTokensToInput(settokens);
 
                         showToast("Please Type the date", 5000, true);
                         updateDynamicHintFromPrompt({ prompt: "fieldValue" })
@@ -15943,7 +15996,9 @@ if (typeof document !== "undefined") {
                     let lastToken = tokens[lastIndex];
                     tokens[lastIndex] = "";
 
-                    input.value = tokens.join(" ");
+                    // old code: input.value = tokens.join(" ");
+                    // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                    writeCommandTokensToInput(tokens);
 
                     filtered = list;
                 }
@@ -16109,7 +16164,9 @@ if (typeof document !== "undefined") {
 
                     targetIndex = targetIndex - 1;
 
-                    input.value = settokens.join(" ");
+                    // old code: input.value = settokens.join(" ");
+                    // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                    writeCommandTokensToInput(settokens);
                     updateDynamicHintFromPrompt({ prompt: "fieldName" })
                     //return [];
 
@@ -16247,7 +16304,9 @@ if (typeof document !== "undefined") {
                             let lastToken = tokens[lastIndex];
                             tokens[lastIndex] = "";
 
-                            input.value = tokens.join(" ");
+                            // old code: input.value = tokens.join(" ");
+                            // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                            writeCommandTokensToInput(tokens);
 
                             filtered = list;
                         }
@@ -16363,7 +16422,9 @@ if (typeof document !== "undefined") {
 
                         settokens[lastIndex] = date;
 
-                        input.value = settokens.join(" ");
+                        // old code: input.value = settokens.join(" ");
+                        // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                        writeCommandTokensToInput(settokens);
 
                         SET_COMMAND_STATE.currentFieldValue = date;
                         dateControlBoolean = false;
@@ -16381,7 +16442,9 @@ if (typeof document !== "undefined") {
 
                         settokens[lastIndex] = "";
 
-                        input.value = settokens.join(" ");
+                        // old code: input.value = settokens.join(" ");
+                        // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                        writeCommandTokensToInput(settokens);
 
                         showToast("Please Type the date", 5000, true);
                         updateDynamicHintFromPrompt({ prompt: "fieldValue" })
@@ -16451,7 +16514,9 @@ if (typeof document !== "undefined") {
                     let lastToken = tokens[lastIndex];
                     tokens[lastIndex] = "";
 
-                    input.value = tokens.join(" ");
+                    // old code: input.value = tokens.join(" ");
+                    // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                    writeCommandTokensToInput(tokens);
 
                     filtered = list;
                 }
@@ -16502,6 +16567,16 @@ if (typeof document !== "undefined") {
             const sourceKey = `${sourceName}_${setCommandTransid}`.toLowerCase();
 
             if (SET_COMMAND_STATE.currentField) {
+                // new code (issue #295): a typed value that does not fit the field's data type is not added to the
+                // save list; the user is asked to correct it before choosing the next field (state is kept as is)
+                const previousFieldMeta = findEditFieldMetadata(SET_COMMAND_STATE.currentField, setCommandTransid, sourceName);
+                const previousValueError = getEditFieldValueError(previousFieldMeta, SET_COMMAND_STATE.currentFieldValue, false);
+                if (previousValueError) {
+                    filteredObjects = [];
+                    updateDynamicHintFromPrompt({ prompt: "fieldValue" });
+                    return [previousValueError];
+                }
+
                 let previousColumnName = SET_COMMAND_STATE.currentField;
                 // previousColumnName = tryResolveToken(targetIndex - 2, previousColumnName, commandConfig, false);
                 const { value, type } = tryResolveToken(targetIndex - 2, previousColumnName, commandConfig, false);
@@ -16640,7 +16715,9 @@ if (typeof document !== "undefined") {
 
                     targetIndex = targetIndex - 1;
 
-                    input.value = settokens.join(" ");
+                    // old code: input.value = settokens.join(" ");
+                    // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                    writeCommandTokensToInput(settokens);
                     updateDynamicHintFromPrompt({ prompt: "fieldName" })
 
                     //return [];
@@ -16718,6 +16795,11 @@ if (typeof document !== "undefined") {
                         let acceptedValue = cleanString(tokens[tokens.length - 1]);
                         if (acceptedValue) {
                             SET_COMMAND_STATE.currentFieldValue = acceptedValue;
+                            // old code: return [];
+                            // new code (issue #295): while the value is typed, say so as soon as it cannot fit the
+                            // field's data type (a partly typed number such as "-" or "12." is still allowed here)
+                            const typingError = getEditFieldValueError(columnMetadata, acceptedValue, true);
+                            if (typingError) return [typingError];
                             return [];
                         }
                         else {
@@ -16775,7 +16857,9 @@ if (typeof document !== "undefined") {
                             let lastToken = tokens[lastIndex];
                             tokens[lastIndex] = "";
 
-                            input.value = tokens.join(" ");
+                            // old code: input.value = tokens.join(" ");
+                            // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                            writeCommandTokensToInput(tokens);
 
                             filtered = list;
                         }
@@ -16839,6 +16923,65 @@ if (typeof document !== "undefined") {
             else return [];
         }
     }
+    /**
+     * Finds a field of the edit command's field list (axi_nongridfieldlist) from the word the user typed for it:
+     * its name, or its caption (the display text without the "(name)" part). Same match as processEditCommand.
+     * @param {string} fieldToken - Field name or caption as typed.
+     * @param {string} transid - Form transid.
+     * @param {string} [sourceName="axi_nongridfieldlist"] - Field list data source.
+     * @returns {object|null} Field row (name, caption, datatype, moe ...) or null when not loaded / not found.
+     */
+    function findEditFieldMetadata(fieldToken, transid, sourceName = "axi_nongridfieldlist") {
+        if (!fieldToken || !transid) return null;
+        const colList = axDatasourceObj[`${sourceName}_${transid}`.toLowerCase()];
+        if (!Array.isArray(colList)) return null;
+        const wanted = cleanString(fieldToken).toLowerCase();
+        if (!wanted) return null;
+        return colList.find(
+            c =>
+                c?.name?.toLowerCase() === wanted ||
+                c?.displaydata?.toLowerCase().replace(/\s*\(.*?\)/g, '').trim() === wanted
+        ) || null;
+    }
+
+    /**
+     * Checks a value typed for a field of the edit command against the field's data type (issue #295).
+     * Only typed values (mode of entry "accept") are checked; values picked from a dropdown or the date list are
+     * already valid. Number fields (datatype "n") take digits with an optional leading minus and decimal point.
+     * Character ("c") and text ("t") fields take any text; date ("d") fields have their own handling.
+     * @param {object|null} fieldMeta - Field row from findEditFieldMetadata.
+     * @param {string} value - Value as typed (quotes are ignored).
+     * @param {boolean} isTyping - True while the value is still being typed: "-", "12." and ".5" are allowed then.
+     * @returns {string} Message to show, or "" when the value is fine (or the field is not checked).
+     */
+    function getEditFieldValueError(fieldMeta, value, isTyping) {
+        if (!fieldMeta || String(fieldMeta.moe || "").toLowerCase() !== "a") return "";
+        const text = cleanString(String(value ?? ""));
+        if (!text) return "";
+        if (String(fieldMeta.datatype || "").toLowerCase() === "n") {
+            const ok = isTyping ? /^-?\d*\.?\d*$/.test(text) : /^-?(\d+(\.\d+)?|\.\d+)$/.test(text);
+            if (!ok) return `Please type a valid number for ${fieldMeta.caption || fieldMeta.name} (e.g. 125 or -12.50)`;
+        }
+        return "";
+    }
+
+    /**
+     * Finds the first field value in an edit command ("<form> edit <key> with <field> <value> ...") that does not
+     * fit its field's data type, so Save can stop before anything is sent (issue #295). Works on the tokens in
+     * either order (target-first or edit-first): only the positions from "with" onwards are read.
+     * @param {string[]} tokens - Command tokens.
+     * @param {string} transid - Form transid.
+     * @returns {string} Message for the first invalid value, or "" when all values are fine.
+     */
+    function findInvalidEditFieldValue(tokens, transid) {
+        if (!Array.isArray(tokens) || cleanString(tokens[3]).toLowerCase() !== "with") return "";
+        for (let i = 4; i + 1 < tokens.length; i += 2) {
+            const error = getEditFieldValueError(findEditFieldMetadata(tokens[i], transid), tokens[i + 1], false);
+            if (error) return error;
+        }
+        return "";
+    }
+
     /**
      * Adds a field-value entry to save payload list.
      * @param {string} fieldName - Field name.
