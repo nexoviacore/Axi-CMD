@@ -42,6 +42,10 @@ Notes:
 - The request is queued through the ARM `PushToQueue` API.
 - **Access:** Developer Studio access (`Build`).
 
+Note to QA:
+
+- The install command works only when the latest **AxiInstall Consumer** and the latest **AxInstaller.dll** are deployed. Test it on a setup that has both.
+
 ### 2. Axi Commandline Configuration page
 
 `AxiCMDConfig.html` is a standalone page for configuring the options of the **Configure** and **SDK** commands:
@@ -55,6 +59,7 @@ Custom options are kept when the scripts are re-run. New Configure / SDK options
 - **Access:** Configuration Studio access **and** Developer Studio access.
 - **Settings (gear) button:** the button in the AxiCMD toolbar (used for **Records per load** and **Configure**) is part of the product's main page (`mainHomeConfigTemplate.html`). Test the settings by configuring **Records per load** (pagination) and by opening the **Axi Commandline Configuration** page.
 
+
 Note to QA:
 
 - `mainHomeConfigTemplate.html` will also be released in the next product patch release.
@@ -65,6 +70,7 @@ Forms, reports and records are loaded page by page from the server, and typed se
 
 - More rows load as the user scrolls to the end of a list.
 - **Records per load** can be set from the settings (gear) menu: 100 to 5000, default 100. The value is saved per user.
+- **Display limit:** a list shows at most **1000** rows. Once 1000 rows are loaded, scrolling loads no more pages and the list shows "Showing first 1000 - type more to narrow the results". With **Records per load** above 1000, one request can fetch up to 5000 rows, but only the first 1000 are shown.
 - **Access:** every user.
 
 ### 4. Arabic (RTL) support
@@ -110,8 +116,5 @@ Notes:
 
 ---
 
-## Note to QA
-
-1. This is to inform QA about `mainHomeConfigTemplate.html`.
 
 
