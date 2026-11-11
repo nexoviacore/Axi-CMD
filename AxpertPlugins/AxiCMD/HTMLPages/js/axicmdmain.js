@@ -864,6 +864,8 @@ if (typeof document !== "undefined") {
     let footerPagedContext = null;
     // The paged list currently shown in the dropdown: { source, param, term, listKey } or null
     let activePagedContext = null;
+    // True when suggestLocal swapped "Form edit ..." to "edit Form ..." for the current pass (see writeCommandTokensToInput)
+    let commandTokensSwapped = false;
 
     /**
      * Registers a search key as most recently used and drops the oldest ones beyond the limit.
@@ -3305,6 +3307,24 @@ if (typeof document !== "undefined") {
     }
 
     /**
+     * Writes a command's words back into the input box. suggestLocal works on the words in verb-first order
+     * ("edit Form ...") although the user typed them target-first ("Form edit ..."); when it swapped them
+     * (commandTokensSwapped), the first two words are swapped back here so the box keeps the order the user typed.
+     * Used by the create / edit / ADS-view handlers when they clear a wrong value or fill in a date.
+     * @param {string[]} tokens - Command words in verb-first order (the array itself is not changed).
+     * @returns {void}
+     */
+    function writeCommandTokensToInput(tokens) {
+        const words = [...tokens];
+        if (commandTokensSwapped && words.length >= 2) {
+            const temp = words[0];
+            words[0] = words[1];
+            words[1] = temp;
+        }
+        input.value = words.join(" ");
+    }
+
+    /**
      * Extracts structure parameters from session or active frame context.
      * @returns {string} Structure parameter string.
      */
@@ -3873,7 +3893,9 @@ if (typeof document !== "undefined") {
 
                         settokens[lastIndex] = date;
 
-                        input.value = settokens.join(" ");
+                        // old code: input.value = settokens.join(" ");
+                        // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                        writeCommandTokensToInput(settokens);
 
                         SET_COMMAND_STATE.currentFieldValue = date;
                         dateControlBoolean = false;
@@ -3891,7 +3913,9 @@ if (typeof document !== "undefined") {
 
                         settokens[lastIndex] = "";
 
-                        input.value = settokens.join(" ");
+                        // old code: input.value = settokens.join(" ");
+                        // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                        writeCommandTokensToInput(settokens);
 
                         showToast("Please Type the date", 5000, true);
                         updateDynamicHintFromPrompt({ prompt: "fieldValue" })
@@ -3975,7 +3999,9 @@ if (typeof document !== "undefined") {
                     let lastToken = tokens[lastIndex];
                     tokens[lastIndex] = "";
 
-                    input.value = tokens.join(" ");
+                    // old code: input.value = tokens.join(" ");
+                    // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                    writeCommandTokensToInput(tokens);
 
                     filtered = list;
                 }
@@ -4174,7 +4200,9 @@ if (typeof document !== "undefined") {
 
                     targetIndex = targetIndex - 1;
 
-                    input.value = settokens.join(" ");
+                    // old code: input.value = settokens.join(" ");
+                    // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                    writeCommandTokensToInput(settokens);
                     updateDynamicHintFromPrompt({ prompt: "fieldname" })
 
 
@@ -4330,7 +4358,9 @@ if (typeof document !== "undefined") {
                             let lastToken = tokens[lastIndex];
                             tokens[lastIndex] = "";
 
-                            input.value = tokens.join(" ");
+                            // old code: input.value = tokens.join(" ");
+                            // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                            writeCommandTokensToInput(tokens);
 
                             filtered = list;
                         }
@@ -5167,6 +5197,8 @@ if (typeof document !== "undefined") {
         }
 
         let tokens = [...rawTokens];
+        // new code: remember whether the words were swapped, so handlers that rewrite the input put them back in order
+        commandTokensSwapped = false;
         if (tokens.length >= 2) {
             const first = cleanString(tokens[0]).toLowerCase();
             const second = cleanString(tokens[1]).toLowerCase();
@@ -5174,6 +5206,7 @@ if (typeof document !== "undefined") {
                 const temp = tokens[0];
                 tokens[0] = tokens[1];
                 tokens[1] = temp;
+                commandTokensSwapped = true;
             }
         }
 
@@ -15871,7 +15904,9 @@ if (typeof document !== "undefined") {
 
                         settokens[lastIndex] = date;
 
-                        input.value = settokens.join(" ");
+                        // old code: input.value = settokens.join(" ");
+                        // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                        writeCommandTokensToInput(settokens);
 
                         SET_COMMAND_STATE.currentFieldValue = date;
                         dateControlBoolean = false;
@@ -15889,7 +15924,9 @@ if (typeof document !== "undefined") {
 
                         settokens[lastIndex] = "";
 
-                        input.value = settokens.join(" ");
+                        // old code: input.value = settokens.join(" ");
+                        // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                        writeCommandTokensToInput(settokens);
 
                         showToast("Please Type the date", 5000, true);
                         updateDynamicHintFromPrompt({ prompt: "fieldValue" })
@@ -15959,7 +15996,9 @@ if (typeof document !== "undefined") {
                     let lastToken = tokens[lastIndex];
                     tokens[lastIndex] = "";
 
-                    input.value = tokens.join(" ");
+                    // old code: input.value = tokens.join(" ");
+                    // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                    writeCommandTokensToInput(tokens);
 
                     filtered = list;
                 }
@@ -16125,7 +16164,9 @@ if (typeof document !== "undefined") {
 
                     targetIndex = targetIndex - 1;
 
-                    input.value = settokens.join(" ");
+                    // old code: input.value = settokens.join(" ");
+                    // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                    writeCommandTokensToInput(settokens);
                     updateDynamicHintFromPrompt({ prompt: "fieldName" })
                     //return [];
 
@@ -16263,7 +16304,9 @@ if (typeof document !== "undefined") {
                             let lastToken = tokens[lastIndex];
                             tokens[lastIndex] = "";
 
-                            input.value = tokens.join(" ");
+                            // old code: input.value = tokens.join(" ");
+                            // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                            writeCommandTokensToInput(tokens);
 
                             filtered = list;
                         }
@@ -16379,7 +16422,9 @@ if (typeof document !== "undefined") {
 
                         settokens[lastIndex] = date;
 
-                        input.value = settokens.join(" ");
+                        // old code: input.value = settokens.join(" ");
+                        // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                        writeCommandTokensToInput(settokens);
 
                         SET_COMMAND_STATE.currentFieldValue = date;
                         dateControlBoolean = false;
@@ -16397,7 +16442,9 @@ if (typeof document !== "undefined") {
 
                         settokens[lastIndex] = "";
 
-                        input.value = settokens.join(" ");
+                        // old code: input.value = settokens.join(" ");
+                        // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                        writeCommandTokensToInput(settokens);
 
                         showToast("Please Type the date", 5000, true);
                         updateDynamicHintFromPrompt({ prompt: "fieldValue" })
@@ -16467,7 +16514,9 @@ if (typeof document !== "undefined") {
                     let lastToken = tokens[lastIndex];
                     tokens[lastIndex] = "";
 
-                    input.value = tokens.join(" ");
+                    // old code: input.value = tokens.join(" ");
+                    // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                    writeCommandTokensToInput(tokens);
 
                     filtered = list;
                 }
@@ -16666,7 +16715,9 @@ if (typeof document !== "undefined") {
 
                     targetIndex = targetIndex - 1;
 
-                    input.value = settokens.join(" ");
+                    // old code: input.value = settokens.join(" ");
+                    // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                    writeCommandTokensToInput(settokens);
                     updateDynamicHintFromPrompt({ prompt: "fieldName" })
 
                     //return [];
@@ -16806,7 +16857,9 @@ if (typeof document !== "undefined") {
                             let lastToken = tokens[lastIndex];
                             tokens[lastIndex] = "";
 
-                            input.value = tokens.join(" ");
+                            // old code: input.value = tokens.join(" ");
+                            // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                            writeCommandTokensToInput(tokens);
 
                             filtered = list;
                         }
