@@ -1,6 +1,6 @@
 # Release Notes: Axi Command Line (AxiCMD)
 
-- **Release date:** 10 November 2026
+- **Release date:** 11 November 2026
 - **Components:** AxiCMD palette (`axicmdmain.js`), Axi Commandline Configuration page (`AxiCMDConfig.html`), AxiCMD database scripts (PostgreSQL and Oracle)
 
 ---
@@ -53,6 +53,11 @@ Custom options are kept when the scripts are re-run. New Configure / SDK options
 
 - **Open from:** the AxiCMD settings (gear) menu → **Configure**.
 - **Access:** Configuration Studio access **and** Developer Studio access.
+- **Settings (gear) button:** the button in the AxiCMD toolbar (used for **Records per load** and **Configure**) is part of the product's main page (`mainHomeConfigTemplate.html`). Test the settings by configuring **Records per load** (pagination) and by opening the **Axi Commandline Configuration** page.
+
+Note to QA:
+
+- `mainHomeConfigTemplate.html` will also be released in the next product patch release.
 
 ### 3. Paging for large lists (TKT-1389, customer: BDF)
 
@@ -65,6 +70,12 @@ Forms, reports and records are loaded page by page from the server, and typed se
 ### 4. Arabic (RTL) support
 
 The command line, suggestions, hints and the help tour support Arabic (right-to-left) layout. Command words and option values stay in English, because they are what the user types.
+
+- **Header CSS changes:** the header and sidebar spacing for Arabic (RTL) mode is fixed in `LayoutTheme.css`. Before this fix, when Axi Command Line was enabled and the user switched to Arabic, the profile icons were not shown on the left side.
+
+Note to QA:
+
+- `LayoutTheme.css` will also be released in the next product patch release.
 
 ### 5. View filters applied to record lists (TKT-1387, customer: BDF)
 
@@ -101,5 +112,6 @@ Notes:
 
 ## Note to QA
 
-1. **Settings (gear) button:** the button in the AxiCMD toolbar (used for **Records per load** and **Configure**) is part of the product's main page (`mainHomeConfigTemplate.html`), so it ships with a separate **Product release**, not with this AxiCMD package. Test the settings features on a build that includes that release.
-2. **Header CSS changes:** the header and sidebar spacing changes for Arabic (RTL) mode (`LayoutTheme.css`) also ship with the **Product release**. Until it is installed, the header may still look as before in Arabic mode; do not log that as an AxiCMD defect.
+1. This is to inform QA about `mainHomeConfigTemplate.html`.
+
+
