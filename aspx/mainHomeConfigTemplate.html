@@ -1503,14 +1503,13 @@ Home Cunfiguration Page Templete
     var isAxiCMDEnabled = typeof axicmdEnabled !== 'undefined' && axicmdEnabled !== false && axicmdEnabled !== 'false';
     if (isAxiCMDEnabled) {
         let _appUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
-        var axiCmdJs = _appUrl + "/AxpertPlugins/AxiCMD/HTMLPages/js/axicmdmain.js?v=111";
-        var axiCmdCss = _appUrl + "/AxpertPlugins/AxiCMD/HTMLPages/css/axicmdmain.css?v=17";
+        var axiCmdJs = _appUrl + "/AxpertPlugins/AxiCMD/HTMLPages/js/axicmdmain.js?v=1";
+        var axiCmdCss = _appUrl + "/AxpertPlugins/AxiCMD/HTMLPages/css/axicmdmain.css?v=1";
         function checkFileExists(url) {
             var fileExists = false;
             $.ajax({
                 url: url,
                 type: "GET",
-                // new code: read the file as plain text; without a dataType jQuery ran axicmdmain.js a second time (as an unnamed VM script, so breakpoints did not stop). HEAD is not used because IIS returns 404 for it.
                 dataType: "text",
                 async: false,
                 cache: false,

@@ -20200,6 +20200,16 @@ if (typeof document !== "undefined") {
                 //         '<div class="axi-tour-note">A smaller number loads faster. A larger number shows more records at once.</div>'),
                 //     position: 'bottom'
                 // },
+                // new code: the settings step is shown only when the settings button is on the page. The button is
+                // part of mainHomeConfigTemplate.html, which ships with the product release, so older shells lack it.
+                ...(document.getElementById('axiSettingsBtn') ? [{
+                    element: '#axiSettingsBtn',
+                    intro: tourStep('settings', 'Choose how many records load',
+                        '<p>Set how many records each list loads at a time. Lists with more records load the rest as you scroll.</p>' +
+                        '<p>Pick a number from 100 to 5000, then select <strong>Save</strong>. The lists reload to use the new number.</p>' +
+                        '<div class="axi-tour-note">A smaller number loads faster. A larger number shows more records at once.</div>'),
+                    position: 'bottom'
+                }] : []),
                 {
                     element: '.searchwrap-AXI',
                     intro: tourStep('keyboard', 'Shortcuts',
