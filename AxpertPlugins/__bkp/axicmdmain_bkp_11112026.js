@@ -1,0 +1,20304 @@
+/**
+ * Safely parses boolean values from boolean, string ("true"/"false"), or number.
+ * Ensures string 'false' evaluates to false (unlike JavaScript's native Boolean('false')).
+ * @param {*} val - Value to parse.
+ * @returns {boolean} Parsed boolean.
+ */
+function parseBool(val) {
+    if (typeof val === "boolean") return val;
+    if (typeof val === "string") {
+        const trimmed = val.trim().toLowerCase();
+        if (trimmed === "true" || trimmed === "1" || trimmed === "t" || trimmed === "y" || trimmed === "yes") return true;
+        if (trimmed === "false" || trimmed === "0" || trimmed === "f" || trimmed === "n" || trimmed === "no" || trimmed === "") return false;
+    }
+    if (typeof val === "number") return val !== 0;
+    return Boolean(val);
+}
+
+/**
+ * Retrieves the raw axicmdEnabled flag from current window, parent/top frames, or callParentNew.
+ * @returns {*} The raw value or undefined.
+ */
+function getRawAxiCmdEnabled() {
+    if (typeof window !== "undefined") {
+        if (typeof window.axicmdEnabled !== "undefined") return window.axicmdEnabled;
+        if (typeof window.axicmdenabled !== "undefined") return window.axicmdenabled;
+        try {
+            if (window.parent && window.parent !== window) {
+                if (typeof window.parent.axicmdEnabled !== "undefined") return window.parent.axicmdEnabled;
+                if (typeof window.parent.axicmdenabled !== "undefined") return window.parent.axicmdenabled;
+            }
+        } catch (e) { }
+        try {
+            if (window.top && window.top !== window) {
+                if (typeof window.top.axicmdEnabled !== "undefined") return window.top.axicmdEnabled;
+                if (typeof window.top.axicmdenabled !== "undefined") return window.top.axicmdenabled;
+            }
+        } catch (e) { }
+    }
+    if (typeof callParentNew === "function") {
+        try {
+            const res = callParentNew("axicmdEnabled");
+            if (typeof res !== "undefined") return res;
+        } catch (e) { }
+    }
+    return undefined;
+}
+
+var _axicmdenabled = (function () {
+    const raw = getRawAxiCmdEnabled();
+    const parsed = typeof raw !== "undefined" ? parseBool(raw) : false;
+    try {
+        if (typeof window !== "undefined" && typeof window.axicmdEnabled !== "undefined") {
+            window.axicmdEnabled = parsed;
+        }
+    } catch (e) { }
+    return parsed;
+})();
+
+/**
+ * Checks whether the AXI Command Line Palette is enabled.
+ * @returns {boolean} True if AXI Command Palette is active, false otherwise.
+ */
+function isAxiCmdEnabled() {
+    const raw = getRawAxiCmdEnabled();
+    if (typeof raw !== "undefined") {
+        const parsed = parseBool(raw);
+        try {
+            if (typeof window !== "undefined" && typeof window.axicmdEnabled !== "undefined" && window.axicmdEnabled !== parsed) {
+                window.axicmdEnabled = parsed;
+            }
+        } catch (e) { }
+        return parsed;
+    }
+    return parseBool(_axicmdenabled);
+}
+
+/**
+ * Applies visibility styles and CSS classes to AxiCMD elements based on enabled status.
+ * Hides or shows .AXI-Sec, modals, and the global search bar.
+ * @returns {void}
+ */
+function applyAxiCmdVisibility() {
+    const isEnabled = isAxiCmdEnabled();
+
+    if (typeof document !== "undefined" && document.body) {
+        if (isEnabled) {
+            document.body.classList.add("axi-cmd-enabled");
+            document.body.classList.remove("axi-cmd-disabled");
+        } else {
+            document.body.classList.add("axi-cmd-disabled");
+            document.body.classList.remove("axi-cmd-enabled");
+        }
+    }
+
+    if (typeof document !== "undefined") {
+        const axiSecElems = document.querySelectorAll(".AXI-Sec");
+        axiSecElems.forEach(elem => {
+            if (isEnabled) {
+                elem.style.removeProperty("display");
+            } else {
+                elem.style.setProperty("display", "none", "important");
+            }
+        });
+
+        const axiModals = document.querySelectorAll("#axiFavModalOverlay, #axiFavDeleteModalOverlay");
+        axiModals.forEach(m => {
+            if (!isEnabled) {
+                m.style.setProperty("display", "none", "important");
+            }
+        });
+
+        const searchBar = document.querySelector(".search-bar");
+        if (searchBar) {
+            if (isEnabled) {
+                searchBar.style.setProperty("display", "none", "important");
+            } else {
+                searchBar.style.removeProperty("display");
+                if (searchBar.style.display === "none") {
+                    searchBar.style.display = "";
+                }
+            }
+        }
+
+        const globalSearchInp = document.getElementById("globalSearchinp");
+        if (globalSearchInp) {
+            if (isEnabled) {
+                globalSearchInp.style.setProperty("display", "none", "important");
+            } else {
+                globalSearchInp.style.removeProperty("display");
+                if (globalSearchInp.style.display === "none") {
+                    globalSearchInp.style.display = "";
+                }
+            }
+        }
+
+        const headerTopbar = (searchBar && searchBar.parentElement) ||
+            document.querySelector(".d-flex.align-items-stretch.justify-content-between.flex-lg-grow-1:has(.search-bar)") ||
+            document.querySelector(".d-flex.align-items-stretch.justify-content-between.flex-lg-grow-1");
+        if (headerTopbar) {
+            if (isEnabled) {
+                headerTopbar.style.setProperty("justify-content", "end", "important");
+            } else {
+                headerTopbar.style.removeProperty("justify-content");
+            }
+        }
+    }
+}
+
+let axiSecObserver = null;
+/**
+ * Sets up a MutationObserver on document body to reactively apply visibility
+ * styles whenever .AXI-Sec is injected into the DOM.
+ * @returns {void}
+ */
+function setupAxiSecObserver() {
+    if (typeof MutationObserver === "undefined" || typeof document === "undefined") return;
+    const target = document.body || document.documentElement;
+    if (!target || axiSecObserver) return;
+
+    try {
+        axiSecObserver = new MutationObserver(() => {
+            applyAxiCmdVisibility();
+        });
+        axiSecObserver.observe(target, {
+            childList: true,
+            subtree: true
+        });
+    } catch (e) { }
+}
+
+const _globalScope = typeof window !== "undefined" ? window : (typeof globalThis !== "undefined" ? globalThis : this);
+
+try {
+    const desc = Object.getOwnPropertyDescriptor(_globalScope, "axicmdenabled");
+    if (!desc || desc.configurable) {
+        Object.defineProperty(_globalScope, "axicmdenabled", {
+            /**
+             * Getter for the global axicmdenabled state.
+             * @returns {boolean} True if AXI Command Palette is active, false otherwise.
+             */
+            get() {
+                const raw = getRawAxiCmdEnabled();
+                if (typeof raw !== "undefined") {
+                    _axicmdenabled = parseBool(raw);
+                }
+                return _axicmdenabled;
+            },
+            /**
+             * Setter for the global axicmdenabled state; updates the internal flag and refreshes DOM visibility.
+             * @param {boolean} val - New enabled state.
+             * @returns {void}
+             */
+            set(val) {
+                const prev = _axicmdenabled;
+                _axicmdenabled = parseBool(val);
+                try {
+                    if (typeof window !== "undefined") {
+                        window.axicmdEnabled = _axicmdenabled;
+                    }
+                } catch (e) { }
+                applyAxiCmdVisibility();
+                if (!prev && _axicmdenabled && typeof _globalScope.initAxiCmd === "function") {
+                    _globalScope.initAxiCmd();
+                }
+            },
+            configurable: true,
+            enumerable: true
+        });
+    } else {
+        if (typeof _globalScope.axicmdenabled !== "undefined") {
+            _axicmdenabled = parseBool(_globalScope.axicmdenabled);
+        }
+        setInterval(() => {
+            const raw = getRawAxiCmdEnabled();
+            if (typeof raw !== "undefined") {
+                const cur = parseBool(raw);
+                if (cur !== _axicmdenabled) {
+                    _axicmdenabled = cur;
+                    applyAxiCmdVisibility();
+                    if (_axicmdenabled && typeof _globalScope.initAxiCmd === "function") {
+                        _globalScope.initAxiCmd();
+                    }
+                }
+            } else if (typeof _globalScope.axicmdenabled !== "undefined") {
+                const cur = parseBool(_globalScope.axicmdenabled);
+                if (cur !== _axicmdenabled) {
+                    _axicmdenabled = cur;
+                    applyAxiCmdVisibility();
+                    if (_axicmdenabled && typeof _globalScope.initAxiCmd === "function") {
+                        _globalScope.initAxiCmd();
+                    }
+                }
+            }
+        }, 200);
+    }
+} catch (e) {
+    if (typeof _globalScope !== "undefined") {
+        _globalScope.axicmdenabled = _axicmdenabled;
+    }
+}
+
+if (typeof _globalScope !== "undefined") {
+    /**
+     * Globally sets the AXI command palette enabled status and updates UI element visibility.
+     * @param {boolean} enabled - True to enable AxiCMD, false to disable.
+     * @returns {void}
+     */
+    _globalScope.setAxiCmdEnabled = function (enabled) {
+        _axicmdenabled = parseBool(enabled);
+        try {
+            _globalScope.axicmdenabled = _axicmdenabled;
+            _globalScope.axicmdEnabled = _axicmdenabled;
+        } catch (e) { }
+        applyAxiCmdVisibility();
+        if (_axicmdenabled && typeof _globalScope.initAxiCmd === "function") {
+            _globalScope.initAxiCmd();
+        }
+    };
+    _globalScope.applyAxiCmdVisibility = applyAxiCmdVisibility;
+}
+
+if (typeof document !== "undefined") {
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", () => {
+            setupAxiSecObserver();
+            applyAxiCmdVisibility();
+        });
+    } else {
+        setupAxiSecObserver();
+        applyAxiCmdVisibility();
+    }
+}
+
+(() => {
+    // Released On: 07/08/2026
+    // /AxPlugins/Axi/HTMLPages/js/axicmdmain.js
+
+    /* ==========================================================================
+       AXI DOMAIN MODULES
+       ========================================================================== */
+
+    const AxiCmdConfig = {
+        MAX_HISTORY: 10,
+        MAX_FAVORITES: 20,
+        SDK_CREATE_NEW_TARGETS: ["tstruct", "iview", "page", "axpert data sources", "ads"],
+        SHORTCUT_OPTIONS: {
+            GO: { displaydata: "Go [Ctrl + Enter]", name: "GO_ACTION", isExecutable: true },
+            SAVE: { displaydata: "Save [Ctrl + S]", name: "Save_ACTION", isExecutable: true },
+            POPUP: { displaydata: "Pop-Up [Ctrl + Shift + Enter]", name: "Pop_ACTION", isExecutable: true },
+            SOURCE: { displaydata: "Source [Ctrl + Alt + Enter]", name: "Source_ACTION", isExecutable: true }
+        },
+        COMMAND_ICONS: {
+            "create": "add_circle_outline",
+            "edit": "edit_note",
+            "view": "visibility",
+            "configure": "settings_suggest",
+            "sdk": "open_in_new",
+            "upload": "upload_file",
+            "download": "download",
+            "run": "play_arrow",
+            "analyse": "bar_chart",
+            "ai": "smart_toy",
+            "connect": "link",
+            "ask": "question_answer",
+            "end": "stop",
+            "editprompt": "edit",
+            "analyze": "analytics",
+            "help": "help_outline",
+            "install": "cloud_download",
+            "version": "info"
+        }
+    };
+
+    // 2. Pure Stateless Command Parser
+    const AxiCommandParser = {
+        /**
+         * Tokenizes a command string into an array of words while preserving quoted strings.
+         * @param {string} commandStr - Raw command string entered by user.
+         * @returns {string[]} Array of token strings.
+         */
+        tokenize(inputStr) {
+            if (!inputStr || typeof inputStr !== "string") return [];
+            const regex = new RegExp(`"[^"]*"?|[^\\s]+`, "g");
+            return inputStr.match(regex) || [];
+        },
+        /**
+         * Parses user input into a structured command object with verb, entity, and arguments.
+         * @param {string} rawCommand - Raw command line input string.
+         * @returns {{ verb: string, targetEntity: string, args: string[] }} Parsed command object.
+         */
+        parseCommand(inputStr) {
+            const tokens = this.tokenize(inputStr);
+            if (tokens.length === 0) return { verb: "", target: "", args: [] };
+            return {
+                verb: tokens[0].toLowerCase(),
+                target: tokens[1] ? tokens[1].toLowerCase() : "",
+                args: tokens.slice(2),
+                raw: inputStr
+            };
+        },
+        /**
+         * Capitalizes the first letter of a given string.
+         * @param {string} string - Input string to format.
+         * @returns {string} Formatted string with first letter capitalized.
+         */
+        capitalizeFirstLetter(str) {
+            if (!str) return "";
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+    };
+
+    // 3. API Service Seam
+    const AxiApiService = {
+        /**
+         * Fetches user session and authorization status from server.
+         * @async
+         * @returns {Promise<boolean>} True if session is valid, false otherwise.
+         */
+        async fetchSessionStatus(webUrl, mainSessionId) {
+            if (!axicmdenabled) return { valid: true };
+            if (typeof mainSessionId === "undefined" || !mainSessionId) {
+                return { valid: false, redirectUrl: `${getAppBaseUrl()}/aspx/sess.aspx` };
+            }
+            try {
+                const res = await fetch(webUrl + "/WebService.asmx/GetSession", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ key: "nsessionid" })
+                });
+                const data = await res.json();
+                const serverSessionId = data?.d;
+                if (!serverSessionId || serverSessionId === "Session does not exist" || serverSessionId !== mainSessionId) {
+                    return { valid: false, redirectUrl: `${getAppBaseUrl()}/aspx/sess.aspx` };
+                }
+                return { valid: true };
+            } catch (err) {
+                // // console.error("[AxiApiService] Session check error:", err);
+                return { valid: true };
+            }
+        }
+    };
+
+    // 4. Favorites State & LocalStorage Manager
+    const AxiFavoritesManager = {
+        /**
+         * Generates localStorage key for storing user favorites.
+         * @param {string} appUrl - Base application URL.
+         * @param {string} username - Current logged in username.
+         * @returns {string} Storage key string.
+         */
+        getStorageKey(appUrl, username) {
+            return `axi_favourites_${appUrl}_${username}`;
+        },
+        /**
+         * Loads favorites list from localStorage for the active user.
+         * @param {string} appUrl - Base application URL.
+         * @param {string} username - Current logged in username.
+         * @returns {Array<object>} List of favorite command objects.
+         */
+        loadLocalFavorites(appUrl, username) {
+            const key = this.getStorageKey(appUrl, username);
+            try {
+                const data = JSON.parse(localStorage.getItem(key)) || [];
+                return data.map(fav => typeof fav === "string" ? { commandText: fav, targetURL: "" } : fav);
+            } catch (ex) {
+                return [];
+            }
+        },
+        /**
+         * Persists favorites array to localStorage.
+         * @param {string} appUrl - Base application URL.
+         * @param {string} username - Current logged in username.
+         * @param {Array<object>} favorites - Array of favorite items to save.
+         * @returns {void}
+         */
+        saveLocalFavorites(appUrl, username, favoritesList) {
+            const key = this.getStorageKey(appUrl, username);
+            localStorage.setItem(key, JSON.stringify(favoritesList));
+        },
+        /**
+         * Determines whether a command text is eligible to be saved as a favorite.
+         * @param {string} cmdText - Command string to validate.
+         * @returns {boolean} True if favorite is allowed.
+         */
+        isFavAllowed(cmdText) {
+            if (!cmdText) return false;
+            const tokens = AxiCommandParser.tokenize(cmdText);
+            const verb = tokens[0]?.toLowerCase();
+            const verb2 = tokens[1]?.toLowerCase();
+            if (verb === "help" || verb === "version" || verb === "run" || verb2 === "keyfield") {
+                return false;
+            }
+            return true;
+        }
+    };
+
+    let apiMetadataUrl = "";
+    let apiMetadataConfigPromise = null;
+    let apiMetadataConfigError = "";
+    let settingsPageButtons = null;
+    let importExportButtons = null;
+    let commandHistory = [];
+    const MAX_HISTORY = AxiCmdConfig.MAX_HISTORY;
+    let historyIndex = -1;
+    let megaDropdown;
+    let favouritesCard;
+    let commandHeader;
+    let hiddenLoader;
+    let favouriteBtn;
+    let commandFavorites = [];
+    let axiFavoritesUrl = "";
+    let axiKeyfieldUrl = "";
+    let axiCommandSettingsUrl = "";
+    let axiSettingsUrl = "";
+    const MAX_FAVORITES = AxiCmdConfig.MAX_FAVORITES;
+    let commandRoutes = [];
+    let isDeleting = false;
+    let isEditing = false;
+    let isProgrammaticExecution = false;
+    let suppressFocusSuggestions = false;
+    // new code: option label ("Product") while a configure product / plugin / changerequest save runs, null otherwise.
+    // hide(), render() and executeCommandsV2() read it, so it is declared here, before any of them can run.
+    let commandSettingSaving = null;
+    let isInitialLoad = true;
+
+    const goOption = AxiCmdConfig.SHORTCUT_OPTIONS.GO;
+    const saveOption = AxiCmdConfig.SHORTCUT_OPTIONS.SAVE;
+    const popOption = AxiCmdConfig.SHORTCUT_OPTIONS.POPUP;
+    const sourceOption = AxiCmdConfig.SHORTCUT_OPTIONS.SOURCE;
+
+
+
+    const VIEW_HANDLERS = {
+        tstruct: ({ transId, rawStruct, fieldName, fieldValue, recordId }) =>
+            redirectToEntity(transId, rawStruct, fieldName, fieldValue, recordId),
+
+        iview: ({ transId, rawStruct }) =>
+            redirectToIView(transId, rawStruct),
+
+        page: ({ transId, fieldName, fieldValue }) =>
+            redirectToEntity(transId, fieldName, fieldValue),
+
+        ads: ({ transId, fieldName, fieldValue }) => redirectToEntity(transId, "", fieldName, fieldValue),
+
+        // inbox: () => handleViewInbox()
+    };
+
+
+
+
+
+
+    const COMMAND_HANDLERS = {
+        show: {
+            toast: () => showToast(input.value)
+
+        },
+        Configure: {
+            keyfield: handleKeyfield,
+        },
+        Edit: {
+            default: handleEditData,
+            data: handleEditData,
+            // user: handleEditUser
+
+
+
+        },
+        Create: {
+            default: handleCreate,
+
+
+
+
+        },
+        View: {
+            default: handleViewCommand,
+            source: handleViewSource,
+
+
+
+        },
+        Source: {
+            default: handleSourceCommand,
+        },
+        SDK: {
+            default: handleOpenSource,
+        },
+        Run: {
+            default: handleRunCommand,
+        },
+        Ai: {
+            start: handleAiStart,
+
+        },
+        connect: { default: () => handleAiButtons("openConnect"), },
+        ask: { default: handleAiAsk, },
+        end: { default: handleAiEnd, },
+        editprompt: { default: () => handleAiButtons("openSystemPrompt") },
+
+        // upload: { default: () => handleAiButtons("openUpload") }
+
+    };
+
+
+
+    let SET_COMMAND_STATE = {
+        isNextField: false,
+        currentField: null,
+        currentFieldType: null,
+        isFirst: true,
+        transid: null,
+        currentFieldValue: null,
+        isDropDown: false
+    };
+
+    let input;
+
+    let hintDiv;
+    let list;
+    let btnRefresh;
+    let runBtn;
+    let axiClearBtn;
+    let axiLogo;
+    let searchWrapper;
+    let axiSec;
+    let setCommandTransid = null;
+    let dateControlBoolean = false;
+    let popUpOption = false;
+
+    //let cachedSessionId;
+
+
+    let topToolbarButtons = null;
+    let bottomToolbarButtons = null;
+    let entityToolbarButtons = null;
+    let designModeToolbarButtons = null;
+    let pfToolbarButtons = null;
+    let buttonsList = null;
+    const OPERATORS_LIST = [">=", "<=", "!=", "=", ">", "<"];
+    const OPERATORS_SET = new Set(OPERATORS_LIST);
+
+
+    const OPERATOR_REGEX_PART = OPERATORS_LIST.join("|");
+
+    // STATE
+    let commands = null;
+    let items = [];
+    let activeIndex = -1;
+    let resolvedParams = {};
+    let resolvedParamType = {};
+    let lastTypedTokens = [];
+
+    // DATA CACHES
+    let axDatasourceObj = {};
+    let activeFetches = new Set();
+    let failedFetches = new Set();
+
+    // ---- Large dataset handling ------------------------------------------------------------
+    // Sources that are searched and paged on the server by the AxList API (props.pageno / pagesize / filters,
+    // see getList); everything else is small and filtered locally.
+    // axi_structmetalist = the list of forms / reports / pages / data sources shown under the commands.
+    // (axi_viewlist is paged the same way, but the command line does not use it.)
+    const PAGED_SOURCES = ["axi_getstructsdata", "axi_structmetalist", "axi_viewlist"];
+    // Rows loaded at a time is a per-user setting (gear button next to Refresh). It is stored under
+    // "axipref_" (NOT "axi_") so the Refresh button, which wipes every "axi_" cache key, keeps it.
+    const DEFAULT_PAGE_SIZE = 100;
+    const MIN_PAGE_SIZE = 100;
+    const MAX_PAGE_SIZE = 5000;
+    const PAGE_SIZE_STORAGE_KEY = "axipref_pagesize";
+
+    /**
+     * Local storage key for the page size of the signed-in user. The browser storage is shared by every
+     * user of this browser, so the user name is part of the key; otherwise one user's value shows for the next.
+     * @returns {string} Storage key.
+     */
+    function pageSizeStorageKey() {
+        const user = String(window.mainUserName || "").trim().toLowerCase();
+        return user ? PAGE_SIZE_STORAGE_KEY + "_" + user : PAGE_SIZE_STORAGE_KEY;
+    }
+
+    /**
+     * Keeps a page size inside the allowed range; anything that is not a number gives the default.
+     * @param {*} value - Candidate page size.
+     * @returns {number} Whole number between MIN_PAGE_SIZE and MAX_PAGE_SIZE.
+     */
+    function clampPageSize(value) {
+        const n = parseInt(value, 10);
+        if (isNaN(n)) return DEFAULT_PAGE_SIZE;
+        return Math.min(MAX_PAGE_SIZE, Math.max(MIN_PAGE_SIZE, n));
+    }
+
+    /**
+     * Rows requested per page: the user's saved setting, or the default when none is saved.
+     * @returns {number} Current page size.
+     */
+    function getPageSize() {
+        try {
+            const saved = localStorage.getItem(pageSizeStorageKey());
+            if (saved !== null) return clampPageSize(saved);
+        } catch (e) { }
+        return DEFAULT_PAGE_SIZE;
+    }
+
+    /**
+     * Saves the page size setting for this browser.
+     * @param {*} value - Requested page size (clamped to the allowed range).
+     * @returns {number} The value that was stored.
+     */
+    function setPageSize(value) {
+        const size = clampPageSize(value);
+        try { localStorage.setItem(pageSizeStorageKey(), String(size)); } catch (e) { }
+        return size;
+    }
+
+    /**
+     * Brings the local page size in line with the one saved on the server for this user (the server copy is
+     * what follows the user to another browser or machine). Never rejects and nobody waits for it: the lists load
+     * at once with the value known in this browser (or the default), and if the answer arrives later and differs
+     * from what the lists were loaded with, the setting is applied and the lists are reloaded, so the saved value
+     * is never silently ignored. The request is not aborted when it is slow (a cold API can take several seconds).
+     * @returns {void}
+     */
+    function syncPageSizeFromServer() {
+        if (!axiSettingsUrl || !window.mainUserName) return;
+        const sizeInUse = getPageSize();
+        const request = fetchServerPageSize().then(remote => {
+            if (remote === undefined) return;               // unreachable: keep the local value
+            if (remote === null) {
+                // old code
+                // // The server has no value for this user. A value saved in this browser then never reached the server
+                // // (the save failed, or the API was down): keep it and send it again instead of deleting it (#271).
+                // let hasLocalValue = false;
+                // try { hasLocalValue = localStorage.getItem(pageSizeStorageKey()) !== null; } catch (e) { }
+                // if (hasLocalValue) savePageSizeToServer(getPageSize());
+                // new code: the backend decides. No value saved there means the user never set one, so the default
+                // (100) applies. A value left in this browser (an old test, a failed save) is dropped instead of being
+                // pushed to the server, where it would have become this user's setting without them choosing it.
+                try { localStorage.removeItem(pageSizeStorageKey()); } catch (e) { }
+            } else {
+                setPageSize(remote);
+            }
+            return true;
+        });
+        request.then(done => {
+            if (done && getPageSize() !== sizeInUse && btnRefresh) btnRefresh.click();
+        });
+    }
+
+    /**
+     * Reads this user's saved page size from the server.
+     * @returns {Promise<number|null|undefined>} The size; null when the user has none saved; undefined when the API could not be read.
+     */
+    async function fetchServerPageSize() {
+        try {
+            const res = await fetch(`${axiSettingsUrl}?username=${encodeURIComponent(window.mainUserName)}&appname=${encodeURIComponent(getProjectName())}`);
+            if (!res.ok) return undefined;
+            const settings = await res.json();
+            const remote = settings && (settings.pagesize ?? settings.PAGESIZE ?? settings.Pagesize);
+            return (remote === undefined || remote === null || remote === "") ? null : clampPageSize(remote);
+        } catch (e) {
+            return undefined;
+        }
+    }
+
+    /**
+     * Saves the page size for this user on the server. The local value is already stored, so a failure here
+     * only means the setting will not follow the user to another browser yet.
+     * @param {number} size - Page size that was just stored locally.
+     * @returns {Promise<boolean>} True if the server accepted it.
+     */
+    async function savePageSizeToServer(size) {
+        if (!axiSettingsUrl || !window.mainUserName) return false;
+        try {
+            const res = await fetch(`${axiSettingsUrl}/pagesize?appname=${encodeURIComponent(getProjectName())}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username: window.mainUserName, value: String(size) })
+            });
+            return res.ok;
+        } catch (e) {
+            return false;
+        }
+    }
+    const MAX_CACHED_SEARCH_KEYS = 20;     // in-memory "_q_<term>" result sets kept per session (LRU)
+    const MAX_MERGED_BASE_ROWS = 5000;     // search hits merged into a base list stop growing past this
+    const MAX_RENDERED_ITEMS = 1000;       // hard cap of <li> elements built in one render
+    const FAILED_FETCH_RETRY_MS = 10000;   // a failed fetch key may be retried after this long
+    const LS_MAX_ENTRY_CHARS = 200000;     // results bigger than this are not persisted to localStorage
+
+    /**
+     * Tells whether a data source is searched/paged on the server.
+     * @param {string} sourceName - Data source (ADS) name.
+     * @returns {boolean} True if the source is searched + paged by the AxList API.
+     */
+    function isPagedSource(sourceName) {
+        const name = (sourceName || "").toLowerCase();
+        return PAGED_SOURCES.includes(name) || name.includes("getstructsdata");
+    }
+
+    // Paging state per fetch key: { page: last page loaded, hasMore: server may have more rows, loading }
+    const axPageState = {};
+    // Insertion order of "_q_" search keys in axDatasourceObj, used for LRU eviction
+    const axSearchKeyOrder = [];
+    // Row-id index per base list so merging search hits does not rescan the whole list each time
+    const axBaseIdIndex = {};
+    // Wait after the last keystroke before a typed term is sent to the server (a database round-trip is slower
+    // than 300 ms, so a shorter wait sends terms that are already outdated).
+    const SEARCH_DEBOUNCE_MS = 450;
+    // The search request still running for each base list (baseKey -> AbortController). Starting a new search of
+    // the same list aborts the old one, so outdated queries do not keep the server busy or re-render the dropdown.
+    const axSearchAbort = {};
+    // When a fetch failed (fetchKey -> timestamp) so it can be retried after FAILED_FETCH_RETRY_MS
+    const failedFetchTimes = {};
+    const LS_TTL_MS = 30 * 60 * 1000;      // persisted list results are reused for this long
+    // new code: param values longer than this (e.g. param10 of axi_getstructsdata, which carries every session variable
+    // after "@@VARS@@") go into the cache key as a short hash instead of the full text
+    const CACHE_KEY_MAX_VALUE_CHARS = 40;
+
+    /**
+     * Short, stable hash of a string (53-bit cyrb53, base 36), used to keep long values out of cache keys.
+     * Not for security: it only has to give different keys for different values.
+     * @param {string} str - Text to hash.
+     * @returns {string} About 10 characters.
+     */
+    function shortHash(str) {
+        let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+        for (let i = 0; i < str.length; i++) {
+            const ch = str.charCodeAt(i);
+            h1 = Math.imul(h1 ^ ch, 2654435761);
+            h2 = Math.imul(h2 ^ ch, 1597334677);
+        }
+        h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+        h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+        return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+    }
+
+    /**
+     * The form a param value takes inside a list cache key: short values stay readable (other code finds entries by
+     * "param4:<transid>|" and "param8:<field>|"), long ones become "h<hash>".
+     * @param {string} value - Param value sent to the data source.
+     * @returns {string} Value for the cache key.
+     */
+    function cacheKeyValue(value) {
+        const text = String(value);
+        return (text.length > CACHE_KEY_MAX_VALUE_CHARS || text.indexOf("@@VARS@@") !== -1) ? "h" + shortHash(text) : text;
+    }
+
+    /**
+     * Reads rows back from a localStorage entry written by writeListCache. Also accepts a plain array
+     * (older format). Returns an empty array for anything unreadable.
+     * @param {string} raw - Raw localStorage string.
+     * @returns {Array<object>} Rows.
+     */
+    function parseStoredList(raw) {
+        try {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) return parsed;
+            if (parsed && Array.isArray(parsed.d)) return parsed.d;
+        } catch (e) { }
+        return [];
+    }
+
+    /**
+     * Returns a still-fresh cached result for the key, or null (missing, expired or unreadable).
+     * Expired entries are removed.
+     * @param {string} cacheKey - localStorage key.
+     * @returns {Array<object>|null} Cached rows or null.
+     */
+    function readListCache(cacheKey) {
+        try {
+            const raw = localStorage.getItem(cacheKey);
+            if (!raw) return null;
+            const parsed = JSON.parse(raw);
+            if (parsed && Array.isArray(parsed.d) && typeof parsed.t === "number" && Date.now() - parsed.t < LS_TTL_MS) {
+                return parsed.d;
+            }
+            localStorage.removeItem(cacheKey);
+        } catch (e) { }
+        return null;
+    }
+
+    /**
+     * Stores rows in localStorage with a timestamp. Very large result sets are not stored (parsing them
+     * later would block the page). If the browser quota is exceeded, old AxiCMD list entries are
+     * removed and the write is retried once.
+     * @param {string} cacheKey - localStorage key.
+     * @param {Array<object>} rows - Rows to store.
+     * @returns {void}
+     */
+    function writeListCache(cacheKey, rows) {
+        let json;
+        try {
+            json = JSON.stringify({ t: Date.now(), d: rows });
+        } catch (e) { return; }
+        if (json.length > LS_MAX_ENTRY_CHARS) return;
+        try {
+            localStorage.setItem(cacheKey, json);
+        } catch (quotaErr) {
+            try {
+                // Quota exceeded: drop every cached list result (they are cheap to reload), then retry once
+                const stale = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const k = localStorage.key(i);
+                    if (k && k.startsWith("axi_") && /_v[12]$/.test(k) && k !== cacheKey && k.toLowerCase().includes("_param")) stale.push(k);
+                }
+                stale.forEach(k => localStorage.removeItem(k));
+                localStorage.setItem(cacheKey, json);
+            } catch (e) { /* still no room: skip caching, in-memory cache is still used */ }
+        }
+    }
+
+    // Coalesces "fetch finished -> refresh suggestions" calls (see scheduleSuggestionRefresh)
+    let suggestionRefreshTimer = null;
+    // Dropdown scrollTop to restore after a "load more" re-render (null = start from top)
+    let pendingScrollRestore = null;
+    // Watches the "Scroll down for more..." row. A scroll event does not bubble, and the dropdown has nested
+    // scrolling containers (list, commands grid, structures), so watching the row itself is what reliably
+    // tells that the user reached the end of whichever container scrolls.
+    let loadMoreObserver = null;
+    // listKey of the paged list drawn by the previous render(), to tell a refresh of the same list from a new one
+    let lastRenderedListKey = null;
+    // Paged-list context of the "load more" footer currently drawn (see buildLoadMoreFooter / loadNextPage)
+    let footerPagedContext = null;
+    // The paged list currently shown in the dropdown: { source, param, term, listKey } or null
+    let activePagedContext = null;
+
+    /**
+     * Registers a search key as most recently used and drops the oldest ones beyond the limit.
+     * @param {string} key - Search result key containing "_q_".
+     * @returns {void}
+     */
+    function touchSearchKey(key) {
+        const idx = axSearchKeyOrder.indexOf(key);
+        if (idx !== -1) axSearchKeyOrder.splice(idx, 1);
+        axSearchKeyOrder.push(key);
+        while (axSearchKeyOrder.length > MAX_CACHED_SEARCH_KEYS) {
+            const oldest = axSearchKeyOrder.shift();
+            delete axDatasourceObj[oldest];
+            delete axPageState[oldest];
+        }
+    }
+
+    /**
+     * Builds the result of a typed search from a list the client already holds completely, so no request is sent.
+     * Works when the base list, or the result of a shorter term contained in the typed one, came back without a
+     * "more pages" flag: then every match of the longer term is among its rows. Field rows (isfield 't') are
+     * kept as the server returns them whatever the term.
+     * @param {string} baseKey - Key of the base list, e.g. "axi_getstructsdata_<params>".
+     * @param {string} term - Lower-case typed term (3+ chars).
+     * @returns {boolean} True when axDatasourceObj["<baseKey>_q_<term>"] was filled from local data.
+     */
+    function refineFromCompleteList(baseKey, term) {
+        const isField = r => String(r?.isfield ?? r?.ISFIELD ?? "").toLowerCase() === "t";
+        const sources = [baseKey];
+        axSearchKeyOrder.forEach(k => {
+            if (k.startsWith(baseKey + "_q_")) {
+                const t = k.slice(baseKey.length + 3);
+                if (t.length < term.length && term.includes(t)) sources.push(k);
+            }
+        });
+        for (const k of sources) {
+            const state = axPageState[k];
+            const rows = axDatasourceObj[k];
+            if (!state || state.hasMore || !Array.isArray(rows)) continue;
+            const searchKey = `${baseKey}_q_${term}`;
+            axDatasourceObj[searchKey] = rows.filter(r => {
+                if (!r) return false;
+                if (isField(r)) return true;
+                const display = r.displaydata || r.caption || r.name || r.fname || r.keyfield || "";
+                return String(display).toLowerCase().includes(term);
+            });
+            axPageState[searchKey] = { page: 1, hasMore: false };
+            touchSearchKey(searchKey);
+            return true;
+        }
+        return false;
+    }
+
+    let filteredObjects = [];
+    let dynamicSearchDebounceTimer = null;
+    let adsfieldvalueanddt = {};
+    let createfieldnamevaluesList = {};
+    let AxiArmUrl;
+    let axiCommandConfigUrl;
+    let axiCommandConfigList = [];
+    let axiCommandConfigMap = {};
+    let isConfigLoaded = false;
+    let mode = "";
+    let isCommandsLoading = false;
+    const aiModeCommands = {
+        "connect": { "cmdToken": 11, "command": "", "commandGroup": "connect", "prompts": [] },
+        "ask": { "cmdToken": 11, "command": "", "commandGroup": "ask", "prompts": [{ "cmdToken": 11, "wordPos": 2, "prompt": "Chat", "promptSource": "", "promptParams": "", "promptValues": "", "extraParams": "" }] },
+        "end": { "cmdToken": 11, "command": "", "commandGroup": "end", "prompts": [] },
+        "editprompt": { "cmdToken": 11, "command": "", "commandGroup": "editprompt", "prompts": [] },
+        "analyze": { "cmdToken": 11, "command": "", "commandGroup": "analyze", "prompts": [] },
+        "upload": { "cmdToken": 11, "command": "", "commandGroup": "upload", "prompts": [] }
+    }
+
+
+
+
+    let isAxiInitialized = false;
+
+    /**
+     * Initializes AxiCMD component, DOM references, event listeners, commands, and favorites.
+     * @returns {void}
+     */
+    function init() {
+        applyAxiCmdVisibility();
+        if (!axicmdenabled) {
+            return;
+        }
+        if (isAxiInitialized) {
+            return;
+        }
+        let parentUserName = "";
+        let parentProject = "";
+        let parentUserRoles = "";
+        let parentUserResp = "";
+        let parentArmUrl = "";
+
+        // 1. Try callParentNew
+        try {
+            if (typeof callParentNew === "function") {
+                parentUserName = callParentNew("mainUserName") || "";
+                parentProject = callParentNew("mainProject") || "";
+                parentUserRoles = callParentNew("AxUserRoles") || "";
+                parentUserResp = callParentNew("userResp") || "";
+                parentArmUrl = callParentNew("armUrl") || "";
+            }
+        } catch (e) {
+            // // console.warn("callParentNew failed", e);
+        }
+
+        // 2. Try parent window
+        try {
+            if (typeof parent !== "undefined" && parent) {
+                if (!parentUserName) parentUserName = parent.mainUserName || "";
+                if (!parentProject) parentProject = parent.mainProject || "";
+                if (!parentUserRoles) parentUserRoles = parent.AxUserRoles || "";
+                if (!parentUserResp) parentUserResp = parent.userResp || "";
+                if (!parentArmUrl) parentArmUrl = parent.armUrl || "";
+            }
+        } catch (e) {
+            // // console.warn("parent access failed", e);
+        }
+
+        // 3. Try top window
+        try {
+            if (typeof top !== "undefined" && top) {
+                if (!parentUserName) parentUserName = top.mainUserName || "";
+                if (!parentProject) parentProject = top.mainProject || "";
+                if (!parentUserRoles) parentUserRoles = top.AxUserRoles || "";
+                if (!parentUserResp) parentUserResp = top.userResp || "";
+                if (!parentArmUrl) parentArmUrl = top.armUrl || "";
+            }
+        } catch (e) {
+            // // console.warn("top access failed", e);
+        }
+
+        // 4. Try local variable scope fallback
+        try {
+            if (!parentArmUrl && typeof armUrl !== "undefined") {
+                parentArmUrl = armUrl || "";
+            }
+        } catch (e) { }
+
+        if (typeof window.mainUserName === "undefined" || !window.mainUserName) {
+            window.mainUserName = parentUserName || "";
+        }
+        if (typeof window.mainProject === "undefined" || !window.mainProject) {
+            window.mainProject = parentProject || "";
+        }
+        if (typeof window.AxUserRoles === "undefined" || !window.AxUserRoles) {
+            window.AxUserRoles = parentUserRoles || "";
+        }
+        if (typeof window.userResp === "undefined" || !window.userResp) {
+            window.userResp = parentUserResp || "";
+        }
+
+        let globalArmUrl = parentArmUrl || "";
+
+        if (globalArmUrl) {
+            AxiArmUrl = globalArmUrl;
+        }
+
+        if (axicmdenabled && !AxiArmUrl && !isConfigLoaded) {
+            isConfigLoaded = true;
+            let configUrl = "";
+            try {
+                configUrl = `${getAppBaseUrl()}/AxpertPlugins/AxiCMD/axicmd-config.json`;
+            } catch (e) {
+                configUrl = `/AxpertPlugins/AxiCMD/axicmd-config.json`;
+            }
+            try {
+                const res = fetch(configUrl);
+                if (res.ok) {
+                    const config = res.json();
+                    AxiArmUrl = config.axiarmurl || config.armUrl || config.axiArmUrl || "";
+                }
+            } catch (err) {
+                // // console.error("Failed to load AxiArmUrl from config file:", err);
+            }
+        }
+
+        apiMetadataUrl = `${AxiArmUrl}/AxiCMDApi/api/v1/Axi/axi_get`;
+        // // console.log("ApiMetadataUrl = " + apiMetadataUrl);
+
+        axiFavoritesUrl = `${AxiArmUrl}/AxiCMDApi/api/v1/Axi/user-favourites`;
+        // axiFavoritesUrl = `http://localhost:5057/api/v1/Axi/user-favourites`; 
+        // // console.log("AxiFavoritesUrl = " + axiFavoritesUrl);
+
+        axiCommandConfigUrl = `${AxiArmUrl}/AxiCMDApi/api/v1/Axi/command-config`;
+        axiKeyfieldUrl = `${AxiArmUrl}/AxiCMDApi/api/v1/Axi/setkeyfield`;
+        axiSettingsUrl = `${AxiArmUrl}/AxiCMDApi/api/v1/Axi/user-settings`;
+        axiCommandSettingsUrl = `${AxiArmUrl}/AxiCMDApi/api/v1/CommandSettings`;
+
+
+        input = document.getElementById("Axi-Searchinp");
+
+
+        if (!input) {
+            // // console.log("Axi Input not ready yet... waiting.");
+            setTimeout(init, 200);
+            return;
+        }
+
+        installInputScrollToEnd(input);
+
+        axiSec = document.querySelector(".AXI-Sec");
+        applyAxiCmdVisibility();
+
+        // // console.log("Axi Input Found!", input);
+
+        axiLogo = document.getElementById("axiLogo");
+
+
+
+        if (!axiLogo) {
+            // // console.log("Axi Logo not ready yet... waiting.");
+            setTimeout(init, 200);
+            return;
+
+        }
+
+        searchWrapper = document.querySelector(".searchwrap-AXI");
+
+        if (!searchWrapper) {
+            // // console.log("Axi search wrapper not ready yet... waiting.");
+            setTimeout(init, 200);
+            return;
+
+        }
+
+        hintDiv = document.getElementById("axiHint");
+        if (!hintDiv) {
+            // // console.log("Axi HintDiv not ready yet... waiting.");
+            setTimeout(init, 200);
+            return;
+        }
+
+        // // console.log("Axi HintDiv Found!", hintDiv);
+
+        list = document.getElementById("axiSuggestions");
+        if (!list) {
+            // // console.log("Axi AxiSuggestion not ready yet... waiting.");
+            setTimeout(init, 200);
+            return;
+        }
+
+        // console.log("Axi AxiSuggestionList found Found!", list);
+
+        btnRefresh = document.getElementById("btnRefresh");
+        if (!btnRefresh) {
+            // console.log("Axi btnRefresh not ready yet... waiting.");
+            setTimeout(init, 200);
+            return;
+        }
+
+        // console.log("Axi btnRefresh Found!", btnRefresh);
+
+        runBtn = document.getElementById("runBtn");
+        if (!runBtn) {
+            // console.log("Axi Run btn not ready yet... waiting.");
+            setTimeout(init, 200);
+            return;
+        }
+
+        // console.log("Axi Runbtn Found!", runBtn);
+
+        axiClearBtn = document.getElementById("axiClearBtn");
+
+        if (!axiClearBtn) {
+            // console.log("Axi Clear button not ready yet... waiting.");
+            setTimeout(init, 200);
+            return;
+        }
+
+
+
+
+
+        // console.log("Axi Clear button found!", axiClearBtn);
+
+        megaDropdown = document.getElementById("axiMegaDropdown");
+
+
+
+
+
+
+
+        // console.log("Axi Clear button found!", megaDropdown);
+
+        favouritesCard = document.getElementById("axiFavouritesCard");
+        // console.log("Axi Clear favouritesCard Found!", favouritesCard);
+
+        commandHeader = document.getElementById("axiCommandsHeader");
+        // console.log("Axi Command Header found!", commandHeader);
+
+        hiddenLoader = document.getElementById("hiddenLoader");
+        // console.log("Axi hidden Loader found!", hiddenLoader);
+
+
+        favouriteBtn = document.getElementById("axiFavouriteBtn");
+
+        // console.log("Axi Favourite Button found!", favouriteBtn);
+
+
+
+
+
+
+        setupEventListeners();
+
+
+
+        if (axicmdenabled) {
+            // The commands load at once with the page size known in this browser. The value saved on the server is
+            // checked in the background and reloads the lists only if it differs (#275).
+            syncPageSizeFromServer();
+            initCommands(false);
+            loadFavorites();
+        }
+
+        applyAxiCmdVisibility();
+        isAxiInitialized = true;
+    }
+
+    if (typeof window !== "undefined") {
+        window.initAxiCmd = init;
+    }
+
+    /**
+     * Moves the caret to the end and scrolls the input horizontally so the tail of the text is visible.
+     * @param {HTMLInputElement} el - The command input element.
+     * @returns {void}
+     */
+    function scrollInputToEnd(el) {
+        try {
+            const len = el.value.length;
+            if (document.activeElement === el) {
+                el.setSelectionRange(len, len);
+            }
+            el.scrollLeft = el.scrollWidth;
+        } catch (e) { }
+    }
+
+    /**
+     * Wraps the input's value setter so every programmatic update (autocomplete, history,
+     * suggestion click) leaves the caret at the end with the end of the text in view.
+     * Typing by the user does not go through the setter, so normal editing is unaffected.
+     * @param {HTMLInputElement} el - The command input element.
+     * @returns {void}
+     */
+    function installInputScrollToEnd(el) {
+        if (!el || el.__axiScrollToEnd) return;
+        const proto = Object.getPrototypeOf(el);
+        const desc = Object.getOwnPropertyDescriptor(proto, "value") ||
+            Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
+        if (!desc || !desc.set || !desc.configurable) return;
+        el.__axiScrollToEnd = true;
+        Object.defineProperty(el, "value", {
+            configurable: true,
+            enumerable: desc.enumerable,
+            get() { return desc.get.call(this); },
+            set(v) {
+                const changed = desc.get.call(this) !== String(v == null ? "" : v);
+                desc.set.call(this, v);
+                if (changed) {
+                    scrollInputToEnd(this);
+                    // re-apply after layout, once the browser has recomputed scrollWidth
+                    requestAnimationFrame(() => {
+                        if (this.selectionStart === this.value.length) {
+                            this.scrollLeft = this.scrollWidth;
+                        }
+                    });
+                }
+            }
+        });
+        // typing/paste/IME: keep the caret in view when the text outgrows the field
+        el.addEventListener("input", () => {
+            if (el.selectionStart === el.value.length) {
+                el.scrollLeft = el.scrollWidth;
+            }
+        });
+    }
+
+    let initRetries = 0;
+    /**
+     * Initiates startup sequence with retry polling until session prerequisites and DOM elements are ready.
+     * @returns {void}
+     */
+    function startInit() {
+        applyAxiCmdVisibility();
+        if (!isAxiCmdEnabled()) {
+            if (initRetries < 30 && !document.querySelector(".AXI-Sec")) {
+                initRetries++;
+                setTimeout(startInit, 100);
+            }
+            return;
+        }
+        const proj = window.mainProject || (typeof callParentNew === "function" && callParentNew("mainProject"));
+        const user = window.mainUserName || (typeof callParentNew === "function" && callParentNew("mainUserName"));
+
+        if ((!proj || !user) && initRetries < 20) {
+            initRetries++;
+            setTimeout(startInit, 100);
+            return;
+        }
+        init();
+    }
+
+    startInit();
+
+    /**
+     * Resolves current Axpert project name from session or URL.
+     * @returns {string} Current project name.
+     */
+    function getProjectName() {
+        // let appSessUrl = top.window.location.href.toLowerCase().substring("0", top.window.location.href.indexOf("/aspx/"));
+        // // console.log("Origin: " + appSessUrl);
+        // const projInfoKey = `projInfo-${appSessUrl}`;
+
+        // const appname = localStorage.getItem(projInfoKey);
+
+        // // console.log(appname);
+        // return appname;
+
+        return window.mainProject ||
+            (typeof callParentNew === "function" && callParentNew("mainProject")) ||
+            (typeof parent !== "undefined" && parent.mainProject) ||
+            (typeof top !== "undefined" && top.mainProject) ||
+            "";
+    }
+
+    /* ===============================
+        INITIALIZATION
+    =============================== */
+    /**
+     * Fetches command definitions from server API or cache and initializes command dictionary.
+     * @async
+     * @param {boolean} [isForced=false] - If true, bypasses cache and re-fetches from server.
+     * @returns {Promise<void>}
+     */
+    async function initCommands(isForced = false) {
+        if (!axicmdenabled) return;
+        const structType = getStructType();
+        if (mode === "ai") {
+            commands = aiModeCommands;
+            return;
+        }
+
+        const appname = getProjectName();
+        // console.log(appname);
+
+        if (!apiMetadataUrl) {
+            // console.error("Metadata API URL is not configured.", apiMetadataConfigError);
+            showToast("Metadata API URL is not configured.");
+            return;
+        }
+
+        try {
+            isCommandsLoading = true;
+            input.disabled = false;
+            input.placeholder = "Axpert AI";
+
+            await initCommandConfigs(isForced, appname);
+
+            const cached = localStorage.getItem("axi_commands_raw_v1");
+            let commandsFromDb = null;
+            if (cached && !isForced) {
+                try {
+                    commandsFromDb = JSON.parse(cached);
+                } catch (e) {
+                    // console.error("Failed to parse cached raw commands", e);
+                }
+            }
+
+            if (!commandsFromDb) {
+                const res = await fetch(`${apiMetadataUrl}?view=metadata&forceRefresh=${isForced}&appname=${appname}`);
+
+                if (!res.ok) {
+                    showToast("Metadata fetch failed. Please contact Administrator");
+                    // console.error("Metadata fetch failed");
+                    return;
+                }
+
+                if (res.status === 204) {
+                    showToast("No commands found. Please check 'AxiApi' Configuration");
+                    return;
+                }
+
+                const data = await res.json();
+                commandsFromDb = data.commands;
+                localStorage.setItem("axi_commands_raw_v1", JSON.stringify(commandsFromDb));
+            }
+
+            if (commandsFromDb) {
+                const message = isForced ? "Refreshed Successfully!" : "Commands Loaded Successfully!.";
+                const accessPermissions = getAccessPermissions();
+                // User Activation under Configure also depends on axusers.licactivation; only asked when Configure is available
+                const canActivateUsers = (commandsFromDb["Configure"] && accessPermissions.appMgrAccess)
+                    ? await getUserLicActivation(window.mainUserName)
+                    : false;
+                // Clone to avoid mutating the cached object stored in memory
+                commands = buildCommandsByAccessPermissions(JSON.parse(JSON.stringify(commandsFromDb)), accessPermissions, canActivateUsers);
+                // Append Help command to initial suggestions list
+                commands["Help"] = {
+                    cmdToken: 11,
+                    command: "",
+                    commandGroup: "Help",
+                    prompts: []
+                };
+                // Append Version command to initial suggestions list
+                commands["Version"] = {
+                    cmdToken: 12,
+                    command: "",
+                    commandGroup: "Version",
+                    prompts: []
+                };
+
+                // console.log(JSON.stringify(commands));
+
+                // Load target entities (tstructs, iview, ads and pages) from metadata on startup asynchronously
+                const metadataParams = getStructParam();
+                loadList("axi_structmetalist", metadataParams);
+                // if (isForced) {
+                showToast(message, 3000, true);
+                // }
+            }
+        } catch (err) {
+            // console.error("Critical: Could not load commands", err);
+        } finally {
+            isCommandsLoading = false;
+            suppressFocusSuggestions = true;
+            input.disabled = false;
+            input.placeholder = "Axpert AI";
+        }
+    }
+
+    /**
+     * Computes base application URL from current window location.
+     * @returns {string} Application base URL.
+     */
+    function getAppBaseUrl() {
+        const href = top.window.location.href;
+        const aspxIndex = href.toLowerCase().indexOf("/aspx/");
+
+        if (aspxIndex === -1) {
+            throw new Error(`Cannot resolve app base URL. '/aspx/' not found in: ${href}`);
+        }
+
+        return href.substring(0, aspxIndex);
+    }
+
+    // async function loadApiMetadataConfig() {
+    //     let configUrl = "";
+    //     try {
+    //         configUrl = `${getAppBaseUrl()}/AxpertPlugins/Axi/axiConfig.json`;
+    //         const res = await fetch(configUrl, { cache: "no-store" });
+    //         if (!res.ok) {
+    //             throw new Error(`Failed to load ${configUrl}. Status: ${res.status}`);
+    //         }
+
+    //         const settings = await res.json();
+    //         const configuredApiMetadata = typeof settings?.API_METADATA === "string" ? settings.API_METADATA.trim() : "";
+    //         const configuredAxiFavoritesUrl = typeof settings?.AXI_FAVORITES_URL === "string" ? settings.AXI_FAVORITES_URL.trim() : "";
+
+    //         if (!configuredApiMetadata) {
+    //             throw new Error(`API_METADATA is missing or empty in ${configUrl}`);
+    //         }
+
+    //         if (!configuredAxiFavoritesUrl) {
+    //             throw new Error(`API_METADATA is missing or empty in ${configUrl}`);
+    //         }
+
+    //         apiMetadataUrl = configuredApiMetadata;
+    //         axiFavoritesUrl = configuredAxiFavoritesUrl;
+    //         apiMetadataConfigError = "";
+    //     } catch (error) {
+    //         apiMetadataUrl = "";
+    //         apiMetadataConfigError = (error && error.message) ? error.message : String(error);
+    //         showToast("Failed to load API metadata configuration.");
+    //         // console.error(`Failed to resolve API_METADATA from ${configUrl || "app base URL"}`, error);
+    //     }
+    // }
+
+    // function ensureApiMetadataConfigLoaded() {
+    //     if (!apiMetadataConfigPromise) {
+    //         apiMetadataConfigPromise = loadApiMetadataConfig();
+    //     }
+
+    //     return apiMetadataConfigPromise;
+    // }
+
+    /**
+     * Resolves the active prompt configuration object for the current token position.
+     * @param {object} commandConfig - Command definition schema.
+     * @param {string[]} tokens - Current token array.
+     * @param {number} targetIndex - Index of the target token.
+     * @returns {object|null} Matching prompt definition or null.
+     */
+    function getActivePromptInfo(commandConfig, tokens, targetIndex) {
+        // targetIndex is 0-based. WordPos is 1-based.
+        // Since the user DOES NOT type the extraParam, the mapping is direct.
+        const currentWordPos = targetIndex + 1;
+
+
+        const sortedPrompts = commandConfig.prompts.sort((a, b) => a.wordPos - b.wordPos);
+        const prompt = sortedPrompts.find(p => p.wordPos === currentWordPos);
+
+        if (!prompt) return null;
+
+        if (targetIndex > 0) {
+            const prevWordPos = currentWordPos - 1;
+            const prevPrompt = sortedPrompts.find(p => p.wordPos === prevWordPos);
+
+
+
+            if (prevPrompt) {
+
+                const prevSources = prevPrompt.promptSource
+                    .split(',')
+                    .map(s => s.trim().toLowerCase())
+                    .filter(Boolean);
+
+
+                //We need to optimise this logic as it works only for axi_getstructsdata now.
+                let fieldSource = prevSources.find(src =>
+                    src.toLowerCase().includes('axi_getstructsdata') || src.includes('keyvalue') || src.includes('fieldname')
+                );
+
+                //const fieldSource = prevSources.find(src =>
+                //    src.includes('keyvalue') || src.includes('fieldname')
+                //);
+                if (fieldSource?.toLowerCase() === "axi_getstructsdata" && tokens.length === 5 && commandConfig?.commandGroup?.toLowerCase() === "edit") {
+                    fieldSource = "";
+                }
+
+
+                if (fieldSource) {
+
+                    const prevTokenRaw = cleanString(tokens[targetIndex - 1]);
+                    let foundItem = null;
+
+                    for (const key in axDatasourceObj) {
+                        if (key.startsWith(fieldSource)) {
+                            const list = axDatasourceObj[key];
+
+                            foundItem = list.find(item =>
+                                (item.name && item.name.toLowerCase() === prevTokenRaw.toLowerCase()) ||
+                                (item.displaydata && item.displaydata.toLowerCase() === prevTokenRaw.toLowerCase())
+                            );
+
+                            if (foundItem) break;
+                        }
+                    }
+
+                    if (foundItem && foundItem.isfield === 'f') {
+                        // console.log("Short Circuit: Previous item is not a field. Stopping prompts.");
+                        return null;
+                    }
+                }
+            }
+
+        }
+
+        let activeSource = prompt.promptSource || "";
+
+        // Handle Dynamic Source Switching 
+        if (activeSource.includes(",")) {
+            const prevWordPos = currentWordPos - 1;
+            const prevPrompt = sortedPrompts.find(p => p.wordPos === prevWordPos);
+
+            if (prevPrompt && prevPrompt.promptValues) {
+                const prevTokenIndex = targetIndex - 1;
+                const prevValue = cleanString(tokens[prevTokenIndex]);
+                const allowedValues = prevPrompt.promptValues.split(',').map(v => v.trim().toLowerCase());
+                // const actualPrevValue = tryResolveToken(prevTokenIndex, prevValue, commandConfig, false) || prevValue;
+                const { value: actualPrevValue, type } = tryResolveToken(prevTokenIndex, prevValue, commandConfig, false) || prevValue;
+                let valueIndex = allowedValues.indexOf(prevValue.toLowerCase());
+
+                if (valueIndex === -1 && commandConfig.commandGroup?.toLowerCase() === 'view') {
+                    if (actualPrevValue.toLowerCase() === "source") {
+                        return null;
+
+                    }
+                    const detectedType = getType(commandConfig?.prompts?.[0]?.promptSource.toLowerCase(), { value: actualPrevValue, type: type }, prevPrompt.promptValues, tokens, commandConfig);
+
+                    if (detectedType) {
+                        valueIndex = allowedValues.indexOf(detectedType.toLowerCase());
+                    }
+
+
+                }
+
+                if (valueIndex === -1 && (commandConfig.commandGroup?.toLowerCase() === "sdk" || commandConfig.commandGroup?.toLowerCase() === "configure")) {
+
+                    return { config: prompt, realSource: null, error: "Not a Valid command" };
+                }
+
+                if (valueIndex !== -1) {
+                    const sources = activeSource.split(',');
+                    activeSource = sources[valueIndex] ? sources[valueIndex].trim() : "";
+                }
+
+                // console.log("Value Index: " + valueIndex);
+                // console.log("Active Source: " + activeSource);
+            }
+        }
+
+        return { config: prompt, realSource: activeSource, error: "" };
+    }
+
+
+
+
+
+    /**
+     * Asynchronously fetches dropdown list data from server for a given prompt data source.
+     * @async
+     * @param {string} sourceName - Source definition name.
+     * @param {string} [paramValue=""] - Optional parameter filter value.
+     * @param {string} [searchTerm=""] - Optional search query string (minimum 3 chars for dynamic search).
+     * @param {number} [pageNo=1] - Page number to fetch.
+     * @param {number} [pageSize=100] - Number of records per page (default 100).
+     * @returns {Promise<Array<object>>} List of suggestion items.
+     */
+    async function loadList(sourceName, paramValue = "", searchTerm = "", pageNo = 1, pageSize = getPageSize()) {
+        if (!axicmdenabled || sourceName === "axi_dummy") {
+            return [];
+        }
+        if (sourceName.toLowerCase().includes("getstructsdata") && (!paramValue || !String(paramValue).trim())) {
+            console.warn(`[AxiCMD loadList] Blocked call to ${sourceName} without required paramValue.`);
+            return [];
+        }
+        const baseKey = paramValue ? `${sourceName}_${paramValue}`.toLowerCase() : sourceName.toLowerCase();
+        const cleanTerm = (typeof searchTerm === "string" ? searchTerm : "").trim().toLowerCase();
+
+        // listKey = where the accumulated rows live (base list, or the list for one search term).
+        // fetchKey = what identifies one network request (page 2+ get their own key so they can run
+        // while page 1 is already cached, and so duplicate scroll events are ignored).
+        const listKey = cleanTerm ? `${baseKey}_q_${cleanTerm}` : baseKey;
+        const isNextPage = pageNo > 1;
+        const fetchKey = isNextPage ? `${listKey}_p${pageNo}` : listKey;
+
+        if (activeFetches.has(fetchKey)) return axDatasourceObj[listKey] || [];
+        if (failedFetches.has(fetchKey)) {
+            // A failed fetch is only blocked for a short time, then it may be retried
+            if (Date.now() - (failedFetchTimes[fetchKey] || 0) < FAILED_FETCH_RETRY_MS) return axDatasourceObj[listKey] || [];
+            failedFetches.delete(fetchKey);
+            delete failedFetchTimes[fetchKey];
+        }
+        activeFetches.add(fetchKey);
+
+        // A typed-term search (page 1) cancels the earlier search of the same list that is still running
+        let abortCtl = null;
+        // (Not for the structure list: each of its terms is asked only once, so an aborted term would never be retried.)
+        if (cleanTerm && !isNextPage && typeof AbortController !== "undefined" && sourceName.toLowerCase() !== "axi_structmetalist") {
+            if (axSearchAbort[baseKey]) axSearchAbort[baseKey].abort();
+            abortCtl = new AbortController();
+            axSearchAbort[baseKey] = abortCtl;
+        }
+
+        try {
+            const paged = isPagedSource(sourceName);
+            // Every source is requested one page at a time. (The structure list, axi_structmetalist, used to
+            // be fetched whole with pageSize 0; it is paged on the server now like the record lists.)
+            const effectivePageSize = pageSize || getPageSize();
+            const data = await getList(sourceName, paramValue, cleanTerm, pageNo, effectivePageSize, abortCtl ? abortCtl.signal : undefined);
+            let list = Array.isArray(data) ? data : (data ? [data] : []);
+
+            // Field rows (isfield === 't') are exempt from pagination and search: they are always
+            // returned in full by the server. Only record rows are capped/filtered below.
+            const isFieldItem = item => String(item?.isfield ?? item?.ISFIELD ?? "").toLowerCase() === "t";
+            const fieldItems = list.filter(isFieldItem);
+            let recordItems = list.filter(item => !isFieldItem(item));
+
+            // A full page from the server means there may be another page ("load more" on scroll)
+            // hasMore is true only when the server returned EXACTLY one full page. More rows than a page means
+            // the server did not apply paging (for example the ADS query has not been updated yet): then
+            // everything it sent is already here and there is no next page to ask for.
+            const serverRecordCount = recordItems.length;
+            axPageState[listKey] = {
+                page: pageNo,
+                // The AxList API pages the whole result (field rows count too), so compare the full row count
+                hasMore: paged && effectivePageSize > 0 && (serverRecordCount === effectivePageSize || list.length === effectivePageSize || recordItems.some(r => r && r.__fullPage))
+            };
+
+            // Search first, then limit. (Limiting first would cut the list to its first rows and the search
+            // would then run on those only, so a match further down could never be found.)
+            // The server already applies the term; this is a safety net in case it does not.
+            if (cleanTerm && recordItems.length > 0) {
+                recordItems = recordItems.filter(item => {
+                    const display = item.displaydata || item.caption || item.name || item.fname || item.keyfield || "";
+                    return String(display).toLowerCase().includes(cleanTerm);
+                });
+            }
+
+            // Page-size limit for sources that are not paged on the server. Paged sources are not cut here:
+            // the server limits them, and when it did not, the rows it sent are kept rather than dropped.
+            if (!paged && effectivePageSize > 0 && recordItems.length > effectivePageSize) {
+                recordItems = recordItems.slice(0, effectivePageSize);
+            }
+
+            const uidOf = item => {
+                const uid = item?.transrecordid ?? item?.id ?? item?.displaydata ?? item?.name;
+                return (uid !== undefined && uid !== null) ? String(uid).toLowerCase() : null;
+            };
+
+            if (isNextPage && Array.isArray(axDatasourceObj[listKey])) {
+                // Page 2+: append only rows we do not already hold (no field rows - they came with page 1)
+                const current = axDatasourceObj[listKey];
+                const seen = new Set();
+                current.forEach(item => { const u = uidOf(item); if (u !== null) seen.add(u); });
+                const incoming = new Set();
+                recordItems.forEach(item => {
+                    const u = uidOf(item);
+                    if (u !== null) incoming.add(u);
+                    if (u === null || !seen.has(u)) current.push(item);
+                });
+                // Rows that were only merged from a search and have now arrived as a real page are plain rows again
+                if (!cleanTerm) {
+                    current.forEach(item => { if (item && item.__fromSearch && incoming.has(uidOf(item))) delete item.__fromSearch; });
+                }
+                list = current;
+            } else {
+                // Page 1: replace the list (records first, then the untouched field rows)
+                const previous = axDatasourceObj[listKey];
+                list = recordItems.concat(fieldItems);
+                // A reload of a base list must not forget structures / records that were merged in from earlier
+                // searches (they are not on page 1 but may already be in use by a typed command).
+                if (!cleanTerm && paged && Array.isArray(previous) && previous.length > 0) {
+                    const have = new Set();
+                    list.forEach(item => { const u = uidOf(item); if (u !== null) have.add(u); });
+                    for (let i = 0; i < previous.length && list.length < MAX_MERGED_BASE_ROWS; i++) {
+                        const u = uidOf(previous[i]);
+                        if (u !== null && !have.has(u) && !isFieldItem(previous[i])) { have.add(u); list.push(previous[i]); }
+                    }
+                }
+                axDatasourceObj[listKey] = list;
+            }
+
+            if (cleanTerm) touchSearchKey(listKey);
+
+            // When dynamic search returns records, merge them into the base list in memory
+            // so token resolvers, command runners, and storage lookups can find any selected record.
+            if (cleanTerm && recordItems.length > 0) {
+                if (!axDatasourceObj[baseKey] || !Array.isArray(axDatasourceObj[baseKey])) {
+                    axDatasourceObj[baseKey] = [];
+                }
+                const existing = axDatasourceObj[baseKey];
+
+                // Id index kept per base list so every merge does not rescan the whole list.
+                // It is rebuilt only if the base array itself was replaced (e.g. after a reset).
+                let idx = axBaseIdIndex[baseKey];
+                if (!idx || idx.ref !== existing) {
+                    idx = { ref: existing, ids: new Set() };
+                    existing.forEach(item => { const u = uidOf(item); if (u !== null) idx.ids.add(u); });
+                    axBaseIdIndex[baseKey] = idx;
+                }
+
+                // Rows merged in from a search are copies marked __fromSearch. They stay findable for resolvers
+                // (tryResolveToken, edit/view lookups ...) but are not part of the list as the server returned it,
+                // so the plain list (nothing typed) does not show them out of order at its end.
+                for (let i = 0; i < recordItems.length && existing.length < MAX_MERGED_BASE_ROWS; i++) {
+                    const item = recordItems[i];
+                    const u = uidOf(item);
+                    if (u === null) {
+                        existing.push(Object.assign({}, item, { __fromSearch: true }));
+                    } else if (!idx.ids.has(u)) {
+                        idx.ids.add(u);
+                        existing.push(Object.assign({}, item, { __fromSearch: true }));
+                    }
+                }
+            }
+            return list;
+        } catch (error) {
+            // Aborted because the user typed on: not a failure, nothing is stored, the newer search takes over
+            if (error && error.name === "AbortError") return axDatasourceObj[listKey] || [];
+            failedFetches.add(fetchKey);
+            failedFetchTimes[fetchKey] = Date.now();
+            if (!isNextPage) axDatasourceObj[listKey] = [];
+            console.error("[AxiCMD loadList] Failed fetch:", fetchKey, error);
+            return [];
+        } finally {
+            activeFetches.delete(fetchKey);
+            if (abortCtl && axSearchAbort[baseKey] === abortCtl) delete axSearchAbort[baseKey];
+            scheduleSuggestionRefresh();
+        }
+    }
+
+    /**
+     * Re-runs the suggestion pipeline after a fetch finishes. Several fetches can finish close together
+     * (for example while typing), so refreshes are coalesced into one to avoid re-filtering and
+     * re-rendering large lists repeatedly.
+     * @returns {void}
+     */
+    function scheduleSuggestionRefresh() {
+        if (isInitialLoad) return;
+        clearTimeout(suggestionRefreshTimer);
+        suggestionRefreshTimer = setTimeout(() => {
+            if (!isInitialLoad && document.activeElement === input) {
+                handleInput();
+            }
+        }, 30);
+    }
+
+    // Structure-list search (axi_structmetalist): only a first page of the list is loaded, so names that are
+    // not in it are looked up on the server as the user types.
+    let structSearchTimer = null;
+    let structSearchPendingTerm = null;
+    // True while a debounced record search (axi_getstructsdata etc.) is waiting to be sent
+    let dynamicSearchPending = false;
+
+    /**
+     * Tells whether a server search has been requested but not finished: either waiting out its debounce delay
+     * (nothing is in activeFetches yet) or running. The dropdown must show "Searching..." then, never "No Data".
+     * @returns {boolean} True while a search is pending.
+     */
+    function isSearchPending() {
+        return structSearchPendingTerm !== null || dynamicSearchPending;
+    }
+    const structSearchAsked = new Set();
+    // Structure list keys that were already asked again after coming back empty (see processParamforEditndView)
+    const emptyStructListRetried = new Set();
+
+    /**
+     * Asks the server for structures (forms / reports / pages / data sources) matching a typed word, when the
+     * word is not in the part of the structure list loaded so far. Debounced, and each term is asked only once.
+     * Hits are merged into the base list by loadList, which then refreshes the suggestions.
+     * @param {string} term - Text typed by the user (3+ characters are searched).
+     * @param {string} [paramOverride] - Parameter string of the structure list to search. Commands such as edit
+     *   use their own (e.g. "...$#$run$#$t"), so the list that is searched must be the one that command reads.
+     * @returns {void}
+     */
+    function requestStructSearch(term, paramOverride) {
+        term = (term || "").replace(/"/g, "").trim().toLowerCase();
+        if (term.length < 3 || !axicmdenabled) return;
+        const param = paramOverride || getStructParam();
+        const baseKey = "axi_structmetalist_" + param.toLowerCase();
+        const state = axPageState[baseKey];
+        // Not loaded yet, or the whole list already fits in the first page: nothing more to find on the server
+        if (!state || !state.hasMore) return;
+        // A command word (create, edit, ...) is not a structure name
+        if (["create", "edit", "view", "source"].includes(term) || getCommandConfig(term)) return;
+        const askKey = baseKey + "|" + term;
+        if (structSearchAsked.has(askKey) || structSearchPendingTerm === askKey) return;
+        structSearchPendingTerm = askKey;
+        clearTimeout(structSearchTimer);
+        structSearchTimer = setTimeout(() => {
+            structSearchPendingTerm = null;
+            structSearchAsked.add(askKey);
+            
+            loadList("axi_structmetalist", param, term, 1, getPageSize());
+        }, SEARCH_DEBOUNCE_MS);
+    }
+
+    /**
+     * Sets status text such as "Searching..." inside <bdi>. In an RTL page (Arabic) the trailing dots are
+     * neutral characters and take the page direction, so they jump to the start ("...Searching"). <bdi> works
+     * out the direction from the text itself, so English status text keeps its dots at the end while the row
+     * stays aligned with the page. Harmless in LTR.
+     * @param {HTMLElement} el - Element that receives the text.
+     * @param {string} text - Status text.
+     * @returns {void}
+     */
+    function setStatusText(el, text) {
+        el.textContent = "";
+        const bdi = document.createElement("bdi");
+        bdi.textContent = text;
+        el.appendChild(bdi);
+    }
+
+    /**
+     * Builds the small non-selectable row shown under a paged list: a spinner while the next page is
+     * loading, a hint when more rows can be loaded by scrolling, or a note when the render cap is reached.
+     * It deliberately does not use the "axi-suggestion" class so keyboard navigation ignores it.
+     * @param {number} renderedTotal - Number of valid items currently in the list.
+     * @returns {HTMLElement|null} Footer element or null when there is nothing to show.
+     */
+    function buildLoadMoreFooter(renderedTotal) {
+        const ctx = activePagedContext;
+        if (!ctx) return null;
+        const state = axPageState[ctx.listKey];
+        if (!state || !state.hasMore) return null;
+
+        // Remember which list this footer belongs to; loadNextPage loads the next page of exactly that list
+        footerPagedContext = ctx;
+        const li = document.createElement("li");
+        li.className = "axi-load-more";
+        li.style.cssText = "list-style:none;text-align:center;padding:8px;font-size:12px;color:#6b7280;cursor:default;";
+        if (activeFetches.has(`${ctx.listKey}_p${state.page + 1}`)) {
+            setStatusText(li, "Loading more...");
+        } else if (renderedTotal >= MAX_RENDERED_ITEMS) {
+            setStatusText(li, `Showing first ${MAX_RENDERED_ITEMS} - type more to narrow the results`);
+        } else {
+            setStatusText(li, list.classList.contains("My-Command-Wrapper") ? "Scroll for more..." : "Scroll down for more...");
+        }
+        return li;
+    }
+
+    /**
+     * Fetches the next page of the paged list currently shown in the dropdown (called when the user
+     * scrolls to the bottom). Does nothing if there is no next page, one is already loading, or the
+     * render cap has been reached.
+     * @returns {void}
+     */
+    function loadNextPage() {
+        // Use the context of the footer that is on screen. activePagedContext is cleared at the start of every
+        // suggestion pass, so between that and the next render it is null while the old footer still shows;
+        // a scroll in that window used to be dropped silently (no request at all).
+        const ctx = footerPagedContext || activePagedContext;
+        if (!ctx) return;
+        const state = axPageState[ctx.listKey];
+        if (!state) return;
+        if (!state.hasMore) return;
+        const nextPage = state.page + 1;
+        if (activeFetches.has(`${ctx.listKey}_p${nextPage}`)) return;
+        if ((axDatasourceObj[ctx.listKey] || []).length >= MAX_RENDERED_ITEMS) return;
+
+        // Re-render happens when the page arrives; remember where the user was scrolled to
+        pendingScrollRestore = { top: list.scrollTop, left: list.scrollLeft };
+        const footer = list.querySelector(".axi-load-more");
+        if (footer) setStatusText(footer, "Loading more...");
+        loadList(ctx.source, ctx.param, ctx.term, nextPage, getPageSize());
+    }
+
+    //function openPopOption(targetURL) {
+    //    // console.log("PopOption is clicked");
+
+
+    //    if (targetURL) {
+    //        let popUpContainerUrl = `../AxpertPlugins/Axi/HTMLPages/PopUpContainer.html`;
+
+    //        //if (targetURL && targetURL.toLowerCase().includes("/aspx")) {
+    //        //    // console.log("Before removing : " + targetURL);
+    //        //    targetURL = targetURL.replace("/aspx", "");
+    //        //    // console.log("After removing : " + targetURL);
+    //        //}
+
+    //        //if (targetURL && targetURL.toLowerCase().includes("/aspx/")) {
+    //        //    // console.log("Before removing : " + targetURL)
+    //        //    targetURL = targetURL.split("/aspx/")[1];
+    //        //    // console.log("After removing : " + targetURL);
+    //        //}
+    //        if (targetURL && targetURL.toLowerCase().includes("../")) {
+    //            // console.log("Before removing : " + targetURL)
+    //            targetURL = targetURL.replace("../", "");
+    //            //targetURL = targetURL.split("/")[1];
+    //            // console.log("After removing : " + targetURL);
+    //        }
+
+
+    //        //let finalUrl = `${popUpContainerUrl}?contenturl=${encodeURIComponent(btoa(targetURL))}`;
+    //        let finalUrl = `${popUpContainerUrl}?contenturl=${targetURL}`;
+
+
+    //        popUpOption = false;
+    //        // console.log("PopUp Option is set to :" + popUpOption);
+
+
+    //        let hiddenVar = document.getElementById("hiddenLoader");
+    //        // console.log(hiddenVar);
+    //        hiddenVar.src = finalUrl;
+    //        //hiddenVar.style.display = "block";
+    //        hiddenVar.style.display = "flex";
+    //        //let popup = document.getElementById("popupContainer");
+    //        //popup.style.display = "block";
+    //        // window.open(finalUrl);
+    //    }
+    //    else {
+    //        popUpOption = false;
+    //        // console.log("Error in Popup: TargetURL is empty");
+    //        showToast("Something went wrong. Please try again later");
+    //    }
+    //}
+
+    /**
+     * Loads dynamic command configuration from server and populates axiCommandConfigList.
+     * @async
+     * @param {boolean} [isForced=false] - Whether to force a reload from the server.
+     * @param {string} appname - Active project/application name.
+     * @returns {Promise<void>}
+     */
+    async function initCommandConfigs(isForced = false, appname) {
+        if (!axicmdenabled || !axiCommandConfigUrl || !appname) return;
+        try {
+            const userName = window.mainUserName || "";
+            const cached = localStorage.getItem("axi_command_config_v2");
+            let configs = null;
+            if (cached && !isForced) {
+                try {
+                    configs = JSON.parse(cached);
+                } catch (e) { }
+            }
+            if (!configs) {
+                const res = await fetch(`${axiCommandConfigUrl}?appname=${encodeURIComponent(appname)}&username=${encodeURIComponent(userName)}&forceRefresh=${isForced}`);
+                if (res.ok) {
+                    configs = await res.json();
+                    if (configs && Array.isArray(configs)) {
+                        localStorage.setItem("axi_command_config_v2", JSON.stringify(configs));
+                    }
+                }
+            }
+            if (configs && Array.isArray(configs)) {
+                axiCommandConfigList = configs;
+                window.axiCommandConfigStore = configs;
+                axiCommandConfigMap = {};
+                configs.forEach(row => {
+                    const activeVal = (row.active || row.Active || "").toString().toUpperCase();
+                    if (activeVal === "T" || activeVal === "TRUE") {
+                        const cmd = (row.command || row.Command || "").trim().toLowerCase();
+                        const opt = (row.promptOptions || row.prompt_options || row.PromptOptions || "").trim().toLowerCase();
+                        const key = `${cmd}:${opt}`;
+                        axiCommandConfigMap[key] = row;
+                    }
+                });
+            }
+        } catch (err) {
+            // console.warn("Failed to load axi_command_config:", err);
+        }
+    }
+
+    // Used by the AxiCMD Config page's structure picker: forms / reports matching a typed word (3+ characters),
+    // from the paged axi_structmetalist source (searched by the AxList API, not loaded whole)
+    window.axiSearchStructures = async function (term) {
+        const t = String(term || "").trim();
+        if (t.length < 3 || !axicmdenabled) return [];
+        try { return await getList("axi_structmetalist", getStructParam(), t, 1, 30); } catch (e) { return []; }
+    };
+
+    // Called by the AxiCMD Config page after it saved an option: drops this user's local copies (routes and the
+    // command/prompt lists, which a new Custom Option extends) and rebuilds the commands
+    window.axiReloadCommandConfig = async function () {
+        try { localStorage.removeItem("axi_command_config_v2"); } catch (e) { }
+        try { localStorage.removeItem("axi_commands_raw_v1"); } catch (e) { }
+        await initCommands(false);
+    };
+
+    /**
+     * Finds an active command configuration row matching command name and prompt option.
+     * @param {string} command - Command name (e.g. 'Configure', 'SDK').
+     * @param {string} promptOption - Prompt option value to match.
+     * @returns {object|null} Matching configuration row or null.
+     */
+    function getCommandConfigRow(command, promptOption) {
+        if (!command || !promptOption) return null;
+        const cmdKey = command.trim().toLowerCase();
+        const optKey = promptOption.trim().toLowerCase();
+        const fullKey = `${cmdKey}:${optKey}`;
+        if (axiCommandConfigMap[fullKey]) {
+            return axiCommandConfigMap[fullKey];
+        }
+        return axiCommandConfigList.find(r => {
+            const rCmd = (r.command || r.Command || "").trim().toLowerCase();
+            const rOpt = (r.promptOptions || r.prompt_options || r.PromptOptions || "").trim().toLowerCase();
+            const rActive = (r.active || r.Active || "").toString().toUpperCase();
+            return rCmd === cmdKey && rOpt === optKey && (rActive === "T" || rActive === "TRUE");
+        }) || null;
+    }
+
+    /**
+     * Finds a disabled command configuration row matching command name and prompt option.
+     * @param {string} command - Command name.
+     * @param {string} promptOption - Prompt option value to match.
+     * @returns {object|null} Disabled configuration row or null.
+     */
+    function getDisabledCommandConfigRow(command, promptOption) {
+        if (!command || !promptOption) return null;
+        const cmdKey = command.trim().toLowerCase();
+        const optKey = promptOption.trim().toLowerCase();
+        return axiCommandConfigList.find(r => {
+            const rCmd = (r.command || r.Command || "").trim().toLowerCase();
+            const rOpt = (r.promptOptions || r.prompt_options || r.PromptOptions || "").trim().toLowerCase();
+            const rActive = (r.active ?? r.Active ?? "").toString().trim().toUpperCase();
+            return rCmd === cmdKey && rOpt === optKey && rActive !== "T" && rActive !== "TRUE";
+        }) || null;
+    }
+
+    /**
+     * Replaces placeholders (e.g. {proj}, {user}) in a URL string with session values.
+     * @param {string} urlStr - URL template string containing placeholders.
+     * @param {object} [context={}] - Additional context values for replacement.
+     * @returns {string} Resolved URL string.
+     */
+    function resolveCommandUrlPlaceholders(urlStr, context = {}) {
+        if (!urlStr || typeof urlStr !== "string") return urlStr || "";
+
+        const currentUserName = context.userName ?? window.mainUserName ?? "";
+        const currentUserRoles = context.userRoles ?? window.AxUserRoles ?? "";
+        const currentUserResp = context.userResp ?? window.userResp ?? "";
+        const currentApp = context.appname ?? window.mainProject ?? "";
+        const currentCaption = context.caption ?? "";
+        const currentParamValue = context.paramValue ?? "";
+        const currentRawParamName = context.rawParamName ?? "";
+        const currentPromptId = context.promptId ?? "";
+        const currentName = currentParamValue || currentRawParamName || currentCaption || currentPromptId;
+
+        const replacements = [
+            { regex: /:username\b/gi, val: currentUserName },
+            { regex: /:user\b/gi, val: currentUserName },
+            { regex: /:userroles\b/gi, val: currentUserRoles },
+            { regex: /:userrole\b/gi, val: currentUserRoles },
+            { regex: /:roles\b/gi, val: currentUserRoles },
+            { regex: /:role\b/gi, val: currentUserRoles },
+            { regex: /:userresp\b/gi, val: currentUserResp },
+            { regex: /:responsibility\b/gi, val: currentUserResp },
+            { regex: /:responsibilities\b/gi, val: currentUserResp },
+            { regex: /:caption\b/gi, val: currentCaption },
+            { regex: /:name\b/gi, val: currentName },
+            { regex: /:paramvalue\b/gi, val: currentParamValue || currentRawParamName },
+            { regex: /:param\b/gi, val: currentParamValue || currentRawParamName },
+            { regex: /:value\b/gi, val: currentParamValue || currentRawParamName },
+            { regex: /:transid\b/gi, val: currentPromptId },
+            { regex: /:promptid\b/gi, val: currentPromptId },
+            { regex: /:appname\b/gi, val: currentApp },
+            { regex: /:project\b/gi, val: currentApp },
+            { regex: /:proj\b/gi, val: currentApp }
+        ];
+
+        let result = urlStr;
+        replacements.forEach(({ regex, val }) => {
+            result = result.replace(regex, encodeURIComponent(val));
+        });
+
+        return result;
+    }
+
+    /**
+     * Calls a function the shell (Js/main.js) already exposes, so the palette does exactly what the header does.
+     * @param {string} fnName - Global function name in the main window.
+     * @param {...any} args - Arguments passed to the function.
+     * @returns {boolean} True when the function exists and was called.
+     */
+    function callShellFunction(fnName, ...args) {
+        const shellWin = (top && top.window) || window;
+        const fn = shellWin[fnName] || window[fnName];
+        if (typeof fn !== "function") {
+            showToast("This option is not available on the current page.");
+            return false;
+        }
+        fn.apply(shellWin, args);
+        return true;
+    }
+
+    /**
+     * Turns the header "Show Logs" trace switch on or off. The header switch is the single source of truth
+     * (ToggleShowLog reads it and saves the state to the session), so it is set first and the shell function is run.
+     * @param {boolean} turnOn - True to enable trace.
+     * @returns {void}
+     */
+    function setShellTrace(turnOn) {
+        const shellWin = (top && top.window) || window;
+        const traceSwitch = shellWin.document.querySelector("#chkshowlog input[name='trace']");
+        if (!traceSwitch) {
+            showToast("The trace switch is not available on the current page.");
+            return;
+        }
+        if (traceSwitch.checked === turnOn) {
+            showToast(`Trace is already ${turnOn ? "on" : "off"}.`, 3000, "info");
+            return;
+        }
+        traceSwitch.checked = turnOn;
+        if (callShellFunction("ToggleShowLog", true)) {
+            showToast(`Trace turned ${turnOn ? "on" : "off"}.`, 3000, true);
+        } else {
+            traceSwitch.checked = !turnOn;
+        }
+    }
+
+    /**
+     * Actions a "shellaction" command row can run, keyed by the row's prompt_id. Only these names run, so a
+     * configuration row can never make the palette call an arbitrary function.
+     */
+    const SHELL_ACTIONS = {
+        trace_on: () => setShellTrace(true),
+        trace_off: () => setShellTrace(false),
+        trace_files: () => callShellFunction("showTraceFileDialog")
+    };
+
+    /**
+     * Runs a shell action from a "shellaction" command row. Trace is a developer feature (the header hides it
+     * unless the user has build access), so the same rule applies here.
+     * @param {string} actionName - The row's prompt_id.
+     * @returns {void}
+     */
+    function runShellAction(actionName) {
+        const action = SHELL_ACTIONS[(actionName || "").toLowerCase()];
+        if (!action) {
+            showToast(`Unknown action '${actionName}'.`);
+            return;
+        }
+        if (!getAccessPermissions().buildAccess) {
+            showToast(`User '${window.mainUserName}' has no access to trace options.`);
+            return;
+        }
+        action();
+    }
+
+    /**
+     * Executes navigation for dynamically configured command routes.
+     * @param {object} params - Parameter object.
+     * @param {string[]} params.tokens - Command tokens.
+     * @param {object} params.commandConfig - Command schema configuration.
+     * @param {object} params.configRow - Matching command configuration row.
+     * @returns {void}
+     */
+    function executeDynamicNavigation({ tokens, commandConfig, configRow }) {
+        if (!configRow) return false;
+        hide();
+
+        const optType = (configRow.promptOptionType || configRow.prompt_option_type || configRow.PromptOptionType || "").toLowerCase();
+        const promptId = configRow.promptId || configRow.prompt_id || configRow.PromptId || "";
+        const paramField = configRow.paramField || configRow.param_field || configRow.ParamField || "";
+        const rawTargetUrl = configRow.targetUrl || configRow.target_url || configRow.TargetUrl || "";
+        const extraParams = configRow.extraParams || configRow.extra_params || configRow.ExtraParams || "";
+
+        const caption = tokens.length > 1 ? cleanCommandToken(tokens[1]) : "";
+
+        if (optType === "action") {
+            handleKeyfield({ tokens, commandConfig });
+            return true;
+        }
+
+        // Configure Product / Plugin / ChangeRequest: saves "<account> <repo>" through the CommandSettings API
+        if (optType === "commandsetting") {
+            handleCommandSetting({ tokens, commandConfig, configRow });
+            return true;
+        }
+
+        if (optType === "shellaction") {
+            runShellAction(promptId);
+            return true;
+        }
+
+        let rawParamName = "";
+        let paramValue = "";
+
+        if (tokens.length > 2) {
+            rawParamName = cleanCommandToken(tokens[2]);
+            if (rawParamName.toLowerCase() !== "create new") {
+                if (paramField && paramField.toLowerCase() === "caption") {
+                    paramValue = rawParamName.replace(/\s*\[[^\]]*\]$/, "").trim();
+                } else {
+                    const resolved = tryResolveToken(2, rawParamName, commandConfig, false);
+                    paramValue = (resolved && resolved.value) ? resolved.value : rawParamName;
+                }
+            }
+        }
+
+        if (tokens.length > 2 && rawParamName && rawParamName.toLowerCase() !== "create new") {
+            if (!paramField) {
+                showToast(`Parameter field is not configured for '${caption}'. Cannot filter with search value '${rawParamName}'.`);
+                return true;
+            }
+        }
+
+        const context = {
+            caption: caption,
+            rawParamName: rawParamName,
+            paramValue: paramValue,
+            promptId: promptId,
+            userName: window.mainUserName || "",
+            userRoles: window.AxUserRoles || "",
+            userResp: window.userResp || "",
+            appname: (typeof appname !== "undefined" ? appname : (window.mainProject || ""))
+        };
+
+        const loadIframeFn = (top && top.window && top.window.LoadIframe) || window.LoadIframe;
+
+        setEditSessionState(promptId);
+
+        if ((commandConfig?.commandGroup?.toLowerCase() === "sdk" || (tokens[0] && cleanCommandToken(tokens[0]).toLowerCase() === "sdk")) && caption) {
+            if (!isDevOptionAllowed(caption)) {
+                showToast(`User '${window.mainUserName}' has no access for SDK option: ${caption}`);
+                return true;
+            }
+        }
+
+        if (optType === "processflow" || optType === "url/tstruct") {
+            if (paramValue) {
+                let url = rawTargetUrl || `../aspx/processflow.aspx?loadcaption=AxProcessBuilder`;
+                if (paramField && !url.includes(`${paramField}=`)) {
+                    const separator = url.includes("?") ? "&" : "?";
+                    url += `${separator}${paramField}=${encodeURIComponent(paramValue)}`;
+                }
+                if (extraParams) {
+                    const separator = url.includes("?") ? "&" : "?";
+                    url += `${separator}${extraParams}`;
+                }
+                url = resolveCommandUrlPlaceholders(url, context);
+                setEditSessionState(promptId || "ad_pm");
+                if (popUpOption) {
+                    const sep = url.includes("?") ? "&" : "?";
+                    url += `${sep}tname=${encodeURIComponent(caption)}&AxIsPop=true`;
+                    openPopOption(url);
+                } else {
+                    setCommandRoutes(input.value.trim(), url);
+                    loadIframeFn(url);
+                }
+            } else {
+                setEditSessionState(promptId || "ad_pm");
+                redirectToTstruct(promptId || "ad_pm", caption);
+            }
+            return true;
+        }
+
+        if (optType === "tstruct/iview" || optType === "iview/tstruct") {
+            const types = optType.split("/");
+            const ids = promptId.split("/");
+            const tstructId = types[0] === "tstruct" ? ids[0] : ids[1];
+            const iviewId = types[0] === "iview" ? ids[0] : ids[1];
+
+            if (paramValue && paramField) {
+                setEditSessionState(tstructId);
+                const resolvedExtra = resolveCommandUrlPlaceholders(extraParams, context);
+                redirectToTstruct(tstructId, caption, true, paramField, paramValue, resolvedExtra);
+            } else {
+                setEditSessionState(iviewId);
+                redirectToIView(iviewId, caption);
+            }
+            return true;
+        }
+
+        if (optType === "tstruct") {
+            const isEdit = !!(paramValue && paramField);
+            const resolvedExtra = resolveCommandUrlPlaceholders(extraParams, context);
+            redirectToTstruct(promptId, caption, isEdit, paramField, paramValue, resolvedExtra);
+            return true;
+        }
+
+        if (optType === "iview") {
+            if (paramValue && paramField) {
+                let url = rawTargetUrl || `../aspx/iview.aspx?ivname=${promptId}`;
+                if (!url.includes("?")) {
+                    url += `?ivname=${promptId}`;
+                }
+                if (!url.includes(`${paramField}=`)) {
+                    const separator = url.includes("?") ? "&" : "?";
+                    url += `${separator}${paramField}=${encodeURIComponent(paramValue)}`;
+                }
+                if (extraParams) {
+                    const separator = url.includes("?") ? "&" : "?";
+                    url += `${separator}${extraParams}`;
+                }
+                url = resolveCommandUrlPlaceholders(url, context);
+                if (popUpOption) {
+                    const sep = url.includes("?") ? "&" : "?";
+                    url += `${sep}tname=${encodeURIComponent(caption)}&AxIsPop=true`;
+                    openPopOption(url);
+                } else {
+                    setCommandRoutes(input.value.trim(), url);
+                    loadIframeFn(url);
+                }
+                return true;
+            }
+            redirectToIView(promptId, caption);
+            return true;
+        }
+
+        if (optType === "ivtoivload") {
+            let url = rawTargetUrl || `../aspx/ivtoivload.aspx?ivname=${promptId}`;
+            if (!url.includes("?")) {
+                url += `?ivname=${promptId}`;
+            }
+            if (rawParamName && paramField && !url.includes(`${paramField}=`)) {
+                const separator = url.includes("?") ? "&" : "?";
+                url += `${separator}${paramField}=${encodeURIComponent(rawParamName)}`;
+            }
+            if (extraParams) {
+                const separator = url.includes("?") ? "&" : "?";
+                url += `${separator}${extraParams}`;
+            }
+            url = resolveCommandUrlPlaceholders(url, context);
+            if (popUpOption) {
+                const sep = url.includes("?") ? "&" : "?";
+                url += `${sep}tname=${encodeURIComponent(caption)}&AxIsPop=true`;
+                openPopOption(url);
+            } else {
+                setCommandRoutes(input.value.trim(), url);
+                loadIframeFn(url);
+            }
+            return true;
+        }
+
+        if (optType === "url") {
+            let url = rawTargetUrl || (promptId.startsWith("http") || promptId.startsWith("../") ? promptId : `../aspx/${promptId}`);
+            if (paramValue && paramField) {
+                const separator = url.includes("?") ? "&" : "?";
+                if (url.includes("AddEditResponsibility.aspx")) {
+                    url += `${separator}status=true&action=edit&${paramField}=${encodeURIComponent(paramValue)}`;
+                } else {
+                    url += `${separator}${paramField}=${encodeURIComponent(paramValue)}`;
+                }
+            } else if (url.includes("AddEditResponsibility.aspx")) {
+                const separator = url.includes("?") ? "&" : "?";
+                url += `${separator}action=add`;
+            }
+            if (extraParams) {
+                const separator = url.includes("?") ? "&" : "?";
+                url += `${separator}${extraParams}`;
+            }
+            url = resolveCommandUrlPlaceholders(url, context);
+            if (popUpOption) {
+                const sep = url.includes("?") ? "&" : "?";
+                url += `${sep}tname=${encodeURIComponent(caption)}&AxIsPop=true`;
+                openPopOption(url);
+            } else {
+                setCommandRoutes(input.value.trim(), url);
+                loadIframeFn(url);
+            }
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Opens a target URL inside the modal popup container.
+     * @param {string} targetURL - URL to display in popup frame.
+     * @returns {void}
+     */
+    function openPopOption(targetURL) {
+        hide();
+        // console.log("PopOption is clicked");
+
+        if (targetURL) {
+
+            // ? FIX: Ensure htmlPages.aspx loads from /aspx/
+            if (targetURL.toLowerCase().includes("htmlpages.aspx") && !targetURL.includes("../")) {
+                targetURL = "../aspx/" + targetURL;
+            }
+
+            let popUpContainerUrl = `../AxpertPlugins/AxiCMD/HTMLPages/PopupContainer.html`;
+            if (window.location.pathname.toLowerCase().includes("/axpertplugins/axicmd/htmlpages/")) {
+                popUpContainerUrl = `PopupContainer.html`;
+            }
+
+            if (targetURL && targetURL.toLowerCase().includes("../")) {
+                targetURL = targetURL.replace("../", "");
+            }
+
+            let hiddenVar = document.getElementById("hiddenLoader");
+            if (!hiddenVar) {
+                hiddenVar = document.createElement("iframe");
+                hiddenVar.id = "hiddenLoader";
+                hiddenVar.style.display = "none";
+                document.body.appendChild(hiddenVar);
+            }
+
+            // Check if the PopupManager already exists in the iframe
+            try {
+                if (hiddenVar.contentWindow && hiddenVar.contentWindow.PopupManager) {
+                    // ADD AS NEW TAB: Call the internal manager
+                    hiddenVar.contentWindow.PopupManager.openForm("Loading...", targetURL);
+                    popUpOption = false;
+                    return;
+                }
+            } catch (e) { }
+
+            // INITIAL LOAD: Set src for the first time
+            let finalUrl = `${popUpContainerUrl}?contenturl=${targetURL}`;
+            hiddenVar.src = finalUrl;
+            hiddenVar.style.display = "flex";
+            popUpOption = false;
+
+        } else {
+            popUpOption = false;
+            // console.log("Error in Popup: TargetURL is empty");
+            showToast("Something went wrong. Please try again later");
+        }
+    }
+
+    /**
+     * Navigates to SmartView / ADS view with specified filters.
+     * @param {object} params - Parameter object.
+     * @param {string} params.adsName - Name of the ADS / SmartView.
+     * @param {object} [params.filters] - Filter criteria object.
+     * @returns {void}
+     */
+    function redirectToSmartView({ adsName, filters }) {
+
+
+        // let targetUrl = "../CustomPages/Smartview_table_1769088257557.html";
+        // let targetUrl = `${getAppBaseUrl()}/CustomPages/Smartview_table_1769088257557.html`;
+        // let targetUrl = `${getAppBaseUrl()}/CustomPages/Smartview_table.html`;
+        // let targetUrl = `${getAppBaseUrl()}/plugins/Axi/HTMLPages/Smartview_table.html`;
+        let targetUrl = `../AxpertPlugins/AxiCMD/HTMLPages/Smartview.html`;
+
+        // let targetUrl = "../axidev/HTMLPages/Smartview_table_1769088257557.html";
+
+        targetUrl += `?ads=${encodeURIComponent(adsName)}`;
+        targetUrl += "&load=1769601086182";
+
+        let encodedFilterQuery;
+
+        let isGroupable = false;
+        if (filters && filters.length === 1 && (!filters[0].value || filters[0].value === "")) {
+            const datatypes = (filters[0].datatype || "").split(",");
+            isGroupable = datatypes.length > 0 && datatypes.every(dt => dt === "c" || dt === "d" || dt === "t" || dt === "NA" || !dt);
+        }
+
+        if (isGroupable) {
+            const columnName = filters[0].field;
+            targetUrl += `&groupby=${encodeURIComponent(columnName)}`;
+        }
+        else {
+            const payload = {
+
+                filters: filters
+            }
+
+            encodedFilterQuery = btoa(JSON.stringify(payload));
+
+            targetUrl += `&filter=${encodedFilterQuery}`;
+        }
+
+        // console.log("Target Url for SmartViewTable:  " + targetUrl);
+        setCommandRoutes(input.value.trim(), targetUrl);
+        /**====================================================================================
+         * NOTE: This is Debug code remove it before deploying  to the  production environment 
+         * ====================================================================================
+         */
+        if (typeof encodedFilterQuery !== "undefined") {
+            try {
+                const decodedForDebug = JSON.parse(atob(encodedFilterQuery));
+                // console.group("AXI SmartView Redirect Debug");
+                // console.log("Final URL:", targetUrl);
+                // console.log("Encoded q:", encodedFilterQuery);
+                // console.log("Decoded payload:", JSON.stringify(decodedForDebug));
+                // console.groupEnd();
+            } catch (e) {
+                // console.error("AXI SmartView payload decode failed", e);
+            }
+        }
+
+
+        /**
+         * ===================== End ========================================
+         */
+
+        if (popUpOption) {
+            targetUrl += "&AxIsPop=true";
+
+            targetUrl += `&tname=${encodeURIComponent(adsName)}`;
+            openPopOption(targetUrl)
+        }
+        else {
+            top.window.LoadIframe(targetUrl);
+        }
+
+
+    }
+
+
+    /**
+     * Navigates to user permissions, role management, or security configuration screen.
+     * @param {string} optType - Option type (e.g. 'user', 'role').
+     * @param {string[]} tokens - Command tokens.
+     * @returns {void}
+     */
+    function redirectToPermissionScreeen(username) {
+
+        const transId = "a__up";
+        let targetUrl = "../aspx/tstruct.aspx";
+
+
+        targetUrl += "?act=load";
+        targetUrl += `&transid=${transId}`;
+
+
+        if (username) {
+
+            targetUrl += `&axusername=${username}`;
+
+
+
+
+        }
+
+        targetUrl += "&fromsource=U";
+
+
+        targetUrl += "&openerIV=axusers";
+
+
+
+        targetUrl += "&isIV=true";
+
+        targetUrl += `&isDupTab=true`;
+
+
+
+        targetUrl += "&dummyload=false";
+
+        setEditSessionState(transId);
+        // console.log(`LoadIframe called with Url: ${targetUrl}`);
+        setCommandRoutes(input.value.trim(), targetUrl);
+
+
+        top.window.LoadIframe(targetUrl);
+
+    }
+
+
+
+    // function redirectToTstruct(transId, tstructCaption = "", isEdit = false, fieldName = "", fieldValue = "") {
+    //     // console.log(`Redirecting to Tstruct: ${transId}, Edit: ${isEdit}, Field: ${fieldName}, Val: ${fieldValue}`);
+
+
+
+    //     if (!transId) {
+    //         alert("There is no Tstruct name provided!");
+    //         return;
+    //     }
+
+    //     let targetUrl;
+
+    //     targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
+
+    //     if (isEdit) {
+    //         if (fieldName && fieldValue) {
+    //             targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
+    //         }
+    //         targetUrl += `&hltype=load`;
+    //         targetUrl += `&torecid=false`;
+    //         targetUrl += `&openerIV=${transId}`;
+    //         targetUrl += `&isIV=false`;
+    //         targetUrl += `&isDupTab=false`;
+
+    //         targetUrl += `&dummyload=false?`;
+
+    //     }
+    //     else {
+    //         if (fieldName && fieldValue) {
+    //             targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
+    //         }
+    //         targetUrl += `&hltype=open`;
+
+    //         targetUrl += `&createaxiflag=true`;
+    //         targetUrl += `&dummyload=false?`;
+    //     }
+
+
+
+    //     if (popUpOption) {
+    //         targetUrl += `&tname=${encodeURIComponent(tstructCaption)}`;
+    //         targetUrl += "&AxPop=true";
+
+    //         openPopOption(targetUrl)
+    //     }
+    //     else {
+    //         setCommandRoutes(input.value.trim(), targetUrl);
+    //         top.window.LoadIframe(targetUrl);
+    //     }
+    // }
+
+
+
+    /**
+     * Navigates main window or iframe to a Tstruct form, optionally in edit mode with keyfield filters.
+     * @param {string} transId - Transaction structure identifier.
+     * @param {string} [tstructCaption=""] - Form title caption.
+     * @param {boolean} [isEdit=false] - Whether to load the Tstruct in edit mode.
+     * @param {string} [fieldName=""] - Key field name for record filtering.
+     * @param {string} [fieldValue=""] - Key field value for record filtering.
+     * @param {string} [extraParams=""] - Additional query string parameters.
+     * @returns {void}
+     */
+    function redirectToTstruct(transId, tstructCaption = "", isEdit = false, fieldName = "", fieldValue = "", extraParams = "") {
+        if (!transId) {
+            alert("There is no Tstruct name provided!");
+            return;
+        }
+        hide();
+
+        let targetUrl;
+        targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
+
+        if (isEdit) {
+            if (fieldName && fieldValue) {
+                targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
+            }
+            targetUrl += `&hltype=load`;
+            targetUrl += `&torecid=false`;
+            targetUrl += `&openerIV=${transId}`;
+            targetUrl += `&isIV=false`;
+            targetUrl += `&isDupTab=${callParentNew('isDuplicateTab')}`;
+            targetUrl += `&dummyload=false`;
+        }
+        else {
+            if (fieldName && fieldValue) {
+                targetUrl += `&${fieldName}=${encodeURIComponent(fieldValue)}`;
+            }
+            targetUrl += `&hltype=open`;
+            targetUrl += `&createaxiflag=true`;
+            targetUrl += `&isDupTab=${callParentNew('isDuplicateTab')}`;
+            targetUrl += `&dummyload=false`;
+        }
+
+        if (extraParams) {
+            // dummyload is already set above. A second (or malformed "false?") one makes the server cache this
+            // open's HTML, and 'act=load' without a record caches an empty "load" page that other openers
+            // (e.g. the Developer Studio modal) then reuse, which renders blank.
+            const dropped = isEdit ? ["dummyload"] : ["dummyload", "act"];
+            extraParams = extraParams.split("&")
+                .filter(p => p && !dropped.includes(p.split("=")[0].trim().toLowerCase()))
+                .join("&");
+        }
+        if (extraParams) {
+            const separator = targetUrl.includes("?") ? "&" : "?";
+            targetUrl += `${separator}${extraParams}`;
+        }
+
+        // old code (debug log left from the #261 investigation)
+        //console.log("[AxiCMD] redirectToTstruct targetUrl:", targetUrl, { transId, isEdit, extraParams });
+
+        if (popUpOption) {
+            // Query string only ever has one '?': a stray one breaks the contenturl parsing in PopupContainer.html
+            targetUrl += `&tname=${encodeURIComponent(tstructCaption)}`;
+            targetUrl += "&AxPop=true";
+            openPopOption(targetUrl);
+        }
+        else {
+            setCommandRoutes(input.value.trim(), targetUrl);
+            top.window.LoadIframe(targetUrl);
+        }
+    }
+
+    /**
+     * Generic redirect function to load a Tstruct via ivtstload.aspx (for save-normalized fields).
+     * @param {string} transId - Transaction structure ID (tstname).
+     * @param {string} [tstructCaption=""] - Form caption for popup mode.
+     * @param {string} [fieldName=""] - Field name (e.g., field1).
+     * @param {string} [fieldId=""] - Normalized field ID / value.
+     * @param {string} [extraParams=""] - Additional query string parameters.
+     * @returns {void}
+     */
+    function redirectToIvtstload(transId, tstructCaption = "", fieldName = "", fieldId = "", extraParams = "") {
+        if (!transId) {
+            alert("There is no Tstruct name provided!");
+            return;
+        }
+        hide();
+
+        let targetUrl = `../aspx/ivtstload.aspx?tstname=${transId}`;
+
+        if (fieldName && fieldId !== undefined && fieldId !== null && fieldId !== "") {
+            targetUrl += `&${fieldName}=${encodeURIComponent(fieldId)}`;
+        }
+        targetUrl += `&hltype=load`;
+        targetUrl += `&torecid=false`;
+        targetUrl += `&openerIV=${transId}`;
+        targetUrl += `&isIV=false`;
+        let isDupTab = false;
+        try {
+            if (typeof callParentNew === "function") {
+                isDupTab = callParentNew("isDuplicateTab") || false;
+            }
+        } catch (e) {
+            isDupTab = false;
+        }
+        targetUrl += `&isDupTab=${isDupTab}`;
+        targetUrl += `&hdnbElapsTime=0`;
+
+        if (extraParams) {
+            const separator = targetUrl.includes("?") ? "&" : "?";
+            targetUrl += `${separator}${extraParams}`;
+        }
+
+        if (popUpOption) {
+            targetUrl += `&tname=${encodeURIComponent(tstructCaption)}`;
+            targetUrl += "&AxPop=true";
+            openPopOption(targetUrl);
+        } else {
+            setCommandRoutes(input.value.trim(), targetUrl);
+            top.window.LoadIframe(targetUrl);
+        }
+    }
+
+    /**
+     * Generic redirect function to load a Tstruct via tstruct.aspx using transrecordid.
+     * @param {string} transId - Transaction structure ID (transid).
+     * @param {string} [tstructCaption=""] - Form caption for popup mode.
+     * @param {string} [recordId=""] - Transaction record ID (transrecordid).
+     * @param {string} [extraParams=""] - Additional query string parameters.
+     * @returns {void}
+     */
+    function redirectToTstructRecord(transId, tstructCaption = "", recordId = "", extraParams = "") {
+        if (!transId) {
+            alert("There is no Tstruct name provided!");
+            return;
+        }
+        hide();
+
+        let isDupTab = false;
+        try {
+            if (typeof callParentNew === "function") {
+                isDupTab = callParentNew("isDuplicateTab") || false;
+            }
+        } catch (e) {
+            isDupTab = false;
+        }
+
+        let targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
+        targetUrl += `&recordid=${encodeURIComponent(recordId)}`;
+        targetUrl += `&hltype=load`;
+        targetUrl += `&torecid=false`;
+        targetUrl += `&recPos=1`;
+        targetUrl += `&curPage=1`;
+        targetUrl += `&pageType=first`;
+        targetUrl += `&openerIV=${transId}`;
+        targetUrl += `&isIV=false`;
+        targetUrl += `&isDupTab=${isDupTab}`;
+        targetUrl += `&dummyload=false`;
+        targetUrl += `&hdnbElapsTime=0`;
+
+        if (extraParams) {
+            const separator = targetUrl.includes("?") ? "&" : "?";
+            targetUrl += `${separator}${extraParams}`;
+        }
+
+        if (popUpOption) {
+            targetUrl += `&tname=${encodeURIComponent(tstructCaption)}`;
+            targetUrl += "&AxPop=true";
+            openPopOption(targetUrl);
+        } else {
+            setCommandRoutes(input.value.trim(), targetUrl);
+            top.window.LoadIframe(targetUrl);
+        }
+    }
+
+
+
+    /**
+     * Navigates to the Axpert Responsibilities configuration page.
+     * @returns {void}
+     */
+    function redirectToResponsibilitiesPage(fieldValue = "") {
+        hide();
+
+        let targetUrl = "../aspx/AddEditResponsibility.aspx";
+
+        if (fieldValue) {
+            targetUrl += "?status=true";
+            targetUrl += "&action=edit";
+
+            targetUrl += `&name=${encodeURIComponent(fieldValue)}`;
+        } else {
+            targetUrl += "?status=true";
+            targetUrl += "&action=add";
+
+        }
+
+
+        setCommandRoutes(input.value.trim(), targetUrl);
+        top.window.LoadIframe(targetUrl);
+    }
+
+    /**
+     * Navigates the main window or iframe to an IView report.
+     * @param {string[]} tokens - Command tokens.
+     * @param {string} target - Target IView name.
+     * @returns {void}
+     */
+    function redirectToIView(iViewName, iViewCaption = "") {
+        hide();
+        // console.log("Redirecting to Iview: " + iViewName + "..............");
+
+
+        if (popUpOption) {
+            let targetUrl = `../aspx/ivtoivload.aspx?ivname=${iViewName}`;
+            // setCommandRoutes(input.value.trim(), targetUrl);
+            targetUrl += `&tname=${encodeURIComponent(iViewCaption)}`;
+            targetUrl += "&AxIsPop=true&isDupTab=true";
+            openPopOption(targetUrl)
+        }
+        else {
+            let targetUrl = `../aspx/iview.aspx?ivname=${iViewName}`;
+            setCommandRoutes(input.value.trim(), targetUrl);
+            window.LoadIframe(targetUrl);
+        }
+
+
+    }
+
+
+    /**
+     * Navigates to the Process Flow viewer/designer page.
+     * @param {string[]} tokens - Command tokens.
+     * @returns {void}
+     */
+    function redirectToProcessFlow(caption, tstructCaption) {
+        // console.log(`Redirecting to Process flow for caption:  ${caption}`);
+
+
+
+
+        let targetUrl;
+
+        if (caption) {
+            targetUrl = `../aspx/processflow.aspx`;
+            targetUrl += "?loadcaption=AxProcessBuilder"
+            targetUrl += `&processname=${encodeURIComponent(caption)}`;
+        }
+        else {
+            redirectToTstruct("ad_pm", tstructCaption);
+            return;
+        }
+
+
+
+        setEditSessionState("ad_pm");
+        if (popUpOption) {
+            targetUrl += `&tname=${encodeURIComponent(tstructCaption)}`;
+            targetUrl += "&AxIsPop=true";
+
+            openPopOption(targetUrl)
+        }
+        else {
+            setCommandRoutes(input.value.trim(), targetUrl);
+            top.window.LoadIframe(targetUrl);
+        }
+    }
+
+
+
+    /* ===============================
+       2. INPUT HANDLER
+    =============================== */
+    /**
+     * Filters and returns initial list of available command verbs based on current context.
+     * @returns {string[]} List of command verb keys.
+     */
+    function getInitialCommandsList() {
+        if (!commands) return [];
+        const structType = getStructType();
+        const isRunnable = structType && structType !== "o" && !isPreviewModalOpen() && !isRunDisabledForPage() && !isViewDesignerModalOpen();
+        return Object.keys(commands).filter(key => {
+            const lowerKey = key.toLowerCase();
+            if (lowerKey === "create" || lowerKey === "view" || lowerKey === "edit" || lowerKey === "source") {
+                return false;
+            }
+            if (lowerKey === "run") {
+                return isRunnable;
+            }
+            return true;
+        });
+    }
+
+    /**
+     * Main input event handler; manages tokenization, suggestions popup, and dynamic hint rendering.
+     * @returns {void}
+     */
+    /**
+     * Marks the structure list (axi_structmetalist, nothing typed) as the paged list on screen, so the render
+     * draws its "Scroll down for more..." row and scrolling loads the next page. Every route that shows the
+     * initial suggestions must call this, not only suggestLocal.
+     * @returns {void}
+     */
+    function setInitialPagedContext() {
+        const param = getStructParam();
+        activePagedContext = { source: "axi_structmetalist", param: param, term: "", listKey: "axi_structmetalist_" + param.toLowerCase() };
+    }
+
+    /**
+     * Opens a double quote before the word being typed when a space is typed after it and a suggestion with
+     * spaces starts with that word (typing "test" then a space for "Test Target" gives `"test `), so the
+     * rest of the name is treated as one value. Uses the suggestions currently shown (`items`).
+     * @param {string} val - Input text before the space is added.
+     * @returns {string|null} New input text including the space, or null when no quote should be added.
+     */
+    function autoQuoteMultiWordValue(val) {
+        const tokens = getTokens(val);
+        const lastTokenRaw = tokens[tokens.length - 1] || "";
+        const isFirstToken = tokens.length === 1;
+
+        if (lastTokenRaw.startsWith('"') || (isFirstToken && getCommandConfig(lastTokenRaw))) return null;
+
+        const hasMultiWordMatch = items.some(item => {
+            const str = (typeof item === 'string' ? item : item.displaydata || "").toLowerCase();
+            return str.startsWith(lastTokenRaw.toLowerCase()) && str.includes(" ");
+        });
+        if (!hasMultiWordMatch) return null;
+
+        const lastIndex = val.lastIndexOf(lastTokenRaw);
+        if (lastIndex === -1) return null;
+        return val.substring(0, lastIndex) + '"' + lastTokenRaw + ' ';
+    }
+
+    /**
+     * Soft keyboards (Android Chrome, WebView, hybrid app) do not send a usable keydown for the space key,
+     * so the quote is added here instead: the input event reports the text that was inserted.
+     * Does nothing when the keydown path already quoted the word (the last token then starts with a quote).
+     * @param {InputEvent} ev - The input event.
+     * @returns {void}
+     */
+    function quoteMultiWordAfterSpace(ev) {
+        try {
+            const type = ev && ev.inputType;
+            if (type !== "insertText" && type !== "insertCompositionText") return;
+            const val = input.value;
+            // Only a single space just typed at the end of the text: not a double space, not mid-text edits
+            if (!/[^\s]\s$/.test(val) || val.slice(-1) !== " " || input.selectionStart !== val.length) return;
+            if (items.length === 0) return;
+            const quoted = autoQuoteMultiWordValue(val.slice(0, -1));
+            if (quoted !== null) {
+                input.value = quoted;
+                input.setSelectionRange(quoted.length, quoted.length);
+            }
+        } catch (e) { }
+    }
+
+    function handleInput() {
+        try {
+            if (!axicmdenabled) return;
+            if (favouritesCard) {
+                favouritesCard.style.display = "none";
+            }
+            const suggCard = list.closest(".card");
+            if (suggCard) {
+                suggCard.style.display = "flex";
+            }
+
+            if (input.value && input.value.includes(" ,")) {
+                const cursorPos = input.selectionStart;
+                input.value = input.value.replace(/ ,/g, ",");
+                if (cursorPos !== null) {
+                    const newPos = Math.max(0, cursorPos - 1);
+                    input.setSelectionRange(newPos, newPos);
+                }
+            }
+            const initialTokens = getTokens(input.value.trim());
+            const isInitialCommandStage = initialTokens.length === 0 || (initialTokens.length === 1 && !input.value.endsWith(" "));
+
+            if (isCommandsLoading && !isInitialCommandStage) {
+                items = ["Loading Commands...."];
+                setStatusText(hintDiv, "Please wait...");
+                render();
+                return;
+            }
+            const text = input.value;
+
+            if (axiClearBtn) {
+                if (text.length > 0) {
+                    axiClearBtn.style.display = "flex";
+
+                } else {
+                    axiClearBtn.style.display = "none";
+                }
+            }
+            if (!commands) {
+                if (isInitialCommandStage) {
+                    setInitialPagedContext();
+                    items = getInitialSuggestions();
+                    hintDiv.textContent = "";
+                    render();
+                    return;
+                }
+                return;
+            }
+
+            if (!text.trim()) {
+                resolvedParams = {};
+                resolvedParamType = {};
+                // This empty-input shortcut skips suggestLocal, which is where the paged context is normally
+                // set. Without it the "Scroll down for more..." row is not drawn on the very first open.
+                setInitialPagedContext();
+                items = getInitialSuggestions();
+                hintDiv.textContent = "";
+                render();
+                return;
+            }
+
+            ///set command - numeric handling.
+            if (SET_COMMAND_STATE.currentFieldType === 'n') {
+
+                let tokens = getTokens(text);
+
+                const grpKey = (tokens[0] || "").toLowerCase();
+
+                let lastIndex = tokens.length - 1;
+                let lastToken = lastIndex >= 0 ? tokens[lastIndex] : "";
+
+
+                if (lastToken && lastToken.toLowerCase() == (SET_COMMAND_STATE.currentField || "").toLowerCase()) {
+                    return;
+                }
+
+                //const numericRegex = /^-?\d*$/;
+                let numericRegex;
+                if (grpKey === "view") {
+                    numericRegex = /^-?(?!.*\.\.)(?!.*'')(?!.*,,)[\d.,'-<>!=]*$/;
+                    //numericRegex = /^(>=|<=|!=|>|<|=)?-?(?:\d+(?:,\d+)*(?:\.\d+)?|\.\d+)$/;
+                }
+                else
+                    numericRegex = /^-?(?!.*\.\.)(?!.*'')(?!.*,,)[\d.,']*$/;
+
+
+                //const cursorPos = input.selectionStart
+                //if (input.value[cursorPos - 1] === " ") {
+                //    return;
+                //}
+
+
+                // If user pressed space ? don't validate previous token again
+                //let endsWithSpace = text.endsWith(" ");
+
+                //if (endsWithSpace) {
+                //    return; // just wait for next input
+                //}
+
+
+
+                if (lastToken && !numericRegex.test(lastToken)) {
+
+                    // console.error("Type only numeric value");
+
+                    if (grpKey === "view")
+                        showToast("Please enter a valid number. You may use comparison operators (>, <, >=, <=, !=, =).");
+                    else
+                        showToast("Please enter a valid numeric value.");
+
+
+
+                    tokens[lastIndex] = "";
+
+                    input.value = tokens.join(" ");
+                    return;
+                }
+            }
+
+
+        // Clear stale resolutions when input changes
+        const currentTokens = getTokens(text, false);
+        currentTokens.forEach((token, idx) => {
+            const cleanToken = token.replace(/"/g, "");
+            const lastToken = lastTypedTokens[idx] ? lastTypedTokens[idx].replace(/"/g, "") : null;
+
+            if (lastToken && cleanToken !== lastToken) {
+                // console.log(`Token changed at position ${idx}: "${lastToken}" -> "${cleanToken}"`);
+
+                const lowerLast = lastToken.toLowerCase();
+                const isVerb = ["view", "create", "edit", "run", "refresh", "sdk", "configure", "publish", "help", "save", "go", "pop", "version", "source"].includes(lowerLast);
+                if (!isVerb) {
+                    delete resolvedParams[idx];
+                    delete resolvedParamType[idx];
+                    Object.keys(resolvedParams).forEach(key => {
+                        if (parseInt(key) > idx) {
+                            delete resolvedParams[key];
+                            delete resolvedParamType[key];
+                            // console.log(`Cleared dependent resolution at index ${key}`);
+                        }
+                    });
+                }
+            }
+        });
+
+        if (currentTokens.length < lastTypedTokens.length) {
+            for (let i = currentTokens.length; i < lastTypedTokens.length; i++) {
+                const deletedToken = (lastTypedTokens[i] || "").toLowerCase().trim();
+                const isVerb = ["view", "create", "edit", "run", "refresh", "sdk", "configure", "publish", "help", "save", "go", "pop", "version", "source"].includes(deletedToken);
+                if (!isVerb) {
+                    if (resolvedParams[i]) {
+                        delete resolvedParams[i];
+                        delete resolvedParamType[i];
+                        // console.log(`Cleared deleted token resolution at index ${i}`);
+                    }
+                }
+            }
+        }
+
+        lastTypedTokens = [...currentTokens];
+        items = suggestLocal(text);
+
+        const tokens = getTokens(text);
+        if (tokens.length >= 2) {
+            const first = cleanString(tokens[0]).toLowerCase();
+            const second = cleanString(tokens[1]).toLowerCase();
+            if (isTargetEntity(first) && isValidActionForTarget(first, second)) {
+                const temp = tokens[0];
+                tokens[0] = tokens[1];
+                tokens[1] = temp;
+            }
+        }
+        const grpKey = tokens[0]?.toLowerCase();
+
+        if (grpKey === "edit" && (text.toLowerCase().includes(" with") || tokens.some(t => cleanString(t).toLowerCase() === "with"))) {
+            const entityObj = getTargetEntityObj(tokens[1], "edit");
+            if (entityObj && (entityObj.keyfieldforedit === "F" || entityObj.keyfieldforedit === false)) {
+                showToast("Key field is not configured for this form. Please configure the key field using the Configure Key Field command.", 3000, false);
+                items = [];
+                render();
+                hide();
+                return;
+            }
+        }
+
+        if (
+            grpKey === "view" &&
+            tokens.length > 1 &&
+            !text.endsWith(" ")
+        ) {
+            items = items.filter(item => {
+                const itemText = (
+                    typeof item === "string"
+                        ? item
+                        : (item.displaydata || item.name || "")
+                ).toLowerCase();
+
+                return itemText !== "source";
+            });
+            filteredObjects = filteredObjects.filter(item => {
+                const itemText = (
+                    typeof item === "string"
+                        ? item
+                        : (item.displaydata || item.name || "")
+                ).toLowerCase();
+
+                return itemText !== "source";
+            });
+        }
+
+
+        render();
+
+        /**
+         * Auto-Apply Logic
+         */
+        if (!isDeleting && items.length > 0) {
+            const currentTokens = getTokens(text);
+            const lastTokenRaw = currentTokens[currentTokens.length - 1] || "";
+            const lastTokenClean = cleanString(lastTokenRaw);
+
+            if (!text.endsWith(" ") && lastTokenClean.length > 0) {
+                const validItems = items.filter(i => !isSystemMessage(i) && !i.isExecutable);
+
+                let indexToApply = -1;
+
+                if (validItems.length === 1 && lastTokenClean.length >= 2) {
+                    indexToApply = items.findIndex(item => {
+                        if (isSystemMessage(item) || item.isExecutable) return false;
+
+                        const itemStr = typeof item === "string" ? item : (item.displaydata || item.name);
+
+                        return itemStr.toLowerCase() === lastTokenClean.toLowerCase();
+                    });
+                } else if (lastTokenClean.toLowerCase() === "help") {
+                    input.value = "Help ";
+                    handleInput();
+                    return;
+                }
+
+                // Second-token verb auto-resolve: when the user fully types an
+                // action verb (e.g., "edit") after a target entity, resolve to
+                // proper case and advance to next-level suggestions.
+                if (indexToApply === -1) {
+                    const rawCheckTokens = getTokens(text, false);
+                    if (rawCheckTokens.length === 2) {
+                        const entityToken = rawCheckTokens[0];
+                        const verbClean = cleanString(rawCheckTokens[1]).toLowerCase();
+                        const verbsToAutoResolve = ["create", "edit", "view", "source"];
+                        if (verbClean.length >= 2 && verbsToAutoResolve.includes(verbClean) && isTargetEntity(entityToken)) {
+                            const properVerb = verbClean.charAt(0).toUpperCase() + verbClean.slice(1).toLowerCase();
+                            input.value = entityToken + " " + properVerb + " ";
+                            lastTypedTokens = getTokens(input.value, false);
+                            setTimeout(() => { handleInput(); }, 50);
+                            return;
+                        }
+                    }
+                }
+
+                if (indexToApply !== -1) {
+                    setTimeout(() => {
+                        apply(indexToApply);
+                    }, 50);
+                }
+            }
+        }
+    } catch (inputErr) {
+        console.error("Error in handleInput:", inputErr);
+    }
+}
+
+    /* ===============================
+       3. TOKENIZER
+    =============================== */
+
+
+    /**
+     * Tokenizes command string and optionally normalizes target-first commands (swapping entity and action).
+     * @param {string} str - Raw command input string.
+     * @param {boolean} [shouldNormalize=true] - Whether to normalize target-first command order.
+     * @returns {string[]} Array of processed token strings.
+     */
+    function getTokens(str, shouldNormalize = true) {
+        let tokens = AxiCommandParser.tokenize(str);
+        if (shouldNormalize && tokens.length >= 2) {
+            const first = cleanString(tokens[0]).toLowerCase();
+            const second = cleanString(tokens[1]).toLowerCase();
+            if (isTargetEntity(first) && isValidActionForTarget(first, second)) {
+                const temp = tokens[0];
+                tokens[0] = tokens[1];
+                tokens[1] = temp;
+            }
+        }
+        return tokens;
+    }
+
+    /**
+     * Sanitizes and cleans a string by stripping punctuation and special characters.
+     * @param {string} str - Raw input string.
+     * @returns {string} Sanitized string.
+     */
+    function cleanString(val) {
+        return (val || "").replace(/["]/g, "").trim();
+    }
+
+    /**
+     * Extracts structure parameters from session or active frame context.
+     * @returns {string} Structure parameter string.
+     */
+    function getStructParam() {
+        const userName = window.mainUserName || "";
+        const userRoles = window.AxUserRoles || "default";
+        const userResp = window.userResp || "default";
+        return `${userName}$#$${userRoles}$#$${userResp}$#$all$#$all`;
+    }
+
+    /**
+     * Matches user typed field token against form metadata fields for a transaction.
+     * @param {string} tokenText - Field name or caption entered by user.
+     * @param {string} transId - Transaction structure ID.
+     * @returns {object|null} Matched field metadata object or null.
+     */
+    function getMatchedField(tokenText, transId) {
+        if (!tokenText || !transId) return null;
+        const searchStr = transId.toLowerCase();
+        let list = [];
+        for (const key in axDatasourceObj) {
+            const keyLower = key.toLowerCase();
+            if (keyLower.startsWith("axi_getstructsdata") && keyLower.includes(searchStr)) {
+                list = axDatasourceObj[key] || [];
+                break;
+            }
+        }
+        const cleanToken = cleanString(tokenText).toLowerCase();
+        return list.find(item =>
+            (item.name && item.name.toLowerCase() === cleanToken) ||
+            (item.caption && item.caption.toLowerCase() === cleanToken) ||
+            (item.displaydata && item.displaydata.toLowerCase() === cleanToken)
+        ) || null;
+    }
+
+    /**
+     * Sanitizes and extracts display caption from a metadata item.
+     * @param {object} item - Metadata item.
+     * @returns {string} Clean caption string.
+     */
+    function getCleanCaption(item) {
+        if (!item || typeof item !== "object") return "";
+        if (item._cleanCaption !== undefined) return item._cleanCaption;
+        const displaydata = item.displaydata || item.DISPLAYDATA || "";
+        if (typeof displaydata === "string" && displaydata !== "") {
+            item._cleanCaption = displaydata
+                .replace(/\s*\(.*?\)\s*(?=\[[^\]]+\]$)/, "")
+                .replace(/\s*\[[^\]]+\]\s*$/, "")
+                .trim()
+                .toLowerCase();
+        } else {
+            item._cleanCaption = "";
+        }
+        return item._cleanCaption;
+    }
+
+    let targetEntitiesCache = {
+        sourceList: null,
+        matchesMap: null
+    };
+
+    /**
+     * Searches and returns matching entity structures (Tstructs, Iviews, Pages) for a token.
+     * @param {string} token - Search token text.
+     * @returns {Array<object>} Matching entity metadata objects.
+     */
+    function getTargetEntityMatches(token) {
+        if (!token) return [];
+        const cleanTok = token.replace(/"/g, "").toLowerCase();
+        const key = "axi_structmetalist_" + getStructParam().toLowerCase();
+        const list = axDatasourceObj[key] || [];
+
+        // Rebuilt when the list object changes or grows in place (next pages / merged search hits)
+        if (targetEntitiesCache.sourceList !== list || targetEntitiesCache.listLength !== list.length || !targetEntitiesCache.matchesMap) {
+            const map = new Map();
+            for (let i = 0; i < list.length; i++) {
+                const d = list[i];
+                const namesSet = new Set();
+
+                const name = d.name || d.NAME;
+                if (name) namesSet.add(name.toLowerCase());
+
+                const caption = d.caption || d.CAPTION;
+                if (caption) namesSet.add(caption.toLowerCase());
+                // "Caption (transid)" names exactly one structure when several share a caption (#289)
+                if (caption && name) namesSet.add(`${caption} (${name})`.toLowerCase());
+
+                const displaydata = d.displaydata || d.DISPLAYDATA;
+                if (displaydata) {
+                    namesSet.add(displaydata.toLowerCase());
+                    const cleanCaption = getCleanCaption(d);
+                    if (cleanCaption) namesSet.add(cleanCaption);
+                }
+
+                namesSet.forEach(val => {
+                    let itemsArray = map.get(val);
+                    if (!itemsArray) {
+                        itemsArray = [];
+                        map.set(val, itemsArray);
+                    }
+                    itemsArray.push(d);
+                });
+            }
+            targetEntitiesCache.sourceList = list;
+            targetEntitiesCache.listLength = list.length;
+            targetEntitiesCache.matchesMap = map;
+        }
+
+        const found = targetEntitiesCache.matchesMap.get(cleanTok) || [];
+        // Not in the part of the list loaded so far: ask the server (debounced). When the hit is merged
+        // into the list the suggestions refresh and the name is recognised.
+        if (found.length === 0) requestStructSearch(cleanTok);
+        return found;
+    }
+
+    /**
+     * Checks whether a token represents a recognized target entity type or object.
+     * @param {string} token - Token text to validate.
+     * @returns {boolean} True if token is an entity.
+     */
+    function isTargetEntity(token) {
+        return getTargetEntityMatches(token).length > 0;
+    }
+
+    /**
+     * Compares two entity type strings for equality (case-insensitive).
+     * @param {string} type1 - First entity type.
+     * @param {string} type2 - Second entity type.
+     * @returns {boolean} True if types match.
+     */
+    function areTypesMatching(type1, type2) {
+        if (!type1 || !type2) return false;
+        const t1 = String(type1).trim().toLowerCase();
+        const t2 = String(type2).trim().toLowerCase();
+        if (t1 === t2) return true;
+        if ((t1 === "t" || t1 === "tstruct") && (t2 === "t" || t2 === "tstruct")) return true;
+        if ((t1 === "i" || t1 === "iview") && (t2 === "i" || t2 === "iview")) return true;
+        if ((t1 === "p" || t1 === "page") && (t2 === "p" || t2 === "page")) return true;
+        if ((t1 === "a" || t1 === "ads" || t1 === "v") && (t2 === "a" || t2 === "ads" || t2 === "v")) return true;
+        return false;
+    }
+
+    /**
+     * Resolves full target entity metadata object given token and action.
+     * @param {string} token - Entity token text.
+     * @param {string} [action] - Optional action verb.
+     * @returns {object|null} Resolved entity object or null.
+     */
+    function getTargetEntityObj(token, action) {
+        if (!token) return null;
+        const matches = getTargetEntityMatches(token);
+
+        if (matches.length === 0) return null;
+        if (matches.length === 1) return matches[0];
+
+        // Structures sharing a caption: the internal name already picked wins over a type-only match (#289)
+        const pickedNames = Object.values(resolvedParams).filter(v => v).map(v => String(v).toLowerCase());
+        const pickedMatch = matches.find(d => pickedNames.includes((d.name || d.NAME || d.sqlname || "").toLowerCase()));
+        if (pickedMatch) return pickedMatch;
+
+        let matched = null;
+        const lowerToken = token.toLowerCase();
+        const allKeys = new Set([...Object.keys(resolvedParams), ...Object.keys(resolvedParamType)]);
+        for (const idx of allKeys) {
+            const resolvedVal = (resolvedParams[idx] || "").toLowerCase();
+            const preferredType = resolvedParamType[idx];
+
+            const found = matches.find(d => {
+                const name = (d.name || d.NAME || d.sqlname || "").toLowerCase();
+                const caption = (d.caption || d.CAPTION || "").toLowerCase();
+                const displaydata = (d.displaydata || d.DISPLAYDATA || "").toLowerCase();
+                const cleanCaption = getCleanCaption(d);
+
+                const nameMatch = !resolvedVal || name === resolvedVal || caption === resolvedVal || displaydata === resolvedVal || cleanCaption === resolvedVal;
+                if (!nameMatch) return false;
+
+                if (preferredType) {
+                    return areTypesMatching(d.stype || d.STYPE, preferredType);
+                }
+                return true;
+            });
+
+            if (found) {
+                matched = found;
+                break;
+            }
+        }
+
+        if (matched) return matched;
+
+        if (action) {
+            const lowAction = action.toLowerCase().trim();
+            if (lowAction === "create" || lowAction === "edit") {
+                const tstructMatch = matches.find(d => {
+                    const type = (d.stype || d.STYPE || "").toLowerCase();
+                    return type === "t" || type === "tstruct";
+                });
+                if (tstructMatch) return tstructMatch;
+            } else if (lowAction === "view" || lowAction.startsWith("v")) {
+                const iviewOrAdsMatch = matches.find(d => {
+                    const type = (d.stype || d.STYPE || "").toLowerCase();
+                    return type === "i" || type === "iview" || type === "ads" || type === "a" || type === "v";
+                });
+                if (iviewOrAdsMatch) return iviewOrAdsMatch;
+            } else if (lowAction === "source" || lowAction.startsWith("s")) {
+                const sourceMatch = matches.find(d => {
+                    const type = (d.stype || d.STYPE || "").toLowerCase();
+                    return ["t", "tstruct", "i", "iview", "ads"].includes(type);
+                });
+                if (sourceMatch) return sourceMatch;
+            }
+        }
+
+        if (matches.length > 1) {
+            const nonTstructMatch = matches.find(d => {
+                const type = (d.stype || d.STYPE || "").toLowerCase();
+                return type === "i" || type === "iview" || type === "ads" || type === "a" || type === "v" || type === "p" || type === "page";
+            });
+            if (nonTstructMatch) return nonTstructMatch;
+        }
+
+        return matches[0];
+    }
+
+    /**
+     * Returns the structures of one type that share the caption a token names, e.g. Test Form2 (ytdf) and
+     * Test Form2 (tst2) for "Test Form2" (#289). Such a token cannot be run: it does not say which one is meant.
+     * Empty when the token names one structure: it equals an internal name, carries "(transid)", or no other
+     * structure of the same type has that caption. A form and a report sharing a caption are not counted;
+     * the usual type preference (getTargetEntityObj) chooses between them.
+     * @param {string} token - Structure token as typed (quotes and a trailing [badge] are ignored).
+     * @param {string} [action] - Command verb (create / edit / view), used to tell which type is meant.
+     * @returns {Array<object>} Rows sharing the caption, or [] when the token is not ambiguous.
+     */
+    function getSameCaptionStructs(token, action) {
+        const raw = cleanString(token);
+        const clean = raw.replace(/\s*\[[^\]]*\]$/, "").trim();
+        if (!clean) return [];
+        const matches = getTargetEntityMatches(clean);
+        if (matches.length < 2) return [];
+        const lowClean = clean.toLowerCase();
+        if (matches.some(d => (d.name || d.NAME || d.sqlname || "").toLowerCase() === lowClean)) return [];
+
+        let typeOf = null;
+        const badge = (raw.match(/\[([^\]]*)\]$/) || [])[1];
+        if (badge) {
+            const b = badge.toLowerCase().trim();
+            if (["form", "tstruct", "t"].includes(b)) typeOf = "t";
+            else if (["report", "iview", "i"].includes(b)) typeOf = "i";
+            else if (["ads", "a", "v"].includes(b)) typeOf = "ads";
+            else if (["page", "p"].includes(b)) typeOf = "p";
+        }
+        if (!typeOf) {
+            const target = getTargetEntityObj(clean, action);
+            typeOf = target ? (target.stype || target.STYPE) : null;
+        }
+        if (!typeOf) return [];
+        const sameType = matches.filter(d => areTypesMatching(d.stype || d.STYPE, typeOf));
+        return sameType.length > 1 ? sameType : [];
+    }
+
+    /**
+     * Checks if a metadata item represents an Inbox structure.
+     * @param {object} item - Structure item to check.
+     * @returns {boolean} True if structure is Inbox.
+     */
+    function isInboxStructure(item) {
+        if (!item) return false;
+        const stype = item.stype !== undefined ? item.stype : item.STYPE;
+        if (stype !== undefined && stype !== null) {
+            const stypeStr = String(stype).trim().toLowerCase();
+            if (stypeStr === "inbox") {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Checks if a metadata item represents an Axpert Data Source (ADS).
+     * @param {object} item - Structure item to check.
+     * @returns {boolean} True if structure is ADS.
+     */
+    function isAdsStructure(item) {
+        if (!item) return false;
+        const stype = item.stype || item.STYPE;
+        if (stype === undefined || stype === null) return false;
+        const s = String(stype).trim().toLowerCase();
+        return s === "ads" || s === "a" || s === "v";
+    }
+
+    /**
+     * Checks if an ADS structure should be visible to current user based on permissions.
+     * @param {object} item - ADS structure item.
+     * @returns {boolean} True if ADS is visible.
+     */
+    function isAdsVisible(item) {
+        if (!item) return false;
+        const view = item.viewallowed;
+        if (view === "F" || view === false || view === "false" || view === "NA" || view === "f" || view === "False") {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Verifies if an action verb (create, edit, view) is allowed on the given entity item.
+     * @param {object} item - Entity metadata item.
+     * @param {string} action - Action verb to check.
+     * @returns {boolean} True if action is permitted.
+     */
+    function isActionAllowed(item, action) {
+        if (!item) return true;
+        const act = action.toLowerCase();
+        const stype = (item.stype || item.STYPE || "").toLowerCase().trim();
+        if (stype === "p" || stype === "page" || stype === "i" || stype === "iview" || stype === "") {
+            return true;
+        }
+        const hasView = item.viewallowed !== undefined;
+        const hasCreate = item.createallowed !== undefined;
+        const hasEditKey = item.keyfieldforedit !== undefined;
+        if (!hasView && !hasCreate && !hasEditKey) {
+            return true;
+        }
+        if (act === "view") {
+            return hasView ? item.viewallowed === "T" : true;
+        }
+        if (act === "create" || act === "edit") {
+            return hasCreate ? item.createallowed === "T" : true;
+        }
+        return true;
+    }
+
+    /**
+     * Validates whether an action is compatible with the specified target entity.
+     * @param {string} target - Entity name or type.
+     * @param {string} action - Action verb.
+     * @returns {boolean} True if valid action for target.
+     */
+    function isValidActionForTarget(target, action) {
+        if (!target || !action) return false;
+        const entityObj = getTargetEntityObj(target, action);
+        const lowAction = action.toLowerCase();
+        let actions = [];
+        if (entityObj) {
+            const type = (entityObj.stype || entityObj.STYPE || "").toLowerCase().trim();
+            const accessPermissions = getAccessPermissions();
+            const canBuild = accessPermissions && accessPermissions.buildAccess;
+
+            if (type === "t" || type === "tstruct") {
+                if (isActionAllowed(entityObj, "view")) actions.push("View");
+                if (isActionAllowed(entityObj, "create")) {
+                    actions.push("Create");
+                    actions.push("Edit");
+                }
+                if (canBuild && isDevOptionAllowed("tstruct")) actions.push("Source");
+            } else if (isInboxStructure(entityObj)) {
+                actions.push("Go");
+            } else if (type === "ads") {
+                if (isAdsVisible(entityObj)) actions.push("View");
+                if (canBuild && isDevOptionAllowed("ads")) actions.push("Source");
+            } else if (type === "i" || type === "iview") {
+                if (isActionAllowed(entityObj, "view")) actions.push("View");
+                if (canBuild && isDevOptionAllowed("iview")) actions.push("Source");
+            } else {
+                if (type === "p" || type === "page" || isActionAllowed(entityObj, "view")) actions.push("View");
+                if ((type === "i" || type === "iview" || type === "t" || type === "tstruct" || type === "ads") && canBuild) {
+                    const devKey = (type === "t" || type === "tstruct") ? "tstruct" : (type === "ads" ? "ads" : "iview");
+                    if (isDevOptionAllowed(devKey)) {
+                        actions.push("Source");
+                    }
+                }
+            }
+        }
+        return actions.map(act => act.toLowerCase()).includes(lowAction);
+    }
+
+    /**
+     * Checks if 'view' action is permitted on the specified metadata item.
+     * @param {object} item - Item to validate.
+     * @returns {boolean} True if view is allowed.
+     */
+    function isViewAllowed(item) {
+        if (!item) return false;
+        if (isInboxStructure(item)) {
+            return false;
+        }
+        if (isAdsStructure(item)) {
+            return isAdsVisible(item);
+        }
+        const stype = (item.stype || item.STYPE || "").toLowerCase().trim();
+        if (stype === "p" || stype === "page" || stype === "i" || stype === "iview") {
+            return true;
+        }
+        return isActionAllowed(item, "view");
+    }
+
+    /**
+     * Checks if a structure satisfies user role visibility requirements.
+     * @param {object} item - Structure metadata item.
+     * @returns {boolean} True if structure is visible.
+     */
+    function isStructureVisible(item) {
+        if (!item) return false;
+        if (isInboxStructure(item)) {
+            return true;
+        }
+        if (isAdsStructure(item)) {
+            return isAdsVisible(item);
+        }
+        const stype = (item.stype || item.STYPE || "").toLowerCase().trim();
+        if (stype === "p" || stype === "page" || stype === "i" || stype === "iview") {
+            return true;
+        }
+        const hasView = item.viewallowed !== undefined;
+        const hasCreate = item.createallowed !== undefined;
+        if (!hasView && !hasCreate) {
+            return true;
+        }
+        return (hasView && item.viewallowed === "T") || (hasCreate && item.createallowed === "T");
+    }
+
+    let initialSuggestionsCache = null;
+    let initialSuggestionsSourceList = null;
+    let initialSuggestionsListLength = -1;
+    let initialSuggestionsRunnable = null;
+    let initialSuggestionsIncludeHits = false;
+
+    /**
+     * Returns list of base command verbs for initial/empty input state.
+     * @param {boolean} [includeSearchHits=false] - Also include structures merged in from a server search.
+     *   False for the plain list (nothing typed); true while the user is typing a word to search for.
+     * @returns {Array<object>} Initial suggestion objects.
+     */
+    function getInitialSuggestions(includeSearchHits = false) {
+        const key = "axi_structmetalist_" + getStructParam().toLowerCase();
+        const currentList = axDatasourceObj[key] || [];
+        const structType = getStructType();
+        const isRunnable = !!(structType && structType !== "o" && !isPreviewModalOpen() && !isRunDisabledForPage() && !isViewDesignerModalOpen());
+
+        // The list is extended in place (next pages, merged search hits), so besides the list identity the
+        // length is compared too; otherwise newly loaded structures would never show up.
+        if (initialSuggestionsCache && initialSuggestionsSourceList === currentList && initialSuggestionsListLength === currentList.length && initialSuggestionsRunnable === isRunnable && initialSuggestionsIncludeHits === includeSearchHits) {
+            return initialSuggestionsCache;
+        }
+        const verbs = getInitialCommandsList().filter(k => !["create", "edit", "view", "source"].includes(k.toLowerCase()));
+        const targets = currentList.filter(item => (includeSearchHits || !item.__fromSearch) && isStructureVisible(item));
+        initialSuggestionsIncludeHits = includeSearchHits;
+        initialSuggestionsCache = [...verbs, ...targets];
+        initialSuggestionsSourceList = currentList;
+        initialSuggestionsListLength = currentList.length;
+        initialSuggestionsRunnable = isRunnable;
+        return initialSuggestionsCache;
+    }
+
+    /**
+     * Resets internal command state flags and active suggestion properties.
+     * @returns {void}
+     */
+    function normalizeGlobalState() {
+        if (!input) return;
+        const tokens = getTokens(input.value, false);
+        if (tokens.length >= 2) {
+            const first = cleanString(tokens[0]).toLowerCase();
+            const second = cleanString(tokens[1]).toLowerCase();
+            if (isTargetEntity(first) && isValidActionForTarget(first, second)) {
+                const val0 = (resolvedParams[0] || "").toLowerCase();
+                const val1 = (resolvedParams[1] || "").toLowerCase();
+                if (val0 && !["create", "edit", "view", "source"].includes(val0) && val1 && ["create", "edit", "view", "source"].includes(val1)) {
+                    const tempVal = resolvedParams[0];
+                    resolvedParams[0] = resolvedParams[1];
+                    resolvedParams[1] = tempVal;
+
+                    const tempType = resolvedParamType[0];
+                    resolvedParamType[0] = resolvedParamType[1];
+                    resolvedParamType[1] = tempType;
+                    // console.log("Global state: Swapped to normalized order");
+                }
+            } else {
+                const val0 = (resolvedParams[0] || "").toLowerCase();
+                const val1 = (resolvedParams[1] || "").toLowerCase();
+                if (val0 && ["create", "edit", "view", "source"].includes(val0) && val1 && !["create", "edit", "view", "source"].includes(val1)) {
+                    const tempVal = resolvedParams[0];
+                    resolvedParams[0] = resolvedParams[1];
+                    resolvedParams[1] = tempVal;
+
+                    const tempType = resolvedParamType[0];
+                    resolvedParamType[0] = resolvedParamType[1];
+                    resolvedParamType[1] = tempType;
+                    // console.log("Global state: Swapped back to user order");
+                }
+            }
+        } else {
+            const val0 = (resolvedParams[0] || "").toLowerCase();
+            if (val0 && ["create", "edit", "view", "source"].includes(val0)) {
+                const tempVal = resolvedParams[0];
+                resolvedParams[0] = resolvedParams[1];
+                resolvedParams[1] = tempVal;
+
+                const tempType = resolvedParamType[0];
+                resolvedParamType[0] = resolvedParamType[1];
+                resolvedParamType[1] = tempType;
+                // console.log("Global state: Swapped back to user order (length < 2)");
+            }
+        }
+    }
+
+
+
+
+    /**
+     * Resolves parameters, fields, and suggestions for 'View ADS' commands.
+     * @param {string[]} tokens - Current command tokens.
+     * @param {object} commandConfig - Command definition schema.
+     * @returns {Array<object>} Suggestions for ADS command.
+     */
+    function viewAdsCommandHandling(tokens, commandConfig) {
+        //const viewSource = commandConfig?.prompts?.[0]?.promptSource?.toLowerCase();
+        //const viewSource = createsourceObj;
+
+        if (SET_COMMAND_STATE.isDropDown) {
+            let acceptedValue = cleanString(tokens[tokens.length - 2]);
+            if (acceptedValue)
+                SET_COMMAND_STATE.currentFieldValue = acceptedValue;
+
+            SET_COMMAND_STATE.isDropDown = false;
+        }
+
+
+        if (SET_COMMAND_STATE.currentFieldType == 'n') {
+
+            return processAdsRepetitiveTokens(tokens, commandConfig);
+        }
+        else if (SET_COMMAND_STATE.currentFieldType == 'd') {
+            let prevValueInSet = tokens[tokens.length - 2].toLowerCase();
+
+            if (prevValueInSet === "today" || prevValueInSet === "yesterday" || prevValueInSet === "tomorrow" ||
+                prevValueInSet === "lastweek" || prevValueInSet === "nextweek" || prevValueInSet === "thisweek" ||
+                prevValueInSet === "lastmonth" || prevValueInSet === "thismonth" || prevValueInSet === "nextmonth" ||
+                prevValueInSet === "thisquarter" || prevValueInSet === "lastquarter" || prevValueInSet === "nextquarter" ||
+                prevValueInSet === "thisyear" || prevValueInSet === "lastyear" || prevValueInSet === "nextyear" || prevValueInSet === "custom") {
+                dateControlBoolean = true;
+            }
+
+            if (dateControlBoolean) {
+
+                if (prevValueInSet === "today" || prevValueInSet === "yesterday" || prevValueInSet === "tomorrow" ||
+                    prevValueInSet === "lastweek" || prevValueInSet === "nextweek" || prevValueInSet === "thisweek" ||
+                    prevValueInSet === "lastmonth" || prevValueInSet === "thismonth" || prevValueInSet === "nextmonth" ||
+                    prevValueInSet === "thisquarter" || prevValueInSet === "lastquarter" || prevValueInSet === "nextquarter" ||
+                    prevValueInSet === "thisyear" || prevValueInSet === "lastyear" || prevValueInSet === "nextyear") {
+
+                    const dateResult = getDateByFilter(prevValueInSet);
+                    let date = dateResult.date;
+
+                    if (date !== null || date !== undefined) {
+                        let settokens = [...tokens]
+                        let lastIndex = settokens.length - 2;
+                        let lastToken = settokens[lastIndex];
+
+
+                        ///We need to use System Date Format
+                        date = formatDate(date, dateString);
+
+                        // console.log("Final date:", date);
+
+                        settokens[lastIndex] = date;
+
+                        input.value = settokens.join(" ");
+
+                        SET_COMMAND_STATE.currentFieldValue = date;
+                        dateControlBoolean = false;
+
+                    }
+                }
+                else {
+                    if (prevValueInSet.toLowerCase() == "custom") {
+                        //let settokens = tokens
+                        //let lastIndex = tokens.length - 2;
+                        //let lastToken = tokens[lastIndex];
+                        let settokens = [...tokens]
+                        let lastIndex = settokens.length - 2;
+                        let lastToken = settokens[lastIndex];
+
+                        settokens[lastIndex] = "";
+
+                        input.value = settokens.join(" ");
+
+                        showToast("Please Type the date", 5000, true);
+                        updateDynamicHintFromPrompt({ prompt: "fieldValue" })
+
+                        filteredObjects = [goOption, popOption];
+                        return [
+                            goOption,
+                            popOption,
+                            "Please Type the date"
+                        ];
+                        //return ["Please Type the date"];
+                    }
+                    else {
+                        //const partialDate = tokens[tokens.length - 1]
+                        const partialDate = tokens[tokens.length - 1]
+
+                        let isSetValidDate = isValidDate(partialDate)
+
+                        if (isSetValidDate) {
+
+                            ///We need to use System Date Format
+                            const formattedDate = formatDate(partialDate, dateString);
+                            date = formattedDate;
+                            // console.log("Final date:", date);
+                            SET_COMMAND_STATE.currentFieldValue = date;
+                            SET_COMMAND_STATE.currentFieldType = null;
+                            SET_COMMAND_STATE.isNextField = true;
+                            dateControlBoolean = false;
+
+                        }
+                        else {
+                            filteredObjects = [goOption, popOption];
+                            return [
+                                goOption,
+                                popOption,
+                                "Please type Valid date using / (ex: DD / MM / YYYY)"
+                            ];
+                            //return ["Please type Valid date using / (ex: DD / MM / YYYY)"];
+                        }
+                    }
+                }
+            }
+            else {
+                let acceptedValue = cleanString(tokens[tokens.length - 1]).toLowerCase();
+
+                const list = [
+                    "Custom",
+                    "Today",
+                    "Yesterday",
+                    "Tomorrow",
+                    "LastWeek",
+                    "NextWeek",
+                    "ThisWeek",
+                    "LastMonth",
+                    "ThisMonth",
+                    "NextMonth",
+                    "ThisQuarter",
+                    "LastQuarter",
+                    "NextQuarter",
+                    "ThisYear",
+                    "LastYear",
+                    "NextYear"
+                ];
+
+                let filtered = list.filter(col => {
+
+                    const rawDisplay = col.toLowerCase();
+
+                    const normalizedTypedValue = (acceptedValue ?? "")
+                        .toLowerCase();
+
+                    return rawDisplay.includes(normalizedTypedValue);
+                });
+
+
+                if (acceptedValue && filtered.length === 0) {
+                    // console.log("User given value which is not in the date list");
+                    showToast("Please select a valid Option from the list", 5000, true);
+
+                    let lastIndex = tokens.length - 1;
+                    let lastToken = tokens[lastIndex];
+                    tokens[lastIndex] = "";
+
+                    input.value = tokens.join(" ");
+
+                    filtered = list;
+                }
+
+                filteredObjects = [goOption, popOption, ...filtered];
+                return [
+                    goOption,
+                    popOption,
+                    ...filtered
+                ];
+
+                //return filtered;
+            }
+
+            return processAdsRepetitiveTokens(tokens, commandConfig);
+
+        }
+        else
+            return processAdsRepetitiveTokens(tokens, commandConfig);
+    }
+
+    /**
+     * Validates if a suggestion item matches filter criteria and should be displayed.
+     * @param {object} item - Suggestion candidate item.
+     * @returns {boolean} True if valid suggestion.
+     */
+    function isValidSuggestion(item) {
+        return !!(
+            item &&
+            (
+                (typeof item.displaydata === "string" && item.displaydata.trim()) ||
+                (typeof item.name === "string" && item.name.trim())
+            )
+        );
+    }
+
+
+    /**
+     * Filters out already selected tokens in chained ADS command expressions.
+     * @param {string[]} tokens - Current command tokens.
+     * @param {object} commandConfig - Command definition schema.
+     * @returns {Array<object>} Filtered suggestion list.
+     */
+    function processAdsRepetitiveTokens(tokens, commandConfig) {
+        let targetIndex = tokens.length - 1;
+        let partialTyped = cleanString(tokens[targetIndex]);
+
+        const adsName = cleanString(tokens[1]);
+        setCommandTransid = adsName;
+
+        if (targetIndex < 2) return [];
+
+        if (SET_COMMAND_STATE.transid === null || setCommandTransid !== SET_COMMAND_STATE.transid) {
+            SET_COMMAND_STATE = {
+                isNextField: false,
+                currentField: null,
+                currentFieldType: null,
+                isFirst: true,
+                transid: adsName,
+                currentFieldValue: null,
+                isDropDown: false
+
+            };
+        }
+
+
+        if (targetIndex % 2 === 0) {
+            const sourceName = "axi_adscolumnlist";
+            const sourceKey = `${sourceName}_${adsName}`.toLowerCase();
+
+
+            if (!axDatasourceObj[sourceKey]) {
+                loadList(sourceName, adsName);
+                return ["Loading columns..."];
+            }
+
+            const list = axDatasourceObj[sourceKey];
+            if (!Array.isArray(list)) {
+                filteredObjects = [goOption, popOption];
+                return [goOption, popOption];
+            }
+
+            const safeList = list.filter(isValidSuggestion);
+
+            if (safeList.length === 0) {
+                filteredObjects = [goOption, popOption];
+                return [goOption, popOption];
+            }
+
+
+            const usedColumns = new Set();
+            for (let i = 2; i < targetIndex; i += 2) {
+                const usedToken = cleanString(tokens[i]).toLowerCase();
+                usedColumns.add(usedToken);
+            }
+
+            const lastToken = tokens[targetIndex];
+            if (lastToken && lastToken.includes(",")) {
+                const parts = lastToken.split(",");
+                partialTyped = cleanString(parts[parts.length - 1]);
+                for (let i = 0; i < parts.length - 1; i++) {
+                    const p = cleanString(parts[i]).toLowerCase();
+                    if (p) usedColumns.add(p);
+                }
+            }
+
+
+
+
+            const filtered = safeList.filter(col => {
+
+                const rawDisplay = (col?.displaydata || col?.name)?.toLowerCase();
+
+
+                const cleanDisplay = rawDisplay?.replace(/\s*\(.*?\)/g, "")?.replace(/\s*\[[^\]]+\]\s*$/, "")?.trim();
+
+                const rawName = (col.name || "").toLowerCase();
+
+
+                const isUsed = usedColumns.has(cleanDisplay) || usedColumns.has(rawName);
+
+
+                const matchesInput = cleanDisplay.includes(partialTyped.toLowerCase());
+
+                return !isUsed && matchesInput;
+            });
+
+
+
+
+            SET_COMMAND_STATE.currentField = null;
+            SET_COMMAND_STATE.currentFieldType = null
+            SET_COMMAND_STATE.currentFieldValue = null;
+            SET_COMMAND_STATE.isNextField = false;
+            SET_COMMAND_STATE.isDropDown = false;
+
+
+            filteredObjects = [goOption, popOption, ...filtered];
+            if (tokens.length > 2) {
+                return [
+                    goOption,
+                    popOption,
+                    ...filtered.map(col => col.displaydata || col.name)
+                ];
+
+            }
+
+
+
+        } else {
+            const prevColToken = tokens[targetIndex - 1];
+            if (prevColToken && prevColToken.includes(",")) {
+                SET_COMMAND_STATE.isDropDown = false;
+                filteredObjects = [goOption, popOption];
+                return [goOption, popOption];
+            }
+            if (!SET_COMMAND_STATE.isNextField) {
+                let prevColumnName
+                if (!SET_COMMAND_STATE.currentField) {
+                    prevColumnName = cleanString(tokens[targetIndex - 1]);
+                    SET_COMMAND_STATE.currentField = prevColumnName;
+                } else
+                    prevColumnName = SET_COMMAND_STATE.currentField;
+
+                //const prevColumnName = cleanString(tokens[targetIndex - 1]);
+
+
+                const colSourceKey = `axi_adscolumnlist_${adsName}`.toLowerCase();
+                const colList = axDatasourceObj[colSourceKey];
+
+                if (!colList) {
+                    // console.log("In processAds " + "axi_adscolumnlist" + " is empty");
+                    showToast("Please Try Again Later.");
+                    return [];
+                }
+
+                const columnMetadata = colList.find(
+                    c =>
+                        c.name?.toLowerCase() === prevColumnName.toLowerCase() ||
+                        c.displaydata?.toLowerCase().replace(/\s*\(.*?\)/g, '').trim() === prevColumnName.toLowerCase()
+                ) || null;
+
+                if (!columnMetadata) {
+                    //// console.log("Selected Field Name is Not in the List " + prevColumnName);
+                    //showToast("Please Select Field from the list", 5000, true);
+                    //return [];
+
+                    // console.log("Selected Field Name is Not in the List " + prevColumnName);
+                    showToast("Please Select Field from the list", 5000, true);
+
+                    let settokens = [...tokens]
+                    let lastIndex = settokens.length - 2;
+                    let lastToken = settokens[lastIndex];
+
+                    settokens[lastIndex] = "";
+
+                    targetIndex = targetIndex - 1;
+
+                    input.value = settokens.join(" ");
+                    updateDynamicHintFromPrompt({ prompt: "fieldname" })
+
+
+                    const usedColumns = new Set();
+                    for (let i = 2; i < targetIndex; i += 2) {
+                        const usedToken = cleanString(tokens[i]).toLowerCase();
+                        usedColumns.add(usedToken);
+                    }
+
+
+                    const safeColList = colList.filter(isValidSuggestion);
+
+
+                    // const filtered = colList.filter(col => {
+
+                    //     const rawDisplay = (col.displaydata || col.name).toLowerCase();
+
+                    //     const cleanDisplay = rawDisplay
+                    //         .replace(/\s*\(.*?\)/g, "")
+                    //         .replace(/\s*\[[^\]]+\]\s*$/, "")
+                    //         .trim();
+
+                    //     const rawName = (col.name || "").toLowerCase();
+
+                    //     const isUsed = usedColumns.has(cleanDisplay) || usedColumns.has(rawName);
+
+                    //     return !isUsed;
+                    // });
+
+                    const filtered = safeColList.filter(col => {
+                        const rawDisplay = (col.displaydata || col.name || "")
+                            .toLowerCase();
+
+                        const cleanDisplay = rawDisplay
+                            .replace(/\s*\(.*?\)/g, "")
+                            .replace(/\s*\[[^\]]+\]\s*$/, "")
+                            .trim();
+
+                        const rawName = (col.name || "").toLowerCase();
+
+                        const isUsed =
+                            usedColumns.has(cleanDisplay) ||
+                            usedColumns.has(rawName);
+
+                        return !isUsed;
+                    });
+
+
+                    SET_COMMAND_STATE.currentField = null;
+                    SET_COMMAND_STATE.currentFieldType = null
+                    SET_COMMAND_STATE.currentFieldValue = null;
+                    SET_COMMAND_STATE.isNextField = false;
+                    SET_COMMAND_STATE.isDropDown = false;
+
+
+                    filteredObjects = [goOption, popOption, ...filtered];
+                    if (tokens.length > 2) {
+                        return [
+                            goOption,
+                            popOption,
+                            ...filtered.map(col => col.displaydata || col.name)
+                        ];
+
+                    }
+                }
+
+                let isAccept = !columnMetadata.sourcetable || !columnMetadata.sourcefld;
+
+
+                let datatype;
+
+                if (SET_COMMAND_STATE.currentFieldType === null) {
+                    datatype = columnMetadata.fdatatype;
+                    SET_COMMAND_STATE.currentFieldType = datatype;
+                } else datatype = SET_COMMAND_STATE.currentFieldType;
+
+
+                if (datatype === 'c' || datatype === 'n' || datatype === "t") {
+                    if (isAccept) {
+                        let acceptedValue = cleanString(tokens[tokens.length - 1]);
+                        const columnName = prevColumnName
+                        adsfieldvalueanddt[columnName] = {
+                            datatype: datatype,
+                            isAccept: isAccept,
+                        };
+                        if (acceptedValue)
+                            SET_COMMAND_STATE.currentFieldValue = acceptedValue;
+                        else {
+                            filteredObjects = [goOption, popOption];
+                            return [
+                                goOption,
+                                popOption,
+                                "Please type the value..."
+                            ];
+                            //return ["Please type the value..."];
+                        }
+                        //return [];
+                        // const columnName = prevColumnName
+                        // adsfieldvalueanddt[columnName] = {
+                        //     datatype: datatype,
+                        //     isAccept: isAccept,
+                        // };
+                        //if (tokens?.length <= 4) {
+                        //    return [goOption,];
+                        //}
+                        return [];
+                    } else {
+                        SET_COMMAND_STATE.isDropDown = true;
+                        if (!columnMetadata.sourcetable || !columnMetadata.sourcefld) {
+                            // console.log("Error in DropDownField check: sourcetable or sourcefld is empty");
+                            showToast("Please Try Again Later.");
+                            return [];
+                        }
+
+                        const acceptedValue = cleanString(tokens[tokens.length - 1]);
+                        const columnName = prevColumnName
+                        adsfieldvalueanddt[columnName] = {
+                            datatype: datatype,
+                            isAccept: isAccept,
+                        };
+
+                        const sourcetable = columnMetadata.sourcetable;
+                        const sourcefld = columnMetadata.sourcefld;
+
+                        const sourceName = "axi_adsdropdowntokens";
+                        const paramValue = `${sourcetable}$#$${sourcefld}`;
+                        const sourceKey = `${sourceName}_${paramValue}`.toLowerCase();
+
+                        if (!axDatasourceObj[sourceKey]) {
+                            loadList(sourceName, paramValue);
+                            return ["Loading values..."];
+                        }
+
+                        const list = axDatasourceObj[sourceKey];
+                        if (!Array.isArray(list)) return [];
+
+
+                        const filtered = list.filter(col => {
+                            const rawDisplay = String(col.displaydata || col.name)
+                                .toLowerCase();
+
+                            const normalizedTypedValue = (acceptedValue ?? "")
+                                .toLowerCase();
+
+                            return !normalizedTypedValue || rawDisplay.includes(normalizedTypedValue);
+                        });
+
+                        if (acceptedValue && filtered.length === 0) {
+                            // console.log("User given value is not in the dropdown");
+                            showToast("Please select a valid value from the dropdown", 5000, true);
+
+                            let lastIndex = tokens.length - 1;
+                            let lastToken = tokens[lastIndex];
+                            tokens[lastIndex] = "";
+
+                            input.value = tokens.join(" ");
+
+                            filtered = list;
+                        }
+
+
+
+
+                        //if (tokens.length <= 4) {
+                        //    filteredObjects = [goOption, ...filtered];
+                        //    return [
+                        //        goOption,
+                        //        ...filtered.map(col => col.displaydata || col.name)
+                        //    ];
+
+                        //}
+
+
+                        //filteredObjects = filtered
+
+                        //return filtered.map(col => col.displaydata || col.name);
+
+                        filteredObjects = [goOption, popOption, ...filtered];
+                        return [
+                            goOption,
+                            popOption,
+                            ...filtered.map(col => col.displaydata || col.name)
+                        ];
+
+
+
+                    }
+                } else if (datatype === 'd') {
+
+
+                    const acceptedValue = cleanString(tokens[tokens.length - 1]);
+
+                    const columnName = prevColumnName
+                    adsfieldvalueanddt[columnName] = {
+                        datatype: datatype,
+                        isAccept: isAccept,
+                    };
+
+                    const list = [
+                        "Custom",
+                        "Today",
+                        "Yesterday",
+                        "Tomorrow",
+                        "LastWeek",
+                        "NextWeek",
+                        "ThisWeek",
+                        "LastMonth",
+                        "ThisMonth",
+                        "NextMonth",
+                        "ThisQuarter",
+                        "LastQuarter",
+                        "NextQuarter",
+                        "ThisYear",
+                        "LastYear",
+                        "NextYear"
+                    ];
+
+                    const filtered = list.filter(col => {
+
+                        const rawDisplay = col.toLowerCase();
+
+                        const normalizedTypedValue = (acceptedValue ?? "")
+                            .toLowerCase();
+
+                        return rawDisplay.includes(normalizedTypedValue);
+                    });
+
+
+                    //return filtered;
+
+                    filteredObjects = [goOption, popOption, ...filtered];
+                    return [
+                        goOption,
+                        popOption,
+                        ...filtered
+                    ];
+
+
+                }
+
+                //else if (datatype === 'd') {
+
+                //}
+            } else return [];
+
+        }
+    }
+
+    //function processAdsRepetitiveTokens(tokens, commandConfig) {
+    //    const targetIndex = tokens.length - 1;
+    //    const partialTyped = cleanString(tokens[targetIndex]);
+    //    const adsName = cleanString(tokens[1]);
+
+
+    //    if (targetIndex < 2) return [];
+
+
+    //    if (targetIndex % 2 === 0) {
+    //        const sourceName = "axi_adscolumnlist";
+    //        const sourceKey = `${sourceName}_${adsName}`.toLowerCase();
+
+
+    //        if (!axDatasourceObj[sourceKey]) {
+    //            loadList(sourceName, adsName);
+    //            return ["Loading columns..."];
+    //        }
+
+    //        const list = axDatasourceObj[sourceKey];
+    //        if (!Array.isArray(list)) return [];
+
+
+    //        const usedColumns = new Set();
+    //        for (let i = 2; i < targetIndex; i += 2) {
+    //            const usedToken = cleanString(tokens[i]).toLowerCase();
+    //            usedColumns.add(usedToken);
+    //        }
+
+
+
+
+
+
+    //        const filtered = list.filter(col => {
+
+    //            const rawDisplay = (col.displaydata || col.name).toLowerCase();
+
+
+    //            const cleanDisplay = rawDisplay
+    //                .replace(/\s*\(.*?\)/g, "")
+    //                .replace(/\s*\[[^\]]+\]\s*$/, "")
+    //                .trim();
+
+    //            const rawName = (col.name || "").toLowerCase();
+
+
+    //            const isUsed = usedColumns.has(cleanDisplay) || usedColumns.has(rawName);
+
+
+    //            const matchesInput = cleanDisplay.includes(partialTyped.toLowerCase());
+
+    //            return !isUsed && matchesInput;
+    //        });
+
+
+
+
+    //        filteredObjects = [goOption, ...filtered];
+    //        if (tokens.length > 2) {
+    //            return [
+    //                goOption,
+    //                ...filtered.map(col => col.displaydata || col.name)
+    //            ];
+
+    //        }
+
+    //    }
+
+
+    //    else {
+
+    //        const prevColumnName = cleanString(tokens[targetIndex - 1]);
+
+
+    //        const colSourceKey = `axi_adscolumnlist_${adsName}`.toLowerCase();
+    //        const colList = axDatasourceObj[colSourceKey];
+
+    //        if (!colList) return [];
+
+    //        const columnMetadata = colList.find(
+    //            c =>
+    //                c.name?.toLowerCase() === prevColumnName.toLowerCase() ||
+    //                c.displaydata?.toLowerCase().replace(/\s*\(.*?\)/g, '').trim() === prevColumnName.toLowerCase()
+    //        ) || null;
+
+    //        if (!columnMetadata) return [];
+
+    //        const isAccept = !columnMetadata.sourcetable || !columnMetadata.sourcefld;
+
+
+    //        const datatype = columnMetadata.fdatatype;
+
+
+    //        if (isAccept) {
+    //            const acceptedValue = cleanString(tokens[tokens.length - 1]);
+    //            const columnName = prevColumnName
+    //            adsfieldvalueanddt[columnName] = {
+    //                datatype: datatype,
+    //                isAccept: isAccept,
+    //            };
+    //            if (tokens?.length <= 4) {
+
+    //                return [
+    //                    goOption,
+
+    //                ];
+
+
+    //            }
+    //            return [];
+    //        }
+    //        else {
+
+    //            if (!columnMetadata.sourcetable || !columnMetadata.sourcefld) {
+    //                // console.log("Error in DropDownField check: sourcetable or sourcefld is empty");
+    //                return [];
+    //            }
+
+    //            const acceptedValue = cleanString(tokens[tokens.length - 1]);
+    //            const columnName = prevColumnName
+    //            adsfieldvalueanddt[columnName] = {
+    //                datatype: datatype,
+    //                isAccept: isAccept,
+    //            };
+
+    //            const sourcetable = columnMetadata.sourcetable;
+    //            const sourcefld = columnMetadata.sourcefld;
+
+    //            const sourceName = "axi_adsdropdowntokens";
+    //            const paramValue = `${sourcetable}$#$${sourcefld}`;
+    //            const sourceKey = `${sourceName}_${paramValue}`.toLowerCase();
+
+    //            if (!axDatasourceObj[sourceKey]) {
+    //                loadList(sourceName, paramValue);
+    //                return ["Loading values..."];
+    //            }
+
+    //            const list = axDatasourceObj[sourceKey];
+    //            if (!Array.isArray(list)) return [];
+
+
+    //            const filtered = list.filter(col => {
+    //                const rawDisplay = String(col.displaydata || col.name)
+    //                    .toLowerCase();
+
+    //                const normalizedTypedValue = (acceptedValue ?? "")
+    //                    .toLowerCase();
+
+    //                return !normalizedTypedValue || rawDisplay.includes(normalizedTypedValue);
+    //            });
+
+
+
+
+
+    //            if (tokens.length <= 4) {
+    //                filteredObjects = [goOption, ...filtered];
+    //                return [
+    //                    goOption,
+    //                    ...filtered.map(col => col.displaydata || col.name)
+    //                ];
+
+    //            }
+
+    //            filteredObjects = filtered
+
+
+    //            return filtered.map(col => col.displaydata || col.name);
+
+    //        }
+
+    //    }
+    //}
+
+    /**
+     * Checks if the active iframe contains a page subject to parameter restrictions.
+     * @returns {boolean} True if page has param restrictions.
+     */
+    function isTargetListingPageForParamsRestriction() {
+        try {
+            const { doc, win, iframe } = getIViewDocumentAndWindow();
+            let src = iframe ? (iframe.getAttribute("src") || "") : "";
+            let docHref = "";
+            try {
+                docHref = doc?.location?.href || win?.location?.href || "";
+            } catch (e) { }
+
+            const combinedUrl = (src + " " + docHref).toLowerCase();
+
+            // Target ivnames for the 5 listing screens:
+            // 1. Responsibility Listing: response
+            // 2. Role Listing: ad___url
+            // 3. Actor Listing: ad__act
+            // 4. Dimension Listing: ad___upg
+            // 5. Smart view listing: a___smtl
+            const targetIvnames = [
+                "ivname=response",
+                "ivname=ad___url",
+                "ivname=ad__act",
+                "ivname=ad___upg",
+                "ivname=a___smtl"
+            ];
+
+            return targetIvnames.some(name => combinedUrl.includes(name));
+        } catch (e) { }
+        return false;
+    }
+
+    /**
+     * Checks if active iframe is displaying the Responsibilities listing page.
+     * @returns {boolean} True if on responsibility listing page.
+     */
+    function isResponsibilityListingPage() {
+        try {
+            const { doc, win, iframe } = getIViewDocumentAndWindow();
+            let src = iframe ? (iframe.getAttribute("src") || "") : "";
+            let docHref = "";
+            try {
+                docHref = doc?.location?.href || win?.location?.href || "";
+            } catch (e) { }
+            const combinedUrl = (src + " " + docHref).toLowerCase();
+            return combinedUrl.includes("ivname=response");
+        } catch (e) { }
+        return false;
+    }
+
+    /**
+     * Processes suggestions and parameter options for the 'Run' command.
+     * @param {string[]} tokens - Command tokens.
+     * @param {number} targetIndex - Token index being processed.
+     * @param {string} structType - Structure type of current page.
+     * @returns {Array<object>} Run suggestions.
+     */
+    function processRunCommands(tokens, targetIndex, structType) {
+        if (targetIndex !== 1) return [goOption];
+        let allButtons
+
+        /**
+         * Checks whether the currently active iframe or window is a CSQ list page.
+         * @returns {boolean} True if the current page is a CSQ list page, false otherwise.
+         */
+        const isCsqlistPage = () => {
+            try {
+                const { doc } = getIViewDocumentAndWindow();
+                if (doc && doc.location) {
+                    const url = doc.location.href.toLowerCase();
+                    if ((url.includes("iview.aspx") || url.includes("ivtoivload.aspx")) && url.includes("ivname=csqlist")) {
+                        return true;
+                    }
+                }
+            } catch (e) { }
+            return false;
+        };
+
+        const partialTyped = cleanString(tokens[targetIndex]);
+
+        switch (structType) {
+            case "t":
+            case "i":
+
+                const isDesign = isTstructDesignMode();
+                if (isDesign) {
+                    designModeToolbarButtons = getDesignModeToolbarButtons();
+                    allButtons = { ...designModeToolbarButtons };
+                } else {
+                    bottomToolbarButtons = getBottomToolbarButtons();
+                    topToolbarButtons = getTopToolbarButtons();
+                    utilityButtons = getIViewUtilityButtons();
+                    actionButtons = getIViewActionDropdownButtons();
+                    allButtons = { ...bottomToolbarButtons, ...topToolbarButtons, ...utilityButtons, ...actionButtons };
+                }
+
+                break;
+
+            case "e":
+            case "ef":
+            case "c":
+                entityToolbarButtons = getEntityToolbarButtons();
+                allButtons = { ...entityToolbarButtons };
+                break;
+
+            case "pf":
+                pfToolbarButtons = getPFToolbarButtons();
+                topToolbarButtons = getTopToolbarButtons();
+                allButtons = { ...pfToolbarButtons, ...topToolbarButtons };
+                break;
+
+            case "s":
+                settingsPageButtons = getButtons(".Config-cont");
+                allButtons = { ...settingsPageButtons };
+                break;
+
+            case "im":
+            case "ex":
+                importExportButtons = getButtons(".card-footer ");
+                allButtons = { ...importExportButtons };
+                break;
+
+
+
+            default:
+                // console.error("Invalid StructType")
+                break;
+        }
+
+        buttonsList = Object.values(allButtons).map(btn => {
+            const element = btn.element;
+            let displayLabel = "";
+            if (element) {
+                const titleAttr = element.getAttribute("title");
+                if (titleAttr && titleAttr.trim()) {
+                    displayLabel = titleAttr.trim();
+                } else {
+                    const cloned = element.cloneNode(true);
+                    cloned.querySelectorAll(".material-icons, .material-icons-style, .symbol, i, span.material-icons").forEach(node => node.remove());
+                    displayLabel = (cloned.textContent || "").trim();
+                }
+            }
+            if (!displayLabel) {
+                displayLabel = (btn.label || "").trim();
+            }
+            // Normalize whitespaces and newlines
+            displayLabel = displayLabel.replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
+            // Remove trailing brackets containing icon names
+            displayLabel = displayLabel.replace(/\s*\[[^\]]+\]\s*$/, '').trim();
+            return {
+                name: btn.id,
+                onclick: btn.element ? btn.element.getAttribute("onclick") : null,
+                displaydata: displayLabel
+            };
+        })
+            .filter(btn => {
+                if (!btn.displaydata) return false;
+                const isEntity = structType === "e" || structType === "ef";
+                const btnNameLower = (btn.name || "").toLowerCase();
+                const btnDisplayLower = (btn.displaydata || "").toLowerCase().trim();
+                const isDelete = btnNameLower === "deleteselectedbutton" || btnDisplayLower === "delete";
+                if (isEntity && isDelete) return false;
+
+                if (isTargetListingPageForParamsRestriction()) {
+                    const isParamsBtn = (btnDisplayLower === "params" ||
+                        btnDisplayLower === "param" ||
+                        btnDisplayLower === "parameters" ||
+                        btnDisplayLower === "parameter" ||
+                        btnNameLower === "params" ||
+                        btnNameLower === "param" ||
+                        btnNameLower === "ivirparams" ||
+                        btnNameLower === "iconsnewparams" ||
+                        btnNameLower === "btnparams") &&
+                        !btnDisplayLower.includes("refresh") &&
+                        !btnNameLower.includes("refresh");
+                    if (isParamsBtn) return false;
+                }
+
+                if (isResponsibilityListingPage()) {
+                    const restrictedList = ["print", "pdf", "excel", "csv", "html", "json", "copy", "word"];
+                    const isRestricted = restrictedList.some(r => btnDisplayLower === r || btnDisplayLower.includes(r) || btnNameLower === r || btnNameLower.includes(r));
+                    if (isRestricted) return false;
+                }
+
+                if (structType === "i") {
+                    if (isCsqlistPage()) {
+                        const isSearchBtn = btnDisplayLower.includes("search") || btnNameLower.includes("search");
+                        const isNewBtn = btnDisplayLower.includes("add new") || btnDisplayLower === "new" || btnNameLower.includes("new") || btnNameLower.includes("addnew") || btnDisplayLower.includes("create");
+                        if (!isSearchBtn && !isNewBtn) return false;
+                    }
+
+                    if (btnDisplayLower.includes("chart view") || btnDisplayLower.includes("grid view") ||
+                        btnNameLower.includes("chartview") || btnNameLower.includes("gridview")) {
+                        return false;
+                    }
+                }
+                return true;
+            });
+
+        const uniqueButtonsMap = new Map();
+        const seenOnclicks = new Set();
+        const seenNames = new Set();
+
+        buttonsList.forEach(btn => {
+            const labelKey = (btn.displaydata || "").toLowerCase().trim();
+            if (!labelKey) return;
+
+            const onclickKey = btn.onclick ? btn.onclick.trim() : null;
+            const nameKey = btn.name ? btn.name.trim() : null;
+
+            // Prevent duplicate buttons with identical display labels
+            if (uniqueButtonsMap.has(labelKey)) return;
+            if (onclickKey && seenOnclicks.has(onclickKey)) return;
+            if (nameKey && seenNames.has(nameKey)) return;
+
+            uniqueButtonsMap.set(labelKey, btn);
+            if (onclickKey) seenOnclicks.add(onclickKey);
+            if (nameKey) seenNames.add(nameKey);
+        });
+
+        const filtered = Array.from(uniqueButtonsMap.values()).filter(item =>
+            item.displaydata.toLowerCase().includes(partialTyped.toLowerCase())
+        );
+
+        filteredObjects = filtered;
+
+
+        if (structType === "o") {
+            return [];
+        }
+
+        return filtered.map(item => item.displaydata);
+
+    }
+
+    /* ===============================
+        Suggestion Logic
+    =============================== */
+
+    /**
+     * Checks if a value is null, undefined, or an empty/whitespace string.
+     * @param {*} val - Value to check.
+     * @returns {boolean} True if empty, false otherwise.
+     */
+    const isEmpty = val => typeof val === "string" ? val.trim() === "" : val === null || val === undefined;
+
+    /**
+     * Matches user typed field token against form metadata fields for a transaction.
+     * @param {string} tokenText - Field name or caption entered by user.
+     * @param {string} transId - Transaction structure ID.
+     * @returns {object|null} Matched field metadata object or null.
+     */
+    function getMatchedField(tokenText, transId) {
+        if (!tokenText || !transId) return null;
+        const searchStr = transId.toLowerCase();
+        let list = [];
+        for (const key in axDatasourceObj) {
+            const keyLower = key.toLowerCase();
+            if (keyLower.startsWith("axi_getstructsdata") && keyLower.includes(searchStr)) {
+                list = axDatasourceObj[key] || [];
+                break;
+            }
+        }
+        const cleanToken = cleanString(tokenText).toLowerCase();
+        return list.find(item =>
+            (item.name && item.name.toLowerCase() === cleanToken) ||
+            (item.caption && item.caption.toLowerCase() === cleanToken) ||
+            (item.displaydata && item.displaydata.toLowerCase() === cleanToken)
+        ) || null;
+    }
+
+    /**
+     * Tells whether the typed words are the beginning of ONE structure name that has spaces but was typed
+     * without quotes (for example "test save" for "Test Save Normalized"): two or more words, the first is
+     * not quoted, not a command word and not already a complete structure name (a single word followed by a
+     * typed space counts too). Empty tokens are ignored.
+     * @param {string[]} typedTokens - Tokens of the input (a trailing "" from a typed space is allowed).
+     * @returns {boolean} True if the words should be searched as one name.
+     */
+    function isUnquotedStructPhrase(typedTokens) {
+        const words = (typedTokens || []).filter(t => cleanString(t) !== "");
+        // one word followed by a typed space ("test ") already counts: the name may continue with more words
+        const spaceTyped = words.length === 1 && (typedTokens || []).length > 1;
+        if ((words.length < 2 && !spaceTyped) || words[0].startsWith('"')) return false;
+        if (words.some(t => t.startsWith('"'))) return false;
+        const firstLow = cleanString(words[0]).toLowerCase();
+        const isVerb = ["create", "edit", "view", "source"].includes(firstLow) ||
+            (commands && Object.keys(commands).some(k => k.toLowerCase() === firstLow));
+        return !isVerb && !isTargetEntity(firstLow);
+    }
+
+    /**
+     * Suggests the commands and structures (forms, reports, pages, data sources) whose name contains the typed
+     * text, best matches (name starts with it) first. Also asks the server for matches that are not loaded yet.
+     * Used for a single typed word and for a multi-word structure name typed without quotes.
+     * @param {string} prefix - Lower case text typed so far (may contain spaces).
+     * @returns {Array<object|string>} Suggestions to show; filteredObjects is set to match.
+     */
+    function suggestStructsByPrefix(prefix) {
+        hintDiv.textContent = "";
+
+        // The structure list is only partly loaded: search the server for what is being typed (3+ chars)
+        // and let scrolling load more of the matching list.
+        const searchTerm = prefix.trim();
+        const metaParam1 = getStructParam();
+        const metaBaseKey1 = "axi_structmetalist_" + metaParam1.toLowerCase();
+        const searching = searchTerm.length >= 3;
+        activePagedContext = {
+            source: "axi_structmetalist",
+            param: metaParam1,
+            term: searching ? searchTerm : "",
+            listKey: searching ? `${metaBaseKey1}_q_${searchTerm}` : metaBaseKey1
+        };
+        if (searching) requestStructSearch(searchTerm);
+
+        const allSuggestions = getInitialSuggestions(true);
+        const filtered = allSuggestions.filter(item => {
+            if (typeof item === "string") {
+                return item.toLowerCase().startsWith(prefix);
+            } else {
+                const nameMatch = item.name && item.name.toLowerCase().includes(prefix);
+                const displayMatch = item.displaydata && item.displaydata.toLowerCase().includes(prefix);
+                const cleanCaptionMatch = typeof item.displaydata === "string" &&
+                    getCleanCaption(item).includes(prefix);
+                const captionMatch = item.caption && item.caption.toLowerCase().includes(prefix);
+                return nameMatch || displayMatch || cleanCaptionMatch || captionMatch;
+            }
+        });
+
+        // Rank startsWith matches higher than includes matches to keep better matching.
+        const startsWithPrefix = [];
+        const containsPrefix = [];
+        filtered.forEach(item => {
+            if (typeof item === "string") {
+                startsWithPrefix.push(item);
+            } else {
+                const starts = (item.name && item.name.toLowerCase().startsWith(prefix)) ||
+                    (item.displaydata && item.displaydata.toLowerCase().startsWith(prefix)) ||
+                    (typeof item.displaydata === "string" && getCleanCaption(item).startsWith(prefix)) ||
+                    (item.caption && item.caption.toLowerCase().startsWith(prefix));
+                if (starts) {
+                    startsWithPrefix.push(item);
+                } else {
+                    containsPrefix.push(item);
+                }
+            }
+        });
+        const rankedFiltered = [...startsWithPrefix, ...containsPrefix];
+        filteredObjects = rankedFiltered.map(item => {
+            if (typeof item === "string") {
+                return { name: item, displaydata: item };
+            }
+            return item;
+        });
+        return rankedFiltered.map(item => typeof item === "string" ? item : (item.displaydata || item.name));
+    }
+
+    /**
+     * Generates local keyword, entity, and action suggestions for current input text.
+     * @param {string} inputText - User typed input text.
+     * @returns {Array<object>} List of local suggestions.
+     */
+    function suggestLocal(inputText) {
+        // Cleared on every pass; set again below only when the list shown is a server-paged one
+        activePagedContext = null;
+        // console.log("Resolved Param" + JSON.stringify(resolvedParams));
+        // console.log("ResolvedParamType = " + JSON.stringify(resolvedParamType)); 
+        normalizeGlobalState();
+        let ignoreExtraParams = false;
+        let detectedType = "";
+        const rawTokens = getTokens(inputText, false);
+
+        const endsWithSpace = inputText.endsWith(" ");
+
+
+        const lastTokenRaw = rawTokens[rawTokens.length - 1];
+        const isUnclosedString = lastTokenRaw && lastTokenRaw.startsWith('"') && (!lastTokenRaw.endsWith('"') || lastTokenRaw === '"');
+        if (endsWithSpace && !isUnclosedString) rawTokens.push("");
+
+        if (rawTokens.length === 0) {
+            hintDiv.textContent = "";
+            // The structure list under the commands is paged: scrolling to its end loads the next page
+            setInitialPagedContext();
+            const allSuggestions = getInitialSuggestions();
+            filteredObjects = allSuggestions.map(item => {
+                if (typeof item === "string") {
+                    return { name: item, displaydata: item };
+                }
+                return item;
+            });
+            return allSuggestions.map(item => typeof item === "string" ? item : (item.displaydata || item.name));
+        }
+
+        const groupKeyRaw = cleanString(rawTokens[0]);
+
+        if (rawTokens.length === 1 && (!endsWithSpace || isUnclosedString)) {
+            return suggestStructsByPrefix(groupKeyRaw.toLowerCase());
+        }
+
+        // A structure name with spaces typed WITHOUT quotes ("test save" for "Test Save Normalized"): the
+        // first word is neither a command verb nor a complete structure name, so the words typed so far are
+        // the start of one structure name. Search for the whole text instead of giving up with no suggestions.
+        // (Pressing space normally opens the quote itself, but only when the matching name was already loaded;
+        // a name that is still being fetched from the server used to leave this case empty.)
+        if (isUnquotedStructPhrase(rawTokens)) {
+            const phrase = rawTokens.map(t => cleanString(t)).join(" ").toLowerCase();
+            const phraseMatches = suggestStructsByPrefix(phrase);
+            if (phraseMatches.length > 0) return phraseMatches;
+        }
+
+        if (rawTokens.length === 2 && isTargetEntity(rawTokens[0])) {
+            const entityObj = getTargetEntityObj(rawTokens[0]);
+            const partial = cleanString(rawTokens[1] || "").toLowerCase();
+
+            if (entityObj && isInboxStructure(entityObj)) {
+                const filtered = [goOption].filter(opt => {
+                    const displayText = opt.displaydata || opt.name;
+                    return displayText.toLowerCase().startsWith(partial);
+                });
+                filteredObjects = filtered;
+                return filtered;
+            }
+
+            let actions = [];
+            let targetType = "";
+            if (entityObj) {
+                targetType = (entityObj.stype || entityObj.STYPE || "").toLowerCase();
+            }
+
+            const accessPermissions = getAccessPermissions();
+            const canBuild = accessPermissions && accessPermissions.buildAccess;
+
+            if (targetType === "t" || targetType === "tstruct") {
+                const hasPerms = entityObj.viewallowed !== undefined || entityObj.createallowed !== undefined;
+                if (!hasPerms) {
+                    actions = ["Create", "Edit", "View"];
+                } else {
+                    if (entityObj.viewallowed === "T") actions.push("View");
+                    if (entityObj.createallowed === "T") {
+                        actions.push("Create");
+                        actions.push("Edit");
+                    }
+                }
+                if (canBuild && isDevOptionAllowed("tstruct")) {
+                    actions.push("Source");
+                }
+            } else if (targetType === "p" || targetType === "page") {
+                actions.push("View");
+            } else if (targetType === "ads") {
+                if (isAdsVisible(entityObj)) actions.push("View");
+                if (canBuild && isDevOptionAllowed("ads")) {
+                    actions.push("Source");
+                }
+            } else if (targetType === "i" || targetType === "iview") {
+                const hasPerms = entityObj.viewallowed !== undefined || entityObj.createallowed !== undefined;
+                if (!hasPerms || entityObj.viewallowed === "T") actions.push("View");
+                if (canBuild && isDevOptionAllowed("iview")) {
+                    actions.push("Source");
+                }
+            } else if (targetType) {
+                const hasPerms = entityObj.viewallowed !== undefined || entityObj.createallowed !== undefined;
+                if (!hasPerms || entityObj.viewallowed === "T") actions.push("View");
+                if ((targetType === "i" || targetType === "iview" || targetType === "t" || targetType === "tstruct" || targetType === "ads") && canBuild) {
+                    const devKey = (targetType === "t" || targetType === "tstruct") ? "tstruct" : (targetType === "ads" ? "ads" : "iview");
+                    if (isDevOptionAllowed(devKey)) {
+                        actions.push("Source");
+                    }
+                }
+            } else {
+                const matches = getTargetEntityMatches(rawTokens[0]);
+
+                let hasView = false;
+                let hasCreate = false;
+                let hasGo = false;
+                let hasTstruct = false;
+                let matchesAnyTstructWithoutPerms = false;
+                let matchesAnyIviewWithoutPerms = false;
+                let hasSource = false;
+                for (let i = 0; i < matches.length; i++) {
+                    const m = matches[i];
+                    const type = (m.stype || m.STYPE || "").toLowerCase().trim();
+                    const hasPerms = m.viewallowed !== undefined || m.createallowed !== undefined;
+                    if (isInboxStructure(m)) {
+                        hasGo = true;
+                    } else if (type === "t" || type === "tstruct") {
+                        hasTstruct = true;
+                        if (!hasPerms) {
+                            matchesAnyTstructWithoutPerms = true;
+                        } else {
+                            if (m.viewallowed === "T") hasView = true;
+                            if (m.createallowed === "T") hasCreate = true;
+                        }
+                        if (canBuild && isDevOptionAllowed("tstruct")) hasSource = true;
+                    } else if (type === "ads") {
+                        if (isAdsVisible(m)) hasView = true;
+                        if (canBuild && isDevOptionAllowed("ads")) hasSource = true;
+                    } else if (type === "p" || type === "page") {
+                        hasView = true;
+                    } else if (type === "i" || type === "iview") {
+                        if (!hasPerms) {
+                            matchesAnyIviewWithoutPerms = true;
+                        } else {
+                            if (m.viewallowed === "T") hasView = true;
+                        }
+                        if (canBuild && isDevOptionAllowed("iview")) hasSource = true;
+                    } else {
+                        if (!hasPerms) {
+                            matchesAnyIviewWithoutPerms = true;
+                        } else {
+                            if (m.viewallowed === "T") hasView = true;
+                        }
+                        if ((type === "i" || type === "iview" || type === "t" || type === "tstruct" || type === "ads") && canBuild) {
+                            const devKey = (type === "t" || type === "tstruct") ? "tstruct" : (type === "ads" ? "ads" : "iview");
+                            if (isDevOptionAllowed(devKey)) {
+                                hasSource = true;
+                            }
+                        }
+                    }
+                }
+                if (hasView || matchesAnyTstructWithoutPerms || matchesAnyIviewWithoutPerms) actions.push("View");
+                if (hasGo) actions.push("Go");
+                if (hasTstruct && (hasCreate || matchesAnyTstructWithoutPerms)) {
+                    actions.push("Create");
+                    actions.push("Edit");
+                }
+                if (hasSource) actions.push("Source");
+            }
+
+            const specialTypes = ["iview", "i", "ads", "p", "page"];
+            if (targetType && specialTypes.includes(targetType)) {
+                const viewAction = { name: "View", displaydata: "View" };
+                const allOptions = [viewAction];
+                if (["iview", "i", "ads"].includes(targetType) && canBuild) {
+                    const devKey = targetType === "ads" ? "ads" : "iview";
+                    if (isDevOptionAllowed(devKey)) {
+                        allOptions.push({ name: "Source", displaydata: "Source" });
+                    }
+                }
+                allOptions.push(goOption, popOption);
+                const filtered = allOptions.filter(opt => {
+                    const displayText = opt.displaydata || opt.name;
+                    return displayText.toLowerCase().startsWith(partial);
+                });
+                filteredObjects = filtered;
+                return filtered.map(item => {
+                    if (item.isExecutable) {
+                        return item;
+                    }
+                    return item.displaydata || item.name;
+                });
+            }
+
+            if (actions.map(act => act.toLowerCase()).includes(partial)) {
+                if (partial === "source") {
+                    filteredObjects = [goOption];
+                    return [goOption];
+                }
+                filteredObjects = [goOption, popOption];
+                return [goOption, popOption];
+            }
+
+            const filteredActions = actions.filter(act => act.toLowerCase().startsWith(partial));
+            filteredObjects = filteredActions.map(act => ({ name: act, displaydata: act }));
+            return filteredActions;
+        }
+
+        let tokens = [...rawTokens];
+        if (tokens.length >= 2) {
+            const first = cleanString(tokens[0]).toLowerCase();
+            const second = cleanString(tokens[1]).toLowerCase();
+            if (isTargetEntity(first) && isValidActionForTarget(first, second)) {
+                const temp = tokens[0];
+                tokens[0] = tokens[1];
+                tokens[1] = temp;
+            }
+        }
+
+        const groupKey = cleanString(tokens[0]);
+
+        // Install <type> <directory> [version]: the directory and version lists come from the AxiGit API, not the ADS
+        if (groupKey.toLowerCase() === "install" && getCommandConfig("install") && getInstallWords(inputText).length >= 3) {
+            return getInstallSuggestions(inputText);
+        }
+
+        const subCmdFull = tokens.slice(1).map(t => cleanString(t)).join(" ").toLowerCase().trim();
+        const subCmdFirst = tokens[1] ? cleanString(tokens[1]).toLowerCase().trim() : "";
+        const isResponsibilityCmd = subCmdFirst === "responsibility" || subCmdFirst === "responsibilities" || subCmdFirst === "responsibility listing" || subCmdFull === "responsibility listing" || subCmdFull === "responsibilities" || subCmdFull.startsWith("responsibility");
+
+        if (groupKey.toLowerCase() === "configure" && isResponsibilityCmd) {
+            filteredObjects = [goOption];
+            return [goOption];
+        }
+
+        if (groupKey.toLowerCase() === "help") {
+            return [goOption];
+        }
+
+        if (groupKey.toLowerCase() === "version") {
+            return [goOption];
+        }
+
+        if (groupKey.toLowerCase() === "source" && tokens.length >= 2 && isTargetEntity(tokens[1])) {
+            filteredObjects = [goOption];
+            return [goOption];
+        }
+
+        //const commandConfig = commands[groupKey];
+
+
+        let commandConfig = getCommandConfig(groupKey, tokens);
+
+
+        /** Begin: Note: This must be removed when releasing */
+        // if (groupKey.toLowerCase() === "configure") {
+        //     //commandConfig.prompts[0].promptValues = "PEG,Form Notification,Scheduled Notification,Peg Form Notification,Job,Rule,Application Properties,"
+        //     //    +"KeyField,News And Announcement,Settings,User,Users,Role,Roles,Publish Axpert API,Publish Config Studio,Card,Responsibility,Responsibilities,User Group,"
+        //     //    +"Dimension,Actor,Actors,User Activation,User Permission,User Permissions,Role Permissions";
+        //     //commandConfig.prompts[1].promptSource = "Axi_PegList,Axi_FormNotifyList,Axi_ScheduleNotifyList,Axi_PEGNotifyList,Axi_JobNamesList,Axi_RuleNamesList,Axi_Dummy,"
+        //     //    + "axi_structlist,axi_newsandannounce,Axi_Dummy,Axi_Dummy,Axi_Dummy,Axi_Dummy,Axi_Dummy,axi_publishapi,Axi_ServernameList,axi_cardlist,axi_resposibilitylist,Axi_Dummy,axi_usergrouplist,"
+        //     //    +"axi_dimensionlist,axi_actorlist,Axi_Dummy,axi_useractivation,axi_userlist,axi_userlist,axi_rolelist";
+        //     commandConfig.prompts[0].promptValues = "PEG,Form Notification,Scheduled Notification,Peg Form Notification,Rule,"
+        //         + "KeyField,News And Announcement,User,Users,User Permission,User Permissions,User Activation,User Group,Role,Roles,Role Permissions,"
+        //         + "Actor, Actors, Publish Axpert API, Publish Config Studio, Card, Responsibility, Responsibilities,"
+        //         + "Dimension,Application Properties,Settings";
+        //     commandConfig.prompts[1].promptSource = "Axi_PegList,Axi_FormNotifyList,Axi_ScheduleNotifyList,Axi_PEGNotifyList,Axi_RuleNamesList,"
+        //         + "axi_structlist,axi_newsandannounce,Axi_Dummy,Axi_Dummy,axi_userlist,axi_userlist,axi_useractivation,axi_usergrouplist,Axi_Dummy,Axi_Dummy,axi_rolelist,"
+        //         + "axi_actorlist,Axi_Dummy,axi_publishapi,Axi_ServernameList,axi_cardlist,axi_resposibilitylist,Axi_Dummy,"
+        //         + "axi_dimensionlist,Axi_Dummy,Axi_Dummy,";
+        // }
+        // if (groupKey.toLowerCase() === "open") {
+        //     commandConfig.prompts[0].promptValues = "Tstruct,Iview,Axpert Data Sources,Page,Arrange Menu,Dev Option,App Variables,Db Explorer,API Plugin,Axpert Job,Language,Publish,Custom Data Type,Email Definition,Table Field Descriptor,Custom Plugin,Queue Listing,Out Bound Queue,In Bound Queue,Mem DB Console";
+        //     commandConfig.prompts[1].promptSource = "axi_structmetalist,axi_structmetalist,axi_structmetalist,axi_structmetalist,Axi_Dummy,Axi_Dummy,Axi_Dummy,Axi_Dummy,Axi_APINamesList,axi_jobs,axi_language,Axi_Dummy,axi_customtype,axi_emaildef,axi_tabledesc,Axi_Dummy,Axi_Dummy,axi_outbound,axi_inbound,Axi_Dummy";
+        // }
+
+        /** End: Note: This must be removed when releasing */
+
+
+
+        if (!commandConfig) { hintDiv.textContent = ""; return []; }
+
+        const targetIndex = tokens.length - 1;
+
+        if (commandConfig.commandGroup?.toLowerCase() === "view") {
+            const viewSource = commandConfig?.prompts?.[0]?.promptSource?.toLowerCase();
+            const viewValues = commandConfig.prompts?.[0]?.promptValues;
+            const firstToken = cleanString(tokens[1] || "");
+            const { value: actualFirstToken, type } = tryResolveToken(1, firstToken, commandConfig, false);
+            // console.log("Resolved Param" + JSON.stringify(resolvedParams)); 
+            // console.log("ResolvedParamType = " + JSON.stringify(resolvedParamType)); 
+            detectedType = getType(viewSource.toLowerCase(), { value: actualFirstToken, type: type }, viewValues, tokens, commandConfig);
+            // detectedType = getType(viewSource.toLowerCase(), {value: act}, viewValues, tokens, commandConfig);
+
+            if (detectedType === "ads") {
+                ignoreExtraParams = true;
+                if (tokens.length > 2) {
+                    updateDynamicHintFromPrompt({ prompt: (targetIndex % 2 === 0) ? "fieldname" : "fieldvalue" });
+                    return viewAdsCommandHandling(tokens, commandConfig)
+
+                }
+
+                // console.log("ResolutionContext: ignoreExtraParams = true (ADS)")
+            }
+        }
+
+        ///Need to make a common function for processAdsRepetitivetokens
+        if (groupKey.toLowerCase() === "create" && tokens.length > 3) {
+            let viewSource = commandConfig?.prompts?.[2]?.promptSource?.toLowerCase();
+            //let viewSource = "Axi_FieldList".toLowerCase();
+            let tokenCopy = [...tokens];
+            //let dummyValue = commandConfig?.prompts?.[1]?.promptValues.toLowerCase();
+            //let orgTokens = [...tokens];
+            //if (dummyValue) {
+            //    tokenCopy = tokenCopy.filter(t => t?.toLowerCase() !== dummyValue.toLowerCase());
+            //}
+            updateDynamicHintFromPrompt({ prompt: (targetIndex % 2 !== 0) ? "fieldname" : "fieldValue" })
+            return createCommandHandling(tokenCopy, commandConfig, viewSource);
+        }
+
+        if (groupKey.toLowerCase() === "run") {
+            const structType = getStructType();
+
+            if (!structType || structType === "o" || isPreviewModalOpen() || isRunDisabledForPage() || isViewDesignerModalOpen()) {
+                if (isPreviewModalOpen() || isRunDisabledForPage() || isViewDesignerModalOpen()) {
+                    return [];
+                }
+                showToast("Warning: CommandGroup Invalid: Please open Tstruct or Any other page");
+                return [];
+            }
+
+
+
+            return processRunCommands(tokens, targetIndex, structType);
+        }
+        // Configure Product / Plugin / ChangeRequest: hints and Go only, no list fetch
+        if (groupKey.toLowerCase() === "configure" && tokens.length > 2 && isCommandSettingOption(tokens[1])) {
+            return getCommandSettingSuggestions(tokens);
+        }
+
+        const promptInfo = getActivePromptInfo(commandConfig, tokens, targetIndex);
+        // console.log("Resolved Param" + JSON.stringify(resolvedParams)); 
+        // console.log("ResolvedParamType = " + JSON.stringify(resolvedParamType)); 
+
+
+        ///KeyValue based edit handling.
+
+        if ((!promptInfo || tokens[3] === "with") && groupKey.toLowerCase() === "edit" && tokens.length >= 4) {
+
+            let viewSource;
+            if (tokens.length == 4) {
+                viewSource = commandConfig?.prompts?.[3]?.promptValues?.toLowerCase().split(',').map(v => v.trim());
+                //const partialTyped = cleanString(tokens[targetIndex]);
+                const result = viewSource.filter(val => val.toLowerCase());
+                filteredObjects = result.map(val => ({ name: val, displaydata: val }));
+
+                result.unshift(popOption);
+                result.unshift(goOption);
+                filteredObjects.unshift(popOption);
+                filteredObjects.unshift(goOption);
+
+                updateDynamicHintFromPrompt({ prompt: commandConfig?.prompts?.[3]?.prompt })
+                return result;
+
+
+            }
+            else if (tokens.length >= 5) {
+                viewSource = commandConfig?.prompts?.[4]?.promptSource?.toLowerCase()
+
+                let tokenCopy = [...tokens];
+
+                updateDynamicHintFromPrompt({ prompt: (targetIndex % 2 === 0) ? "fieldname" : "fieldValue" })
+                return editCommandHandling(tokenCopy, commandConfig, viewSource);
+
+
+            }
+
+        }
+
+        // if (promptInfo?.error) {
+        //     showToast(promptInfo.error);
+        //     return [];
+        // }
+
+        if (!promptInfo) {
+            updateDynamicHintFromPrompt(null);
+
+            ///added as we now dont have option for go and popup in create(When create old logic works we can remove this)(T)
+            if (groupKey.toLowerCase() === "create" && tokens.length === 3) {
+                filteredObjects = [goOption, popOption];
+                return [goOption, popOption];
+            }
+
+            ///added as we now dont have option for go and popup in create(When create old logic works we can remove this)(T)
+            else if (groupKey.toLowerCase() === "view" && tokens.length >= 3) {
+                const secondToken = cleanCommandToken(tokens[1]).toLowerCase();
+
+                if (secondToken === "source") {
+                    filteredObjects = [goOption];
+                    return [goOption];
+                }
+                filteredObjects = [goOption, popOption];
+                return [goOption, popOption];
+            }
+
+            else if (groupKey.toLowerCase() === "source" && tokens.length >= 3) {
+                filteredObjects = [goOption];
+                return [goOption];
+            }
+
+            else if (groupKey.toLowerCase() === "sdk" && tokens.length > 2) {
+                filteredObjects = [goOption];
+                return [goOption];
+            }
+
+            else if (groupKey.toLowerCase() === "configure" && tokens.length > 2) {
+                // new code
+                if (isCommandSettingOption(tokens[1])) {
+                    // old code
+                    // const csOptions = shouldOfferCommandSettingGo(tokens) ? [goOption] : [];
+                    // new code: configure product / plugin / changerequest saves a setting, so Save is offered instead of Go
+                    const csOptions = shouldOfferCommandSettingGo(tokens) ? [saveOption] : [];
+                    filteredObjects = csOptions;
+                    return csOptions;
+                }
+                if (cleanCommandToken(tokens[1]).toLowerCase() === "keyfield") {
+                    filteredObjects = [goOption];
+                    return [goOption];
+                }
+                // new code: Trace On / Trace Off / Trace Files run in the shell, a pop-up makes no sense: Go only
+                if (isShellActionOption(tokens)) {
+                    filteredObjects = [goOption];
+                    return [goOption];
+                }
+                else {
+                    filteredObjects = [goOption, popOption];
+                    return [goOption, popOption];
+                }
+            }
+
+            else if (groupKey.toLowerCase() === "analyse" && tokens.length > 2) {
+                filteredObjects = [goOption];
+                return [goOption];
+            }
+
+            if (["upload", "download"].includes(groupKey.toLowerCase()) && tokens.length >= 2) {
+                filteredObjects = [goOption];
+                return [goOption];
+            }
+
+            return [];
+        }
+
+
+
+
+
+
+        const { config: activePrompt, realSource } = promptInfo;
+        updateDynamicHintFromPrompt(activePrompt);
+
+        const partialTyped = cleanString(tokens[targetIndex]);
+
+        //We return go/pop up for configure when tokens length is greater than 3(Below we have another check it will work but realsource is finded so here itself we returning it for configure)
+        // old code
+        // if (groupKey.toLowerCase() === "configure" && tokens.length > 3 && tokens[1].toLowerCase() != "keyfield") {
+        //     filteredObjects = [goOption, popOption];
+        //     return [goOption, popOption]
+        // }
+        // new code
+        if (groupKey.toLowerCase() === "configure" && tokens.length > 3 && isCommandSettingOption(tokens[1])) {
+            // old code
+            // const csOptions = shouldOfferCommandSettingGo(tokens) ? [goOption] : [];
+            // new code: Save instead of Go for configure product / plugin / changerequest
+            const csOptions = shouldOfferCommandSettingGo(tokens) ? [saveOption] : [];
+            filteredObjects = csOptions;
+            return csOptions;
+        }
+        // new code: Trace On / Trace Off / Trace Files: Go only, no Pop-Up
+        if (groupKey.toLowerCase() === "configure" && tokens.length > 2 && isShellActionOption(tokens)) {
+            filteredObjects = [goOption];
+            return [goOption];
+        }
+        if (groupKey.toLowerCase() === "configure" && tokens.length > 3 && tokens[1].toLowerCase() != "keyfield") {
+            filteredObjects = [goOption, popOption];
+            return [goOption, popOption]
+        }
+
+
+        // Scenario A: Static Values
+
+        ///Skipping PromptValue "With" token for edit
+        if (!realSource && activePrompt.promptValues && groupKey.toLowerCase() !== "edit") {
+
+            let staticValues = activePrompt.promptValues.split(',').map(v => v.trim());
+
+            if (groupKey.toLowerCase() === "configure" || groupKey.toLowerCase() === "sdk") {
+                if (axiCommandConfigList && axiCommandConfigList.length > 0) {
+                    staticValues = staticValues.filter(val => {
+                        const lowVal = val.toLowerCase().trim();
+                        if (groupKey.toLowerCase() === "sdk" && (lowVal === "tstruct" || lowVal === "iview")) {
+                            return true;
+                        }
+                        const activeRow = getCommandConfigRow(groupKey, val);
+                        return !!activeRow;
+                    });
+                }
+            }
+
+            const result = staticValues.filter(val => val.toLowerCase().startsWith(partialTyped.toLowerCase()));
+            filteredObjects = result.map(val => ({ name: val, displaydata: val }));
+
+            if (groupKey.toLowerCase() === "create" && tokens.length === 3) {
+                result.unshift(popOption);
+                result.unshift(goOption);
+                filteredObjects.unshift(popOption);
+                filteredObjects.unshift(goOption);
+            }
+
+            //  if (staticValues.length > 0 && result.length === 0 && partialTyped.length > 0) {
+
+            //     // console.warn(`[Validation] Invalid input detected: "${partialTyped}" not found in allowed list.`);
+            //     showToast("Please select a valid option from the list.");
+
+            //     let dummyTokens = [...tokens];
+            //     let lastIndex = dummyTokens.length - 1;
+            //     let lastTokenValue = dummyTokens[lastIndex];
+
+            //     dummyTokens[lastIndex] = "";
+
+            //     input.value = dummyTokens.join(" ");
+
+            //     result = [...staticValues];
+            // }
+
+            if (staticValues.length > 0 && result.length === 0 && partialTyped.length > 0) {
+                const currentInput = inputText;
+
+
+                clearTimeout(window._staticValidationTimer);
+
+                window._staticValidationTimer = setTimeout(() => {
+                    if (input.value !== currentInput) return;
+
+                    const latestTokens = getTokens(input.value);
+                    const latestPartial = cleanString(latestTokens[latestTokens.length - 1] || "");
+                    const isValid = staticValues.some(val => val.toLowerCase() === latestPartial.toLowerCase());
+
+                    if (!isValid) {
+                        showToast("Please select a valid option from the list.", 2000, false);
+                        let dummyTokens = [...tokens];
+                        dummyTokens[dummyTokens.length - 1] = "";
+                        input.value = dummyTokens.join(" ");
+                        handleInput();
+                    }
+                }, 400);
+            }
+
+            if (groupKey.toLowerCase() === "create" && tokens.length === 3) {
+                result.unshift(popOption);
+                result.unshift(goOption);
+                filteredObjects.unshift(popOption);
+                filteredObjects.unshift(goOption);
+            }
+            return result;
+        }
+
+
+
+        // Scenario B: Data Source
+        if (realSource) {
+            let paramValue = "";
+
+            // Resolve Standard Dependencies 
+            if (activePrompt.promptParams) {
+                const indices = activePrompt.promptParams.toString().split(',');
+                const values = indices.map(idx => {
+                    const logicalWordPos = parseInt(idx.trim());
+                    const depTokenIndex = logicalWordPos - 1;
+                    const depToken = cleanString(tokens[depTokenIndex] || "");
+                    // return tryResolveToken(depTokenIndex, depToken, commandConfig, true);
+                    const resolved = tryResolveToken(depTokenIndex, depToken, commandConfig, true);
+                    return resolved.value;
+                });
+                paramValue = values.join('$#$');
+            }
+
+
+
+
+            if (activePrompt.extraParams) {
+
+
+                if (!paramValue || paramValue.trim() === "") {
+                    // console.log("Skipping extraParams � dependency not resolved yet");
+
+                } else {
+                    const extraSource = activePrompt.extraParams.toLowerCase();
+
+                    const extraKey = `${extraSource}_${paramValue}`.toLowerCase();
+
+
+                    if (!axDatasourceObj[extraKey]) {
+
+                        // console.log(`Fetching Hidden Param Source: ${extraSource}`);
+                        if (tokens[1].toLowerCase() === "inbox") {
+                            return [goOption];
+                        }
+                        loadList(extraSource, paramValue);
+                        return [];
+                    }
+
+                    // Extra List is cached, extract Index 0
+                    const extraList = axDatasourceObj[extraKey];
+                    if (extraList && extraList.length > 0) {
+                        const hiddenValue = extraList[0].name || extraList[0].displaydata || extraList[0].fname || extraList[0].keyfield;
+                        // console.log(`Hidden Param Found (Index 0): ${hiddenValue}`);
+
+                        // Append hidden value to params for the MAIN list
+                        if (paramValue) paramValue += "$#$" + hiddenValue;
+                        else paramValue = hiddenValue;
+                    } else {
+
+                        ///addedby(t)
+                        if (groupKey.toLowerCase() === "view" && tokens.length >= 3) {
+                            filteredObjects = [goOption, popOption];
+                            return [goOption, popOption];
+                        }
+                        return [];
+                    }
+
+                }
+
+            }
+
+
+            let apiSourceName = realSource.toLowerCase();
+            if (apiSourceName.toLowerCase() === "axi_analyticslist") {
+                paramValue = window.mainUserName;
+                // apiSourceName = "axi_analyticslistnew"; 
+            }
+
+            else if (realSource.toLowerCase() === "axi_structlist") {
+                paramValue = processExtraParams(tokens, commandConfig);
+            }
+
+            else if (realSource.toLowerCase() === "axi_structmetalist") {
+                paramValue = processExtraParams(tokens, commandConfig);
+            }
+
+            else if (realSource.toLowerCase() === "axi_viewlist") {
+                paramValue = processExtraParams(tokens, commandConfig);
+            }
+            else if (realSource.toLowerCase() === "axi_getstructsdata") {
+
+                if (detectedType?.toLowerCase() === "iview" || detectedType?.toLowerCase() === "page") {
+                    filteredObjects = [goOption, popOption];
+                    return [goOption, popOption];
+                }
+                let staticParams = "";
+                if (tokens.length == 3) {
+                    staticParams = "2";
+                }
+                else {
+                    staticParams = "2,3";
+                }
+
+                const indices = staticParams.toString().split(',');
+                const values = indices.map(idx => {
+                    const logicalWordPos = parseInt(idx.trim());
+                    const depTokenIndex = logicalWordPos - 1;
+                    const depToken = cleanString(tokens[depTokenIndex] || "");
+                    // return tryResolveToken(depTokenIndex, depToken, commandConfig, true);
+                    const resolved = tryResolveToken(depTokenIndex, depToken, commandConfig, true);
+                    return resolved.value;
+                });
+
+                paramValue = values.join('$#$');
+
+                //if (tokens.length == 3) {
+                //    const depToken = cleanString(tokens[1] || "");
+                //    paramValue = tryResolveToken(1, depToken, commandConfig, false);
+                //}
+                //else {
+                //    const depToken = cleanString(tokens[1] || "");
+                //    paramValue = tryResolveToken(1, depToken, commandConfig, false);
+
+                //    const fieldName = cleanString(tokens[2] || "");
+                //    paramValue += "$#$"+ tryResolveToken(2, fieldName, commandConfig, false);
+                //}
+
+
+
+                let struct_name = paramValue;
+
+                if (paramValue && paramValue.includes("$#$")) {
+                    const struct_split = paramValue.split("$#$");
+                    struct_name = struct_split[0];
+                }
+                //const extraPromptSource = "axi_keyfieldList".toLowerCase();
+                //const extraSourceKey = `${extraPromptSource}_${struct_name}`.toLowerCase();
+
+
+                //const extraList = axDatasourceObj[extraSourceKey];
+
+                //if (!extraList) {
+                //    loadList(extraPromptSource, struct_name);
+                //}
+
+                paramValue = processParamforEditndView(tokens, commandConfig, paramValue, tokens.length);
+            }
+
+
+            const sourceKey = (paramValue ? `${apiSourceName}_${paramValue}` : apiSourceName).toLowerCase();
+
+            if (!axDatasourceObj[sourceKey]) {
+                const paramStr = typeof paramValue === "string" ? paramValue : (Array.isArray(paramValue) ? paramValue.join("$#$") : "");
+                const isGetStructsData = apiSourceName.toLowerCase().includes("getstructsdata");
+                const hasValidParams = isGetStructsData
+                    ? (paramStr && paramStr.replace(/,/g, '').trim().length > 0)
+                    : (!activePrompt.promptParams || (paramStr && paramStr.replace(/,/g, '').trim().length > 0));
+
+                if (apiSourceName === "axi_dummy" || apiSourceName === "axi_dummylist") {
+                    if (groupKey.toLowerCase() === "sdk" && tokens.length >= 2) {
+                        filteredObjects = [goOption];
+                        return [goOption];
+                    }
+
+                    if (groupKey.toLowerCase() === "configure" && tokens.length >= 2) {
+                        const subCmdFull = tokens.slice(1).map(t => cleanString(t)).join(" ").toLowerCase().trim();
+                        const subCmdFirst = tokens[1] ? cleanString(tokens[1]).toLowerCase().trim() : "";
+                        const isResponsibilityCmd = subCmdFirst === "responsibility" || subCmdFirst === "responsibilities" || subCmdFirst === "responsibility listing" || subCmdFull === "responsibility listing" || subCmdFull === "responsibilities" || subCmdFull.startsWith("responsibility");
+
+                        if (isResponsibilityCmd) {
+                            filteredObjects = [goOption];
+                            return [goOption];
+                        }
+                        filteredObjects = [goOption, popOption];
+                        return [goOption, popOption];
+                    }
+
+                    if ((groupKey.toLowerCase() === "upload" || groupKey.toLowerCase() === "download") && tokens.length >= 2) {
+                        filteredObjects = [goOption, popOption];
+                        return [goOption, popOption];
+                    }
+
+                    if ((groupKey.toLowerCase() === "view" || groupKey.toLowerCase() === "go") && tokens.length >= 2) {
+                        if (tokens[1] && tokens[1].toLowerCase() === "inbox") {
+                            filteredObjects = [goOption];
+                            return [goOption];
+                        }
+                        filteredObjects = [goOption, popOption];
+                        return [goOption, popOption];
+                    }
+                    return [];
+                }
+                if (hasValidParams) {
+                    if (tokens[1] && tokens[1].toLowerCase() === "inbox") {
+                        filteredObjects = [goOption];
+                        return [goOption];
+                    }
+                    loadList(apiSourceName, paramValue);
+                    // console.log(axDatasourceObj);
+                    // if (realSource.toLowerCase() === "axi_dummy") {
+                    //     if (groupKey.toLowerCase() === "open" && tokens.length > 2) {
+                    //         filteredObjects = [goOption];
+                    //         return [goOption]
+                    //     }
+                    //     return [];
+                    // }
+                    return [`Fetching Data...`];
+                }
+                // edit <form>: the form/field names are still being resolved against the structure list (or the
+                // list itself is loading), so paramStr is empty for a moment. Say "Fetching Data..." like view
+                // does instead of flashing "Waiting for input..."
+                if (isGetStructsData && tokens.length >= 2) return [`Fetching Data...`];
+                return ["Waiting for input..."];
+            }
+
+            // Filter Cache
+            // Sources that support server-side search + paging (see PAGED_SOURCES)
+            const isDynamicSource = isPagedSource(apiSourceName);
+            const cleanSearch = (partialTyped || "").trim().toLowerCase();
+            let dataList = axDatasourceObj[sourceKey] || [];
+            // Rows merged into the base list from earlier searches are shown only while searching (3+ chars)
+            if (cleanSearch.length < 3) dataList = dataList.filter(item => !item || !item.__fromSearch);
+
+            // Remember which list the dropdown is showing so scrolling to the bottom can load the next page
+            activePagedContext = isDynamicSource
+                ? {
+                    source: apiSourceName,
+                    param: paramValue,
+                    term: cleanSearch.length >= 3 ? cleanSearch : "",
+                    listKey: cleanSearch.length >= 3 ? `${sourceKey}_q_${cleanSearch}` : sourceKey
+                }
+                : null;
+
+            if (isDynamicSource) {
+                if (cleanSearch.length >= 3) {
+                    const searchKey = `${sourceKey}_q_${cleanSearch}`;
+                    if (axDatasourceObj[searchKey] !== undefined) {
+                        dataList = axDatasourceObj[searchKey];
+                    } else if (refineFromCompleteList(sourceKey, cleanSearch)) {
+                        // A shorter search (or the base list) already holds every match, so no server call is needed
+                        clearTimeout(dynamicSearchDebounceTimer);
+                        dynamicSearchPending = false;
+                        dataList = axDatasourceObj[searchKey];
+                    } else {
+                        clearTimeout(dynamicSearchDebounceTimer);
+                        dynamicSearchPending = true;
+                        dynamicSearchDebounceTimer = setTimeout(() => {
+                            dynamicSearchPending = false;
+                            
+                            let findTerm = dataList.find(f => f.displaydata.includes(cleanSearch)); 
+
+                            if (!findTerm) {
+                                 loadList(apiSourceName, paramValue, cleanSearch, 1, getPageSize());
+                            }
+                           
+                        }, SEARCH_DEBOUNCE_MS);
+
+                        const localMatches = dataList.filter(item => {
+                            const display = item.displaydata || item.caption || item.name || "";
+                            return display.toLowerCase().includes(cleanSearch);
+                        });
+
+                        if (localMatches.length > 0) {
+                            dataList = localMatches;
+                        } else {
+                            filteredObjects = [];
+                            return ["Searching..."];
+                        }
+                    }
+                } else {
+                    clearTimeout(dynamicSearchDebounceTimer);
+                    dynamicSearchPending = false;
+                }
+            }
+
+            const currentAccessPerms = getAccessPermissions();
+            if (groupKey.toLowerCase() === "sdk" && currentAccessPerms?.buildAccess && tokens.length >= 2) {
+                const targetToken = cleanCommandToken(tokens[1])?.toLowerCase().trim();
+                if (AxiCmdConfig.SDK_CREATE_NEW_TARGETS.includes(targetToken)) {
+                    dataList = [{ displaydata: "Create New", name: "Create New", isCreateNew: true }, ...dataList];
+                }
+            }
+
+            let filtered = dataList.filter(item => {
+                const display = item.displaydata || item.caption || item.name || "";
+                return display.toLowerCase().includes(partialTyped.toLowerCase());
+            });
+
+            //filteredObjects = filtered;
+
+
+            ///added to restrict user by typing only the listed values from the list(if they type other than that we prompt them again with the default list added - 18-3-2026(t))
+            if (dataList.length > 0 && filtered.length === 0) {
+                if (isDynamicSource) {
+                    filteredObjects = [];
+                    if (cleanSearch.length < 3) {
+                        return ["Type at least 3 characters to search records..."];
+                    } else {
+                        return ["No matching records found"];
+                    }
+                }
+
+                // console.warn(`[Validation] Invalid input detected: "${partialTyped}" not found in allowed list.`);
+                showToast("Please select a valid option from the list.");
+
+                let dummyTokens = [...tokens];
+                let lastIndex = dummyTokens.length - 1;
+
+
+                dummyTokens[lastIndex] = "";
+
+                input.value = dummyTokens.join(" ");
+
+                filtered = [...dataList];
+            } else if (isDynamicSource && filtered.length === 0 && cleanSearch.length >= 3) {
+                filteredObjects = [];
+                return ["No matching records found"];
+            }
+
+
+            //let resultList = filtered.map(item => {
+            //    if (item.createallowed === 'F') return;
+            //    return item.displaydata || item.caption || item.name || item.fname || item.keyfield
+            //});
+
+            // let resultList = filtered.map(item => {
+            //     let key = groupKey?.toLowerCase();
+
+            //     if (key === 'create') {
+            //         if (item.createallowed === 'F') return;
+            //     }
+            //     else if (key === 'view') {
+            //         if (item.viewallowed === 'F') return;
+            //     }
+
+
+            //     return item.displaydata || item.caption || item.name || item.fname || item.keyfield;
+
+            // });
+
+            const key = groupKey?.toLowerCase();
+            const validItems = filtered.filter(item => {
+                const hasPerms = item?.viewallowed !== undefined || item?.createallowed !== undefined || item?.keyfieldforedit !== undefined;
+                if (!hasPerms) return true;
+                if (key === "create" || key === "edit") {
+                    return isActionAllowed(item, key);
+                }
+                if (key === "view") {
+                    return isViewAllowed(item);
+                }
+                if (key === "source") {
+                    const stype = (item.stype || item.STYPE || "").toLowerCase().trim();
+                    return ["t", "tstruct", "i", "iview", "ads"].includes(stype);
+                }
+                if (isEmpty(item?.displaydata) && isEmpty(item?.caption) && isEmpty(item?.name)) return false;
+                return true;
+            });
+
+            filteredObjects = validItems;
+
+            let resultList = validItems.map(item => [
+                item.displaydata ||
+                item.caption ||
+                item.name ||
+                item.fname ||
+                item.keyfield
+            ].find(val => val !== null && val !== undefined && (typeof val === "string" ? val.trim() !== "" : true))
+            ).filter(val => val !== undefined);
+
+            if ((groupKey.toLowerCase() === "view" || groupKey.toLowerCase() === "go") && tokens.length === 3) {
+                if (tokens[1] && tokens[1].toLowerCase() === "inbox") {
+                    resultList.unshift(goOption);
+                    filteredObjects.unshift(goOption);
+                } else {
+                    resultList.unshift(goOption, popOption);
+                    filteredObjects.unshift(goOption, popOption);
+                }
+            }
+
+            //otherthan keyfield, userpermissionlisting, and responsibility listing it will work for all tokens which length is eqaul to 3(ex : peg)
+            else if ((groupKey.toLowerCase() === "configure") && tokens.length >= 2) {
+                const subCmdFull = tokens.slice(1).map(t => cleanString(t).replace(/"/g, '')).join(" ").toLowerCase().trim();
+                const subCmdFirst = tokens[1] ? cleanString(tokens[1]).replace(/"/g, '').toLowerCase().trim() : "";
+                const isResp = (subCmdFirst === "responsibilities" || subCmdFirst === "responsibility listing" || subCmdFull === "responsibility listing" || subCmdFull === "responsibilities");
+                const isKeyfield = (subCmdFirst === "keyfield");
+                const isUserPerm = (subCmdFull === "user permissions" || subCmdFirst === "user permissions");
+                const isRolePerm = (subCmdFull === "role permissions" || subCmdFirst === "role permissions");
+
+                // old code
+                // if (!isKeyfield && !isUserPerm && !isRolePerm && !isResp) {
+                // new code: Trace On / Trace Off / Trace Files get Go only, no Pop-Up
+                if (isShellActionOption(tokens)) {
+                    resultList.unshift(goOption);
+                    filteredObjects.unshift(goOption);
+                }
+                else if (!isKeyfield && !isUserPerm && !isRolePerm && !isResp) {
+                    resultList.unshift(goOption, popOption);
+                    filteredObjects.unshift(goOption, popOption);
+                }
+            }
+
+            else if ((groupKey.toLowerCase() === "analyse") && tokens.length === 3) {
+                resultList.unshift(goOption);
+                filteredObjects.unshift(goOption);
+            }
+            //else if (groupKey.toLowerCase() === "open" && (tokens[1]?.toLowerCase() === "api"
+            else if (groupKey.toLowerCase() === "sdk" && (cleanCommandToken(tokens[1])?.toLowerCase().trim() === "api plugin"
+                || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "axpert job" || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "language"
+                || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "custom data type" || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "email definition"
+                || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "table field descriptor" || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "out bound queue"
+                || cleanCommandToken(tokens[1])?.toLowerCase().trim() == "in bound queue")) {
+                resultList.unshift(goOption);
+                filteredObjects.unshift(goOption);
+            }
+
+
+            //else if (groupKey.toLowerCase() === "create" && tokens.length == 3) {
+            //    resultList.unshift(goOption);
+            //    filteredObjects.unshift(goOption);
+            //}
+
+            //else if (groupKey.toLowerCase() === "edit" && tokens.length > 4) {
+            //    resultList.unshift(popOption);
+            //    resultList.unshift(goOption);
+            //    filteredObjects.unshift(popOption);
+            //    filteredObjects.unshift(goOption);
+            //}
+
+
+            ///added this for sinlge fieldname and fieldvalue(T)
+            if (groupKey.toLowerCase() === "edit" && tokens.length > 4) {
+                //resultList.unshift(goOption);
+                //resultList.unshift(popOption);
+                //filteredObjects.unshift(goOption);
+                //filteredObjects.unshift(popOption);
+                filteredObjects = [goOption, popOption]
+                return [goOption, popOption];
+            }
+
+            const structName = getCurrentStructName();
+            const accessPermissions = getAccessPermissions();
+
+            if ((groupKey.toLowerCase() === "view") && tokens.length <= 2 && structName !== null && accessPermissions?.buildAccess) {
+                const structType = (getStructType() || "").toLowerCase();
+                const devKey = (structType === "t" || structType === "tstruct") ? "tstruct" : (structType === "ads" ? "ads" : "iview");
+                if (isDevOptionAllowed(devKey)) {
+                    resultList.unshift("Source");
+                    // resultList.unshift(goOption);
+                    filteredObjects.unshift("Source");
+                    updateDynamicHintFromPrompt({ prompt: "Ready to Run" });
+                    // filteredObjects.unshift(goOption);
+                }
+            }
+
+            if (groupKey.toLowerCase() === "sdk" && accessPermissions?.buildAccess && tokens.length >= 2) {
+                const targetToken = cleanCommandToken(tokens[1])?.toLowerCase().trim();
+                if (AxiCmdConfig.SDK_CREATE_NEW_TARGETS.includes(targetToken)) {
+                    const createObj = { displaydata: "Create New", name: "Create New", isCreateNew: true };
+                    resultList = resultList.filter(item => typeof item === "string" ? item.toLowerCase() !== "create new" : true);
+                    filteredObjects = filteredObjects.filter(item => typeof item === "object" ? item?.name?.toLowerCase() !== "create new" : true);
+                    resultList.unshift("Create New");
+                    filteredObjects.unshift(createObj);
+                }
+            }
+
+            return resultList;
+        }
+
+        ///added this for sinlge fieldname and fieldvalue(T)
+        if (groupKey.toLowerCase() === "edit" && tokens.length > 4) {
+            //resultList.unshift(goOption);
+            //resultList.unshift(popOption);
+            //filteredObjects.unshift(goOption);
+            //filteredObjects.unshift(popOption);
+            updateDynamicHintFromPrompt({ prompt: "Ready to Run" })
+            filteredObjects = [goOption, popOption]
+            return [goOption, popOption];
+        }
+
+
+        return [];
+    }
+
+    /**
+     * Processes parameter options for 'Edit' and 'View' command chains.
+     * @param {string[]} tokens - Command tokens.
+     * @param {object} commandConfig - Command definition schema.
+     * @param {string} paramValue - Current parameter value.
+     * @param {number} position - Token position index.
+     * @returns {Array<object>} Parameter suggestions.
+     */
+    /**
+     * Finds a structure (form / report / page / data source) in a loaded part of the structure list.
+     * The list is loaded one page at a time, so a miss does not mean the structure does not exist:
+     * callers should ask the server (requestStructSearch) when this returns undefined.
+     * Matches the internal name first, then the caption / display text (ignoring case and a trailing [badge]).
+     * @param {Array<object>} list - Rows of axi_structmetalist (may be undefined).
+     * @param {string} wanted - Internal name or caption.
+     * @param {string} [preferredType] - Optional stype (t / i / p / ads); used to choose between equal names.
+     * @returns {object|undefined} Matching row.
+     */
+    function findStructRow(list, wanted, preferredType) {
+        if (!Array.isArray(list) || !wanted) return undefined;
+        const w = String(wanted).replace(/\s*\[[^\]]*\]$/, "").trim().toLowerCase();
+        if (!w) return undefined;
+        const same = v => v !== undefined && v !== null && String(v).trim().toLowerCase() === w;
+        const typeOk = r => !preferredType || (r.stype || "").toLowerCase() === preferredType;
+        // "Caption (transid)" names one structure among several sharing a caption (#289)
+        const captionAndName = r => r.caption && r.name && `${String(r.caption).trim()} (${r.name})`.toLowerCase() === w;
+        return list.find(r => r && r.name === wanted && typeOk(r))
+            || list.find(r => r && r.name === wanted)
+            || list.find(r => r && captionAndName(r))
+            || list.find(r => r && (same(r.name) || same(r.caption) || same(r.displaydata)) && typeOk(r))
+            || list.find(r => r && (same(r.name) || same(r.caption) || same(r.displaydata)));
+    }
+
+    function processParamforEditndView(tokens, commandConfig, paramValue, position) {
+        if (!commandConfig || !commandConfig.prompts || !commandConfig.prompts[0]) {
+            return "";
+        }
+        const struct_prompt = commandConfig.prompts[0];
+        const struct_source = struct_prompt.promptSource;
+        if (!struct_source) return "";
+
+        // extra params
+        const struct_paramValue = processExtraParams(tokens, commandConfig);
+
+        const struct_sourceKey = (struct_paramValue ? `${struct_source}_${struct_paramValue}` : struct_source).toLowerCase();
+
+        // load datasource if not exists
+        if (!axDatasourceObj[struct_sourceKey]) {
+
+            const struct_hasParams = !struct_prompt.promptParams ||
+                (struct_paramValue && struct_paramValue.replace(/,/g, '').trim().length > 0);
+
+            if (struct_hasParams) {
+                loadList(struct_source, struct_paramValue);
+            }
+            return "";
+        }
+
+        const struct_dataList = axDatasourceObj[struct_sourceKey];
+        if (!struct_dataList || !Array.isArray(struct_dataList)) return "";
+
+        // A failed or empty load leaves [] cached under this key, and nothing would ever fetch it again.
+        // Ask again, but only once per key until Refresh: getList returns [] for server errors too, so loadList
+        // sees them as successful loads, and every finished load re-runs this function through the suggestion refresh.
+        // Asking every time would request the list in an endless loop (#267).
+        if (struct_dataList.length === 0) {
+            if (!emptyStructListRetried.has(struct_sourceKey)) {
+                emptyStructListRetried.add(struct_sourceKey);
+                loadList(struct_source, struct_paramValue);
+            }
+            return "";
+        }
+
+        // find struct row
+
+        let struct_name = paramValue;
+
+        if (paramValue && typeof paramValue === "string" && paramValue.includes("$#$")) {
+            const struct_split = paramValue.split("$#$");
+            struct_name = struct_split[0];
+        }
+
+        let preferredType = getResolvedParamType(1);
+        if (preferredType) {
+            preferredType = preferredType.toLowerCase();
+            if (preferredType === "tstruct") preferredType = "t";
+            if (preferredType === "iview") preferredType = "i";
+        }
+
+        // struct_name is the internal name when it was resolved, or still the caption the user typed
+        const struct_row = findStructRow(struct_dataList, struct_name, preferredType);
+
+        if (!struct_row) {
+            // The structure list is loaded one page at a time, so the chosen form / report may simply not be in the
+            // part loaded so far. Ask the server for it by the name the user typed (and by its resolved name);
+            // when the rows arrive loadList refreshes the suggestions and this lookup runs again.
+            // requestStructSearch asks once per term, so this cannot loop.
+            const typedStruct = cleanString(tokens[1] || "").replace(/\s*\[[^\]]*\]$/, "").trim();
+            console.warn("[AxiCMD edit/view] Structure not found in the loaded structure list:", {
+                struct_name, typedStruct, source: struct_source, listKey: struct_sourceKey, loadedRows: struct_dataList.length
+            });
+            requestStructSearch(typedStruct, struct_paramValue);
+            if (struct_name && struct_name.toLowerCase() !== typedStruct.toLowerCase()) requestStructSearch(struct_name, struct_paramValue);
+            return "";
+        }
+
+        // values from structmetalist
+        //const struct_dimension = struct_row.dimension;
+        //const struct_permission = struct_row.permission;
+        //const struct_keyfield = struct_row.keyfield;
+        //const struct_primarytable = struct_row.primarytable;
+        //const struct_transid = struct_row.name;
+
+        // selected field logic
+        let struct_selectedfield = "";
+        if (position === 3) {
+            struct_selectedfield = "0";
+        } else {
+            const struct_split = (paramValue && typeof paramValue === "string") ? paramValue.split("$#$") : [];
+            struct_selectedfield = struct_split.length > 1 ? struct_split[1] : "";
+
+            // The word after the form name can be a record key VALUE (e.g. "msg04") instead of a field name.
+            // fn_axi_getstructs_obj reads that word as a column of the primary table, which fails with
+            // 42703 "column p.msg04 does not exist". Only a word confirmed as a field row is sent as the
+            // selected field; a key value, or a word we cannot classify yet (cache empty after Refresh or a
+            // settings Save), is sent as "0". That "0" list holds both key values and fields, so once it has
+            // loaded the suggestions are rebuilt and this check runs again with the rows available.
+            if (struct_selectedfield && struct_selectedfield !== "0") {
+                const selLower = struct_selectedfield.toLowerCase();
+                const rawLower = cleanString(tokens[2] || "").toLowerCase();
+                // list keys are "axi_getstructsdata_<cmd>$#$<user>$#$<role>$#$<transid>$#$..." (lower case)
+                const transidLower = String(struct_row.name || "").toLowerCase();
+                let confirmedFname = "";
+                for (const key in axDatasourceObj) {
+                    if (!key.startsWith("axi_getstructsdata_") || !key.includes(transidLower) || !Array.isArray(axDatasourceObj[key])) continue;
+                    for (const row of axDatasourceObj[key]) {
+                        if (row.isfield !== 't') continue;
+                        const hit = [row.name, row.displaydata, row.caption]
+                            .some(v => v && (String(v).toLowerCase() === selLower || String(v).toLowerCase() === rawLower));
+                        // field rows are shown as "Caption (fname) [field]"; the resolved value may be just fname
+                        const byFname = String(row.displaydata || "").toLowerCase().includes(`(${selLower})`);
+                        if (hit || byFname) {
+                            // The function needs the field's internal name (fname). A word matched by its caption
+                            // ("Rent Expenses") must not be sent as typed, or it is read as the column p."rent expenses".
+                            const m = /\(([^()]+)\)\s*\[field\]\s*$/i.exec(String(row.displaydata || ""));
+                            confirmedFname = m ? m[1].trim() : "";
+                            break;
+                        }
+                    }
+                    if (confirmedFname) break;
+                }
+                struct_selectedfield = confirmedFname || "0";
+            }
+        }
+
+        //// already available globals
+        //const struct_username = mainUserName;
+        //const struct_userrole = AxUserRoles;
+
+        const struct_globalvars = getGlobalVar(allGloblVars, "axg_applicable_dimensions") || "NA";
+        //const struct_globalvars = prepareKeyValueString(allGloblVars);
+        //const struct_globalvars = allGloblVars
+
+        const promptIndex = position === 3 ? 1 : 2;
+        const extraParamsStr = commandConfig.prompts[promptIndex]?.extraParams || "";
+
+        const paramsArray = extraParamsStr.split(",");
+
+        let finalParamsArray = [];
+
+        //default first param
+        //finalParamsArray.push(commandConfig.commandGroup)
+
+        for (let i = 0; i < paramsArray.length; i++) {
+
+            let param = paramsArray[i].trim().toLowerCase();
+            let value = "";
+
+
+            if (param === ":username") {
+                value = mainUserName;
+            }
+            else if (param === ":userrole") {
+                value = AxUserRoles;
+            }
+            else if (param === ":cmd") {
+                value = commandConfig.commandGroup;
+            }
+            else if (param === ":transid") {
+                value = struct_row?.name || "";
+            }
+            else if (param === ":selectedfield") {
+                value = struct_selectedfield;
+            }
+            else if (param === ":dimension") {
+                value = struct_row?.dimension || "";
+            }
+            else if (param === ":permission") {
+                value = struct_row?.permission || "";
+            }
+            else if (param === ":keyfield") {
+                value = struct_row?.keyfield || "";
+            }
+            else if (param === ":primarytable") {
+                value = struct_row?.primarytable || "";
+            }
+            else if (param === ":globalvars") {
+                // Dimension part stays "NA" (as before). For "view" / "edit" the session variables that the form's
+                // <transid>_filter application variable may use (e.g. :branch) follow the marker, see buildFilterVarsString.
+                value = "NA";
+                const cmdForVars = String(commandConfig.commandGroup || "").toLowerCase();
+                if (cmdForVars === "view" || cmdForVars === "edit") {
+                    const filterVars = buildFilterVarsString(allGloblVars);
+                    if (filterVars) value = "NA" + FILTER_VARS_MARK + filterVars;
+                }
+            }
+
+
+            // fallback NA
+            if (value === null || value === undefined || value === "") {
+                value = "NA";
+            }
+
+            finalParamsArray.push(value);
+        }
+
+        const struct_finalParams = finalParamsArray.join("$#$");
+        //const struct_finalParams = [
+        //    commandConfig.commandGroup,
+        //    struct_username,
+        //    struct_userrole,
+        //    struct_transid,
+        //    struct_selectedfield,
+        //    struct_dimension,
+        //    struct_permission,
+        //    struct_keyfield,
+        //    struct_primarytable,
+        //    struct_globalvars
+        //]
+        //    .map(v => (v === null || v === undefined || v === "") ? "NA" : v)
+        //    .join("$#$");
+
+        return struct_finalParams;
+    }
+
+    // Separator between the dimension part and the session variables inside param10 (:globalvars) of axi_getstructsdata.
+    // fn_axi_getstructs_obj splits on it (keep in sync with Structures/*/Scripts/axi_functions.sql).
+    const FILTER_VARS_MARK = "@@VARS@@";
+
+    /**
+     * Builds "name=value~~name=value" from the session global variables, for the view filter of a form
+     * (<transid>_filter in axvarcore, e.g. "and Form11.branch=:branch"), which fn_axi_getstructs_obj resolves.
+     * Only plain short values are sent: passwords, keys, tokens, urls, paths and the *_filter variables stay out,
+     * because this text goes into the request, the cache key and the database log.
+     * @param {object} allVars - Session variables object ({ globalVars: [ { name: value }, ... ] }).
+     * @returns {string} Pairs joined by "~~", or "" when there is nothing to send.
+     */
+    function buildFilterVarsString(allVars) {
+        if (!allVars || !Array.isArray(allVars.globalVars)) return "";
+        const blockedName = /pwd|pass|secret|token|key|auth|url|path|server|mail|connection|schema|_filter$/i;
+        const plainValue = /^[A-Za-z0-9_. -]{1,60}$/;
+        const pairs = [];
+        allVars.globalVars.forEach(obj => {
+            const name = obj && Object.keys(obj)[0];
+            if (!name || !/^[A-Za-z0-9_]+$/.test(name) || blockedName.test(name)) return;
+            const value = String(obj[name] === null || obj[name] === undefined ? "" : obj[name]).trim();
+            if (plainValue.test(value)) pairs.push(name.toLowerCase() + "=" + value);
+        });
+        return pairs.join("~~");
+    }
+
+    /**
+     * Fetches a global variable value by name from global variables collection.
+     * @param {object} struct_allGlobalVars - Global variables object.
+     * @param {string} struct_keyName - Variable name to lookup.
+     * @returns {string} Variable value or empty string.
+     */
+    function getGlobalVar(struct_allGlobalVars, struct_keyName) {
+
+        if (!struct_allGlobalVars || !Array.isArray(struct_allGlobalVars.globalVars)) {
+            return null;
+        }
+
+        for (let struct_var of struct_allGlobalVars.globalVars) {
+            if (struct_var.hasOwnProperty(struct_keyName)) {
+                return struct_var[struct_keyName];
+            }
+        }
+
+        return null;
+    }
+
+    // function processExtraParams(tokens,commandConfig) {
+
+    //     let paramValue = "";
+
+    //     let iviewBoolCheck = false;
+
+    //     let adsBoolCheck = false;
+
+    //     let pageBoolCheck = false;
+
+    //     if (tokens.length >= 2) {
+    //         if (tokens[1].toLowerCase() == "iview" && commandConfig.commandGroup.toLowerCase() == "open") {
+    //             iviewBoolCheck = true;
+    //         }
+    //         else if (tokens[1].toLowerCase() == "ads" && commandConfig.commandGroup.toLowerCase() == "open") {
+    //             adsBoolCheck = true;
+    //         }
+    //         else if (tokens[1].toLowerCase() == "page" && commandConfig.commandGroup.toLowerCase() == "open") {
+    //             pageBoolCheck = true;
+    //         }
+    //     }
+    //     try {
+
+    //         let extraParams;
+    //         if (commandConfig.commandGroup.toLowerCase() == "configure") {
+    //             extraParams = commandConfig?.prompts?.[1]?.extraParams;
+    //         }
+    //         else if (commandConfig.commandGroup.toLowerCase() == "open") {
+    //             extraParams = commandConfig?.prompts?.[1]?.extraParams;
+    //         }
+    //         else {
+    //             extraParams = commandConfig?.prompts?.[0]?.extraParams;
+    //         }
+
+    //         if (!extraParams) return paramValue;
+
+    //         let paramsArray = extraParams.split(",");
+
+    //         paramsArray.forEach(param => {
+
+    //             param = param.trim().toLowerCase();
+    //             let value = "";
+
+    //             if (param === ":username") {
+    //                 value = mainUserName;
+    //             }
+    //             else if (param === ":userroles") {
+    //                 value = AxUserRoles;
+    //             }
+    //             else if (param === ":userresp") {
+    //                 value = userResp;
+    //             }
+    //             else if (param === ":mode") {
+    //                 if (commandConfig.commandGroup.toLowerCase() === "open") {
+    //                     value = "dev";
+    //                 }
+    //                 else if (commandConfig.commandGroup.toLowerCase() === "view") {
+    //                     value = "all"
+    //                 }
+    //                 else value = "run";
+    //             }
+    //             else if (param === ":structtype") {
+    //                 if (commandConfig.commandGroup.toLowerCase() === "view") {
+    //                     value = "all"
+    //                 }
+    //                 else {
+
+    //                     value = iviewBoolCheck ? "i" : adsBoolCheck ? "ads" : pageBoolCheck ? "p" : "t";
+    //                 }
+    //             }
+
+    //             if (value) {
+    //                 if (paramValue === "") {
+    //                     paramValue = value;
+    //                 } else {
+    //                     paramValue += "$#$" + value;
+    //                 }
+    //             }
+
+    //         });
+
+    //     } catch (err) {
+    //         // console.log("Error in processExtraParams:", err);
+    //     }
+
+    //     return paramValue;
+    // }
+
+
+    /**
+     * Parses and validates additional key-value parameter pairs appended to commands.
+     * @param {string[]} tokens - Command tokens.
+     * @param {object} commandConfig - Command definition schema.
+     * @returns {object} Extracted parameter key-value pairs.
+     */
+    function processExtraParams(tokens, commandConfig) {
+        let paramValue = "";
+
+        let iviewBoolCheck = false;
+
+        if (tokens.length >= 2) {
+            if (tokens[1].toLowerCase() == "iview" && commandConfig.commandGroup.toLowerCase() == "sdk") {
+                iviewBoolCheck = true;
+            }
+        }
+        try {
+            let extraParams;
+            if (commandConfig.commandGroup.toLowerCase() == "configure") {
+                extraParams = commandConfig?.prompts?.[1]?.extraParams;
+            } else if (commandConfig.commandGroup.toLowerCase() == "sdk") {
+                extraParams = commandConfig?.prompts?.[1]?.extraParams;
+            } else {
+                extraParams = commandConfig?.prompts?.[0]?.extraParams;
+            }
+
+            if (!extraParams) return paramValue;
+
+            let paramsArray = extraParams.split(",");
+
+            paramsArray.forEach((param) => {
+                param = param.trim().toLowerCase();
+                let value = "";
+
+                if (param === ":username") {
+                    value = mainUserName;
+                } else if (param === ":userroles") {
+                    value = AxUserRoles;
+                } else if (param === ":userresp") {
+                    value = userResp;
+                } else if (param === ":mode") {
+                    if (commandConfig.commandGroup.toLowerCase() === "sdk") {
+                        value = "dev";
+                    } else if (commandConfig.commandGroup.toLowerCase() === "view") {
+                        value = "all";
+                    } else value = "run";
+                }
+
+                else if (param === ":structtype") {
+                    if (commandConfig.commandGroup.toLowerCase() === "view") {
+                        value = "all";
+                    } else if (commandConfig.commandGroup.toLowerCase() == "sdk" && tokens.length >= 2) {
+                        let token = cleanCommandToken(tokens[1]).toLowerCase();
+
+                        switch (token) {
+                            case "iview":
+                                value = "i";
+                                break;
+                            case "tstruct":
+                                value = "t";
+                                break;
+                            case "page":
+                                value = "p";
+                                break;
+                            case "axpert data sources":
+                                value = "ads";
+                                break;
+                            default:
+                                value = "t"; //all
+                        }
+                    }
+                    else if (commandConfig.commandGroup.toLowerCase() == "analyse") {
+                        value = 'analyse'
+                    }
+                    else value = iviewBoolCheck ? "i" : "t";
+                }
+                if (value) {
+                    if (paramValue === "") {
+                        paramValue = value;
+                    } else {
+                        paramValue += "$#$" + value;
+                    }
+                }
+            });
+        } catch (err) {
+            // console.log("Error in processExtraParams:", err);
+        }
+
+        return paramValue;
+    }
+
+
+    /**
+     * Adjusts token index to account for target-first token position swapping.
+     * @param {number} tokenIndex - Raw token index.
+     * @returns {number} Adjusted token index.
+     */
+    function getUnswappedIndex(tokenIndex) {
+        if (!input) return tokenIndex;
+        const tokens = getTokens(input.value, false);
+        if (tokens.length >= 2) {
+            const first = cleanString(tokens[0]).toLowerCase();
+            const second = cleanString(tokens[1]).toLowerCase();
+            if (isTargetEntity(first) && isValidActionForTarget(first, second)) {
+                if (tokenIndex === 0) return 1;
+                if (tokenIndex === 1) return 0;
+            }
+        }
+        return tokenIndex;
+    }
+
+    /**
+     * Returns resolved parameter data type for the specified token position.
+     * @param {number} tokenIndex - Index of token.
+     * @returns {string} Parameter type string.
+     */
+    function getResolvedParamType(tokenIndex) {
+        const rawIndex = getUnswappedIndex(tokenIndex);
+        return resolvedParamType?.[rawIndex];
+    }
+
+    /**
+     * Retrieves the command definition schema for a given group key and tokens.
+     * @param {string} groupKey - Command verb or group name.
+     * @param {string[]} currentTokens - Current tokens array.
+     * @returns {object|null} Command configuration schema.
+     */
+    function getCommandConfig(groupKey, currentTokens) {
+        if (!groupKey || !commands) return null;
+        const lowKey = groupKey.toLowerCase();
+        if (["create", "view", "edit", "source"].includes(lowKey)) {
+            if (!currentTokens || currentTokens.length <= 1 || (currentTokens.length === 2 && cleanString(currentTokens[1]) === "")) {
+                return null;
+            }
+        }
+        if (commands[groupKey]) return commands[groupKey];
+        const matchedKey = Object.keys(commands).find(k => k.toLowerCase() === lowKey);
+        return matchedKey ? commands[matchedKey] : null;
+    }
+
+    /**
+     * Attempts to resolve raw token text to a recognized metadata item or entity object.
+     * @param {number} tokenIndex - Position of token.
+     * @param {string} tokenText - Token string to resolve.
+     * @param {object} commandConfig - Command configuration schema.
+     * @param {boolean} [forceResolve=false] - If true, bypasses fuzzy matching.
+     * @returns {object|null} Resolved metadata object or null.
+     */
+    function tryResolveToken(tokenIndex, tokenText, commandConfig, forceResolve = false) {
+
+        tokenText = cleanString(tokenText);
+        if (!tokenText) return { value: "", type: "" };
+
+        const rawIndex = getUnswappedIndex(tokenIndex);
+
+        let lookupIndex = tokenIndex;
+        if (resolvedParams[lookupIndex] === undefined && resolvedParams[0] !== undefined) {
+            lookupIndex = 0;
+        }
+
+        if (resolvedParams[lookupIndex] && !forceResolve) {
+            const val = resolvedParams[lookupIndex];
+            const lowerVal = val?.toLowerCase();
+            const isVerb = ["view", "create", "edit", "run", "refresh", "sdk", "configure", "publish", "help", "save", "go", "pop", "version", "source"].includes(lowerVal);
+            if (!(tokenIndex === 1 && isVerb)) {
+                return {
+                    value: val,
+                    type: resolvedParamType?.[lookupIndex] || ""
+                };
+            }
+        }
+
+        if (tokenIndex === 1 && !forceResolve) {
+            let preferredType = resolvedParamType?.[lookupIndex] || resolvedParamType?.[tokenIndex];
+            if (tokenText.includes("[") && tokenText.includes("]")) {
+                const badgeMatch = tokenText.match(/\[(.*?)\]/);
+                if (badgeMatch) {
+                    const badgeStr = badgeMatch[1].toLowerCase().trim();
+                    if (["form", "tstruct", "t"].includes(badgeStr)) preferredType = "t";
+                    else if (["iview", "i"].includes(badgeStr)) preferredType = "i";
+                    else if (["ads", "a", "v"].includes(badgeStr)) preferredType = "ads";
+                    else if (["page", "p"].includes(badgeStr)) preferredType = "p";
+                }
+            }
+
+            const cleanTokName = tokenText.replace(/\s*\[[^\]]*\]$/, "").trim();
+            const matches = getTargetEntityMatches(cleanTokName.length > 0 ? cleanTokName : tokenText);
+
+            if (matches.length > 0) {
+                let found = matches[0];
+                if (matches.length > 1) {
+                    const currentTokens = getTokens(input.value);
+                    const cmdGroup = currentTokens[0]?.toLowerCase();
+
+                    // 1. Explicit preferredType or badge type match
+                    if (preferredType) {
+                        const typeMatched = matches.find(item => areTypesMatching(item.stype || item.STYPE, preferredType));
+                        if (typeMatched) found = typeMatched;
+                    }
+
+                    // 2. Exact internal name match (e.g. 'ads1', 'tst1', 'iv1')
+                    if (!preferredType) {
+                        const exactNameMatch = matches.find(item =>
+                            (item.name || item.NAME || item.sqlname || "").toLowerCase() === cleanTokName.toLowerCase()
+                        );
+                        if (exactNameMatch) {
+                            found = exactNameMatch;
+                        } else if (cmdGroup === "create" || cmdGroup === "edit") {
+                            const typeMatched = matches.find(item => {
+                                const type = (item.stype || "").toLowerCase();
+                                return type === "t" || type === "tstruct";
+                            });
+                            if (typeMatched) found = typeMatched;
+                        } else if (cmdGroup === "view") {
+                            const fullDisplayMatch = matches.find(item =>
+                                (item.displaydata || item.DISPLAYDATA || "").toLowerCase() === tokenText.toLowerCase()
+                            );
+                            if (fullDisplayMatch) {
+                                found = fullDisplayMatch;
+                            } else {
+                                const iviewMatch = matches.find(item => {
+                                    const type = (item.stype || "").toLowerCase();
+                                    return type === "i" || type === "iview";
+                                });
+                                if (iviewMatch) found = iviewMatch;
+                            }
+                        }
+                    }
+                }
+
+                let foundStype = found.stype || "";
+                if (!foundStype && isInboxStructure(found)) {
+                    foundStype = "inbox";
+                }
+                resolvedParams[lookupIndex] = found.name;
+                if (foundStype) resolvedParamType[lookupIndex] = foundStype;
+                return {
+                    value: found.name,
+                    type: foundStype
+                };
+            }
+        }
+        // if (!tokenText && !forceResolve) return "";
+        // if (!commandConfig) return tokenText;
+        if (!commandConfig) return {
+            value: tokenText,
+            type: ""
+        };
+
+
+        const currentTokens = getTokens(input.value);
+
+
+        const promptInfo = getActivePromptInfo(commandConfig, getTokens(input.value), tokenIndex);
+        // if (!promptInfo) return tokenText;
+        if (!promptInfo) return {
+            value: tokenText,
+            type: ""
+        };
+
+        const { config: prompt, realSource } = promptInfo;
+
+
+        if (realSource) {
+            let paramValue = "";
+
+
+            // Resolve Dependencies
+            if (prompt.promptParams) {
+                const indices = prompt.promptParams.toString().split(',');
+                const values = indices.map(idx => {
+                    const logicalWordPos = parseInt(idx.trim());
+                    const depTokenIndex = logicalWordPos - 1;
+                    const depToken = cleanString(getTokens(input.value)[depTokenIndex] || "");
+                    // return tryResolveToken(depTokenIndex, depToken, commandConfig, true);
+                    const resolved = tryResolveToken(depTokenIndex, depToken, commandConfig, true);
+                    return resolved.value;
+                });
+                paramValue = values.join('$#$');
+            }
+
+            // Append Hidden Param for Resolution Context
+            if (prompt.extraParams) {
+                const extraSource = prompt.extraParams;
+                const extraKey = `${extraSource}_${paramValue}`.toLowerCase();
+                const extraList = axDatasourceObj[extraKey];
+
+                if (extraList && extraList.length > 0) {
+                    const hiddenValue = extraList[0].name || extraList[0].keyfield || extraList[0].fname || extraList[0].displaydata;
+
+                    if (paramValue) paramValue += "$#$" + hiddenValue;
+                    else paramValue = hiddenValue;
+                }
+            }
+
+            let apiName = realSource;
+            if (apiName.toLowerCase() === "axi_analyticslist") {
+                // apiName = "axi_analyticslistnew"; 
+                paramValue = window.mainUserName;
+            }
+
+            else if (realSource.toLowerCase() === "axi_structlist") {
+                paramValue = processExtraParams(currentTokens, commandConfig);
+            }
+
+            else if (realSource.toLowerCase() === "axi_structmetalist") {
+                paramValue = processExtraParams(currentTokens, commandConfig);
+            }
+
+            else if (realSource.toLowerCase() === "axi_viewlist") {
+                paramValue = processExtraParams(currentTokens, commandConfig);
+            }
+            else if (realSource.toLowerCase() === "axi_getstructsdata") {
+
+                let staticParams = "2";
+                //if (currentTokens.length < 3) {
+                //    staticParams = "2";
+                //}
+                //else {
+                //    staticParams = "2,3";
+                //}
+
+                const indices = staticParams.toString().split(',');
+                const values = indices.map(idx => {
+                    const logicalWordPos = parseInt(idx.trim());
+                    const depTokenIndex = logicalWordPos - 1;
+                    const depToken = cleanString(currentTokens[depTokenIndex] || "");
+                    // return tryResolveToken(depTokenIndex, depToken, commandConfig, true);
+                    const resolved = tryResolveToken(depTokenIndex, depToken, commandConfig, true);
+                    return resolved?.value;
+                });
+                paramValue = values.join('$#$');
+
+                //if (currentTokens.length == 2) {
+                //    const depToken = cleanString(currentTokens[1] || "");
+                //    paramValue = tryResolveToken(1, depToken, commandConfig, false);
+                //}
+                //else {
+                //    const depToken = cleanString(currentTokens[1] || "");
+                //    paramValue = tryResolveToken(1, depToken, commandConfig, false);
+
+                //    const fieldName = cleanString(currentTokens[2] || "");
+                //    paramValue += "$#$"+tryResolveToken(2, fieldName, commandConfig, false);
+                //}
+
+
+
+                paramValue = processParamforEditndView(currentTokens, commandConfig, paramValue, 3)
+            }
+
+            let cacheKey = paramValue ? `${apiName}_${paramValue}` : apiName;
+
+            let cachedList = axDatasourceObj[cacheKey.toLowerCase()];
+            if (!cachedList) {
+                for (const k in axDatasourceObj) {
+                    if (k.startsWith(cacheKey.toLowerCase())) {
+                        const sub = axDatasourceObj[k];
+                        if (Array.isArray(sub) && sub.length > 0) {
+                            cachedList = sub;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (cachedList) {
+                // Find matching items
+                const matches = cachedList.filter(item =>
+                    (cleanString(item.displaydata) || "").toLowerCase() === tokenText.toLowerCase() ||
+                    (cleanString(item.caption) || "").toLowerCase() === tokenText.toLowerCase() ||
+                    (cleanString(item.name) || "").toLowerCase() === tokenText.toLowerCase() ||
+                    // "Caption (transid)" kept in the input for a caption that several structures share (#289)
+                    (item.caption && item.name && `${cleanString(item.caption)} (${cleanString(item.name)})`.toLowerCase() === tokenText.toLowerCase())
+                );
+
+                if (matches.length > 0) {
+                    let found = matches[0];
+                    let preferredType = resolvedParamType?.[tokenIndex];
+                    if (tokenText.includes("[") && tokenText.includes("]")) {
+                        const badgeMatch = tokenText.match(/\[(.*?)\]/);
+                        if (badgeMatch) {
+                            const badgeStr = badgeMatch[1].toLowerCase().trim();
+                            if (["form", "tstruct", "t"].includes(badgeStr)) preferredType = "t";
+                            else if (["iview", "i"].includes(badgeStr)) preferredType = "i";
+                            else if (["ads", "a", "v"].includes(badgeStr)) preferredType = "ads";
+                            else if (["page", "p"].includes(badgeStr)) preferredType = "p";
+                        }
+                    }
+
+                    const cmdGroup = currentTokens[0]?.toLowerCase();
+                    if ((cmdGroup === "edit" || cmdGroup === "create") && tokenIndex === 1 && !preferredType) {
+                        preferredType = "t";
+                    }
+
+                    // Two structures can share a caption ("Test Form2" is both ytdf and tst2). The one the user picked
+                    // is already in resolvedParams, so keep it instead of taking the first row with that caption (#289).
+                    const pickedName = String(resolvedParams[lookupIndex] || "").toLowerCase();
+                    const pickedMatch = (pickedName && matches.length > 1)
+                        ? matches.find(item => (item.name || item.NAME || item.sqlname || "").toLowerCase() === pickedName)
+                        : null;
+
+                    if (pickedMatch) {
+                        found = pickedMatch;
+                    } else if (preferredType && matches.length > 1) {
+                        const typeMatched = matches.find(item => areTypesMatching(item.stype || item.STYPE, preferredType));
+                        if (typeMatched) {
+                            found = typeMatched;
+                        }
+                    } else if (matches.length > 1) {
+                        const cleanTokName = tokenText.replace(/\s*\[[^\]]*\]$/, "").trim();
+                        const exactNameMatch = matches.find(item =>
+                            (item.name || item.NAME || item.sqlname || "").toLowerCase() === cleanTokName.toLowerCase()
+                        );
+                        if (exactNameMatch) {
+                            found = exactNameMatch;
+                        } else if (cmdGroup === "view" && tokenIndex === 1) {
+                            const fullDisplayMatch = matches.find(item =>
+                                (item.displaydata || item.DISPLAYDATA || "").toLowerCase() === tokenText.toLowerCase()
+                            );
+                            if (fullDisplayMatch) {
+                                found = fullDisplayMatch;
+                            } else {
+                                const iviewMatch = matches.find(item => {
+                                    const type = (item.stype || "").toLowerCase();
+                                    return type === "i" || type === "iview";
+                                });
+                                if (iviewMatch) found = iviewMatch;
+                            }
+                        }
+                    }
+
+                    let real = found.name || found.sqlname || found.displaydata;
+
+                    // Field rows read "Caption (fname) [field]": keep only the field name. A record row (isfield "f")
+                    // holds a plain value that can contain brackets itself ("Rent Expenses (Indirect Expenses)"),
+                    // so it must keep its whole text or the record lookup searches for "Indirect Expenses".
+                    const isRecordRow = String(found.isfield ?? "").toLowerCase() === "f";
+                    if (!isRecordRow && real.includes("(") && real.includes(")")) {
+                        const match = real.match(/\(([^)]+)\)/);
+
+                        real = match ? match[1] : real;
+
+                    }
+
+                    resolvedParams[lookupIndex] = real;
+                    if (found?.stype) resolvedParamType[lookupIndex] = found?.stype;
+                    // return real;
+                    return {
+                        value: real,
+                        type: found?.stype ?? ""
+                    };
+                }
+            }
+        }
+
+        // return tokenText;
+        return {
+            value: tokenText,
+            type: ""
+        };
+    }
+
+
+    /* ===============================
+       RENDER & APPLY
+    =============================== */
+    /**
+     * Renders suggestion dropdown list items in the DOM.
+     * @returns {void}
+     */
+    function render() {
+
+        // new code: while a configure product / plugin / changerequest save runs, the loader replaces the suggestions
+        if (commandSettingSaving) {
+            drawCommandSettingSavingRow();
+            return;
+        }
+
+        // console.log("Render called");
+        // Emptying the list resets its scroll position. Background requests (commands, favourites, the next
+        // page ...) finish while the user is scrolling and trigger a re-render, which threw the user back to
+        // the top. Remember the position so a re-render of the SAME list can put it back (see below).
+        const scrollBeforeRender = { top: list.scrollTop, left: list.scrollLeft };
+        list.innerHTML = "";
+        // No footer on screen until buildLoadMoreFooter draws one again in this render
+        footerPagedContext = null;
+
+        const currentInput = input.value;
+        const currentInputTokens = getTokens(currentInput.trim());
+
+        // Determine the current suggestion token position/level (0-based)
+        let suggestionTokenIndex = currentInputTokens.length;
+        if (currentInputTokens.length > 0 && !currentInput.endsWith(" ")) {
+            suggestionTokenIndex = currentInputTokens.length - 1;
+        }
+        const shouldCapitalize = (suggestionTokenIndex <= 1);
+
+        /**
+         * Capitalizes the first letter of a given string.
+         * @param {string} string - Input string to format.
+         * @returns {string} Formatted string with first letter capitalized.
+         */
+        const capitalizeFirstLetter = (str) => {
+            if (!str) return str;
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        };
+
+        const isInitialCommandStage = currentInputTokens.length === 0 || (currentInputTokens.length === 1 && !currentInput.endsWith(" "));
+
+        const commandIcons = AxiCmdConfig.COMMAND_ICONS;
+
+
+
+
+        const validItems = items.filter(item => {
+            if (!item) return false;
+            if (typeof item === "string") {
+                return (item !== "Loading options..." && !item.startsWith("Fetching") && !item.startsWith("Searching") && item.trim() !== "");
+            }
+            if (typeof item === "object") {
+                return (typeof item.displaydata === "string" && item.displaydata.trim() !== "");
+            }
+            return false;
+        });
+
+        // console.log(`Valid Items: ${validItems.length}`);
+
+        if (items.length > 0 && isSystemMessage(items[0])) {
+            activeIndex = -1;
+        } else {
+            const currentTokens = getTokens(input.value.trim());
+            const isUserTyping = currentTokens.length > 1 && !input.value.endsWith(" ");
+            // const hasGoOption = validItems.some(item => typeof item === 'object' && item.name === "GO_ACTION");
+            // const hasSaveOption = validItems.some(item => typeof item === 'object' && item.name === "Save_ACTION");
+
+            // if (hasGoOption && hasSaveOption) {
+            //     activeIndex = 2; 
+            // } else if (hasGoOption || hasSaveOption) {
+            //     activeIndex = 1; 
+            // } else {
+            //     activeIndex = 0; 
+            // }
+            // activeIndex = 0;
+            //           if (isUserTyping) {
+            //     const firstNonActionIndex = validItems.findIndex(
+
+            if (isUserTyping) {
+                const lastToken = cleanString(
+                    currentTokens[currentTokens.length - 1]
+                ).toLowerCase();
+
+                const matchedIndex = validItems.findIndex(item => {
+                    const text =
+                        typeof item === "string"
+                            ? item.toLowerCase()
+                            : (item.displaydata || item.name || "").toLowerCase();
+
+                    return text.startsWith(lastToken);
+                });
+
+                activeIndex = matchedIndex !== -1 ? matchedIndex : 0;
+            } else {
+                activeIndex = 0;
+            }
+
+        }
+
+        const metadataParams = getStructParam();
+        const structKey = "axi_structmetalist_" + metadataParams.toLowerCase();
+        const isCmdsLoading = isCommandsLoading || !commands;
+        const isStructsLoading = activeFetches.has(structKey) || !axDatasourceObj[structKey];
+
+        const isAnyLoadingItem = items.some(item => {
+            const text = typeof item === "string" ? item : (item?.displaydata || "");
+            return typeof text === "string" && (text.startsWith("Loading") || text.startsWith("Searching") || text.startsWith("Fetching"));
+        });
+        const isAnyFetchActive = activeFetches.size > 0 || isCmdsLoading || isStructsLoading || isAnyLoadingItem || isSearchPending();
+
+        const showInitialWrapper = isInitialCommandStage && (validItems.length > 0 || isCmdsLoading || isStructsLoading) && !isSystemMessage(validItems[0]);
+
+        if (showInitialWrapper) {
+            list.classList.add("My-Command-Wrapper");
+            if (favouritesCard) favouritesCard.style.display = "none";
+            if (commandHeader) commandHeader.style.display = "flex";
+        } else {
+            list.classList.remove("My-Command-Wrapper");
+            if (favouritesCard) favouritesCard.style.display = "none";
+            if (commandHeader) commandHeader.style.display = "none";
+        }
+
+        if (validItems.length === 0 && isAnyFetchActive) {
+            if (!showInitialWrapper) {
+                list.innerHTML = "";
+                // old code
+                // const li = document.createElement("li");
+                // li.className = "axi-suggestion-loading d-flex align-items-center justify-content-center py-3 px-4 text-muted gap-2";
+                // li.style.fontSize = "13px";
+                // li.style.textAlign = "center";
+                // const loadingText = items.find(it => typeof it === "string" && (it.startsWith("Searching") || it.startsWith("Fetching"))) || (isSearchPending() ? "Searching..." : "Loading options...");
+                // li.innerHTML = `
+                //     <span class="spinner-border h-15px w-15px align-middle text-gray-400" role="status" aria-hidden="true" style="border-width: 2px; margin-inline-end: 6px;"></span>
+                //     <span><bdi>${loadingText}</bdi></span>
+                // `;
+                // list.appendChild(li);
+                // new code: same row, built by the shared helper (also used by the configure product / plugin / changerequest save)
+                const loadingText = items.find(it => typeof it === "string" && (it.startsWith("Searching") || it.startsWith("Fetching"))) || (isSearchPending() ? "Searching..." : "Loading options...");
+                list.appendChild(createSuggestionLoadingRow(loadingText));
+                list.style.display = "block";
+                return;
+            }
+        }
+
+        const showNoData = validItems.length === 0 && !isAnyFetchActive;
+        if (showNoData) {
+            const li = document.createElement("li");
+            li.textContent = "No Data";
+            li.className = "no-data-axi-suggestion";
+            li.style.color = "#FF0000";
+            li.style.textAlign = "start";
+            li.style.padding = "12px";
+
+            list.appendChild(li);
+            list.style.display = "block";
+            return;
+        }
+
+        /**
+         * Creates an HTML <li> element representing a single suggestion item.
+         * @param {object} item - Suggestion data object.
+         * @param {number} i - Item index in suggestion list.
+         * @returns {HTMLElement} Created list item element.
+         */
+        function createSuggestionLi(item, i) {
+            const li = document.createElement("li");
+            const text = typeof item === "string" ? item : item.displaydata;
+            li.className = "axi-suggestion";
+
+            const displayText = (shouldCapitalize && !(typeof item === 'object' && item.isExecutable))
+                ? capitalizeFirstLetter(text)
+                : text;
+
+            const isCreateNewItem = (typeof item === 'string' && item.toLowerCase() === 'create new') || (typeof item === 'object' && (item.isCreateNew || item?.name?.toLowerCase() === 'create new'));
+
+            if (isSystemMessage(item)) {
+                li.classList.add("axi-suggestion-system-message");
+                li.style.cursor = "default";
+                li.style.color = "#6c757d";
+                li.style.fontStyle = "italic";
+                setStatusText(li, displayText);
+            } else if (isCreateNewItem) {
+                li.classList.add("axi-create-new-item");
+                li.textContent = displayText;
+            } else if (typeof item === 'object' && item.isExecutable) {
+                li.style.fontWeight = "bold";
+                li.style.color = "#22c55e";
+                li.style.borderBottom = "1px solid #eee";
+                li.textContent = displayText;
+
+            } else if (isInitialCommandStage && getCommandConfig(text)) {
+                const iconName = (commandIcons && commandIcons[text.toLowerCase()]) ? commandIcons[text.toLowerCase()] : "info";
+                li.setAttribute("data-cmd", text.toLowerCase());
+
+                li.innerHTML = `
+               
+                <div class="d-flex align-items-center">
+                        <div class="symbol symbol-25px mainIcon">
+                            <div class="symbol-label cardbg-inverse-1">
+                                <div class="items-icon">
+                                    <span class="material-icons material-icons-style material-icons-2">${iconName}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <span class="command-text">${displayText}</span>
+                    </div>`;
+            } else {
+                li.textContent = displayText;
+            }
+
+            if (i === activeIndex) {
+                li.classList.add("active");
+            }
+
+            // No per-row listener: with thousands of rows that is thousands of closures. One delegated
+            // "mousedown" handler on the list (see setupEventListeners) reads this index instead.
+            // i is already the index of the item inside validItems.
+            li.dataset.vi = String(i);
+
+            return li;
+        }
+
+        const fragment = document.createDocumentFragment();
+
+        if (isInitialCommandStage && (validItems.length > 0 || isCmdsLoading || isStructsLoading) && !isSystemMessage(validItems[0])) {
+            const verbs = [];
+            const structures = [];
+            validItems.forEach((item, i) => {
+                const text = typeof item === "string" ? item : item.displaydata;
+                if (getCommandConfig(text)) {
+                    verbs.push({ item, index: i });
+                } else {
+                    structures.push({ item, index: i });
+                }
+            });
+
+            /**
+             * Creates and returns a DOM loading indicator element with custom text.
+             * @param {string} text - Display text for loading indicator.
+             * @returns {HTMLElement} Loading element.
+             */
+            const createLoadingElement = (text) => {
+                const div = document.createElement("div");
+                div.className = "d-flex align-items-center justify-content-center py-2 px-5 text-muted gap-2";
+                div.style.fontSize = "13px";
+                div.innerHTML = `
+                    <span class="spinner-border h-15px w-15px align-middle text-gray-400" role="status" aria-hidden="true" style="border-width: 2px; margin-inline-end: 6px;"></span>
+                    <span><bdi>${text}</bdi></span>
+                `;
+                return div;
+            };
+
+            if (verbs.length > 0 || isCmdsLoading) {
+                const gridContainer = document.createElement("div");
+                gridContainer.className = "axi-verbs-grid-container";
+
+                const header = document.createElement("div");
+                header.className = "axi-grid-header";
+                header.textContent = "Commands";
+                gridContainer.appendChild(header);
+
+                if (isCmdsLoading) {
+                    gridContainer.appendChild(createLoadingElement("Loading commands..."));
+                } else {
+                    const grid = document.createElement("div");
+                    grid.className = "axi-verbs-grid";
+
+                    verbs.forEach(({ item, index }) => {
+                        const li = createSuggestionLi(item, index);
+                        grid.appendChild(li);
+                    });
+
+                    gridContainer.appendChild(grid);
+                }
+
+                fragment.appendChild(gridContainer);
+            }
+
+            if (structures.length > 0 || isStructsLoading) {
+                const listContainer = document.createElement("div");
+                listContainer.className = "axi-structures-list-container";
+
+                const header = document.createElement("div");
+                header.className = "axi-grid-header";
+                header.textContent = "Structures";
+                listContainer.appendChild(header);
+
+                if (isStructsLoading) {
+                    listContainer.appendChild(createLoadingElement("Loading structures..."));
+                } else {
+                    // Never build more than MAX_RENDERED_ITEMS rows; the user narrows the list by typing
+                    structures.slice(0, MAX_RENDERED_ITEMS).forEach(({ item, index }) => {
+                        const li = createSuggestionLi(item, index);
+                        listContainer.appendChild(li);
+                    });
+                    // "Scroll down for more..." / "Loading more..." for the paged structure list
+                    const structFooter = buildLoadMoreFooter(structures.length);
+                    if (structFooter) listContainer.appendChild(structFooter);
+                }
+
+                fragment.appendChild(listContainer);
+            }
+        } else {
+            // Render cap: at most MAX_RENDERED_ITEMS <li> are built, however long the list is
+            const renderCount = Math.min(validItems.length, MAX_RENDERED_ITEMS);
+            for (let i = 0; i < renderCount; i++) {
+                fragment.appendChild(createSuggestionLi(validItems[i], i));
+            }
+
+            // Footer for paged sources: spinner while the next page loads, hint when more can be loaded
+            const footer = buildLoadMoreFooter(validItems.length);
+            if (footer) fragment.appendChild(footer);
+        }
+
+        list.appendChild(fragment);
+
+        // After a "load more" re-render, keep the user where they were instead of jumping to the top
+        // A re-render of the same list (same paged source and search term) keeps the scroll position; a
+        // different list (the user typed something else, another command) starts at the top as before.
+        const renderedListKey = activePagedContext ? activePagedContext.listKey : null;
+        const sameListAsBefore = renderedListKey !== null && renderedListKey === lastRenderedListKey;
+        if (pendingScrollRestore !== null) {
+            list.scrollTop = pendingScrollRestore.top;
+            list.scrollLeft = pendingScrollRestore.left;
+            pendingScrollRestore = null;
+        } else if (sameListAsBefore) {
+            list.scrollTop = scrollBeforeRender.top;
+            list.scrollLeft = scrollBeforeRender.left;
+        }
+        lastRenderedListKey = renderedListKey;
+
+        if (list.classList.contains("axi-grid-layout")) {
+            list.style.display = "flex";
+        } else {
+            list.style.display = "block";
+
+
+        }
+
+        if (megaDropdown) {
+            megaDropdown.style.display = "flex";
+        } else {
+            list.style.display = "block";
+        }
+
+        // Load the next page as soon as the footer row scrolls into view
+        if (loadMoreObserver) { loadMoreObserver.disconnect(); loadMoreObserver = null; }
+        const footerRow = list.querySelector(".axi-load-more");
+        if (footerRow && typeof IntersectionObserver !== "undefined") {
+            loadMoreObserver = new IntersectionObserver(entries => {
+                if (entries.some(en => en.isIntersecting)) loadNextPage();
+            }, { threshold: 0.1 });
+            loadMoreObserver.observe(footerRow);
+        }
+
+
+
+    }
+
+    /**
+     * Hides and clears the suggestion dropdown menu.
+     * @returns {void}
+     */
+    function hide() {
+        // new code: keep the "Saving ... repository..." loader on screen until the save ends (endCommandSettingSaving hides it)
+        if (commandSettingSaving) return;
+        if (megaDropdown) {
+            megaDropdown.style.setProperty("display", "none", "important");
+            megaDropdown.classList.remove("show", "menu-dropdown");
+        }
+        if (list) {
+            list.style.setProperty("display", "none", "important");
+            list.classList.remove("My-Command-Wrapper");
+            list.innerHTML = "";
+        }
+
+        if (favouritesCard) {
+            favouritesCard.style.setProperty("display", "none", "important");
+        }
+
+        items = [];
+        activeIndex = -1;
+        suppressFocusSuggestions = true;
+        try {
+            if (input && document.activeElement === input) {
+                input.blur();
+            }
+        } catch (e) { }
+    }
+
+    /**
+     * Resolves entity object name from selected dropdown item value.
+     * @param {string} selectedValue - Selected value string.
+     * @returns {string} Resolved entity name.
+     */
+    function GetObjectName(selectedValue) {
+        const foundObj = filteredObjects.find(item => item.displaydata === selectedValue);
+        if (foundObj) {
+            return foundObj.name || foundObj.sqlname || foundObj.displaydata;
+        }
+        return selectedValue;
+    }
+
+    /**
+     * Applies selected suggestion item into command line input at active token position.
+     * @param {number} index - Index of suggestion item to apply.
+     * @returns {void}
+     */
+    function apply(index) {
+        if (document.querySelector(".AXI-Sec")?.classList.contains("axi-tour-active")) {
+            return;
+        }
+
+        const validItems = items.filter(item => {
+            if (!item) return false;
+            if (typeof item === "string") {
+                return (!item.startsWith("Loading") && !item.startsWith("Searching") && !item.startsWith("Fetching") && !item.startsWith("Type at least") && !item.startsWith("No matching") && item !== "No Data" && item.trim() !== "");
+            }
+            if (typeof item === "object") {
+                const text = item.displaydata || item.name || "";
+                return (typeof text === "string" && !text.startsWith("Loading") && !text.startsWith("Searching") && !text.startsWith("Fetching") && !text.startsWith("Type at least") && !text.startsWith("No matching") && text !== "No Data" && text.trim() !== "");
+            }
+            return false;
+        });
+
+        const targetList = (validItems && validItems.length > 0 && index >= 0 && index < validItems.length) ? validItems : items;
+        const selectedItem = targetList[index];
+
+        if (!selectedItem || isSystemMessage(selectedItem)) return;
+
+
+        const currentInput = input.value;
+        let tokens = getTokens(currentInput, false);
+        // "test save" typed without quotes for "Test Save Normalized": the picked name replaces ALL the words typed
+        if (isUnquotedStructPhrase(tokens)) tokens = [tokens.map(t => cleanString(t)).join(" ")];
+
+        let checkTokens = [...tokens];
+        if (checkTokens.length >= 2) {
+            const first = cleanString(checkTokens[0]).toLowerCase();
+            const second = cleanString(checkTokens[1]).toLowerCase();
+            if (isTargetEntity(first) && isValidActionForTarget(first, second)) {
+                const temp = checkTokens[0];
+                checkTokens[0] = checkTokens[1];
+                checkTokens[1] = temp;
+            }
+        }
+
+        const saveGroupKeyCheck = cleanString(checkTokens[0]);
+        const saveCommandConfig = getCommandConfig(saveGroupKeyCheck, checkTokens);
+
+        if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "GO_ACTION") {
+            // console.log("Action item selected. Executing command...");
+            const rawInput = input.value.trim();
+            const rawTokens = getTokens(rawInput, false);
+            const firstToken = rawTokens.length > 0 ? cleanString(rawTokens[0]).toLowerCase() : "";
+            let shouldRestoreInput = false;
+            if (rawTokens.length === 1 && firstToken && isTargetEntity(firstToken)) {
+                const entityObj = getTargetEntityObj(firstToken);
+                const stype = entityObj ? (entityObj.stype || entityObj.STYPE || "").toLowerCase() : "";
+                if (["i", "iview", "ads", "page", "p"].includes(stype) || isInboxStructure(entityObj)) {
+                    shouldRestoreInput = true;
+                }
+                input.value = "view " + rawInput + " ";
+            }
+            hide();
+            isProgrammaticExecution = true;
+            try {
+                executeCommandsV2();
+            } finally {
+                isProgrammaticExecution = false;
+            }
+            if (shouldRestoreInput) {
+                input.value = rawInput + " ";
+            }
+            return;
+        }
+        // new code: Save on configure product / plugin / changerequest runs the command (saves the account / repo setting)
+        else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Save_ACTION"
+            && saveGroupKeyCheck.toLowerCase() === "configure" && isCommandSettingOption(checkTokens[1])) {
+            hide();
+            isProgrammaticExecution = true;
+            try {
+                executeCommandsV2();
+            } finally {
+                isProgrammaticExecution = false;
+            }
+            return;
+        }
+        else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Save_ACTION" && saveGroupKeyCheck.toLowerCase() === "create") {
+            // console.log("Save Option Selected...Submitting Data...");
+            hide();
+            AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", true, checkTokens, saveCommandConfig);
+            resetSetCommandState();
+            return;
+        }
+        else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Save_ACTION" && saveGroupKeyCheck.toLowerCase() === "edit") {
+            // console.log("Save Option Selected...Submitting Data...");
+            hide();
+            AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", false, checkTokens, saveCommandConfig);
+            resetSetCommandState();
+            return;
+        }
+        else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Pop_ACTION") {
+            // console.log("Pop Option Selected......");
+            try {
+                let executeTokens = tokens;
+                const rawInput = input.value.trim();
+                const rawTokens = getTokens(rawInput, false);
+                const firstToken = rawTokens.length > 0 ? cleanString(rawTokens[0]).toLowerCase() : "";
+                let shouldRestoreInput = false;
+                if (rawTokens.length === 1 && firstToken && isTargetEntity(firstToken)) {
+                    const entityObj = getTargetEntityObj(firstToken);
+                    const stype = entityObj ? (entityObj.stype || entityObj.STYPE || "").toLowerCase() : "";
+                    if (["i", "iview", "ads", "page", "p"].includes(stype)) {
+                        shouldRestoreInput = true;
+                    }
+                    input.value = "view " + rawInput + " ";
+                    executeTokens = getTokens(input.value, false);
+                }
+                if (executeTokens.length >= 2) {
+                    hide();
+                    popUpOption = true;
+                    isProgrammaticExecution = true;
+                    try {
+                        executeCommandsV2();
+                    } finally {
+                        isProgrammaticExecution = false;
+                    }
+                    if (shouldRestoreInput) {
+                        input.value = rawInput + " ";
+                    }
+                    return;
+                }
+                //else return;
+            }
+            catch (err) {
+                popUpOption = false;
+
+                // console.log("Error in Popup:", err);
+
+                showToast("Something went wrong. Please try again later");
+
+                return;
+            }
+
+
+        }
+
+        const endsWithSpace = currentInput.endsWith(" ");
+        const lastTokenRaw = tokens[tokens.length - 1];
+
+        const isUnclosedString = lastTokenRaw && lastTokenRaw.startsWith('"') && (!lastTokenRaw.endsWith('"') || lastTokenRaw === '"');
+
+
+        if (endsWithSpace && !isUnclosedString) {
+            tokens.push("");
+        }
+
+        let targetIndex = tokens.length - 1;
+        if (targetIndex < 0) {
+            targetIndex = 0;
+            tokens.push("");
+        }
+
+        let suggestion = typeof selectedItem === "string" ? selectedItem : (selectedItem.displaydata || selectedItem.name || "");
+        let displayName = suggestion;
+        let realValue = "";
+        let realType = "";
+        // const currentToken = tokens[targetIndex - 1]; 
+
+        // if (currentToken?.toLowerCase() === "with" && tokens.length === 3) {
+        //     isEditing = true; 
+
+        // }
+
+        const isViewCommand = checkTokens[0]?.toLowerCase() === "view";
+
+
+
+
+        let isAdsValue = false;
+
+        const groupKey = cleanString(checkTokens[0]);
+        const commandConfig = getCommandConfig(groupKey, checkTokens);
+        /**
+         * ==== Robust Type checking for View command ===
+         */
+        if (isViewCommand && commands) {
+
+
+            if (commandConfig && commandConfig.prompts && commandConfig.prompts[0]) {
+                const viewSource = commandConfig.prompts[0].promptSource;
+                const viewValues = commandConfig.prompts[0].promptValues;
+                const firstToken = cleanString(checkTokens[1] || "");
+
+                // const detectedType = getType(viewSource.toLowerCase(), firstToken, viewValues, tokens, commandConfig);
+                const resolved = tryResolveToken(
+                    1,
+                    firstToken,
+                    commandConfig,
+                    false
+                );
+
+                const detectedType = getType(
+                    viewSource.toLowerCase(),
+                    resolved,
+                    viewValues,
+                    checkTokens,
+                    commandConfig
+                );
+
+                if (detectedType === "ads" && targetIndex >= 3 && targetIndex % 2 !== 0) {
+                    isAdsValue = true;
+                }
+            }
+        }
+
+        // Fix: parenthesis bug 
+        // If it is a field value we will ignore the parenthesis omission 
+        let isValueToken = false;
+        const commandGroup = groupKey?.toLowerCase();
+
+        if (commandGroup === "edit") {
+            if (targetIndex === 3) {
+                isValueToken = true;
+            } else {
+                const withIndex = checkTokens.findIndex(t => cleanString(t).toLowerCase() === "with");
+
+                if (withIndex !== -1 && targetIndex > withIndex && (targetIndex - withIndex) % 2 === 0) {
+                    isValueToken = true;
+                }
+            }
+        } else if (commandGroup === "view") {
+            if (targetIndex === 3) isValueToken = true;
+        }
+
+
+
+        // Get Real Value logic
+        let foundObj = null;
+        if (filteredObjects && index >= 0 && index < filteredObjects.length && typeof filteredObjects[index] !== "string") {
+            foundObj = filteredObjects[index];
+        } else if (selectedItem && typeof selectedItem === "object") {
+            foundObj = selectedItem;
+        }
+        if (!foundObj && filteredObjects) {
+            foundObj = filteredObjects.find(itemObj => {
+                const objText = typeof itemObj === "string" ? itemObj : (itemObj?.displaydata || itemObj?.name || "");
+                return objText && suggestion && objText.toLowerCase() === suggestion.toLowerCase();
+            });
+        }
+
+        const checkEditObj = (checkTokens[0]?.toLowerCase() === "edit" && checkTokens[1]) ? getTargetEntityObj(checkTokens[1], "edit") : null;
+        if (checkEditObj && (checkEditObj.keyfieldforedit === "F" || checkEditObj.keyfieldforedit === false)) {
+            const suggText = (typeof selectedItem === "string" ? selectedItem : (selectedItem?.displaydata || selectedItem?.name || "")).toLowerCase().trim();
+            const hasWithInTokens = checkTokens.some(t => cleanString(t).toLowerCase() === "with") || currentInput.toLowerCase().includes(" with");
+            if (targetIndex === 1 || suggText === "with" || hasWithInTokens) {
+                showToast("Key field is not configured for this form. Please configure the key field using the Configure Key Field command.", 3000, false);
+                hide();
+                return;
+            }
+        }
+
+        if (foundObj && isViewCommand) {
+            const caption = foundObj?.caption ? foundObj?.caption : foundObj?.displaydata;
+
+            const type = getType(commandConfig?.prompts?.[0]?.promptSource.toLowerCase(), caption, commandConfig?.prompts?.[0]?.promptValues, checkTokens, commandConfig);
+
+            if ((!foundObj?.name || foundObj?.name === null || foundObj?.name === undefined) && type?.toLowerCase() === "page") {
+                showToast("Redirection link is not available for this page.");
+                // console.error("No Redirection link!");
+                return;
+            }
+        }
+
+
+        realValue = foundObj ? (foundObj.name || foundObj.sqlname || foundObj.displaydata) : suggestion;
+        realType = foundObj?.stype ?? "";
+
+        // A record row (isfield "f") is always a value, also in "edit <form> <record>" where it sits at index 2.
+        // Without this "Test (issue)" was cut to "Test" below, and the next suggestions then read that word as a
+        // field name. The list can hold plain strings (the row objects are in filteredObjects), so the row is
+        // looked up by the shown text as well as through foundObj / selectedItem.
+        const shownText = String(suggestion).toLowerCase();
+        const pickedRow = [foundObj, selectedItem, ...(Array.isArray(filteredObjects) ? filteredObjects : [])]
+            .find(o => o && typeof o === "object" && String(o.displaydata || "").toLowerCase() === shownText);
+        if (pickedRow && String(pickedRow.isfield ?? "").toLowerCase() === "f") {
+            isValueToken = true;
+        }
+
+
+
+
+
+        // A structure whose caption another one of its type shares keeps "(transid)" in the input, so the
+        // typed text, history and favourites still say which one it is (#289)
+        const isStructRow = foundObj && typeof foundObj === "object" && foundObj.stype && foundObj.name
+            && foundObj.caption && foundObj.isfield === undefined;
+        const keepStructName = isStructRow
+            && getTargetEntityMatches(foundObj.caption).filter(d => areTypesMatching(d.stype || d.STYPE, foundObj.stype)).length > 1;
+
+        // old code
+        // if (suggestion.includes("(") && suggestion.includes(")") && !isAdsValue && !isValueToken && !keepStructName) {
+        // new code: install directory and version names keep their brackets
+        if (suggestion.includes("(") && suggestion.includes(")") && !isAdsValue && !isValueToken && !keepStructName && commandGroup !== "install") {
+            const lastBracketIndex = suggestion.lastIndexOf("(");
+
+
+            const text = suggestion.substring(0, lastBracketIndex)
+
+                .trim();
+
+
+            displayName = text.replace(/-$/, "");
+
+
+
+
+
+        }
+
+        // old code
+        // if (displayName.includes("[") && displayName.includes("]") && !isAdsValue) {
+        // new code: install directory and version names keep their brackets
+        if (displayName.includes("[") && displayName.includes("]") && !isAdsValue && commandGroup !== "install") {
+            const lastBracketIndex = suggestion.lastIndexOf("[");
+            const text = suggestion.substring(0, lastBracketIndex).trim();
+
+            displayName = text.replace(/\s*\[[^\]]*\]$/, "").trim();
+        }
+
+        resolvedParams[targetIndex] = realValue;
+        resolvedParamType[targetIndex] = realType;
+
+        // Keep a picked record findable for later lookups, but only in the one list it was picked from (the list on
+        // screen). Adding it to every record list put a record of one form into the suggestions of other forms (#270).
+        // The copy is marked __fromSearch like search hits merged by loadList, so the plain list does not show it.
+        if (typeof selectedItem === "object" && selectedItem && activePagedContext
+            && String(activePagedContext.source || "").toLowerCase().includes("getstructsdata")
+            && String(selectedItem.isfield ?? "").toLowerCase() !== "t") {
+            const recUid = selectedItem.transrecordid ?? selectedItem.id ?? selectedItem.name;
+            const listParam = activePagedContext.param;
+            const baseArr = axDatasourceObj[(listParam ? `${activePagedContext.source}_${listParam}` : activePagedContext.source).toLowerCase()];
+            if (recUid !== undefined && recUid !== null && Array.isArray(baseArr)
+                && !baseArr.some(x => (x.transrecordid ?? x.id ?? x.name) == recUid)) {
+                baseArr.push(Object.assign({}, selectedItem, { __fromSearch: true }));
+            }
+        }
+
+        displayName = displayName.replace(/[\r\n]+/g, " ").trim();
+
+        if (["create", "view", "edit", "source"].includes(displayName.toLowerCase())) {
+            displayName = displayName.charAt(0).toUpperCase() + displayName.slice(1).toLowerCase();
+        }
+
+        // Auto-Quote if necessary
+        if (displayName.includes(" ")) {
+            displayName = `"${displayName}"`;
+        }
+
+        const originalToken = tokens[targetIndex];
+        if (originalToken && originalToken.includes(",")) {
+            const parts = originalToken.split(",");
+            parts[parts.length - 1] = displayName;
+            tokens[targetIndex] = parts.join(",");
+        } else {
+            tokens[targetIndex] = displayName;
+        }
+
+        input.value = tokens.join(" ") + " ";
+
+        lastTypedTokens = [...tokens];
+        handleInput();
+
+        input.focus();
+    }
+
+
+
+    // new code: Arabic text of the hint shown in the command bar. Keys are the prompt labels in lower case (prompt
+    // column of axi_command_prompts and the labels passed in code). Only the hint is translated: command words and
+    // option values stay English, because they are what the user types and the parser reads.
+    const AXI_HINT_TEXT_AR = {
+        "next": "التالي",
+        "ready to run": "جاهز للتشغيل",
+        "loading": "جارٍ التحميل",
+        "value": "القيمة",
+        "tstruct name": "اسم النموذج",
+        "search value": "قيمة البحث",
+        "key field": "الحقل الرئيسي",
+        "object name": "اسم الكائن",
+        "object type": "نوع الكائن",
+        "type": "النوع",
+        "name": "الاسم",
+        "with values": "مع القيم",
+        "field name": "اسم الحقل",
+        "fieldname": "اسم الحقل",
+        "fieldvalue": "قيمة الحقل",
+        "account name": "اسم الحساب",
+        "repo name": "اسم المستودع",
+        "directory": "المجلد",
+        "version": "الإصدار"
+    };
+
+    /**
+     * True when the shell runs in Arabic (right-to-left): Mainnew.aspx puts "btextDir-rtl" / dir="rtl" on the body.
+     * @returns {boolean} Arabic UI.
+     */
+    function isArabicUi() {
+        const body = document.body;
+        return !!body && (body.classList.contains("btextDir-rtl") || (body.getAttribute("dir") || "").toLowerCase() === "rtl");
+    }
+
+    /**
+     * Hint text in the UI language: the Arabic text for a known label in Arabic mode, otherwise the label unchanged
+     * (custom prompt labels from the Config page have no translation and are shown as entered).
+     * @param {string} text - English label.
+     * @returns {string} Text to show.
+     */
+    function hintText(text) {
+        const label = String(text);
+        if (!isArabicUi()) return label;
+        return AXI_HINT_TEXT_AR[label.trim().toLowerCase()] || label;
+    }
+
+    /**
+     * Updates ghost/hint text displayed in the search input based on prompt schema.
+     * @param {object} prompt - Active prompt definition.
+     * @returns {void}
+     */
+    function updateDynamicHintFromPrompt(prompt) {
+        // new code: the hint reads right to left in Arabic mode (the input itself stays left to right for English commands)
+        const arabic = isArabicUi();
+        hintDiv.dir = arabic ? "rtl" : "";
+
+        if (prompt) {
+            // old code
+            // let label = prompt.prompt || "value";
+            // new code: known labels are translated in Arabic mode
+            let label = hintText(prompt.prompt || "value");
+            if (prompt.promptValues && !prompt.prompt) {
+                // label = prompt.promptValues.split(',').join(' / ');
+                label = prompt.promptValues.split(',').slice(0, 3);
+            }
+            // old code
+            // hintDiv.textContent = `Next: <${label}>`;
+            // new code
+            hintDiv.textContent = `${hintText("Next")}: <${label}>`;
+            hintDiv.style.color = "#f59e0b";
+        } else {
+            // old code: padding-right and the English text were fixed
+            // hintDiv.innerHTML = `
+            // <span style="display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; padding-right: 12px;">
+            //     <svg ...><polyline points="20 6 9 17 4 12"></polyline></svg>
+            //     Ready to Run
+            // </span>`;
+            // new code: padding on the inline end (right in English, left in Arabic) and the text in the UI language
+            hintDiv.innerHTML = `
+    <span style="display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; padding-inline-end: 12px;">
+        <svg xmlns="http://www.w3.org/2000/svg"
+             width="16" height="16"
+             viewBox="0 0 24 24"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="2"
+             stroke-linecap="round"
+             stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <span class="axi-hint-ready"></span>
+    </span>
+`;
+            hintDiv.querySelector(".axi-hint-ready").textContent = hintText("Ready to Run");
+
+            hintDiv.style.color = "#22c55e";
+
+
+        }
+    }
+
+
+
+
+
+
+
+
+
+    // ---- Direct call to the ARM AxList API --------------------------------------------------------------------
+    // The palette calls {armUrl}/AxList/api/v1/AxList itself, with the ARM session id and bearer token that the
+    // Axpert session keeps in its global variables (ARM_SessionId / ARM_Token, read through
+    // axinterface.aspx/GetGlobalVar). That saves the hop through AxPEG.aspx. Anything that goes wrong (no URL, no
+    // token, 401 because the token expired, network/CORS error, a non-OK answer) falls back to the old route
+    // through window.GetDataFromAxList, which renews the ARM session on the server.
+    let armAuthCache = null;            // { sessionId, token }
+    let lastDirectFailToast = 0;        // when the "could not reach the data service" toast was last shown
+    let armDirectDisabledUntil = 0;    // after a network/CORS failure the direct route rests for a while
+
+    /**
+     * The status text of a response, for the session check: only the message fields of the answer, never its rows.
+     * An AxList answer has no top-level message, and searching its whole JSON also searched the record data, so a
+     * form or record containing "session expired" sent the user to the session-expired page (#276).
+     * @param {*} res - Response object, JSON string, or error text.
+     * @param {number} [depth=0] - Nesting level, so a malformed answer cannot recurse for long.
+     * @returns {string} The message text found (may be empty).
+     */
+    function sessionMessageOf(res, depth = 0) {
+        if (res === null || res === undefined || depth > 2) return "";
+        if (typeof res === "string") {
+            const s = res.trim();
+            if (s.startsWith("{")) {
+                try { return sessionMessageOf(JSON.parse(s), depth + 1); } catch (e) { /* not JSON: plain text below */ }
+            }
+            // Plain error text is short; a long string is data, not a status message
+            return s.length <= 500 ? s : "";
+        }
+        if (typeof res !== "object") return "";
+        const parts = [res.message, res.Message, res.error, res.error && res.error.message, res.result && res.result.message, res.result && res.result.Message];
+        if (typeof res.d === "string") parts.push(sessionMessageOf(res.d, depth + 1));
+        return parts.filter(p => typeof p === "string").join(" ");
+    }
+
+    /**
+     * True when an AxList answer says the ARM / Axpert session is gone, e.g.
+     * {"result":{"message":"SessionId is not valid","success":false}}. Only the message fields are read (see
+     * sessionMessageOf), never the record data.
+     * @param {*} res - Response object, JSON string or error text.
+     * @returns {boolean}
+     */
+    function isSessionInvalidResponse(res) {
+        if (!res) return false;
+        const text = sessionMessageOf(res).toLowerCase();
+        return text.includes("sessionid is not valid") ||
+            text.includes("session is not valid") ||
+            text.includes("session expired") ||
+            text.includes("sessionid is invalid") ||
+            text.includes("session is invalid");
+    }
+
+    /**
+     * Sends the whole application to the session-expired page (aspx/sess.aspx) and stops the caller.
+     * @throws {Error} Always, with the message "SessionId is not valid" so callers do not carry on.
+     */
+    function redirectToSessionExpired() {
+        top.window.location.href = `${getAppBaseUrl()}/aspx/sess.aspx`;
+        throw new Error("SessionId is not valid");
+    }
+
+    /**
+     * Parses the session variables text returned by axinterface.aspx/GetGlobalVar. When a value holds a raw control
+     * character (tab, newline ...) the text is not valid JSON, so it is parsed again with those characters as spaces.
+     * @param {string} text - The "d" string of the GetGlobalVar answer.
+     * @returns {object} Parsed object ({ globalVars: [...] }), or {} when it cannot be read.
+     */
+    function parseGlobalVarsText(text) {
+        const raw = typeof text === "string" && text ? text : "{}";
+        try {
+            return JSON.parse(raw) || {};
+        } catch (e) {
+            try {
+                return JSON.parse(raw.replace(/[\u0000-\u001F]/g, " ")) || {};
+            } catch (e2) {
+                console.error("[AxiCMD] Session variables could not be read:", e2);
+                return {};
+            }
+        }
+    }
+
+    /**
+     * Reads the ARM session id and bearer token from the Axpert session global variables.
+     * @async
+     * @param {boolean} [force=false] - Ignore the cached pair and read it again.
+     * @returns {Promise<{sessionId: string, token: string}|null>} The pair, or null when not available.
+     */
+    async function getArmAuth(force = false) {
+        if (armAuthCache && !force) return armAuthCache;
+        try {
+            const res = await fetch(getAppBaseUrl() + "/aspx/axinterface.aspx/GetGlobalVar", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: "{}"
+            });
+            if (!res.ok) return null;
+            const outer = await res.json();
+            // old code
+            // const vars = JSON.parse(outer.d || "{}").globalVars || [];
+            // const read = key => {
+            //     const hit = vars.find(o => o && o[key] !== undefined);
+            //     return hit ? String(hit[key] || "") : "";
+            // };
+            // new code: a session value can hold a raw tab / newline (seen on Oracle schemas), which makes JSON.parse
+            // throw, so no ARM session was found and AxList was never called. Parse again with control characters
+            // turned into spaces, and match the variable name without case (Oracle returns names in upper case).
+            const vars = parseGlobalVarsText(outer.d).globalVars || [];
+            const read = key => {
+                const lower = key.toLowerCase();
+                for (const o of vars) {
+                    if (!o || typeof o !== "object") continue;
+                    const k = Object.keys(o).find(n => n.toLowerCase() === lower);
+                    if (k !== undefined) return String(o[k] || "");
+                }
+                return "";
+            };
+            const sessionId = read("ARM_SessionId");
+            const token = read("ARM_Token");
+            armAuthCache = (sessionId && token) ? { sessionId, token, read } : null;
+        } catch (e) {
+            armAuthCache = null;
+        }
+        return armAuthCache;
+    }
+
+    /**
+     * Sends a list request straight to the ARM AxList API.
+     * @async
+     * @param {object} data - Request in the AxPEG shape built by getList (adsNames, sqlParams, props ...).
+     * @returns {Promise<object|undefined>} AxList response, or undefined when the direct route could not be used.
+     */
+    async function callArmAxListDirect(data, signal) {
+        if (!AxiArmUrl || Date.now() < armDirectDisabledUntil) return undefined;
+        for (let attempt = 0; attempt < 2; attempt++) {
+            const auth = await getArmAuth(attempt > 0);
+            if (!auth) return undefined;
+            const p = data.props || {};
+            const body = {
+                ARMSessionId: auth.sessionId,
+                action: data.action || "view",
+                Project: getProjectName(),
+                ADSNames: data.adsNames,
+                trace: true,
+                refreshCache: !!data.refreshCache,
+                getallrecordscount: !!p.getallrecordscount,
+                CachePermissions: p.CachePermissions !== false,
+                pageno: p.pageno,
+                pagesize: p.pagesize,
+                keyfield: data.keyField || "",
+                keyvalue: data.keyValue || "",
+                select_columns: p.select_columns || [],
+                aggregations: p.aggregations || {},
+                groupby_columns: p.groupby_columns || [],
+                sorting: p.sorting || [],
+                filters: p.filters || [],
+                sqlparams: data.sqlParams || {}
+            };
+            try {
+                const res = await fetch(AxiArmUrl.replace(/\/+$/, "") + "/AxList/api/v1/AxList", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + auth.token },
+                    body: JSON.stringify(body),
+                    signal
+                });
+                if (res.status === 401 || res.status === 400) {
+                    // AxList answers a dead session with {"result":{"message":"SessionId is not valid"}}.
+                    // A fresh pair is tried once; if it is still refused the session is really gone.
+                    const text = await res.text().catch(() => "");
+                    if (isSessionInvalidResponse(text) && attempt > 0) redirectToSessionExpired();
+                    armAuthCache = null;        // token / session no longer valid: read a fresh pair and try once more
+                    continue;
+                }
+                const json = await res.json().catch(() => undefined);
+                if (isSessionInvalidResponse(json)) redirectToSessionExpired();
+                if (!res.ok) return undefined;
+                return json;
+            } catch (e) {
+                if (e && (e.message === "SessionId is not valid" || e.name === "AbortError")) throw e;
+                // Network error or blocked by CORS: do not try the direct route again for a few minutes
+                armDirectDisabledUntil = Date.now() + 5 * 60 * 1000;
+                return undefined;
+            }
+        }
+        return undefined;
+    }
+
+    /**
+     * Turns a raw database / ARM error from a data source call into a message an end user can act on.
+     * The raw text (SQL state, function signature, column names) is only written to the console.
+     * @param {string} rawError - Error text returned by the server.
+     * @param {string} [sourceName] - Name of the data source that failed (for the console only).
+     * @returns {string} Short user-friendly message.
+     */
+    function friendlyDataError(rawError, sourceName) {
+        const raw = String(rawError ?? "");
+        const lower = raw.toLowerCase();
+        console.error(`[AxiCMD] Data source "${sourceName || ""}" failed:`, raw);
+
+        // Postgres 42883 / Oracle PLS-00201, ORA-00904 ...: the AxiCMD database objects are missing or outdated
+        if (/42883|does not exist.*function|function .* does not exist|pls-00201|ora-00904|ora-06575|ora-00942/.test(lower) &&
+            /function|procedure|identifier|table or view|axi_/.test(lower)) {
+            return "AxiCMD could not load this list because its database setup is incomplete or outdated. Please ask your administrator to run the AxiCMD database scripts.";
+        }
+        // 42703 undefined column, 42P01 undefined table
+        if (/42703|42p01|column .* does not exist|relation .* does not exist/.test(lower)) {
+            return "This item has a field or table that AxiCMD could not read. Try a different field, or contact your administrator.";
+        }
+        if (/timeout|timed out/.test(lower)) {
+            return "The request took too long. Please try again.";
+        }
+        if (/exception while reading from stream|connection|network|unable to connect/.test(lower)) {
+            return "AxiCMD could not reach the database. Please try again in a moment.";
+        }
+        return "Something went wrong while loading this list. Please try again, or contact your administrator if it continues.";
+    }
+
+    /**
+     * Asynchronously fetches list data: straight from the ARM AxList API when possible, otherwise through the
+     * Axpert server (AxPEG.aspx GetDataFromAxList).
+     * @async
+     * @param {object} data - Request payload data.
+     * @returns {Promise<object>} Server response data.
+     */
+    async function getAxListAsync(data, signal) {
+        if (!axicmdenabled) return null;
+        // old code
+        // const direct = await callArmAxListDirect(data, signal);
+        // if (direct !== undefined) return direct;
+        // // The direct route could not be used and the server fallback is off: tell the user once in a while,
+        // // instead of silently showing empty lists.
+        // if (Date.now() - lastDirectFailToast > 30000) {
+        //     lastDirectFailToast = Date.now();
+        //     try { showToast("AxiCMD could not reach the data service. Please try again or contact your administrator."); } catch (e) { }
+        // }
+        // new code: lists are loaded through the Axpert server (AxInterface.js GetDataFromAxList -> AxPEG.aspx ->
+        // ARM /AxList) instead of calling ARM AxList directly. The server keeps the ARM session itself.
+        return getAxListViaServer(data, signal);
+        // The fallback through AxPEG.aspx/GetDataFromAxList is switched off on purpose (it must not be called).
+        // Kept commented out in case it is needed again; when the direct route fails, the caller gets null (empty list).
+        // return new Promise((resolve, reject) => {
+        //     window.GetDataFromAxList(
+        //         data,
+        //         res => resolve(res),
+        //         err => {
+        //             // The server route can also report the dead session through its error callback
+        //             try { if (isSessionInvalidResponse(err) || isSessionInvalidResponse(err?.responseText)) redirectToSessionExpired(); }
+        //             catch (e) { return reject(e); }
+        //             reject(err);
+        //         }
+        //     );
+        // });
+        // return null;
+
+    }
+
+    /**
+     * Fetches list data through GetDataFromAxList (Js/AxInterface.js), which posts to AxPEG.aspx/GetDataFromAxList.
+     * The request built by getList is mapped to the parameters that web method takes (adsNames, refreshCache,
+     * keyField, keyValue, sqlParams, props); paging goes in props.PageNo / props.PageSize.
+     * @async
+     * @param {object} data - Request in the shape built by getList (adsNames, sqlParams, props ...).
+     * @param {AbortSignal} [signal] - When aborted, the answer is dropped and an AbortError is thrown.
+     * @returns {Promise<object|string|null>} AxList response (JSON string or object), or null when it failed.
+     */
+    function getAxListViaServer(data, signal) {
+        const p = data.props || {};
+        const payload = {
+            adsNames: data.adsNames,
+            refreshCache: !!data.refreshCache,
+            keyField: data.keyField || "",
+            keyValue: data.keyValue || "",
+            sqlParams: data.sqlParams || {},
+            props: {
+                action: data.action || "view",
+                trace: true,
+                ADS: p.ADS !== false,
+                getallrecordscount: !!p.getallrecordscount,
+                CachePermissions: p.CachePermissions !== false,
+                PageNo: p.pageno !== undefined ? p.pageno : 1,
+                PageSize: p.pagesize !== undefined ? p.pagesize : getPageSize(),
+                keyfield: data.keyField || "",
+                keyvalue: data.keyValue || "",
+                select_columns: p.select_columns || [],
+                aggregations: p.aggregations || {},
+                groupby_columns: p.groupby_columns || [],
+                sorting: p.sorting || [],
+                filters: p.filters || []
+            }
+        };
+        const caller = (typeof window.GetDataFromAxList === "function") ? window
+            : (top.window && typeof top.window.GetDataFromAxList === "function") ? top.window : null;
+        if (!caller) {
+            console.error("[AxiCMD] GetDataFromAxList is not available (Js/AxInterface.js not loaded).");
+            return Promise.resolve(null);
+        }
+        const abortError = () => {
+            const e = new Error("Aborted");
+            e.name = "AbortError";
+            return e;
+        };
+        return new Promise((resolve, reject) => {
+            if (signal && signal.aborted) return reject(abortError());
+            caller.GetDataFromAxList(
+                payload,
+                res => {
+                    if (signal && signal.aborted) return reject(abortError());
+                    try {
+                        // AxPEG answers "SESSION_TIMEOUT" when the Axpert session is gone
+                        if (res === "SESSION_TIMEOUT" || isSessionInvalidResponse(res)) redirectToSessionExpired();
+                    } catch (e) { return reject(e); }
+                    resolve(res);
+                },
+                err => {
+                    if (signal && signal.aborted) return reject(abortError());
+                    // The server route can also report the dead session through its error callback
+                    try { if (isSessionInvalidResponse(err) || isSessionInvalidResponse(err && err.responseText)) redirectToSessionExpired(); }
+                    catch (e) { return reject(e); }
+                    console.error("[AxiCMD] GetDataFromAxList failed:", err);
+                    if (Date.now() - lastDirectFailToast > 30000) {
+                        lastDirectFailToast = Date.now();
+                        try { showToast("AxiCMD could not reach the data service. Please try again or contact your administrator."); } catch (e) { }
+                    }
+                    resolve(null);
+                }
+            );
+        });
+    }
+
+    // ---- View records: view filter applied by fn_axi_getstructs_obj (TKT-1387) -----------------------------------------
+    // NOTE: the text below describes the former Entity API route (GetEntityListPageLoadData), now commented out
+    // further down. The view filter is now applied by fn_axi_getstructs_obj from axvarcore (<transid>_filter).
+    // The generic AxList data source (axi_getstructsdata) knows nothing about the form's view filter (the
+    // "<transid>_filter" application variable, e.g. cityf_filter = "... and cityf1.createdby = :username"), so
+    // "view <form>" listed every record. The Entity page does not have that problem because it asks ARM for the
+    // records of a TransId, and ARM applies the filter itself. The palette does the same for the record rows of the
+    // "view" command. Field rows (isfield = 't') still come from axi_getstructsdata, page 1 only.
+
+    /**
+     * True when this axi_getstructsdata request is a "view" or "edit" record list of a tstruct that must come from
+     * the view filter (axvarcore <transid>_filter) that fn_axi_getstructs_obj applies.
+     * @param {string} axDatasourceName - Data source of the request.
+     * @param {object} sqlParams - param1..param10 as sent to the data source (cmd, user, role, transid, selectedfield,
+     *                             dimension, permission, keyfield, primarytable, globalvars).
+     * @returns {boolean}
+     */
+    function isViewRecordsRequest(axDatasourceName, sqlParams) {
+        if (String(axDatasourceName || "").toLowerCase() !== "axi_getstructsdata") return false;
+        const p = sqlParams || {};
+        const isNA = v => !v || String(v).toUpperCase() === "NA";
+        // "view" and "edit" list the same records, so both must honour the form's view filter
+        const cmd = String(p.param1 || "").toLowerCase();
+        if (!((cmd === "view" || cmd === "edit") && !isNA(p.param4) && !isNA(p.param8))) return false;
+
+        // Only tstructs have a view filter. iviews, pages and ADS are not filtered. The structure type
+        // (stype: t / i / p / ads) is read from the loaded structure list; when the form is not found there, AxList is used.
+        const transLower = String(p.param4).toLowerCase();
+        for (const key in axDatasourceObj) {
+            if (!key.startsWith("axi_structmetalist") || !Array.isArray(axDatasourceObj[key])) continue;
+            const row = axDatasourceObj[key].find(r => r && String(r.name || "").toLowerCase() === transLower && (r.stype || r.STYPE));
+            if (row) return String(row.stype || row.STYPE).toLowerCase() === "t";
+        }
+        return false;
+    }
+
+    // Kept for future use: the former Entity API route (GetEntityListPageLoadData). It is not called any more;
+    // fn_axi_getstructs_obj applies the view filter instead. Uncomment this block and the commented
+    // code in getList to switch back.
+    // /**
+    //  * Case-insensitive read of a column from an Entity list row.
+    //  * @param {object} row - One row of result.data.ListData.
+    //  * @param {string} name - Column (field) name.
+    //  * @returns {string} The value as text, or "" when missing.
+    //  */
+    // function entityRowValue(row, name) {
+    //     if (!row || !name) return "";
+    //     const lower = String(name).toLowerCase();
+    //     const hit = Object.keys(row).find(k => k.toLowerCase() === lower);
+    //     const v = hit === undefined ? "" : row[hit];
+    //     return (v === null || v === undefined) ? "" : String(v);
+    // }
+
+    // /**
+    //  * Fetches one page of records of a form from the ARM Entity API, the same call the Entity page makes, so ARM
+    //  * applies the form's view filter and the user's permissions. Rows are returned in the palette's list shape
+    //  * { displaydata, id, caption, isfield: 'f', transrecordid }.
+    //  * @async
+    //  * @param {object} sqlParams - param1..param10 of the axi_getstructsdata request.
+    //  * @param {string} searchTerm - Typed term (already trimmed and lower-cased); used when 3+ characters.
+    //  * @param {number} pageNo - Page number (1-based).
+    //  * @param {number} pageSize - Page size, the same one AxList uses.
+    //  * @param {AbortSignal} [signal] - Aborts the request when a newer search starts.
+    //  * @returns {Promise<Array<object>|null>} Rows, or null when the Entity API could not be used.
+    //  */
+    // async function getViewRecordsFromEntityApi(sqlParams, searchTerm, pageNo, pageSize, signal) {
+    //     if (!AxiArmUrl) return null;
+    //     const transId = String(sqlParams.param4 || "");
+    //     const keyField = String(sqlParams.param8 || "");
+    //     const selField = (sqlParams.param5 && sqlParams.param5 !== "0" && String(sqlParams.param5).toUpperCase() !== "NA") ? String(sqlParams.param5) : "";
+
+    //     const filters = [];
+    //     if (searchTerm && searchTerm.length >= 3) {
+    //         filters.push({ ftransid: transId, fldname: selField || keyField, condition: "CONTAINS", datatype: "TEXT", value: searchTerm });
+    //     }
+
+    //     for (let attempt = 0; attempt < 2; attempt++) {
+    //         const auth = await getArmAuth(attempt > 0);
+    //         if (!auth) return null;
+    //         const body = {
+    //             Page: "Entity",
+    //             ARMSessionId: auth.sessionId,
+    //             OnlyData: true,
+    //             TransId: transId,
+    //             AppName: getProjectName(),
+    //             Roles: window.AxUserRoles || "",
+    //             UserName: sqlParams.param2 || window.mainUserName || "",
+    //             PageNo: pageNo,
+    //             PageSize: pageSize,
+    //             Filters: filters,
+    //             CalledFromDataList: true
+    //         };
+    //         try {
+    //             const res = await fetch(AxiArmUrl.replace(/\/+$/, "") + "/AxList/api/v1/GetEntityListPageLoadData", {
+    //                 method: "POST",
+    //                 headers: { "Content-Type": "application/json", "Authorization": "Bearer " + auth.token },
+    //                 body: JSON.stringify(body),
+    //                 signal
+    //             });
+    //             if (res.status === 401 || res.status === 400) {
+    //                 const text = await res.text().catch(() => "");
+    //                 if (isSessionInvalidResponse(text) && attempt > 0) redirectToSessionExpired();
+    //                 armAuthCache = null;
+    //                 continue;
+    //             }
+    //             const json = await res.json().catch(() => undefined);
+    //             if (isSessionInvalidResponse(json)) redirectToSessionExpired();
+    //             if (!res.ok || !json) return null;
+
+    //             // ListData can come back null or empty (no record matches, or ARM has nothing for this page): that is
+    //             // "no data", not an error, so the suggestions are simply empty. Only an answer with no result at all
+    //             // is treated as a failure.
+    //             if (!json?.result) return null;
+    //             const listData = Array.isArray(json.result.data?.ListData) ? json.result.data.ListData : [];
+
+    //             const records = listData.map(row => {
+    //                 const keyVal = entityRowValue(row, keyField);
+    //                 const selVal = selField ? entityRowValue(row, selField) : "";
+    //                 return {
+    //                     // same text the SQL function builds: key value, or "<selected field value>[<key value>]"
+    //                     displaydata: selField ? `${selVal}[${keyVal}]` : keyVal,
+    //                     id: "0",
+    //                     caption: selField ? selVal : keyVal,
+    //                     isfield: "f",
+    //                     transrecordid: row.recordid
+    //                 };
+    //             }).filter(r => r.displaydata !== "" && r.displaydata !== "[]");
+
+    //             // Rows with an empty key are dropped above (like "p.<key> IS NOT NULL" in the SQL function), so a full
+    //             // server page can shrink below the page size. The paging code decides "load more" from the row count,
+    //             // so the last row remembers that the server page was full. The mark is plain data and survives the cache.
+    //             if (pageSize > 0 && listData.length >= pageSize && records.length > 0) {
+    //                 records[records.length - 1].__fullPage = true;
+    //             }
+    //             return records;
+    //         } catch (e) {
+    //             if (e && (e.message === "SessionId is not valid" || e.name === "AbortError")) throw e;
+    //             console.error("[AxiCMD] Entity API call failed:", e);
+    //             return null;
+    //         }
+    //     }
+    //     return null;
+    // }
+
+    /**
+     * Fetches dataset for specified Axpert data source name and parameters.
+     * Supports pagination and dynamic server-side search filtering.
+     * @async
+     * @param {string} axDatasourceName - Name of the Axpert data source.
+     * @param {string} [paramValuesCsv=""] - Comma-separated or delimiter-separated parameter values.
+     * @param {string} [searchTerm=""] - Dynamic search filter term.
+     * @param {number} [pageNo=1] - Page number (1-based).
+     * @param {number} [pageSize=100] - Records per page (0 to fetch all, or limit like 100).
+     * @returns {Promise<Array<object>>} Dataset rows.
+     */
+    async function getList(axDatasourceName, paramValuesCsv = "", searchTerm = "", pageNo = 1, pageSize = getPageSize(), signal) {
+        if (!axicmdenabled) return [];
+        try {
+            //await ensureSignedIn();
+            if (!axDatasourceName) {
+                throw new Error("axDatasourceName is required");
+            }
+
+
+            // ---- Build sqlparams dynamically ----
+            const sqlParams = {};
+            const normalizedParams = [];
+
+
+
+            if (paramValuesCsv && typeof paramValuesCsv === "string") {
+                const values = paramValuesCsv
+                    .split("$#$")
+                    .map(v => v.trim())
+                    .filter(Boolean);
+
+                values.forEach((value, index) => {
+                    const key = `param${index + 1}`;
+                    sqlParams[key] = value;
+                    // old code
+                    // normalizedParams.push(`${key}:${value}`);
+                    // new code: the request still gets the full value; the cache key gets a short hash of a long one
+                    normalizedParams.push(`${key}:${cacheKeyValue(value)}`);
+                });
+            }
+
+            const cleanTerm = (typeof searchTerm === "string" ? searchTerm : "").trim().toLowerCase();
+            const effectivePageSize = (typeof pageSize === "number") ? pageSize : getPageSize();
+            const effectivePageNo = (typeof pageNo === "number") ? pageNo : 1;
+
+            // Paged sources (see PAGED_SOURCES) are paged and searched by the AxList API itself, through
+            // props.pageno / props.pagesize / props.filters below. The ADS rows and SQL functions stay unchanged and
+            // receive no extra params. Page and page size only go into the cache key: each page of each search
+            // is a different result and must not overwrite another one.
+            const serverPaged = isPagedSource(axDatasourceName);
+            if (serverPaged) {
+                normalizedParams.push(`page:${effectivePageNo}`, `size:${effectivePageSize}`);
+            }
+
+            // ---- Stable cache key ----
+            let cacheKey = `axi_${axDatasourceName}_${normalizedParams.join("|")}`;
+            if (cleanTerm) {
+                cacheKey += `_q_${cleanTerm}`;
+            }
+            // "view" / "edit" records of a tstruct are filtered by the database function; _ent keeps them apart from older unfiltered entries
+            const viewFromEntity = isViewRecordsRequest(axDatasourceName, sqlParams);
+            if (viewFromEntity) cacheKey += `_ent`;
+            // _v2 = entries are stored as { t: savedAtMs, d: rows } so they can expire (older _v1 entries are ignored)
+            cacheKey += `_v2`;
+
+            // Persistent cache is read only when it is fresh. Search results (_q_) of server-paged sources
+            // are not persisted at all (see below), so nothing stale or huge is parsed here.
+            const cachedRows = readListCache(cacheKey);
+            if (cachedRows) {
+                return cachedRows;
+            }
+
+            const requestBody = {
+                action: "view",
+                adsNames: [axDatasourceName],
+                trace: true,
+                refreshCache: true,
+                sqlParams: sqlParams,
+                props: {
+                    ADS: true,
+                    CachePermissions: true,
+                    getallrecordscount: false,
+                    // Paging is done by the AxList API (AxPEG.aspx -> ARM /AxList): the page asked for here is the
+                    // page that comes back, for every source. (0 would mean "all rows".)
+                    pageno: effectivePageNo,
+                    pagesize: effectivePageSize
+                }
+            };
+
+            // Search is the AxList "displaydata CONTAINS" filter, applied before paging.
+            // Note: for record lists (axi_getstructsdata) it also applies to the field rows (isfield = 't'),
+            // so while a term is typed only fields whose text contains it come back.
+            if (cleanTerm && cleanTerm.length >= 3) {
+                requestBody.props.filters = [
+                    {
+                        fldname: "displaydata",
+                        condition: "CONTAINS",
+                        value: cleanTerm,
+                        datatype: "TEXT"
+                    }
+                ];
+            }
+
+            // // View records: page 1 still asks AxList for the field rows; later pages are records only, so the
+            // // Entity API alone answers them.
+            // const skipAxList = viewFromEntity && effectivePageNo > 1;
+            // const res = skipAxList ? null : await getAxListAsync(requestBody, signal);
+            const res = await getAxListAsync(requestBody, signal);
+
+            // console.log("Get List data: " + JSON.stringify(res));
+
+            // Dead session (also covers the fallback route): go to the session-expired page
+            if (isSessionInvalidResponse(res)) redirectToSessionExpired();
+
+            let dataObj = typeof res === "string" ? JSON.parse(res) : res;
+            if (dataObj && dataObj.d) {
+                dataObj = typeof dataObj.d === "string" ? JSON.parse(dataObj.d) : dataObj.d;
+            }
+
+            // console.log("DATA obj is : " + dataObj);
+            // console.log("Type of DATA OBJ: " + typeof dataObj);
+            let list = dataObj?.result?.data?.[0]?.data ?? [];
+
+            if (dataObj?.result?.data?.[0]?.error) {
+                showToast(friendlyDataError(dataObj.result.data[0].error, axDatasourceName));
+                return [];
+            }
+
+            // Kept for future use: records used to be merged in from the ARM Entity API (GetEntityListPageLoadData).
+            // The view filter is now applied inside fn_axi_getstructs_obj (axvarcore <transid>_filter), see :globalvars.
+            // if (viewFromEntity) {
+            //     // Keep only the field rows of AxList (its record rows ignore the form's view filter) and add the
+            //     // filtered records from the Entity API.
+            //     list = list.filter(r => r && r.isfield === "t");
+            //     const records = await getViewRecordsFromEntityApi(sqlParams, cleanTerm, effectivePageNo, effectivePageSize, signal);
+            //     if (records === null) {
+            //         showToast("AxiCMD could not load the records of this form. Please try again or contact your administrator.");
+            //     } else {
+            //         list = list.concat(records);
+            //     }
+            // }
+
+
+            if (list.length > 0) {
+                // Persist only what is cheap to reload: never per-search results of paged sources
+                // (every keystroke would otherwise add a new key) and never very large result sets.
+                const skipPersist = serverPaged && !!cleanTerm;
+                if (!skipPersist) {
+                    writeListCache(cacheKey, list);
+                }
+            } else {
+                // console.log(`List Data for Ads name ${axDatasourceName} is Empty`);
+            }
+
+            return list;
+
+        } catch (err) {
+            // Session expired, or the request was aborted by a newer search: let the caller decide
+            if (err.message === "SessionId is not valid" || err.name === "AbortError") {
+                throw err;
+            }
+            return [];
+        }
+    }
+
+
+    /* ===============================
+       SHOW DIMMER / LOADER HELPER
+    =============================== */
+    /**
+     * Toggles the loading dimmer overlay on or off.
+     * @param {boolean} status - True to show dimmer, false to hide.
+     * @returns {void}
+     */
+    function toggleShowDimmer(status) {
+        try {
+            if (typeof ShowDimmer === "function") {
+                ShowDimmer(status);
+            } else if (typeof parent !== "undefined" && typeof parent.ShowDimmer === "function") {
+                parent.ShowDimmer(status);
+            } else if (typeof top !== "undefined" && typeof top.ShowDimmer === "function") {
+                top.ShowDimmer(status);
+            } else if (typeof callParentNew === "function") {
+                callParentNew(`ShowDimmer(${status})`, "function");
+            }
+        } catch (e) {
+            // console.warn("Failed to invoke ShowDimmer:", e);
+        }
+    }
+
+    /**
+     * Safely opens Axpert Developer Studio page in appropriate window/frame.
+     * @param {string} page - Developer Studio sub-page name.
+     * @param {string} [name=""] - Optional object name.
+     * @param {boolean} [callFromAxi=true] - Flag indicating call origin.
+     * @returns {void}
+     */
+    function safeOpenDeveloperStudio(page, name = "", callFromAxi = true) {
+        hide();
+
+        // 1. Activate Axpert Web product loader immediately
+        toggleShowDimmer(true);
+
+        // 2. Keep it on until Developer Studio has really loaded. openDeveloperStudio() (main.js) is asynchronous:
+        //    it calls the server first, then hides the loader itself (ShowDimmer(false)) and only then starts
+        //    loading the Developer Studio page into #middle1 - so the loader used to disappear while the page
+        //    was still blank. The guard ignores those early hide requests until #middle1 finishes loading.
+        const guard = holdDimmerUntilStudioLoads();
+
+        const openFn = (typeof window !== "undefined" && typeof window.openDeveloperStudio === "function" && window.openDeveloperStudio) ||
+            (typeof parent !== "undefined" && typeof parent.openDeveloperStudio === "function" && parent.openDeveloperStudio) ||
+            (typeof top !== "undefined" && typeof top.openDeveloperStudio === "function" && top.openDeveloperStudio);
+
+        if (!openFn) {
+            // console.warn("openDeveloperStudio is not available");
+            guard.release();
+            return;
+        }
+
+        try {
+            openFn(page, name, callFromAxi);
+            // Only the React studio pages load into #middle1. Anything else (e.g. AxDBScript.aspx) opens in a
+            // modal straight away and never fires that load, so the loader is not held for it.
+            const loadsIntoMiddleFrame = ["tstreact", "ivreact"].includes(String(page || "").toLowerCase());
+            if (!loadsIntoMiddleFrame) setTimeout(() => guard.release(), 0);
+        } catch (err) {
+            // console.error("openDeveloperStudio call failed:", err);
+            guard.release();
+        }
+    }
+
+    /**
+     * Makes the shell loader (ShowDimmer) ignore "hide" requests until the Developer Studio page has loaded
+     * into the main content iframe (#middle1), then restores normal behaviour and hides the loader.
+     * A safety timer releases it anyway, so the loader can never stay on forever.
+     * @returns {{release: function(): void}} Handle; release() restores ShowDimmer and hides the loader (safe to call twice).
+     */
+    function holdDimmerUntilStudioLoads() {
+        const STUDIO_LOAD_TIMEOUT_MS = 15000;   // give up and hide the loader after this long
+        const ARM_AFTER_MS = 400;               // ignore iframe "load" events before this (a page that was already loading)
+        const SETTLE_AFTER_LOAD_MS = 100;       // let the new page paint before the loader goes away
+        const POLL_MS = 150;                    // how often to check whether the studio has already rendered
+
+        const patched = [];                     // { win, original, wrapper }
+        let released = false;
+        let armed = false;
+        let iframe = null;
+        let onLoad = null;
+        let armTimer = null;
+        let safetyTimer = null;
+        let pollTimer = null;
+
+        // ShowDimmer may live on this window, the parent or the top window
+        const wins = [];
+        [window, (typeof parent !== "undefined" ? parent : null), (typeof top !== "undefined" ? top : null)].forEach(w => {
+            try {
+                if (w && wins.indexOf(w) === -1 && typeof w.ShowDimmer === "function") wins.push(w);
+            } catch (e) { /* cross-origin window: skip */ }
+        });
+
+        const release = () => {
+            if (released) return;
+            released = true;
+            clearTimeout(armTimer);
+            clearTimeout(safetyTimer);
+            clearInterval(pollTimer);
+            if (iframe && onLoad) {
+                try { iframe.removeEventListener("load", onLoad); } catch (e) { }
+            }
+            patched.forEach(({ win, original, wrapper }) => {
+                try {
+                    if (win.ShowDimmer === wrapper) win.ShowDimmer = original;
+                } catch (e) { }
+            });
+            toggleShowDimmer(false);
+        };
+
+        wins.forEach(win => {
+            const original = win.ShowDimmer;
+            const wrapper = function (status) {
+                if (status === false && !released) {
+                    // The studio page is not loaded yet: ignore this early hide, but note that the server
+                    // step has finished so the next iframe load is the Developer Studio page.
+                    armed = true;
+                    return;
+                }
+                return original.apply(this, arguments);
+            };
+            try {
+                win.ShowDimmer = wrapper;
+                patched.push({ win, original, wrapper });
+            } catch (e) { }
+        });
+
+        try {
+            const topDoc = (typeof top !== "undefined" && top.document) ? top.document : document;
+            iframe = topDoc.getElementById("middle1");
+            if (iframe) {
+                onLoad = () => {
+                    if (!armed) return;
+                    setTimeout(release, SETTLE_AFTER_LOAD_MS);
+                };
+                iframe.addEventListener("load", onLoad);
+                // The iframe "load" event waits for every image/font/script of the studio, which can take many
+                // seconds after the screen is already usable. So also watch the page itself: once it has left
+                // about:blank and has rendered content (React mounted into #root / body children) the loader goes.
+                // The page already showing in #middle1 is rendered too, so only a different address counts as the studio
+                let startHref = "";
+                try { startHref = String(iframe.contentWindow.location.href || ""); } catch (e) { }
+                pollTimer = setInterval(() => {
+                    if (!armed || released) return;
+                    try {
+                        const doc = iframe.contentDocument;
+                        const href = String(iframe.contentWindow.location.href || "");
+                        if (!doc || !doc.body) return;
+                        if (href === "about:blank" || href === startHref) return;
+                        const root = doc.getElementById("root") || doc.body;
+                        if (doc.readyState !== "loading" && root.children.length > 0 && root.offsetHeight > 0) {
+                            clearInterval(pollTimer);
+                            setTimeout(release, SETTLE_AFTER_LOAD_MS);
+                        }
+                    } catch (e) { /* cross-origin: rely on the load event */ }
+                }, POLL_MS);
+            }
+        } catch (e) { /* no access to the content iframe: the safety timer will release the loader */ }
+
+        // When the studio opens without a server round trip, no hide request ever arrives, so arm on a timer too
+        armTimer = setTimeout(() => { armed = true; }, ARM_AFTER_MS);
+        safetyTimer = setTimeout(release, STUDIO_LOAD_TIMEOUT_MS);
+
+        return { release };
+    }
+
+    /* ===============================
+       TOAST HELPER
+    =============================== */
+    /**
+     * Displays temporary toast notification message in the UI.
+     * @param {string} message - Message text to display.
+     * @param {number} [duration=5000] - Display duration in milliseconds.
+     * @param {boolean} [isSuccess=false] - True for success styling, false for error/info.
+     * @returns {void}
+     */
+    function showToast(message, duration = 5000, isSuccess = false) {
+        let alertType = "error";
+        if (isSuccess === true || isSuccess === "success") {
+            alertType = "success";
+        } else if (isSuccess === "warning") {
+            alertType = "warning";
+        } else if (isSuccess === "info" || isSuccess === "information") {
+            alertType = "info";
+        } else if (isSuccess === "error" || isSuccess === "danger" || isSuccess === "failure") {
+            alertType = "error";
+        } else if (typeof message === "string") {
+            const lowerMsg = message.toLowerCase();
+            if (lowerMsg.includes("warning") || lowerMsg.startsWith("please ")) {
+                alertType = "warning";
+            } else if (lowerMsg.includes("version") || lowerMsg.includes("info:") || lowerMsg.includes("success")) {
+                alertType = "info";
+            } else {
+                alertType = "error";
+            }
+        }
+
+        const alertFn = (typeof top !== "undefined" && typeof top.showAlertDialog === "function" && top.showAlertDialog) ||
+            (typeof parent !== "undefined" && typeof parent.showAlertDialog === "function" && parent.showAlertDialog) ||
+            (typeof window !== "undefined" && typeof window.showAlertDialog === "function" && window.showAlertDialog);
+
+        if (alertFn) {
+            try {
+                alertFn(alertType, message);
+                return;
+            } catch (e) {
+                // console.warn("showAlertDialog call failed, falling back to axi toast:", e);
+            }
+        }
+
+        let styleTag = document.getElementById("axi-toast-styles");
+        if (!styleTag) {
+            styleTag = document.createElement("style");
+            styleTag.id = "axi-toast-styles";
+            styleTag.innerHTML = `
+                #axi-toast-container {
+                    position: fixed;
+                    bottom: 80px;
+                    right: 24px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                    z-index: 100000;
+                    pointer-events: none;
+                }
+                .axi-toast-card {
+                    display: flex;
+                    align-items: center;
+                    padding: 12px 16px;
+                    border-radius: 10px;
+                    min-width: 300px;
+                    max-width: 420px;
+                    backdrop-filter: blur(12px);
+                    -webkit-backdrop-filter: blur(12px);
+                    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15), 0 4px 6px -2px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05);
+                    opacity: 0;
+                    transform: translateY(16px) scale(0.95);
+                    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                    pointer-events: auto;
+                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+                    font-size: 13.5px;
+                    line-height: 1.4;
+                    color: #ffffff;
+                    white-space: pre-line;
+                }
+                @media (max-width: 576px) {
+                    #axi-toast-container {
+                        right: 16px;
+                        left: 16px;
+                        bottom: 80px;
+                    }
+                    .axi-toast-card {
+                        min-width: 0;
+                        max-width: 100%;
+                    }
+                }
+            `;
+            document.head.appendChild(styleTag);
+        }
+
+        let container = document.getElementById("axi-toast-container");
+        if (!container) {
+            container = document.createElement("div");
+            container.id = "axi-toast-container";
+            document.body.appendChild(container);
+        }
+
+        const toast = document.createElement("div");
+        toast.className = "axi-toast-card";
+
+        // Determine Theme based on type
+        let iconSvg = "";
+        let borderStyle = "";
+        let bgStyle = "";
+
+        if (isSuccess === true || isSuccess === "success") {
+            bgStyle = "rgba(16, 28, 21, 0.9)"; // Dark green glass
+            borderStyle = "1px solid rgba(34, 197, 94, 0.3)";
+            iconSvg = `<svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style="color: #22c55e; margin-right: 12px; flex-shrink: 0;"><path fill-rule="evenodd" clip-rule="evenodd" d="M10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18ZM13.7071 8.70711C14.0976 8.31658 14.0976 7.68342 13.7071 7.29289C13.3166 6.90237 12.6834 6.90237 12.2929 7.29289L9 10.5858L7.70711 9.29289C7.31658 8.90237 6.68342 8.90237 6.29289 9.29289C5.90237 9.68342 5.90237 10.3166 6.29289 10.7071L8.29289 12.7071C8.68342 13.0976 9.31658 13.0976 9.70711 12.7071L13.7071 8.70711Z" fill="currentColor"/></svg>`;
+        } else if (isSuccess === false || isSuccess === "error" || isSuccess === "danger") {
+            bgStyle = "rgba(35, 18, 18, 0.9)"; // Dark red glass
+            borderStyle = "1px solid rgba(239, 68, 68, 0.3)";
+            iconSvg = `<svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style="color: #ef4444; margin-right: 12px; flex-shrink: 0;"><path fill-rule="evenodd" clip-rule="evenodd" d="M18 10C18 14.4183 14.4183 18 10 18C5.58172 18 2 14.4183 2 10C2 5.58172 5.58172 2 10 2C14.4183 2 18 5.58172 18 10ZM11 14C11 14.5523 10.5523 15 10 15C9.44772 15 9 14.5523 9 14C9 13.4477 9.44772 13 10 13C10.5523 13 11 13.4477 11 14ZM10 5C9.44772 5 9 5.44772 9 6V10C9 10.5523 9.44772 11 10 11C10.5523 11 11 10.5523 11 10V6C11 5.44772 10.5523 5 10 5Z" fill="currentColor"/></svg>`;
+        } else {
+            bgStyle = "rgba(22, 22, 22, 0.9)"; // Dark charcoal glass
+            borderStyle = "1px solid rgba(255, 255, 255, 0.1)";
+            iconSvg = `<svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style="color: #3b82f6; margin-right: 12px; flex-shrink: 0;"><path fill-rule="evenodd" clip-rule="evenodd" d="M18 10C18 14.4183 14.4183 18 10 18C5.58172 18 2 14.4183 2 10C2 5.58172 5.58172 2 10 2C14.4183 2 18 5.58172 18 10ZM11 10C11 10.5523 10.5523 11 10 11C9.44772 11 9 10.5523 9 10V14C9 14.5523 9.44772 15 10 15C10.5523 15 11 14.5523 11 14V10ZM10 5C9.44772 5 9 5.44772 9 6C9 6.55228 9.44772 7 10 7C10.5523 7 11 6.55228 11 6C11 5.44772 10.5523 5 10 5Z" fill="currentColor"/></svg>`;
+        }
+
+        toast.style.backgroundColor = bgStyle;
+        toast.style.border = borderStyle;
+
+        // Create elements inside toast
+        const iconDiv = document.createElement("div");
+        iconDiv.innerHTML = iconSvg;
+        iconDiv.style.display = "flex";
+        iconDiv.style.alignItems = "center";
+
+        const textSpan = document.createElement("span");
+        textSpan.textContent = message;
+        textSpan.style.flexGrow = "1";
+        textSpan.style.marginRight = "12px";
+
+        const closeBtn = document.createElement("button");
+        closeBtn.innerHTML = `<svg width="10" height="10" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1.4 1.4L12.6 12.6M1.4 12.6L12.6 1.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
+        Object.assign(closeBtn.style, {
+            background: "none",
+            border: "none",
+            color: "rgba(255, 255, 255, 0.4)",
+            cursor: "pointer",
+            padding: "6px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: "4px",
+            transition: "all 0.2s ease",
+            outline: "none",
+            flexShrink: "0"
+        });
+
+        closeBtn.onmouseenter = () => {
+            closeBtn.style.color = "rgba(255, 255, 255, 0.85)";
+            closeBtn.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
+        };
+        closeBtn.onmouseleave = () => {
+            closeBtn.style.color = "rgba(255, 255, 255, 0.4)";
+            closeBtn.style.backgroundColor = "transparent";
+        };
+
+        /**
+         * Removes the active toast notification element from the DOM with an exit animation.
+         * @returns {void}
+         */
+        const removeToast = () => {
+            toast.style.opacity = "0";
+            toast.style.transform = "translateY(-12px) scale(0.95)";
+            setTimeout(() => {
+                if (container.contains(toast)) {
+                    container.removeChild(toast);
+                }
+            }, 300);
+        };
+
+        closeBtn.onclick = removeToast;
+
+        toast.appendChild(iconDiv);
+        toast.appendChild(textSpan);
+        toast.appendChild(closeBtn);
+        container.appendChild(toast);
+
+        requestAnimationFrame(() => {
+            toast.style.opacity = "1";
+            toast.style.transform = "translateY(0) scale(1)";
+        });
+
+        setTimeout(removeToast, duration);
+    }
+
+    /**
+     * Fetches and displays version modal containing AxiCMD build details.
+     * @async
+     * @returns {Promise<void>}
+     */
+    async function showVersionInfo() {
+        try {
+            const axiUrl = `${getAppBaseUrl()}/AxpertPlugins/AxiCMD/AxiCMDVersioninfo.json`;
+            const axpertUrl = `${getAppBaseUrl()}/versionInfo.json`;
+
+            const [axiRes, axpertRes] = await Promise.all([
+                fetch(axiUrl, { cache: "no-store" }),
+                fetch(axpertUrl, { cache: "no-store" })
+            ]);
+
+            let axiVersion = "";
+            let axpertVersion = "";
+            let axpertBuild = "";
+
+            if (axiRes.ok) {
+                const axiData = await axiRes.json();
+                axiVersion = axiData?.version || "";
+            }
+
+            if (axpertRes.ok) {
+                const axpertData = await axpertRes.json();
+                axpertVersion = axpertData?.version || "";
+                // subVersion (e.g. "release59") is shown as a build tag beside the version
+                axpertBuild = axpertVersion ? (axpertData?.subVersion || "") : "";
+            }
+
+            openVersionModal(axpertVersion, axpertBuild, axiVersion);
+        } catch (err) {
+            // console.error("Failed to load version info", err);
+            // Network or parse failure: still open the modal so the user sees both rows as unavailable
+            openVersionModal("", "", "");
+        }
+    }
+
+    /**
+     * Opens the "Version" dialog: a plain sheet that lists the Axpert and AxiCMD versions. Replaces any open one.
+     * Closes on Esc, a click on the scrim, the close icon or the Close button.
+     * @param {string} axpertVersion Axpert web version, empty when unavailable.
+     * @param {string} axpertBuild Axpert build tag (subVersion), may be empty.
+     * @param {string} axiVersion AxiCMD version, empty when unavailable.
+     * @returns {void}
+     */
+    function openVersionModal(axpertVersion, axpertBuild, axiVersion) {
+        closeVersionModal();
+
+        const previousFocus = document.activeElement;
+        const el = (tag, className, text) => {
+            const node = document.createElement(tag);
+            if (className) node.className = className;
+            if (text !== undefined) node.textContent = text;
+            return node;
+        };
+
+        const overlay = el("div", "axi-vm-overlay");
+        overlay.id = "axiVersionModal";
+
+        const dialog = el("div", "axi-vm");
+        dialog.setAttribute("role", "dialog");
+        dialog.setAttribute("aria-modal", "true");
+        dialog.setAttribute("aria-labelledby", "axiVersionModalTitle");
+
+        const header = el("div", "axi-vm-header");
+        const title = el("h2", "axi-vm-title", "Version");
+        title.id = "axiVersionModalTitle";
+        const closeX = el("button", "axi-vm-x");
+        closeX.type = "button";
+        closeX.setAttribute("aria-label", "Close");
+        closeX.innerHTML = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg>';
+        header.appendChild(title);
+        header.appendChild(closeX);
+
+        // One ruled row per product: name at the start, version at the end, build tag under the version.
+        // Versions are Latin text, so they keep left-to-right order in an RTL shell
+        const buildRow = (name, version, build) => {
+            const row = el("div", "axi-vm-row");
+            row.appendChild(el("dt", "axi-vm-name", name));
+            const value = el("dd", "axi-vm-value");
+            if (version) {
+                const ver = el("span", "axi-vm-ver", version);
+                ver.dir = "ltr";
+                value.appendChild(ver);
+                if (build) {
+                    const tag = el("span", "axi-vm-tag", "Build " + build);
+                    tag.dir = "ltr";
+                    value.appendChild(tag);
+                }
+            } else {
+                value.appendChild(el("span", "axi-vm-missing", "Not available"));
+            }
+            row.appendChild(value);
+            return row;
+        };
+
+        const body = el("dl", "axi-vm-body");
+        body.appendChild(buildRow("Axpert", axpertVersion, axpertBuild));
+        body.appendChild(buildRow("AxiCMD", axiVersion, ""));
+
+        // Secondary first, primary (Close) at the end, as in the gear menu panels
+        const footer = el("div", "axi-vm-footer");
+        const copyBtn = el("button", "axi-vm-btn axi-vm-btn-ghost", "Copy versions");
+        copyBtn.type = "button";
+        const closeBtn = el("button", "axi-vm-btn axi-vm-btn-main", "Close");
+        closeBtn.type = "button";
+        footer.appendChild(copyBtn);
+        footer.appendChild(closeBtn);
+
+        // Read out the copy result; the button label also changes for sighted users
+        const status = el("span", "axi-vm-status");
+        status.setAttribute("role", "status");
+
+        dialog.appendChild(header);
+        dialog.appendChild(body);
+        dialog.appendChild(footer);
+        dialog.appendChild(status);
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
+
+        // Plain text that can be pasted into a support ticket
+        const summary = [
+            "Axpert: " + (axpertVersion ? axpertVersion + (axpertBuild ? " (" + axpertBuild + ")" : "") : "not available"),
+            "AxiCMD: " + (axiVersion || "not available")
+        ].join("\n");
+
+        let copyTimer = null;
+        copyBtn.addEventListener("click", () => {
+            const done = (label, message) => {
+                copyBtn.textContent = label;
+                status.textContent = message;
+                clearTimeout(copyTimer);
+                copyTimer = setTimeout(() => {
+                    copyBtn.textContent = "Copy versions";
+                    status.textContent = "";
+                }, 1800);
+            };
+            const failed = () => done("Copy failed", "Couldn't copy. Select the versions and copy them yourself.");
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(summary).then(() => done("Copied", "Versions copied."), failed);
+            } else {
+                failed();
+            }
+        });
+
+        const close = () => {
+            clearTimeout(copyTimer);
+            document.removeEventListener("keydown", onKey, true);
+            overlay.remove();
+            if (previousFocus && typeof previousFocus.focus === "function") previousFocus.focus();
+        };
+        // Keep the Tab key inside the dialog while it is open
+        const onKey = (e) => {
+            if (e.key === "Escape") {
+                e.preventDefault();
+                e.stopPropagation();
+                close();
+            } else if (e.key === "Tab") {
+                const focusable = [closeX, copyBtn, closeBtn];
+                const first = focusable[0];
+                const last = focusable[focusable.length - 1];
+                if (e.shiftKey && document.activeElement === first) {
+                    e.preventDefault();
+                    last.focus();
+                } else if (!e.shiftKey && document.activeElement === last) {
+                    e.preventDefault();
+                    first.focus();
+                }
+            }
+        };
+        overlay._axiClose = close;
+
+        closeX.addEventListener("click", close);
+        closeBtn.addEventListener("click", close);
+        overlay.addEventListener("mousedown", (e) => { if (e.target === overlay) close(); });
+        document.addEventListener("keydown", onKey, true);
+        closeBtn.focus();
+    }
+
+    /**
+     * Closes the version modal when it is open.
+     * @returns {void}
+     */
+    function closeVersionModal() {
+        const open = document.getElementById("axiVersionModal");
+        if (open) {
+            if (typeof open._axiClose === "function") open._axiClose();
+            else open.remove();
+        }
+    }
+
+
+
+
+    /**
+     * Checks if the suggestion dropdown list is currently visible in the DOM.
+     * @returns {boolean} True if suggestions are visible.
+     */
+    function isSuggestionVisible() {
+        if (megaDropdown) {
+            return megaDropdown.style.display !== "none" && items.length > 0;
+        }
+        return list && list.style.display !== "none" && items.length > 0;
+    }
+
+    /**
+     * Checks if any suggestion list item is currently highlighted or active.
+     * @returns {boolean} True if an item is active.
+     */
+    function hasActiveSuggestion() {
+        return activeIndex >= 0 && activeIndex < items.length;
+    }
+
+
+    /* ===============================
+       SETUP LISTENERS
+    =============================== */
+    /**
+     * Binds keyboard, mouse, input, and focus event listeners to AxiCMD controls.
+     * @returns {void}
+     */
+    function setupEventListeners() {
+
+        // One delegated handler for every suggestion row (rows no longer carry their own listener).
+        // Guarded so a repeated init does not attach the handlers twice.
+        if (!list.__axiListHandlers) {
+        list.__axiListHandlers = true;
+        list.addEventListener("mousedown", e => {
+            const li = e.target.closest ? e.target.closest("li.axi-suggestion") : null;
+            if (!li || !list.contains(li)) return;
+            e.preventDefault();
+            const idx = Number(li.dataset.vi);
+            if (Number.isInteger(idx)) apply(idx);
+        });
+
+        // Load the next page of a paged list when the user scrolls near the bottom of the dropdown
+        let scrollTicking = false;
+        list.addEventListener("scroll", () => {
+            if (scrollTicking) return;
+            scrollTicking = true;
+            requestAnimationFrame(() => {
+                scrollTicking = false;
+                // The first screen (commands + forms, class My-Command-Wrapper) is a single horizontal row of
+                // cards that scrolls sideways; every other list scrolls vertically. Check both directions.
+                const nearBottom = list.scrollHeight > list.clientHeight && list.scrollTop + list.clientHeight >= list.scrollHeight - 60;
+                const nearRight = list.scrollWidth > list.clientWidth && list.scrollLeft + list.clientWidth >= list.scrollWidth - 60;
+                if (nearBottom || nearRight) {
+                    loadNextPage();
+                }
+            });
+        });
+        }
+
+        const favDeleteCancelBtn = document.getElementById("axiFavDeleteCancelBtn");
+
+        if (favDeleteCancelBtn) {
+            favDeleteCancelBtn.addEventListener("click", (e) => {
+                e.preventDefault();
+                hideDeleteFavoriteModal();
+            })
+        }
+
+        const favDeleteConfirmBtn = document.getElementById("axiFavDeleteConfirmBtn");
+
+        if (favDeleteConfirmBtn) {
+            favDeleteConfirmBtn.addEventListener("click", (e) => {
+                e.preventDefault();
+                confirmDeleteFavorite();
+            });
+        }
+
+
+
+        const favCancelBtn = document.getElementById("axiFavCancelBtn");
+
+        if (favCancelBtn) {
+            favCancelBtn.addEventListener("click", (e) => {
+                e.preventDefault();
+                hideFavoriteModal();
+            });
+        }
+
+        const favSaveBtn = document.getElementById("axiFavSaveBtn");
+        if (favSaveBtn) {
+            favSaveBtn.addEventListener("click", (e) => {
+                e.preventDefault();
+                confirmAddFavorite();
+            });
+        }
+
+        const favInput = document.getElementById("axiFavNameInput");
+        if (favInput) {
+            favInput.addEventListener("keydown", (e) => {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    confirmAddFavorite();
+                } else if (e.key === "Escape") {
+                    hideFavoriteModal();
+                }
+            });
+        }
+
+        const favModalOverlay = document.getElementById("axiFavModalOverlay");
+
+        if (favModalOverlay) {
+            favModalOverlay.addEventListener("mousedown", (event) => {
+                if (event.target === favModalOverlay) {
+                    hideFavoriteModal();
+                }
+            })
+        }
+
+        const deleteModalOverlay = document.getElementById("axiFavDeleteModalOverlay");
+
+        if (deleteModalOverlay) {
+            deleteModalOverlay.addEventListener("mousedown", (event) => {
+                if (event.target === deleteModalOverlay) {
+                    hideDeleteFavoriteModal();
+                }
+            })
+        }
+
+        favouriteBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleFavorite(input.value.trim(), true);
+
+        })
+
+        const newAddFavBtn = document.getElementById("axiAddFavoriteBtn");
+        if (newAddFavBtn) {
+            newAddFavBtn.addEventListener("click", (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleFavorite(input.value.trim(), true);
+            });
+        }
+
+        const newViewFavBtn = document.getElementById("axiViewFavoritesBtn");
+        if (newViewFavBtn) {
+            newViewFavBtn.addEventListener("click", (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                loadFavorites();
+                showFavoritesPopupOnly();
+            });
+        }
+
+        const favFilterInput = document.getElementById("axiFavFilterInput");
+        if (favFilterInput) {
+            favFilterInput.addEventListener("input", (e) => {
+                const query = e.target.value.toLowerCase().trim();
+                const filtered = commandFavorites.filter(fav =>
+                    (fav.commandText || "").toLowerCase().includes(query)
+                );
+                renderFavoritesUI(filtered);
+            });
+        }
+        const historyBtn = document.getElementById("History_pages");
+        if (historyBtn) {
+            historyBtn.addEventListener("click", () => {
+                showToast("Not Yet Implemented...");
+                return;
+            });
+        }
+
+        const prevBtn = document.getElementById("btnHistoryPrev");
+        if (prevBtn) {
+            prevBtn.addEventListener("click", () => window.prevbtn_click($(this)));
+        }
+
+        const nextBtn = document.getElementById("btnHistoryNext");
+        if (nextBtn) {
+            nextBtn.addEventListener("click", () => {
+                showToast("Not Yet Implemented...");
+                return;
+            });
+        }
+        if (btnRefresh) {
+            btnRefresh.addEventListener("click", async () => {
+                // console.log("Refresh Logic......");
+                const refreshIcon = btnRefresh.querySelector(".axi-refresh-icon");
+                if (refreshIcon) {
+                    refreshIcon.classList.add("rotating");
+                }
+
+                try {
+                    clearAxiLocalStorage("axi_");
+                    commands = null;
+                    tstructList = null;
+                    adsList = null;
+                    axDatasourceObj = {};
+                    clearInstallCaches();
+                    activeFetches.clear();
+                    failedFetches.clear();
+                    // paging / search bookkeeping belongs to the data that was just discarded
+                    Object.keys(axPageState).forEach(k => delete axPageState[k]);
+                    Object.keys(failedFetchTimes).forEach(k => delete failedFetchTimes[k]);
+                    axSearchKeyOrder.length = 0;
+                    structSearchAsked.clear();
+                    emptyStructListRetried.clear();
+                    structSearchPendingTerm = null;
+                    resolvedParams = {};
+                    resolvedParamType = {};
+                    createfieldnamevaluesList = {};
+                    resetSetCommandState();
+                    cachedAccessPermissions = null;
+                    initialSuggestionsCache = null;
+                    initialSuggestionsSourceList = null;
+                    initialSuggestionsRunnable = null;
+                    targetEntitiesCache.sourceList = null;
+                    targetEntitiesCache.matchesMap = null;
+
+                    await initCommands(true);
+
+                    input.focus();
+
+                } catch (error) {
+                    // console.log("Refresh Failed: " + error);
+                    alert("Error refreshing: " + error);
+
+                } finally {
+                    if (refreshIcon) {
+                        refreshIcon.classList.remove("rotating");
+                    }
+                }
+            });
+        }
+
+
+
+        // ---- Settings: how many records are loaded at a time ----------------------------------------------------
+        // A small popover under the gear button. Saving stores the number (see setPageSize) and then
+        // clicks Refresh, because cached lists were fetched with the old page size.
+        const settingsBtn = document.getElementById("axiSettingsBtn");
+        if (settingsBtn) {
+            let settingsPanel = null;
+
+            const closeSettingsPanel = () => {
+                if (settingsPanel) settingsPanel.style.display = "none";
+            };
+
+            const buildSettingsPanel = () => {
+                const panel = document.createElement("div");
+                panel.id = "axiSettingsPanel";
+                // Look (flat sheet per DESIGN.md) lives in axicmdmain.css, section 8
+                panel.className = "axi-sp";
+                panel.innerHTML =
+                    '<div class="axi-sp-title">Records per load</div>' +
+                    '<div class="axi-sp-sub">How many items each list fetches at once</div>' +
+                    // The number box and the slider below it move the same value
+                    '<div class="axi-sp-readout">' +
+                    '<input id="axiPageSizeInput" class="axi-sp-input" type="number" step="100" aria-label="Records per load">' +
+                    '<span class="axi-sp-unit">records</span>' +
+                    '</div>' +
+                    '<input id="axiPageSizeRange" class="axi-sp-range" type="range" step="100" aria-label="Records per load slider">' +
+                    '<div class="axi-sp-ends"><span id="axiPageSizeMin"></span><span id="axiPageSizeMax"></span></div>' +
+                    '<div id="axiPageSizeError" class="axi-sp-error" role="alert" hidden></div>' +
+                    // Secondary first, the primary action at the end, as in the AxiCMD Config drawer
+                    '<div class="axi-sp-actions">' +
+                    '<button id="axiPageSizeDefault" class="axi-sp-btn axi-sp-default" type="button">Use default</button>' +
+                    '<button id="axiPageSizeSave" class="axi-sp-btn axi-sp-save" type="button">Save</button>' +
+                    '</div>' +
+                    '<div id="axiPageSizeHint" class="axi-sp-hint"></div>';
+                document.body.appendChild(panel);
+
+                const sizeInput = panel.querySelector("#axiPageSizeInput");
+                const hint = panel.querySelector("#axiPageSizeHint");
+                hint.textContent = "Default is " + DEFAULT_PAGE_SIZE + ". Lists reload when you save.";
+
+                // The slider mirrors the number box. syncDial copies the box value onto the slider and sets the
+                // fill width (--axi-sp-fill) used by the gradient track. Callers that set the box in code call it too.
+                const dial = panel.querySelector("#axiPageSizeRange");
+                dial.min = MIN_PAGE_SIZE;
+                dial.max = MAX_PAGE_SIZE;
+                panel.querySelector("#axiPageSizeMin").textContent = MIN_PAGE_SIZE;
+                panel.querySelector("#axiPageSizeMax").textContent = MAX_PAGE_SIZE;
+                panel.axiSyncDial = () => {
+                    const v = Math.min(MAX_PAGE_SIZE, Math.max(MIN_PAGE_SIZE, parseInt(sizeInput.value, 10) || MIN_PAGE_SIZE));
+                    dial.value = v;
+                    panel.style.setProperty("--axi-sp-fill", ((v - MIN_PAGE_SIZE) / (MAX_PAGE_SIZE - MIN_PAGE_SIZE) * 100) + "%");
+                };
+                // Rejects a typed value that is empty, not a whole number, or outside MIN..MAX instead of silently
+                // changing it. Shows the reason under the slider and marks the box (aria-invalid).
+                const errorBox = panel.querySelector("#axiPageSizeError");
+                const validatePageSize = (raw) => {
+                    const text = String(raw === undefined || raw === null ? "" : raw).trim();
+                    let message = "";
+                    if (text === "" || !/^\d+$/.test(text)) message = "Enter a whole number between " + MIN_PAGE_SIZE + " and " + MAX_PAGE_SIZE + ".";
+                    else if (parseInt(text, 10) < MIN_PAGE_SIZE) message = "Invalid value. Records per load can't be lower than " + MIN_PAGE_SIZE + ".";
+                    else if (parseInt(text, 10) > MAX_PAGE_SIZE) message = "Invalid value. Records per load can't be higher than " + MAX_PAGE_SIZE + ".";
+                    errorBox.textContent = message;
+                    errorBox.hidden = !message;
+                    sizeInput.setAttribute("aria-invalid", message ? "true" : "false");
+                    panel.classList.toggle("axi-sp-invalid", !!message);
+                    return !message;
+                };
+                panel.axiClearError = () => validatePageSize(sizeInput.value);
+
+                dial.addEventListener("input", () => { sizeInput.value = dial.value; panel.axiSyncDial(); validatePageSize(sizeInput.value); });
+                sizeInput.addEventListener("input", () => { panel.axiSyncDial(); validatePageSize(sizeInput.value); });
+
+                const applyPageSize = (requested) => {
+                    if (!validatePageSize(requested)) {
+                        sizeInput.focus();
+                        return;
+                    }
+                    const previous = getPageSize();
+                    const size = setPageSize(requested);
+                    sizeInput.value = size;
+                    panel.axiSyncDial();
+                    closeSettingsPanel();
+                    savePageSizeToServer(size).then(ok => {
+                        // old code
+                        // if (!ok) showToast("Saved on this browser only (server unreachable)", 4000);
+                        // new code: the server value is the one that counts at the next login, so say the save did not stick
+                        if (!ok) showToast("Could not save on the server. Records per load goes back to the saved value at the next login.", 5000);
+                    });
+                    if (size !== previous) {
+                        showToast("Records to load at a time set to " + size, 3000, true);
+                        btnRefresh.click();
+                    }
+                };
+
+                panel.querySelector("#axiPageSizeSave").addEventListener("click", () => applyPageSize(sizeInput.value));
+                panel.querySelector("#axiPageSizeDefault").addEventListener("click", () => applyPageSize(DEFAULT_PAGE_SIZE));
+                sizeInput.addEventListener("keydown", (e) => {
+                    if (e.key === "Enter") { e.preventDefault(); applyPageSize(sizeInput.value); }
+                    else if (e.key === "Escape") closeSettingsPanel();
+                });
+                return panel;
+            };
+
+            let settingsMenu = null;
+
+            const closeSettingsMenu = () => {
+                if (settingsMenu) settingsMenu.style.display = "none";
+            };
+
+            // Opens the AxiCMD Config page (AxiCMDConfig.html) in the work area. Only offered with Configure Access and build access.
+            const openConfigPage = () => {
+                const perms = getAccessPermissions();
+                const rtl = document.body.classList.contains("btextDir-rtl");
+                const lang = rtl ? "ar" : (document.documentElement.lang || "en");
+                const targetUrl = `${getAppBaseUrl()}/AxpertPlugins/AxiCMD/HTMLPages/AxiCMDConfig.html` +
+                    `?api=${encodeURIComponent(axiCommandConfigUrl)}` +
+                    `&appname=${encodeURIComponent(getProjectName())}` +
+                    `&username=${encodeURIComponent(window.mainUserName || "")}` +
+                    `&lang=${encodeURIComponent(lang)}` +
+                    `&appmgraccess=${perms.appMgrAccess ? 1 : 0}` +
+                    `&buildaccess=${perms.buildAccess ? 1 : 0}`;
+                const loadFn = (top && top.window && top.window.LoadIframe) || window.LoadIframe;
+                if (typeof loadFn === "function") loadFn(targetUrl);
+            };
+
+            // The gear opens a small menu: "Records per load" (the panel below) and, with Configure Access and build access, "Configure"
+            const buildSettingsMenu = () => {
+                const menu = document.createElement("div");
+                menu.id = "axiSettingsMenu";
+                menu.className = "axi-sm";
+                menu.setAttribute("role", "menu");
+                // old code
+                // const entries = [{ id: "pagesize", label: "Records per load", run: () => openPageSizePanel() }];
+                // const perms = getAccessPermissions();
+                // if (perms.appMgrAccess && perms.buildAccess) entries.push({ id: "configure", label: "Configure", run: openConfigPage });
+                // new code: each entry has a drawn 16px icon (one stroke, currentColor), so the two rows read apart at a glance.
+                // Records per load: stacked rows with a count mark. Configure: sliders (not a gear, which is the button itself).
+                const entries = [{
+                    id: "pagesize", label: "Records per load", run: () => openPageSizePanel(),
+                    icon: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 4h7.5M6 8h7.5M6 12h7.5"/><path d="M2.5 3.25v1.5M2.5 7.25v1.5M2.5 11.25v1.5"/></svg>'
+                }];
+                const perms = getAccessPermissions();
+                if (perms.appMgrAccess && perms.buildAccess) entries.push({
+                    id: "configure", label: "Configure", run: openConfigPage,
+                    icon: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M2.5 4.5h5M10.5 4.5h3M2.5 11.5h2M7.5 11.5h6"/><circle cx="9" cy="4.5" r="1.5"/><circle cx="6" cy="11.5" r="1.5"/></svg>'
+                });
+                entries.forEach((en) => {
+                    const item = document.createElement("button");
+                    item.type = "button";
+                    item.className = "axi-sm-item";
+                    item.setAttribute("role", "menuitem");
+                    item.dataset.entry = en.id;
+                    // old code
+                    // item.textContent = en.label;
+                    // new code: icon, then the label (the label stays the accessible name; the icon is aria-hidden)
+                    const icon = document.createElement("span");
+                    icon.className = "axi-sm-icon";
+                    icon.innerHTML = en.icon || "";
+                    const text = document.createElement("span");
+                    text.className = "axi-sm-label";
+                    text.textContent = en.label;
+                    item.appendChild(icon);
+                    item.appendChild(text);
+                    item.addEventListener("click", (ev) => { ev.stopPropagation(); closeSettingsMenu(); en.run(); });
+                    // Focus follows the mouse, so the first entry (focused on open) does not stay highlighted next to the hovered one
+                    item.addEventListener("mouseenter", () => item.focus({ preventScroll: true }));
+                    menu.appendChild(item);
+                });
+                menu.addEventListener("keydown", (ev) => {
+                    const items = Array.prototype.slice.call(menu.querySelectorAll(".axi-sm-item"));
+                    const at = items.indexOf(document.activeElement);
+                    if (ev.key === "ArrowDown") { items[(at + 1) % items.length].focus(); ev.preventDefault(); }
+                    else if (ev.key === "ArrowUp") { items[(at - 1 + items.length) % items.length].focus(); ev.preventDefault(); }
+                    else if (ev.key === "Escape") { closeSettingsMenu(); settingsBtn.focus(); }
+                });
+                document.body.appendChild(menu);
+                return menu;
+            };
+
+            const openSettingsMenu = () => {
+                // Rebuilt each time so Configure appears or disappears with the current access
+                if (settingsMenu) settingsMenu.remove();
+                settingsMenu = buildSettingsMenu();
+                const r = settingsBtn.getBoundingClientRect();
+                settingsMenu.style.display = "block";
+                const h = settingsMenu.offsetHeight;
+                const top = (r.bottom + h + 8 > window.innerHeight) ? Math.max(8, r.top - h - 8) : r.bottom + 8;
+                const left = Math.max(8, Math.min(r.left, window.innerWidth - settingsMenu.offsetWidth - 8));
+                settingsMenu.style.top = top + "px";
+                settingsMenu.style.left = left + "px";
+                settingsMenu.querySelector(".axi-sm-item").focus();
+            };
+
+            const openPageSizePanel = () => {
+                if (!settingsPanel) settingsPanel = buildSettingsPanel();
+                if (settingsPanel.style.display === "block") { closeSettingsPanel(); return; }
+                settingsPanel.querySelector("#axiPageSizeInput").value = getPageSize();
+                settingsPanel.axiSyncDial();
+                settingsPanel.axiClearError();
+                // The saved server value is the truth: if this browser disagrees (sync was skipped or slow), show it
+                // and reload the lists with it so the box and the loaded rows match
+                if (axiSettingsUrl && window.mainUserName) {
+                    fetchServerPageSize().then(remote => {
+                        // old code
+                        // if (remote === undefined || remote === null || remote === getPageSize()) return;
+                        // setPageSize(remote);
+                        // settingsPanel.querySelector("#axiPageSizeInput").value = remote;
+                        // new code: nothing saved on the server = the default (100); a value left in this browser is dropped
+                        if (remote === undefined) return;
+                        if (remote === null) {
+                            let hadLocal = false;
+                            try { hadLocal = localStorage.getItem(pageSizeStorageKey()) !== null; localStorage.removeItem(pageSizeStorageKey()); } catch (e) { }
+                            if (!hadLocal) return;
+                            remote = DEFAULT_PAGE_SIZE;
+                        } else {
+                            if (remote === getPageSize()) return;
+                            setPageSize(remote);
+                        }
+                        settingsPanel.querySelector("#axiPageSizeInput").value = remote;
+                        settingsPanel.axiSyncDial();
+                        btnRefresh.click();
+                    });
+                }
+                // Open above the button when the palette sits near the bottom of the screen, else below
+                const r = settingsBtn.getBoundingClientRect();
+                settingsPanel.style.display = "block";
+                const h = settingsPanel.offsetHeight;
+                const top = (r.bottom + h + 8 > window.innerHeight) ? Math.max(8, r.top - h - 8) : r.bottom + 8;
+                const left = Math.max(8, Math.min(r.left, window.innerWidth - settingsPanel.offsetWidth - 8));
+                settingsPanel.style.top = top + "px";
+                settingsPanel.style.left = left + "px";
+                settingsPanel.querySelector("#axiPageSizeInput").focus();
+            };
+
+            settingsBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                closeSettingsPanel();
+                if (settingsMenu && settingsMenu.style.display === "block") { closeSettingsMenu(); return; }
+                openSettingsMenu();
+            });
+            // Also reachable from the iframe click/Esc handlers (attachClickToDoc) and the shell-wide Esc key
+            window.axiCloseSettingsPanel = () => { closeSettingsPanel(); closeSettingsMenu(); };
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Escape") { closeSettingsPanel(); closeSettingsMenu(); }
+            });
+            document.addEventListener("click", (e) => {
+                if (settingsMenu && settingsMenu.style.display === "block" &&
+                    !settingsMenu.contains(e.target) && !settingsBtn.contains(e.target)) {
+                    closeSettingsMenu();
+                }
+                if (settingsPanel && settingsPanel.style.display === "block" &&
+                    !settingsPanel.contains(e.target) && !settingsBtn.contains(e.target)) {
+                    closeSettingsPanel();
+                }
+            });
+        }
+
+        if (axiClearBtn) {
+            axiClearBtn.addEventListener("click", () => {
+                input.value = "";
+                resolvedParams = {};
+                resolvedParamType = {};
+                createfieldnamevaluesList = {};
+                setCommandTransid = null;
+                dateControlBoolean = false;
+                resetSetCommandState();
+                handleInput();
+                input.focus();
+            })
+        }
+
+        if (axiLogo) {
+            axiLogo.addEventListener("click", (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                input.value = "";
+                handleInput();
+                input.focus();
+            })
+        }
+
+
+
+        if (runBtn) {
+            runBtn.addEventListener("click", executeCommandsV2);
+        }
+
+        /**
+         * Releases stuck loading dimmer overlays and cleans up EatKeyPress document listeners.
+         * @returns {void}
+         */
+        function releaseStuckDimmer() {
+            try {
+                if (document.onkeydown) {
+                    const fnStr = String(document.onkeydown).replace(/\s+/g, "");
+                    const isDimmerEatKey = document.onkeydown.name === "EatKeyPress"
+                        || fnStr.includes("EatKeyPress")
+                        || fnStr === "function(){return!1;}"
+                        || fnStr === "function(){return!1}"
+                        || fnStr === "function(){returnfalse;}"
+                        || fnStr === "function(){returnfalse}";
+                    if (isDimmerEatKey) {
+                        document.onkeydown = null;
+                    }
+                }
+                if (typeof ShowDimmer === "function") {
+                    ShowDimmer(false);
+                }
+                if (document.body) {
+                    document.body.classList.remove("page-loading");
+                }
+            } catch (e) { }
+        }
+
+        input.addEventListener("focus", () => {
+            releaseStuckDimmer();
+            if (suppressFocusSuggestions) {
+                suppressFocusSuggestions = false;
+                return;
+            }
+            isInitialLoad = false;
+            handleInput();
+        });
+
+        input.addEventListener("click", () => {
+            releaseStuckDimmer();
+            isInitialLoad = false;
+            suppressFocusSuggestions = false;
+            handleInput();
+        });
+
+        input.addEventListener("input", (ev) => {
+            isInitialLoad = false;
+            quoteMultiWordAfterSpace(ev);
+            handleInput();
+        });
+        input.addEventListener("blur", () => setTimeout(() => { if (!input.value) hintDiv.textContent = ""; }, 200));
+        input.addEventListener("keydown", e => {
+            if (document.querySelector(".AXI-Sec")?.classList.contains("axi-tour-active")) {
+                e.preventDefault();
+                return;
+            }
+            isDeleting = (e.key === "Backspace" || e.key === "Delete");
+            // console.log("Keys: " + e.key + "Code: " + e.code + "Alt: " + e.altKey);
+
+            const tokens = getTokens(input.value.trim(), false);
+            let normalizedTokens = [...tokens];
+            if (normalizedTokens.length >= 2) {
+                const first = cleanString(normalizedTokens[0]).toLowerCase();
+                const second = cleanString(normalizedTokens[1]).toLowerCase();
+                if (isTargetEntity(first) && isValidActionForTarget(first, second)) {
+                    const temp = normalizedTokens[0];
+                    normalizedTokens[0] = normalizedTokens[1];
+                    normalizedTokens[1] = temp;
+                }
+            }
+            const grpKey = normalizedTokens[0];
+
+            let saveCommandConfig;
+            if (grpKey)
+                saveCommandConfig = getCommandConfig(grpKey, normalizedTokens);
+
+            if (e.key === 'Backspace' && (grpKey?.toLowerCase() === "create" || grpKey?.toLowerCase() === "edit")) {
+                try {
+                    let transIDcheck = setCommandTransid;
+                    if (input.selectionStart !== input.selectionEnd) {
+                        if (transIDcheck) {
+                            createfieldnamevaluesList[transIDcheck] = [];
+                        }
+                        setCommandTransid = null;
+                        dateControlBoolean = false;
+                        resetSetCommandState();
+                        return;
+                    }
+                    if (tokens.length <= 1) {
+                        return;
+                    }
+                    const isTargetFirst = (tokens.length === 2 && isTargetEntity(tokens[0]) && isValidActionForTarget(tokens[0], tokens[1]));
+                    if (isTargetFirst) {
+                        return;
+                    }
+                    e.preventDefault();
+
+                    const cursorPos = input.selectionStart;
+
+                    if (input.value[cursorPos - 1] === " " && !SET_COMMAND_STATE.currentField?.trim()) {
+                        // Deleted a space using Backspace
+                    }
+                    else {
+                        if (transIDcheck && createfieldnamevaluesList?.[transIDcheck]?.length > 0) {
+                            const list = createfieldnamevaluesList[transIDcheck];
+                            const lastListItem = list[list.length - 1];
+
+                            const lastTokenValue = cleanCommandToken(tokens[tokens.length - 1]);
+                            const { value: actualLastTokenValue } = tryResolveToken(tokens.length - 1, lastTokenValue, saveCommandConfig, false);
+
+                            if (lastListItem) {
+                                const parts = lastListItem.split("~");
+                                const listValue = parts[0];
+
+                                if (listValue === actualLastTokenValue) {
+                                    createfieldnamevaluesList[transIDcheck].pop();
+                                }
+                            }
+                        }
+                    }
+
+                    let lastIndex = tokens.length - 1;
+                    if (lastIndex >= 0) {
+                        tokens[lastIndex] = "";
+                        input.value = tokens.join(" ");
+                    }
+
+                    if (tokens.length <= 2) {
+                        setCommandTransid = null;
+                        if (transIDcheck) {
+                            createfieldnamevaluesList[transIDcheck] = [];
+                        }
+                    }
+
+                    dateControlBoolean = false;
+                    resetSetCommandState();
+                    input.focus();
+                    input.setSelectionRange(input.value.length, input.value.length);
+                    handleInput();
+                } catch (err) {
+                    console.error("Error in create/edit Backspace handler:", err);
+                }
+            }
+            else if (e.key === 'Backspace' && grpKey?.toLowerCase() === "view") {
+                try {
+                    if (input.selectionStart !== input.selectionEnd) {
+                        setCommandTransid = null;
+                        dateControlBoolean = false;
+                        resetSetCommandState();
+                        return;
+                    }
+                    if (tokens.length <= 1) {
+                        return;
+                    }
+                    const isTargetFirst = (tokens.length === 2 && isTargetEntity(tokens[0]) && isValidActionForTarget(tokens[0], tokens[1]));
+                    if (isTargetFirst) {
+                        return;
+                    }
+                    e.preventDefault();
+
+                    const cursorPos = input.selectionStart;
+
+                    if (input.value[cursorPos - 1] === " " && !SET_COMMAND_STATE.currentField?.trim()) {
+                        // Deleted a space using Backspace
+                    }
+
+                    let lastIndex = tokens.length - 1;
+                    if (lastIndex >= 0) {
+                        const lastToken = tokens[lastIndex];
+                        if (lastToken && lastToken.includes(",")) {
+                            const parts = lastToken.split(",");
+                            parts.pop();
+                            tokens[lastIndex] = parts.join(",");
+                        } else {
+                            tokens[lastIndex] = "";
+                        }
+
+                        input.value = tokens.join(" ");
+                    }
+
+                    if (tokens.length <= 2) {
+                        setCommandTransid = null;
+                    }
+
+                    dateControlBoolean = false;
+                    resetSetCommandState();
+                    input.focus();
+                    input.setSelectionRange(input.value.length, input.value.length);
+                    handleInput();
+                } catch (err) {
+                    console.error("Error in view Backspace handler:", err);
+                }
+            }
+
+            if (e.ctrlKey && e.code === "Space") {
+                e.preventDefault();
+                handleInput();
+                return;
+            }
+
+
+            //if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "enter") {
+            //    popUpOption = true;
+            //    e.preventDefault();
+            //    hide();
+            //    executeCommandsV2();
+            //    return;
+            //}
+
+            const isSingleTarget = tokens.length === 1 && isTargetEntity(tokens[0]);
+
+            if ((e.ctrlKey && e.shiftKey && e.key?.toLowerCase() === "enter") && (grpKey?.toLowerCase() === "create" || grpKey?.toLowerCase() === "edit" || grpKey?.toLowerCase() === "view" || grpKey?.toLowerCase() === "configure" || isSingleTarget)) {
+                e.preventDefault();
+
+                const subCmdFull = tokens.slice(1).map(t => cleanString(t)).join(" ").toLowerCase().trim();
+                const subCmdFirst = tokens[1] ? cleanString(tokens[1]).toLowerCase().trim() : "";
+                const isResponsibilityCmd = subCmdFirst === "responsibility" || subCmdFirst === "responsibilities" || subCmdFirst === "responsibility listing" || subCmdFull === "responsibility listing" || subCmdFull === "responsibilities" || subCmdFull.startsWith("responsibility");
+
+                if (isResponsibilityCmd) {
+                    popUpOption = false;
+                    hide();
+                    executeCommandsV2();
+                    return;
+                }
+
+                try {
+                    if (tokens.length >= 1) {
+                        hide();
+                        popUpOption = true;
+                        executeCommandsV2();
+                        return;
+                    }
+                    //else return;
+                }
+                catch (err) {
+                    popUpOption = false;
+
+                    // console.log("Error in Popup:", err);
+
+                    showToast("Something went wrong. Please try again later");
+
+                    return;
+                }
+            }
+
+
+            if (e.key === "Enter") {
+                e.preventDefault();
+
+                if (e.ctrlKey) {
+                    hide();
+                    executeCommandsV2();
+                    return;
+                }
+
+
+
+                if (isSuggestionVisible() && hasActiveSuggestion()) {
+                    e.preventDefault();
+                    if (!isSystemMessage(items[activeIndex])) {
+                        apply(activeIndex);
+
+
+                    }
+                    return;
+                }
+
+
+
+                const cmdText = input.value.trim().toLowerCase();
+                executeCommandsV2();
+                if (cmdText !== "help") {
+                    hide();
+                }
+                return;
+
+
+
+
+            }
+
+            // AUTO DOUBLE-QUOTE FOR MULTI-WORD SUGGESTIONS
+            // Physical keyboards report the space here. Phone soft keyboards usually do not (key is
+            // "Unidentified"), so the same quoting is repeated from the input event below.
+            if (e.key === " " && items.length > 0) {
+                const val = input.value;
+                if (input.selectionStart === val.length) {
+                    const quoted = autoQuoteMultiWordValue(val);
+                    if (quoted !== null) {
+                        e.preventDefault();
+                        input.value = quoted;
+                        handleInput();
+                        return;
+                    }
+                }
+            }
+
+            // ---------------------------------------------------
+            if (list.style.display === "none" || items.length === 0) return;
+            const gridEl = list.querySelector(".axi-verbs-grid");
+            const isInitialGrid = (gridEl !== null);
+            const verbsCount = isInitialGrid ? list.querySelectorAll(".axi-verbs-grid .axi-suggestion").length : 0;
+            let cols = 3;
+            if (isInitialGrid && gridEl && verbsCount > 0) {
+                try {
+                    const gridStyle = window.getComputedStyle(gridEl);
+                    const computedCols = gridStyle.getPropertyValue("grid-template-columns").split(" ").filter(Boolean).length;
+                    if (computedCols > 0) {
+                        cols = computedCols;
+                    }
+                } catch (err) {
+                    cols = 3;
+                }
+            }
+
+            if (e.key === "ArrowDown") {
+                e.preventDefault();
+                if (isInitialGrid) {
+                    if (activeIndex < verbsCount) {
+                        const nextRowIndex = activeIndex + cols;
+                        if (nextRowIndex < verbsCount) {
+                            activeIndex = nextRowIndex;
+                        } else {
+                            if (items.length > verbsCount) {
+                                activeIndex = verbsCount;
+                            } else {
+                                activeIndex = (activeIndex + 1) % verbsCount;
+                            }
+                        }
+                    } else {
+                        activeIndex = (activeIndex + 1) % items.length;
+                    }
+                } else {
+                    activeIndex = (activeIndex + 1) % items.length;
+                }
+                highlight();
+            }
+            else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                if (isInitialGrid) {
+                    if (activeIndex >= verbsCount) {
+                        if (activeIndex === verbsCount) {
+                            const lastRowStart = Math.floor((verbsCount - 1) / cols) * cols;
+                            activeIndex = lastRowStart + (cols - 1);
+                            if (activeIndex >= verbsCount) {
+                                activeIndex = verbsCount - 1;
+                            }
+                        } else {
+                            activeIndex = activeIndex - 1;
+                        }
+                    } else {
+                        const prevRowIndex = activeIndex - cols;
+                        if (prevRowIndex >= 0) {
+                            activeIndex = prevRowIndex;
+                        } else {
+                            activeIndex = items.length - 1;
+                        }
+                    }
+                } else {
+                    activeIndex = (activeIndex - 1 + items.length) % items.length;
+                }
+                highlight();
+            }
+            // Left/Right move the text caret; they only navigate suggestions when the input is empty
+            else if (e.key === "ArrowRight" && input.value.length === 0) {
+                e.preventDefault();
+                if (isInitialGrid && activeIndex < verbsCount) {
+                    activeIndex = (activeIndex + 1) % verbsCount;
+                } else {
+                    activeIndex = (activeIndex + 1) % items.length;
+                }
+                highlight();
+            }
+            else if (e.key === "ArrowLeft" && input.value.length === 0) {
+                e.preventDefault();
+                if (isInitialGrid && activeIndex < verbsCount) {
+                    activeIndex = (activeIndex - 1 + verbsCount) % verbsCount;
+                } else {
+                    activeIndex = (activeIndex - 1 + items.length) % items.length;
+                }
+                highlight();
+            }
+            if (e.key === "Tab") { e.preventDefault(); if (activeIndex === -1) activeIndex = 0; apply(activeIndex); }
+            // if (e.key === "Enter" && activeIndex >= 0) {
+            //     e.preventDefault();
+
+            //     apply(activeIndex);
+
+
+
+            // }
+            if (e.key === "Escape") {
+                e.preventDefault();
+
+                hide();
+            }
+
+            if (e.ctrlKey && e.key.toLowerCase() === "s") {
+                e.preventDefault();
+                // new code: Ctrl + S on configure product / plugin / changerequest saves the setting, when Save is offered
+                if (grpKey && grpKey.toLowerCase() === "configure" && isCommandSettingOption(normalizedTokens[1])) {
+                    if (!shouldOfferCommandSettingGo(normalizedTokens)) return;
+                    hide();
+                    isProgrammaticExecution = true;
+                    try {
+                        executeCommandsV2();
+                    } finally {
+                        isProgrammaticExecution = false;
+                    }
+                    return;
+                }
+                // console.log("Save Option Selected...Submitting Data...");
+                hide();
+                if (grpKey.toLowerCase() === "create")
+                    AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", true, tokens, saveCommandConfig);
+                else if (grpKey.toLowerCase() === "edit")
+                    AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", false, tokens, saveCommandConfig);
+                resetSetCommandState();
+                return;
+            }
+        });
+
+        document.addEventListener("keydown", e => {
+            if (!axicmdenabled) return;
+            if (e.key !== "Escape") return;
+
+            const favModalOverlay = document.getElementById("axiFavModalOverlay");
+            const isFavModalOpen = favModalOverlay && (favModalOverlay.style.display === "flex" || (window.getComputedStyle && window.getComputedStyle(favModalOverlay).display !== "none"));
+
+            const deleteModalOverlay = document.getElementById("axiFavDeleteModalOverlay");
+            const isDeleteModalOpen = deleteModalOverlay && (deleteModalOverlay.style.display === "flex" || (window.getComputedStyle && window.getComputedStyle(deleteModalOverlay).display !== "none"));
+
+            const isFavCardOpen = favouritesCard && (favouritesCard.style.display === "flex" || (megaDropdown && megaDropdown.style.display === "flex" && window.getComputedStyle && window.getComputedStyle(favouritesCard).display !== "none"));
+
+            const isSuggestionsOpen = (list && list.style.display !== "none") || (megaDropdown && megaDropdown.style.display === "flex");
+
+            if (isFavModalOpen) {
+                e.preventDefault();
+                e.stopPropagation();
+                hideFavoriteModal();
+                return;
+            }
+
+            if (isDeleteModalOpen) {
+                e.preventDefault();
+                e.stopPropagation();
+                hideDeleteFavoriteModal();
+                return;
+            }
+
+            if (isFavCardOpen || isSuggestionsOpen) {
+                e.preventDefault();
+                e.stopPropagation();
+                suppressFocusSuggestions = true;
+                hide();
+                if (input) {
+                    input.focus();
+                }
+                return;
+            }
+        }, true);
+
+        document.addEventListener("click", e => {
+            const isDropdownVisible = megaDropdown && megaDropdown.style.display !== "none";
+            if (isDropdownVisible || (list && list.style.display !== "none")) {
+                const insideSearchWrapper = searchWrapper && searchWrapper.contains(e.target);
+                const insideDropdown = megaDropdown && megaDropdown.contains(e.target);
+                const insideFavModal = (document.getElementById("axiFavModalOverlay") && document.getElementById("axiFavModalOverlay").contains(e.target));
+                const insideDeleteModal = (document.getElementById("axiFavDeleteModalOverlay") && document.getElementById("axiFavDeleteModalOverlay").contains(e.target));
+                if (!insideSearchWrapper && !insideDropdown && !insideFavModal && !insideDeleteModal && e.target !== input) {
+                    hide();
+                }
+            }
+        });
+
+
+
+
+        const iframe = document.getElementById("middle1");
+        if (iframe) {
+            /**
+             * Attaches click event listeners to a target document to auto-close AxiCMD suggestions.
+             * @param {Document} doc - Target DOM document.
+             * @returns {void}
+             */
+            const attachClickToDoc = (doc) => {
+                if (!doc) return;
+                if (doc._axiClickAttached) return;
+                doc._axiClickAttached = true;
+
+                doc.addEventListener("click", () => {
+                    hide();
+                    // a click inside the page iframe never reaches the shell document, so close the settings box here
+                    if (typeof window.axiCloseSettingsPanel === "function") window.axiCloseSettingsPanel();
+                });
+                doc.addEventListener("keydown", e => {
+                    if (e.key === "Escape" && typeof window.axiCloseSettingsPanel === "function") window.axiCloseSettingsPanel();
+                });
+
+                try {
+                    const iframes = doc.getElementsByTagName("iframe");
+                    for (let i = 0; i < iframes.length; i++) {
+                        const subIframe = iframes[i];
+                        try {
+                            const subDoc = subIframe.contentDocument || subIframe.contentWindow?.document;
+                            if (subDoc) attachClickToDoc(subDoc);
+                        } catch (e) { }
+
+                        subIframe.addEventListener("load", () => {
+                            try {
+                                const subDoc = subIframe.contentDocument || subIframe.contentWindow?.document;
+                                if (subDoc) attachClickToDoc(subDoc);
+                            } catch (e) { }
+                        });
+                    }
+                } catch (e) { }
+            };
+
+            /**
+             * Scans all child iframes and attaches document click handlers to dismiss suggestions.
+             * @returns {void}
+             */
+            const attachIframeClick = () => {
+                try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    attachClickToDoc(iframeDoc);
+                } catch (err) {
+                    // console.warn("Could not attach click listener to iframe (likely CORS restriction):", err);
+                }
+            };
+
+            attachIframeClick();
+
+            iframe.addEventListener("load", attachIframeClick);
+        }
+    }
+
+    /**
+     * Removes cached AxiCMD storage entries from browser localStorage matching prefix.
+     * @param {string} prefix - Storage key prefix.
+     * @returns {void}
+     */
+    function clearAxiLocalStorage(prefix) {
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+
+            if (key && key.startsWith(prefix)) {
+                keysToRemove.push(key);
+            }
+        }
+
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+
+        // console.log(`Cleared ${keysToRemove.length} keys starting with ${prefix}`);
+
+    }
+
+    /**
+     * Highlights active suggestion list item based on keyboard selection index.
+     * @returns {void}
+     */
+    function highlight() {
+        const suggestionElements = Array.from(list.querySelectorAll(".axi-suggestion"));
+        if (suggestionElements.length > 0) {
+            suggestionElements.forEach((li, i) => li.classList.toggle("active", i === activeIndex));
+
+            const activeItem = suggestionElements[activeIndex];
+            if (activeItem) {
+                const itemTop = activeItem.offsetTop;
+                const itemBottom = itemTop + activeItem.clientHeight;
+                const listScrollTop = list.scrollTop;
+                const listHeight = list.clientHeight;
+
+
+                if (itemBottom > listScrollTop + listHeight) {
+                    list.scrollTop = itemBottom - listHeight;
+                }
+
+                else if (itemTop < listScrollTop) {
+                    list.scrollTop = itemTop;
+                }
+            }
+        }
+    }
+
+
+
+    /**
+     * Main command execution dispatcher; evaluates input tokens and routes to command handler.
+     * @param {boolean} [isNavigating=false] - Indicates whether execution was triggered by navigation.
+     * @returns {void}
+     */
+    function executeCommandsV2(isNavigating = false) {
+        if (!axicmdenabled) {
+            return;
+        }
+        // new code: a configure product / plugin / changerequest save is running; Enter on the read-only input does nothing
+        if (commandSettingSaving) {
+            return;
+        }
+        if (document.querySelector(".AXI-Sec")?.classList.contains("axi-tour-active")) {
+            return;
+        }
+        if (input.value === "") {
+            showToast("Invalid Command!");
+            return;
+        }
+        if (isCommandsLoading) {
+            showToast("Commands are not loaded!");
+            return;
+        }
+
+        if (isEditing) {
+            showToast("Execution is not Allowed while executing");
+            return;
+        }
+
+
+
+        const text = input.value.trim();
+
+
+
+        if (!text || !commands) return;
+
+        const lowerText = text.toLowerCase();
+        if (lowerText === "help") {
+            startWalkthrough();
+            return;
+        }
+
+        if (lowerText === "version") {
+            showVersionInfo();
+            return;
+        }
+
+        const rawTokens = getTokens(text, false);
+        if (rawTokens.length > 0) {
+            const firstToken = cleanString(rawTokens[0]).toLowerCase();
+            const secondToken = rawTokens[1] ? cleanString(rawTokens[1].toLowerCase()) : "";
+
+
+
+        }
+
+        const tokens = getTokens(text);
+        if (tokens.length >= 2) {
+            const first = cleanString(tokens[0]).toLowerCase();
+            const second = cleanString(tokens[1]).toLowerCase();
+            const isResponsibility = second === "responsibility" || second === "responsibilities" || second === "responsibility listing";
+            if (first === "configure" && isResponsibility) {
+                popUpOption = false;
+            }
+        }
+        if (tokens.length === 1 && isTargetEntity(tokens[0])) {
+            const entityObj = getTargetEntityObj(tokens[0]);
+            const stype = entityObj ? (entityObj.stype || entityObj.STYPE || "").toLowerCase() : "";
+            if (["i", "iview", "ads", "a", "v", "page", "p", "t", "tstruct"].includes(stype) || isInboxStructure(entityObj)) {
+                tokens.unshift("view");
+            }
+        }
+
+        if (tokens.length >= 2) {
+            const first = cleanString(tokens[0]).toLowerCase();
+            const second = cleanString(tokens[1]).toLowerCase();
+            if (isTargetEntity(first) && isValidActionForTarget(first, second)) {
+                const temp = tokens[0];
+                tokens[0] = tokens[1];
+                tokens[1] = temp;
+            }
+        }
+
+        if (tokens[3]?.toLowerCase() === "with") {
+            showToast("Execution is Not Allowed while editing");
+            return;
+        }
+
+        if (tokens.length === 0) return;
+
+        const groupKey = cleanString(tokens[0]);
+
+        const groupNameNormalized = groupKey.toLowerCase();
+
+        // Enforce Structure Permissions
+        if (["view", "create", "edit"].includes(groupNameNormalized)) {
+            const targetToken = tokens[1];
+            if (targetToken && targetToken.toLowerCase() !== "inbox") {
+                // A caption typed by hand that several structures of one type share: don't guess which one (#289)
+                const sameCaption = getSameCaptionStructs(targetToken, groupNameNormalized);
+                if (sameCaption.length > 1) {
+                    const caption = cleanString(targetToken).replace(/\s*\[[^\]]*\]$/, "").trim();
+                    const choices = sameCaption.map(d => `${d.caption || caption} (${d.name})`).join(", ");
+                    showToast(`More than one is named '${caption}': ${choices}. Pick one from the list or type it with its name in brackets.`, 5000, "info");
+                    input.focus();
+                    return;
+                }
+                const entityObj = getTargetEntityObj(targetToken, groupNameNormalized);
+                if (entityObj) {
+                    // if (groupNameNormalized === "edit" && (entityObj.keyfieldforedit === "F" || entityObj.keyfieldforedit === false)) {
+                    //     showToast("Key field is not configured for this form.", 3000, false);
+                    //     return;
+                    // }
+                    if (!isActionAllowed(entityObj, groupNameNormalized)) {
+                        showToast("You do not have permission to execute this command.", 3000, false);
+                        return;
+                    }
+                }
+            }
+        }
+
+        if (groupNameNormalized === "run" && (isPreviewModalOpen() || isRunDisabledForPage() || isViewDesignerModalOpen())) {
+            showToast("Execution of run command is not allowed when the active page, preview modal or view designer is not runnable");
+            return;
+        }
+        const accessPermissions = getAccessPermissions();
+
+        if (groupNameNormalized === "source" && !accessPermissions.buildAccess) {
+            showToast(`User '${window.mainUserName}' has no access for command: ${text}`);
+            return;
+        }
+
+        if (groupNameNormalized === "configure" && !accessPermissions.appMgrAccess) {
+            showToast(`User '${window.mainUserName}' has no access for command: ${text}`);
+            return;
+        }
+        if (groupNameNormalized === "upload" && !accessPermissions.importAccess) {
+            showToast(`User '${window.mainUserName}' has no access for command: ${text}`);
+            return;
+        }
+        if (groupNameNormalized === "download" && !accessPermissions.exportAccess) {
+            showToast(`User '${window.mainUserName}' has no access for command: ${text}`);
+            return;
+        }
+        if (groupNameNormalized === "sdk" && !accessPermissions.buildAccess) {
+            showToast(`User '${window.mainUserName}' has no access for command: ${text}`);
+            return;
+        }
+
+        // Install has its own handler (build access only): the directory / version prompts are not configured options
+        if (groupNameNormalized === "install") {
+            if (!accessPermissions.buildAccess) {
+                showToast(`User '${window.mainUserName}' has no access for command: ${text}`);
+                return;
+            }
+            handleInstallCommand(text);
+            hide();
+            if (!isNavigating) saveToHistory(text);
+            return;
+        }
+
+        const groupConfig = getCommandConfig(groupKey, tokens);
+
+        if (!groupConfig) {
+            // console.warn(`Unknown command group: ${groupKey}`);
+
+        }
+
+        // Build the context object to pass to the dispatcher
+        const context = {
+            text: text,
+            tokens: tokens,
+            group: groupKey,
+            config: groupConfig,
+            resolvedParams: resolvedParams
+        };
+
+        dispatchCommand(context);
+        // resolvedParams = {};
+        // resolvedParamType = {};
+        hide();
+        if (!isNavigating) {
+            saveToHistory(text);
+
+
+
+        }
+
+
+        if (groupKey.toLowerCase() === "run") {
+            return;
+        }
+
+
+
+    }
+
+
+    /**
+     * Normalizes and trims command token string for execution.
+     * @param {string} [val=""] - Token value.
+     * @returns {string} Sanitized token.
+     */
+    function cleanCommandToken(val = "") {
+        return val.replace(/["]/g, "").trim();
+    }
+
+    /**
+     * Returns the registered execution handler function for a command group.
+     * @param {string} group - Command group name.
+     * @returns {Function|null} Handler function or null if unregistered.
+     */
+    function getGroupHandlers(group) {
+        if (!group || typeof COMMAND_HANDLERS === "undefined") return null;
+        const lowGroup = group.toLowerCase();
+        if (COMMAND_HANDLERS[group]) return COMMAND_HANDLERS[group];
+        const matchedKey = Object.keys(COMMAND_HANDLERS).find(k => k.toLowerCase() === lowGroup);
+        return matchedKey ? COMMAND_HANDLERS[matchedKey] : null;
+    }
+
+    /**
+     * Dispatches command context to registered group handler.
+     * @param {object} ctx - Command execution context.
+     * @returns {void}
+     */
+    function dispatchCommand(ctx) {
+        const { group, config, tokens } = ctx;
+
+
+
+        const firstParamPrompt = config?.prompts?.find(p => p.wordPos === 2);
+        const firstParamValue = cleanString(tokens[1]);
+
+        let handlerKey = 'default';
+
+        if (firstParamPrompt && firstParamPrompt?.promptValues) {
+
+            if (firstParamValue) {
+                handlerKey = firstParamValue?.toLowerCase();
+            }
+        }
+
+        // Check if command configuration is disabled (active = 'F' or not active)
+        const disabledRow = (firstParamValue ? getDisabledCommandConfigRow(group, firstParamValue) : null)
+            || (handlerKey !== 'default' ? getDisabledCommandConfigRow(group, handlerKey) : null);
+
+        if (disabledRow) {
+            const optName = disabledRow.promptOptions || disabledRow.prompt_options || disabledRow.PromptOptions || firstParamValue;
+            showToast(`The command '${group} ${optName}' is disabled or invalid.`);
+            return;
+        }
+
+        // Dynamically resolve against backend axi_command_config without touching JS code
+        const dynamicRow = (firstParamValue ? getCommandConfigRow(group, firstParamValue) : null)
+            || (handlerKey !== 'default' ? getCommandConfigRow(group, handlerKey) : null)
+            || getCommandConfigRow(group, 'default');
+
+        if (dynamicRow) {
+            executeDynamicNavigation({
+                tokens: tokens,
+                commandConfig: config,
+                configRow: dynamicRow
+            });
+            return;
+        }
+
+        // Locate the handler function in the mapping
+        const groupHandlers = getGroupHandlers(group);
+
+        if (!groupHandlers) {
+            showToast(`The command '${tokens.join(" ")}' is disabled or invalid.`);
+            return;
+        }
+
+        const handler = groupHandlers[handlerKey] || groupHandlers['default'];
+
+        if (!handler) {
+            showToast(`The command '${tokens.join(" ")}' is disabled or invalid.`);
+            return;
+        }
+
+        // console.log(`Dispatching to: ${group}.${handlerKey}`);
+
+
+        try {
+            handler({
+                tokens: tokens,
+                commandConfig: config,
+                resolvedParams: resolvedParams
+            });
+        } catch (err) {
+            // console.error(`Error executing handler for ${group}.${handlerKey}:`, err);
+        }
+    }
+
+    /**
+     * =================== Create Commands ==============================
+     *  
+     */
+
+    /**
+     * Handles execution of 'Create New' command to open creation form.
+     * @param {object} context - Execution context.
+     * @param {string[]} context.tokens - Command tokens.
+     * @param {object} context.commandConfig - Command configuration schema.
+     * @returns {void}
+     */
+    function handleCreateNew({ tokens, commandConfig }) {
+        let rawName = cleanCommandToken(tokens[1]);
+        // let transId = tryResolveToken(1, rawName, commandConfig, false);
+        const { value, type } = tryResolveToken(1, rawName, commandConfig, false);
+        let transId = value;
+
+        if (transId === rawName) {
+            const list = axDatasourceObj["Axi_TStructList".toLowerCase()];
+            const found = list?.find(
+                x => x.caption.toLowerCase() === rawName.toLowerCase()
+            );
+            if (found) transId = found.name
+            else {
+                // console.error("Invalid Tstruct name");
+                return;
+            }
+        }
+
+        redirectToTstruct(transId);
+    }
+
+
+    /**
+     * ======================== END ==================================
+     * 
+     */
+
+    /* ============== View Commands Functions =========================
+       ----------------- Start ------------------------------------------
+    */
+
+
+
+    /**
+     * Handles opening Database Console utility window.
+     * @returns {void}
+     */
+    function handleViewDbConsole() {
+        safeOpenDeveloperStudio("AxDBScript.aspx");
+        // window.LoadIframe("AxDBScript.aspx");
+
+    }
+
+    /**
+     * Handles opening user Inbox view.
+     * @returns {void}
+     */
+    function handleViewInbox() {
+
+        // LoadIframe('htmlpages.aspx?inbox=t')
+        if (typeof top !== "undefined" && top.window && typeof top.window.LoadIframe === "function") {
+            // top.window.LoadIframe('../aspx/processflow.aspx?activelist=t');
+            top.window.LoadIframe('htmlpages.aspx?inbox=t');
+        } else {
+            // window.LoadIframe('../aspx/processflow.aspx?activelist=t');
+            window.LoadIframe('htmlpages.aspx?inbox=t');
+        }
+    }
+
+
+
+
+
+
+
+
+    /* ============= End =================== */
+
+
+
+    /***************************************************
+     * Edit Command Function
+     * **************************************************
+    */
+
+
+    /**
+     * Generates unique identifier string for entity instances.
+     * @param {string} str - Base seed string.
+     * @returns {string} Generated unique ID.
+     */
+
+    function getUniqueId(str) {
+        const match = str.match(/\[(.*?)\]/);
+        return match ? match[1] : str;
+    }
+
+    /**
+     * Clears cached query results for a transaction structure in memory and localStorage.
+     * @param {string} transId - Transaction structure ID (e.g. 'tmmsg').
+     * @returns {void}
+     */
+    function clearStructSearchCache(transId) {
+        if (!transId) return;
+        const lowTransId = transId.toLowerCase().trim();
+        if (typeof axDatasourceObj === "object" && axDatasourceObj) {
+            for (const key in axDatasourceObj) {
+                const lowKey = key.toLowerCase();
+                if (lowKey.includes("getstructsdata") && lowKey.includes(lowTransId)) {
+                    delete axDatasourceObj[key];
+                }
+            }
+        }
+        try {
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.toLowerCase().includes("getstructsdata") && key.toLowerCase().includes(lowTransId)) {
+                    keysToRemove.push(key);
+                }
+            }
+            keysToRemove.forEach(k => localStorage.removeItem(k));
+        } catch (e) { }
+    }
+
+    if (typeof window !== "undefined") {
+        window.clearStructSearchCache = clearStructSearchCache;
+        window.axiClearStructCache = clearStructSearchCache;
+        try {
+            if (top && top !== window) {
+                top.axiClearStructCache = clearStructSearchCache;
+            }
+        } catch (e) { }
+    }
+
+    /**
+     * Looks a typed record up on the server when it is not in the part of the list that is already loaded.
+     * getList returns [] for ANY failure (timeout, dropped request, server hiccup), so one empty answer cannot be
+     * told apart from "record does not exist" and used to produce a false "Record ... not found". Therefore an
+     * empty first answer is asked once more, and when a full page comes back without the record the next pages
+     * are read too (a short term such as "msg11" matches many records).
+     * @async
+     * @param {string} lookupParams - Parameter string of axi_getstructsdata for this structure and field.
+     * @param {string|string[]} searchText - Text sent to the server search. An array is tried in order until one
+     *   finds the record: the resolved value of a picked suggestion can be the record id (or "name [id]"), which
+     *   the server search does not match, while the text the user typed ("msg09") does.
+     * @param {string[]} candidates - Values that identify the wanted record (see findMatchingRecordItem).
+     * @returns {Promise<object|null>} The matching record, or null if the server really has none.
+     */
+    async function lookupRecordOnServer(lookupParams, searchText, candidates) {
+        // old code
+        // const LOOKUP_PAGE_SIZE = 50;
+        // new code: the user's page size setting (also used by the "last page" check below)
+        const LOOKUP_PAGE_SIZE = getPageSize();
+        const MAX_LOOKUP_PAGES = 6;
+        let matched = null;
+
+        const searchTexts = [];
+        (Array.isArray(searchText) ? searchText : [searchText]).forEach(t => {
+            const clean = cleanString(String(t ?? "")).replace(/\[.*?\]/g, "").trim();
+            if (clean && !searchTexts.some(s => s.toLowerCase() === clean.toLowerCase())) searchTexts.push(clean);
+        });
+
+        for (const term of searchTexts) {
+            for (let page = 1; page <= MAX_LOOKUP_PAGES && !matched; page++) {
+                let rows = await getList("axi_getstructsdata", lookupParams, term, page, LOOKUP_PAGE_SIZE);
+                // Page 1 empty: either truly nothing, or a failed request. One more try tells them apart.
+                if (page === 1 && (!Array.isArray(rows) || rows.length === 0)) {
+                    rows = await getList("axi_getstructsdata", lookupParams, term, 1, LOOKUP_PAGE_SIZE);
+                }
+                if (!Array.isArray(rows) || rows.length === 0) break;
+
+                matched = findMatchingRecordItem(rows, candidates);
+                // A page shorter than the page size is the last one
+                // old code
+                // if (!matched && rows.filter(r => String(r?.isfield ?? "").toLowerCase() !== "t").length < LOOKUP_PAGE_SIZE) break;
+                // new code: the field rows now come first on page 1 and take part of the page, so every row is counted
+                if (!matched && rows.length < LOOKUP_PAGE_SIZE) break;
+            }
+            if (matched) break;
+        }
+
+        if (matched) {
+            // Keep the record findable for later commands, as the old inline lookup did
+            const baseKey = `axi_getstructsdata_${lookupParams}`.toLowerCase();
+            if (!axDatasourceObj[baseKey]) axDatasourceObj[baseKey] = [];
+            const existing = axDatasourceObj[baseKey];
+            const recUid = matched.transrecordid ?? matched.id;
+            if (!existing.some(x => (x.transrecordid ?? x.id) == recUid)) {
+                existing.push(Object.assign({}, matched, { __fromSearch: true }));
+            }
+        }
+        return matched;
+    }
+
+    /**
+     * Matches a candidate token or record ID against a list of struct records.
+     * @param {Array<object>} structDataList - Candidate records.
+     * @param {string[]} candidates - Candidate string values.
+     * @returns {object|null} Matched record object or null.
+     */
+    function findMatchingRecordItem(structDataList, candidates) {
+        if (!Array.isArray(structDataList) || structDataList.length === 0 || !Array.isArray(candidates) || candidates.length === 0) return null;
+        let matched = null;
+
+        // 1. Match by transrecordid directly
+        for (const val of candidates) {
+            matched = structDataList.find(item => {
+                const transRecId = (item?.transrecordid ?? item?.TRANSRECORDID ?? "").toString().trim();
+                return transRecId !== "" && transRecId !== "0" && transRecId.toLowerCase() === val.toLowerCase();
+            });
+            if (matched) return matched;
+        }
+
+        // 2. Match by id directly
+        for (const val of candidates) {
+            matched = structDataList.find(item => {
+                const itemId = (item?.id ?? item?.ID ?? "").toString().trim();
+                return itemId !== "" && itemId !== "0" && itemId.toLowerCase() === val.toLowerCase();
+            });
+            if (matched) return matched;
+        }
+
+        // 3. Match exact displaydata, caption, or name (preferring actual records where isfield != 't')
+        for (const val of candidates) {
+            const cleanVal = cleanString(val).toLowerCase();
+            matched = structDataList.find(item => {
+                const isField = String(item?.isfield || item?.ISFIELD || "").toLowerCase() === "t";
+                if (isField) return false;
+                const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
+                const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
+                const name = cleanString(item?.name || item?.NAME || "").toLowerCase();
+                return display === cleanVal || caption === cleanVal || name === cleanVal;
+            }) || structDataList.find(item => {
+                const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
+                const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
+                const name = cleanString(item?.name || item?.NAME || "").toLowerCase();
+                return display === cleanVal || caption === cleanVal || name === cleanVal;
+            });
+            if (matched) return matched;
+        }
+
+        // 4. Match without bracketed text
+        for (const val of candidates) {
+            const cleanVal = cleanString(val).replace(/\[.*?\]/g, "").trim().toLowerCase();
+            if (!cleanVal) continue;
+            matched = structDataList.find(item => {
+                const isField = String(item?.isfield || item?.ISFIELD || "").toLowerCase() === "t";
+                if (isField) return false;
+                const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
+                const caption = cleanString(item?.caption || item?.CAPTION || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
+                return display === cleanVal || caption === cleanVal;
+            }) || structDataList.find(item => {
+                const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
+                const caption = cleanString(item?.caption || item?.CAPTION || "").replace(/\[.*?\]/g, "").trim().toLowerCase();
+                return display === cleanVal || caption === cleanVal;
+            });
+            if (matched) return matched;
+        }
+
+        // 5. Substring match: only when exactly one record contains the text, and never a field row. Taking the first
+        // of several opened an arbitrary record ("msg1" with msg11 and msg12 loaded opened msg11) instead of
+        // reporting that the record was not found (#273).
+        for (const val of candidates) {
+            const cleanVal = cleanString(val).toLowerCase();
+            if (!cleanVal) continue;
+            const hits = structDataList.filter(item => {
+                const isField = String(item?.isfield || item?.ISFIELD || "").toLowerCase() === "t";
+                if (isField) return false;
+                const display = cleanString(item?.displaydata || item?.DISPLAYDATA || "").toLowerCase();
+                const caption = cleanString(item?.caption || item?.CAPTION || "").toLowerCase();
+                return display.includes(cleanVal) || caption.includes(cleanVal);
+            });
+            // The same record can be in the list twice (page rows and a search hit): count it once
+            const rowKey = item => {
+                const recId = String(item?.transrecordid ?? item?.TRANSRECORDID ?? "").trim();
+                if (recId !== "" && recId !== "0") return "r:" + recId;
+                return "d:" + String(item?.displaydata ?? item?.DISPLAYDATA ?? "").toLowerCase();
+            };
+            const distinct = new Set(hits.map(rowKey));
+            if (distinct.size === 1) return hits[0];
+        }
+
+        return null;
+    }
+
+    /**
+     * Retrieves cached struct data list for a transId and field from localStorage or axDatasourceObj.
+     * @param {string} transId - Transaction structure ID.
+     * @param {string} [fieldName=""] - Field name or keyfield.
+     * @returns {Array<object>} Cached data list.
+     */
+    function getStructDataListFromStorage(transId, fieldName = "") {
+        if (!transId) return [];
+        const lowTransId = transId.toLowerCase().trim();
+        const lowFieldName = (fieldName || "").toLowerCase().trim();
+
+        // 1. Check in-memory axDatasourceObj first (contains initial and all dynamically fetched records)
+        if (typeof axDatasourceObj === "object" && axDatasourceObj) {
+            for (const key in axDatasourceObj) {
+                const lowKey = key.toLowerCase();
+                if (lowKey.includes("getstructsdata") && lowKey.includes(lowTransId)) {
+                    if (!lowFieldName || lowKey.includes(lowFieldName)) {
+                        const list = axDatasourceObj[key];
+                        if (Array.isArray(list) && list.length > 0) {
+                            return list;
+                        }
+                    }
+                }
+            }
+            for (const key in axDatasourceObj) {
+                const lowKey = key.toLowerCase();
+                if (lowKey.includes("getstructsdata") && lowKey.includes(lowTransId)) {
+                    const list = axDatasourceObj[key];
+                    if (Array.isArray(list) && list.length > 0) {
+                        return list;
+                    }
+                }
+            }
+        }
+
+        // 2. Search localStorage for matching axi_getstructsdata key
+        try {
+            // Priority 1: Key matching both transId (param4) and fieldName (param8)
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (!key) continue;
+                const lowKey = key.toLowerCase();
+                if (lowKey.includes("getstructsdata")) {
+                    const matchTrans = lowKey.includes(`param4:${lowTransId}|`) || lowKey.includes(`param4:${lowTransId}_`) || lowKey.includes(`:${lowTransId}|`) || lowKey.includes(`:${lowTransId}_`);
+                    const matchField = !lowFieldName || lowKey.includes(`param8:${lowFieldName}|`) || lowKey.includes(`param8:${lowFieldName}_`) || lowKey.includes(`:${lowFieldName}|`) || lowKey.includes(`:${lowFieldName}_`);
+                    if (matchTrans && matchField) {
+                        const raw = localStorage.getItem(key);
+                        if (raw) {
+                            const parsed = parseStoredList(raw);
+                            if (Array.isArray(parsed) && parsed.length > 0) {
+                                return parsed;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Priority 2: Key matching transId in param4 or anywhere
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (!key) continue;
+                const lowKey = key.toLowerCase();
+                if (lowKey.includes("getstructsdata") && (lowKey.includes(`param4:${lowTransId}`) || lowKey.includes(`:${lowTransId}`))) {
+                    const raw = localStorage.getItem(key);
+                    if (raw) {
+                        const parsed = parseStoredList(raw);
+                        if (Array.isArray(parsed) && parsed.length > 0) {
+                            return parsed;
+                        }
+                    }
+                }
+            }
+
+            // Priority 3: Any getstructsdata key containing transId
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (!key) continue;
+                const lowKey = key.toLowerCase();
+                if (lowKey.includes("getstructsdata") && lowKey.includes(lowTransId)) {
+                    const raw = localStorage.getItem(key);
+                    if (raw) {
+                        const parsed = parseStoredList(raw);
+                        if (Array.isArray(parsed) && parsed.length > 0) {
+                            return parsed;
+                        }
+                    }
+                }
+            }
+        } catch (e) { }
+
+        return [];
+    }
+
+
+
+
+
+
+    /**
+     * Handles execution of 'Edit' command to load record into edit form.
+     * @param {object} context - Execution context.
+     * @param {string[]} context.tokens - Command tokens.
+     * @param {object} context.commandConfig - Command configuration schema.
+     * @param {object} [context.resolvedParams] - Resolved parameter map.
+     * @returns {void}
+     */
+    async function handleEditData({ tokens, commandConfig, resolvedParams }) {
+
+        let rawStruct = cleanCommandToken(tokens[1]);
+        // let transId = tryResolveToken(1, rawStruct, commandConfig, false);
+        const { value, type } = tryResolveToken(1, rawStruct, commandConfig, false);
+        let transId = value;
+
+        let fieldName = "";
+        let fieldValue = "";
+        let fieldUniqueId = "";
+
+
+        const struct_prompt = commandConfig.prompts[0];
+        const struct_source = struct_prompt.promptSource;
+
+        // extra params
+        const struct_paramValue = processExtraParams(tokens, commandConfig);
+
+        const struct_sourceKey = (struct_paramValue ? `${struct_source}_${struct_paramValue}` : struct_source).toLowerCase();
+
+        // load datasource if not exists
+        if (!axDatasourceObj[struct_sourceKey]) {
+
+            const struct_hasParams = !struct_prompt.promptParams ||
+                (struct_paramValue && struct_paramValue.replace(/,/g, '').trim().length > 0);
+
+            if (struct_hasParams) {
+                loadList(struct_source, struct_paramValue);
+                return [`Loading ${struct_source}...`];
+            }
+        }
+
+        const struct_dataList = axDatasourceObj[struct_sourceKey];
+
+        let preferredType = getResolvedParamType(1);
+        if (preferredType) {
+            preferredType = preferredType.toLowerCase();
+            if (preferredType === "tstruct") preferredType = "t";
+            if (preferredType === "iview") preferredType = "i";
+        }
+
+        const struct_row = struct_dataList.find(r =>
+            r.name === transId &&
+            (!preferredType || (r.stype || "").toLowerCase() === preferredType)
+        ) || struct_dataList.find(r => r.name === transId);
+
+        const primaryField = struct_row?.keyfield;
+        // const id = struct_row?.id; 
+
+
+
+        if (!primaryField) {
+            // console.error(`Keyfield is empty in ADS datasource: ${struct_source}`);
+            showToast("Please try again later...");
+            return [];
+        }
+
+        setEditSessionState(transId)
+
+        if (tokens.length === 3) {
+            const lastToken = tokens[tokens.length - 1];
+            const matchedField = getMatchedField(lastToken, transId);
+            if (matchedField) {
+                const isFieldVal = (matchedField.isfield || "").toString().toLowerCase();
+                if (isFieldVal === "t" || isFieldVal === "true") {
+                    showToast(`A value is required after the field '${matchedField.caption || matchedField.name || lastToken}'.`);
+                    return;
+                }
+            }
+        }
+
+        let tokenIndex;
+        let tokenBasedBooleanCheck;
+        let targetFieldName = primaryField;
+
+        if (tokens.length > 3) {
+            tokenIndex = 3;
+            tokenBasedBooleanCheck = false;
+            const fieldToken = cleanCommandToken(tokens[2]);
+            const matchedFld = getMatchedField(fieldToken, transId);
+            if (matchedFld && matchedFld.name) {
+                targetFieldName = matchedFld.name;
+            } else if (matchedFld && matchedFld.displaydata) {
+                const fnameMatch = matchedFld.displaydata.match(/\((.*?)\)/);
+                targetFieldName = fnameMatch ? fnameMatch[1].trim() : (matchedFld.caption || fieldToken);
+            } else {
+                const resolvedFld = tryResolveToken(2, fieldToken, commandConfig, false);
+                targetFieldName = (resolvedFld && resolvedFld.value) ? resolvedFld.value : (fieldToken || primaryField);
+            }
+        }
+        else {
+            tokenIndex = 2;
+            tokenBasedBooleanCheck = true;
+            targetFieldName = primaryField;
+        }
+
+        let rawValue = cleanCommandToken(tokens[tokenIndex]);
+        const { value: resolvedFieldValue, type: resolvedFieldType } = tryResolveToken(tokenIndex, rawValue, commandConfig, tokenBasedBooleanCheck);
+        fieldValue = resolvedFieldValue;
+
+        fieldUniqueId = getUniqueId(fieldValue);
+
+        // Fetch struct data list from localStorage (axi_axi_getstructsdata_...) to check save normalized field
+        const structDataList = getStructDataListFromStorage(transId, targetFieldName);
+        let matchedItem = null;
+
+        const candidates = [fieldValue, fieldUniqueId, rawValue]
+            .filter(v => v !== undefined && v !== null && String(v).trim() !== "")
+            .map(v => String(v).trim());
+
+        if (Array.isArray(structDataList) && structDataList.length > 0) {
+            matchedItem = findMatchingRecordItem(structDataList, candidates);
+        }
+
+        const hasUserProvidedRecord = (tokens.length > 2 && candidates.length > 0);
+
+        // If record wasn't preloaded, perform on-demand server lookup
+        if (!matchedItem && hasUserProvidedRecord) {
+            // What the user typed first, then the resolved value (may be an id the server search cannot match)
+            const candidateSearch = [rawValue, ...candidates];
+            if (candidateSearch.some(t => cleanString(String(t ?? "")).replace(/\[.*?\]/g, "").trim())) {
+                try {
+                    const lookupParams = processParamforEditndView(tokens, commandConfig, transId, tokenIndex);
+                    if (lookupParams) {
+                        matchedItem = await lookupRecordOnServer(lookupParams, candidateSearch, candidates);
+                    } else {
+                        console.warn("[AxiCMD] Record lookup skipped: no lookup parameters for", transId);
+                    }
+                } catch (lookupErr) {
+                    console.warn("[AxiCMD] On-demand record resolution failed:", lookupErr);
+                }
+            }
+        }
+
+        const transRecordId = matchedItem ? (matchedItem.transrecordid ?? matchedItem.TRANSRECORDID) : null;
+        const hasTransRecordId = transRecordId !== undefined && transRecordId !== null && String(transRecordId).trim() !== "" && String(transRecordId).trim() !== "0";
+
+        if (hasTransRecordId) {
+            redirectToTstructRecord(transId, rawStruct, String(transRecordId).trim());
+        } else if (!matchedItem && fieldValue && fieldValue.includes("[") && fieldValue.includes("]") && fieldUniqueId && fieldUniqueId !== "0" && fieldUniqueId !== fieldValue && /^\d+$/.test(fieldUniqueId)) {
+            // Fallback: If item had bracketed numeric record ID from autocomplete
+            redirectToTstructRecord(transId, rawStruct, fieldUniqueId);
+        } else if (fieldUniqueId && /^\d+$/.test(fieldUniqueId) && fieldUniqueId !== "0" && String(fieldValue).trim() !== String(rawValue).trim()) {
+            // A picked suggestion carries the record id: open it directly (same as the view command does).
+            // A number the user simply typed (resolved value equal to what was typed) is a key value, not a record id (#273).
+            redirectToTstructRecord(transId, rawStruct, fieldUniqueId);
+        } else if (hasUserProvidedRecord && !matchedItem) {
+            console.warn("[AxiCMD edit] Record not found", { transId, rawValue, fieldValue, fieldUniqueId, candidates, targetFieldName });
+            showToast(`Record '${rawValue || fieldValue}' not found in ${rawStruct}.`);
+            return;
+        } else {
+            redirectToTstruct(transId, rawStruct, true, targetFieldName, fieldUniqueId);
+        }
+    }
+
+
+    // function handleEditData({ tokens, commandConfig, resolvedParams }) {
+
+
+
+
+    //     let rawStruct = cleanCommandToken(tokens[1]);
+    //     let transId = tryResolveToken(1, rawStruct, commandConfig, false);
+    //     let rawFieldName = "";
+    //     let fieldName = "";
+    //     let actualFieldName = "";
+    //     let rawValue = "";
+    //     let fieldValue = "";
+    //     let fieldUniqueId = "";
+    //     const extraPromptSource = commandConfig.prompts[1].extraParams.toLowerCase();
+    //     let fieldValuePromptSource;
+    //     let valuePresentInList = false;
+
+    //     const extraSourceKey = `${extraPromptSource}_${transId}`.toLowerCase();
+
+    //     const extraList = axDatasourceObj[extraSourceKey];
+
+    //     const extraInlineValue = commandConfig?.prompts?.[3]?.promptValues;
+
+
+    //     if (transId === rawStruct) {
+    //         const list = axDatasourceObj["Axi_TStructList".toLowerCase()];
+    //         const found = list?.find(
+    //             x => x.caption?.toLowerCase() === rawStruct
+    //         );
+    //         if (!found || !found.name) {
+    //             // console.error("TStruct not found:", rawStruct);
+    //             return;
+    //         }
+    //         transId = found.name;
+    //     }
+
+    //     if (tokens.length > 3 && tokens.some(t => t.toLowerCase() !== extraInlineValue.toLowerCase())) {
+    //         fieldValuePromptSource = commandConfig.prompts[2].promptSource.toLowerCase();
+    //         rawFieldName = cleanCommandToken(tokens[2]);
+    //         actualFieldName = tryResolveToken(2, rawFieldName, commandConfig, true);
+
+
+    //         if (!Array.isArray(extraList)) {
+    //             // console.warn("Hidden field list is missing or invalid", extraList);
+    //             actualFieldName = null;
+    //             return;
+
+    //         } else if (extraList.length === 0) {
+    //             // console.log("hidden field List is Empty!");
+    //             actualFieldName = null;
+    //             return;
+
+    //         } else {
+    //             const field = extraList[0];
+
+    //             fieldName = field.fname ?? field.keyfield ?? field.name ?? field.displaydata;
+
+    //             if (actualFieldName === null) {
+    //                 // console.error("Field name resolution failed: ", fieldName)
+    //             }
+    //         }
+    //         if (!fieldName) {
+    //             // console.error("Field resolution failed:", rawFieldName);
+    //             return;
+    //         }
+
+    //         rawValue = cleanCommandToken(tokens[3]);
+    //         fieldValue = tryResolveToken(3, rawValue, commandConfig, false);
+    //         fieldUniqueId = getUniqueId(fieldValue);
+
+    //         const extraFieldValueList = axDatasourceObj[`${fieldValuePromptSource}_${transId}$#$${actualFieldName}`.toLowerCase()];
+    //         // console.log(`Edit Data ? TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`);
+
+    //         setEditSessionState(transId);
+
+    //         if (Array.isArray(extraFieldValueList) && extraFieldValueList.length > 0) {
+
+    //             valuePresentInList = extraFieldValueList.some(item =>
+    //                 // item.displaydata?.toLowerCase() === fieldUniqueId.toLowerCase() ||
+    //                 // item.name?.toLowerCase() === fieldUniqueId.toLowerCase() ||
+    //                 // item.fname?.toLowerCase() === fieldUniqueId.toLowerCase() ||
+    //                 // item.keyfield?.toLowerCase() === fieldUniqueId.toLowerCase() ||
+    //                 item.caption?.toLowerCase() === fieldUniqueId.toLowerCase()
+
+    //             );
+
+    //             if (valuePresentInList)
+    //                 redirectToTstruct(transId, rawStruct, true, fieldName, fieldUniqueId);
+    //             else
+    //                 redirectToTstruct(transId, rawStruct, false, fieldName, fieldUniqueId);
+    //         }
+    //         else {
+
+    //             redirectToTstruct(transId, rawStruct, false, fieldName, fieldUniqueId);
+    //         }
+
+
+
+
+    //     } else {
+    //         fieldValuePromptSource = commandConfig.prompts[1].promptSource.toLowerCase()
+
+    //         if (!Array.isArray(extraList)) {
+    //             // console.warn("Hidden field list is missing or invalid", extraList);
+    //             fieldName = null;
+    //             return;
+
+    //         } else if (extraList.length === 0) {
+    //             // console.log("hidden field List is Empty!");
+    //             fieldName = null;
+    //             return;
+
+    //         } else {
+    //             const field = extraList[0];
+
+    //             fieldName = field.fname ?? field.keyfield ?? field.name ?? field.displaydata;
+
+    //             if (fieldName === null) {
+    //                 // console.error("Field name resolution failed: ", fieldName)
+    //             }
+
+    //             rawValue = cleanCommandToken(tokens[2]);
+    //             fieldValue = tryResolveToken(2, rawValue, commandConfig, true);
+    //             fieldUniqueId = getUniqueId(fieldValue);
+
+    //             if (fieldValue === null) {
+    //                 // console.error("Field value resolution failed:", rawValue);
+    //                 return;
+    //             }
+
+
+
+    //         }
+
+    //         const extraFieldValueList = axDatasourceObj[`${fieldValuePromptSource}_${transId}$#$${fieldName}`.toLowerCase()];
+    //         // console.log(`Edit Data ? TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`);
+
+    //         setEditSessionState(transId);
+
+    //         if (Array.isArray(extraFieldValueList) && extraFieldValueList.length > 0) {
+
+    //             valuePresentInList = extraFieldValueList.some(item =>
+    //                 // item.displaydata?.toLowerCase() === fieldUniqueId.toLowerCase() ||
+    //                 // item.name?.toLowerCase() === fieldUniqueId.toLowerCase() ||
+    //                 // item.fname?.toLowerCase() === fieldUniqueId.toLowerCase() ||
+    //                 // item.keyfield?.toLowerCase() === fieldUniqueId.toLowerCase() ||
+    //                 item.caption?.toLowerCase() === fieldUniqueId.toLowerCase()
+
+    //             );
+
+    //             if (valuePresentInList)
+    //                 redirectToTstruct(transId, rawStruct, true, fieldName, fieldUniqueId);
+    //             else
+    //                 redirectToTstruct(transId, rawStruct, false, fieldName, fieldUniqueId);
+    //         }
+    //         else {
+
+    //             redirectToTstruct(transId, rawStruct, false, fieldName, fieldUniqueId);
+    //         }
+
+    //     }
+
+    // }
+
+    /**
+     * Sets session state flags indicating form is in active edit mode.
+     * @param {string} transId - Transaction structure ID.
+     * @returns {void}
+     */
+    function setEditSessionState(transId) {
+        if (!transId) return;
+
+        const href = top.window.location.href.toLowerCase();
+        const aspxIndex = href.indexOf("/aspx/");
+
+        if (aspxIndex === -1) {
+            // console.warn("setEditSessionState: '/aspx/' not found in URL", href);
+            return;
+        }
+
+        const appSessUrl = href.substring(0, aspxIndex);
+        const storageKey = `originaltrIds-${appSessUrl}`;
+
+        const transIdArray = JSON.parse(
+            localStorage.getItem(storageKey) || "[]"
+        );
+
+        if (!Array.isArray(transIdArray)) {
+            // console.warn("setEditSessionState: invalid stored value", transIdArray);
+            return;
+        }
+
+        const normalizedTransId = transId.toLowerCase();
+
+        if (transIdArray.some(x => x.toLowerCase() === normalizedTransId)) {
+            const updated = transIdArray.filter(
+                x => x.toLowerCase() !== normalizedTransId
+            );
+            // console.log("SetEditSessioncachekey: " + storageKey);
+            localStorage.setItem(storageKey, JSON.stringify(updated));
+        }
+    }
+
+
+    /**
+     * Generic redirect function to load an Entity Form via EntityForm.aspx using record ID.
+     * @param {string} transId - Transaction structure ID (tstid).
+     * @param {string} [formCaption=""] - Form caption for popup mode.
+     * @param {string} [recordId=""] - Record ID (recid).
+     * @param {string} [extraParams=""] - Additional query string parameters.
+     * @returns {void}
+     */
+    function redirectToEntityForm(transId, formCaption = "", recordId = "", extraParams = "") {
+        if (!transId) {
+            alert("There is no Tstruct name provided!");
+            return;
+        }
+        hide();
+
+        let targetUrl = `../aspx/EntityForm.aspx?tstid=${transId}&recid=${encodeURIComponent(recordId)}&hdnbElapsTime=0`;
+
+        if (extraParams) {
+            const separator = targetUrl.includes("?") ? "&" : "?";
+            targetUrl += `${separator}${extraParams}`;
+        }
+
+        setCommandRoutes(input.value.trim(), targetUrl);
+
+        if (popUpOption) {
+            targetUrl += `&tname=${encodeURIComponent(formCaption)}`;
+            openPopOption(targetUrl);
+        } else {
+            if (typeof top !== "undefined" && top.window && typeof top.window.LoadIframe === "function") {
+                top.window.LoadIframe(targetUrl);
+            } else {
+                window.LoadIframe(targetUrl);
+            }
+        }
+    }
+
+    /**
+     * Navigates main window or iframe to entity form with pre-filtered record fields.
+     * @param {string} transId - Transaction structure ID.
+     * @param {string} [formCaption=""] - Form title caption.
+     * @param {string} [fieldName=""] - Key field name.
+     * @param {string} [fieldValue=""] - Key field value.
+     * @param {string} [recordId=""] - Record ID (recid).
+     * @returns {void}
+     */
+    function redirectToEntity(transId, formCaption = "", fieldName = "", fieldValue = "", recordId = "") {
+        let targetUrl;
+        const resolvedRecId = recordId || (/^\d+$/.test(String(fieldValue).trim()) ? String(fieldValue).trim() : "");
+        if (resolvedRecId) {
+            targetUrl = `../aspx/EntityForm.aspx?tstid=${transId}&recid=${encodeURIComponent(resolvedRecId)}&hdnbElapsTime=0`;
+        } else if (!fieldValue) {
+            targetUrl = `../aspx/Entity.aspx?tstid=${transId}`;
+        } else {
+            targetUrl = `../aspx/EntityForm.aspx?tstid=${transId}&recid=${encodeURIComponent(fieldValue)}&hdnbElapsTime=0`;
+        }
+
+        setCommandRoutes(input.value.trim(), targetUrl);
+        if (popUpOption) {
+            targetUrl += `&tname=${encodeURIComponent(formCaption)}`;
+            openPopOption(targetUrl);
+        }
+        else {
+            if (typeof top !== "undefined" && top.window && typeof top.window.LoadIframe === "function") {
+                top.window.LoadIframe(targetUrl);
+            } else {
+                window.LoadIframe(targetUrl);
+            }
+        }
+    }
+
+    /**
+     * Opens source definition for an Axpert Data Source (ADS).
+     * @param {string} paramName - Name of ADS structure.
+     * @returns {void}
+     */
+    function handleViewSourceAds(paramName) {
+        let targetUrl;
+        // let paramName;
+        const iviewName = "csqlist"
+        const transId = "b_sql";
+        let fieldname = "sqlname";
+
+        // let rawName = cleanCommandToken(tokens[2]);
+
+
+
+        // if (rawName) {
+        //     paramName = tryResolveToken(2, rawName, commandConfig, false);
+
+        // }
+
+
+
+        setEditSessionState(transId);
+
+
+
+        targetUrl = `../aspx/tstruct.aspx?transid=${transId}`;
+
+        // if (!paramName) {
+        //     setCommandRoutes(input.value.trim(), targetUrl);
+
+        //     redirectToIView(iviewName);
+
+
+        // } else {
+        targetUrl += `&${fieldname}=${encodeURIComponent(paramName)}`;
+        targetUrl += "&act=load";
+        targetUrl += "&dummyload=false?";
+        // setCommandRoutes(input.value.trim(), targetUrl);
+
+        window.LoadIframe(targetUrl);
+
+        // }
+
+    }
+
+    /**
+     * Handles viewing source code / definition of active form or report.
+     * @param {object} context - Execution context.
+     * @param {string[]} context.tokens - Command tokens.
+     * @param {object} context.commandConfig - Command configuration schema.
+     * @returns {void}
+     */
+    function handleViewSource({ tokens, commandConfig }) {
+        hide();
+        const accessPermissions = getAccessPermissions();
+        if (!accessPermissions?.buildAccess) {
+            showToast(`User '${window.mainUserName}' has no access for command: ${input.value.trim()}`);
+            return;
+        }
+
+        const structName = getCurrentStructName();
+
+        if (!structName) {
+            showToast("Unable to determine current structure");
+            // console.error("handleViewSource: getCurrentStructName() returned null or undefined");
+            return;
+        }
+
+
+
+        switch (structName.type.toLowerCase()) {
+            case "entity":
+            case "tstruct":
+                if (!isDevOptionAllowed("tstruct")) {
+                    showToast(`User '${window.mainUserName}' has no access for TStruct source`);
+                    return;
+                }
+                safeOpenDeveloperStudio("tstreact", structName.name, true);
+                break;
+            case "iview":
+                if (!isDevOptionAllowed("iview")) {
+                    showToast(`User '${window.mainUserName}' has no access for IView source`);
+                    return;
+                }
+                safeOpenDeveloperStudio("ivreact", structName.name, true);
+                break;
+            case "ads":
+                if (!isDevOptionAllowed("ads")) {
+                    showToast(`User '${window.mainUserName}' has no access for ADS source`);
+                    return;
+                }
+                handleViewSourceAds(structName.name);
+                break;
+            case "p":
+            case "page":
+                if (!isDevOptionAllowed("page")) {
+                    showToast(`User '${window.mainUserName}' has no access for Page source`);
+                    return;
+                }
+                top.window.LoadIframe(`../aspx/tstruct.aspx?transid=sect&pagename=${encodeURIComponent(structName.name)}&act=load&dummyload=false?`);
+                break;
+
+            default:
+                showToast("Unknown source type: " + structName.name);
+                break;
+        }
+    }
+
+    /**
+     * Dispatches source view command execution.
+     * @param {object} context - Execution context.
+     * @param {string[]} context.tokens - Command tokens.
+     * @param {object} context.commandConfig - Command configuration schema.
+     * @returns {void}
+     */
+    function handleSourceCommand({ tokens, commandConfig }) {
+        hide();
+        const accessPermissions = getAccessPermissions();
+        if (!accessPermissions?.buildAccess) {
+            showToast(`User '${window.mainUserName}' has no access for command: ${input.value.trim()}`);
+            return;
+        }
+
+        let rawName = cleanCommandToken(tokens[1]);
+        const entityObj = getTargetEntityObj(rawName, "source");
+        if (!entityObj) {
+            showToast("Invalid structure name: " + rawName);
+            return;
+        }
+
+        const type = (entityObj.stype || entityObj.STYPE || "").toLowerCase().trim();
+        const name = entityObj.name || entityObj.NAME || "";
+
+        let targetUrl = "";
+        if (type === "t" || type === "tstruct") {
+            if (!isDevOptionAllowed("tstruct")) {
+                showToast(`User '${window.mainUserName}' has no access for TStruct source`);
+                return;
+            }
+            targetUrl = "developerstudio:tstruct:" + name;
+            safeOpenDeveloperStudio("tstreact", name, true);
+        } else if (type === "i" || type === "iview") {
+            if (!isDevOptionAllowed("iview")) {
+                showToast(`User '${window.mainUserName}' has no access for IView source`);
+                return;
+            }
+            targetUrl = "developerstudio:iview:" + name;
+            safeOpenDeveloperStudio("ivreact", name, true);
+        } else if (type === "ads") {
+            if (!isDevOptionAllowed("ads")) {
+                showToast(`User '${window.mainUserName}' has no access for ADS source`);
+                return;
+            }
+            targetUrl = `../aspx/tstruct.aspx?transid=b_sql&sqlname=${encodeURIComponent(name)}&act=load&dummyload=false?`;
+            handleViewSourceAds(name);
+        } else if (type === "p" || type === "page") {
+            if (!isDevOptionAllowed("page")) {
+                showToast(`User '${window.mainUserName}' has no access for Page source`);
+                return;
+            }
+            targetUrl = `../aspx/tstruct.aspx?transid=sect&pagename=${encodeURIComponent(name)}&act=load&dummyload=false?`;
+            top.window.LoadIframe(targetUrl);
+        } else {
+            showToast("Unknown source type: " + name);
+            return;
+        }
+
+        setCommandRoutes(input.value.trim(), targetUrl);
+    }
+
+    /**
+     * Handles execution of 'View' command for forms, reports, and dashboards.
+     * @async
+     * @param {object} context - Execution context.
+     * @param {string[]} context.tokens - Command tokens.
+     * @param {object} context.commandConfig - Command configuration schema.
+     * @returns {Promise<void>}
+     */
+    async function handleViewCommand({ tokens, commandConfig }) {
+
+        let transId = "";
+        let type = "";
+        let fieldName;
+        let fieldValue;
+        let rawFieldName;
+        let rawFieldValue;
+        let fieldUniqueId;
+        let fieldValueIndex = 0;
+        let paramValue;
+
+
+        if (tokens.length < 2) {
+            // console.warn("View Command required atleast two tokens");
+            showToast("view command requires atleast two tokens");
+            return;
+        }
+
+        // console.log(JSON.stringify(commandConfig));
+
+
+        const promptValues = commandConfig?.prompts?.[0].promptValues;
+        const viewDataSource = commandConfig?.prompts?.[0].promptSource;
+        if (viewDataSource?.toLowerCase() === "axi_structmetalist") {
+            paramValue = processExtraParams(tokens, commandConfig);
+        }
+        // const extraDataSource = commandConfig?.prompts?.[1].extraParams;
+        //const extraDataSource = "axi_keyfieldList";
+
+
+        const viewDataSourceKey = `${viewDataSource}_${paramValue}`.toLowerCase();
+        let rawStruct = cleanCommandToken(tokens[1]);
+        // transId = tryResolveToken(1, rawStruct, commandConfig, false);
+        const { value: rawStructValue, type: fieldType } = tryResolveToken(1, rawStruct, commandConfig, false);
+        transId = rawStructValue;
+
+
+        type = getType(viewDataSourceKey, { value: rawStructValue, type: fieldType }, promptValues, tokens, commandConfig);
+
+        if (type === "tstruct" && tokens.length === 3) {
+            const lastToken = tokens[tokens.length - 1];
+            const matchedField = getMatchedField(lastToken, transId);
+            if (matchedField) {
+                const isFieldVal = (matchedField.isfield || "").toString().toLowerCase();
+                if (isFieldVal === "t" || isFieldVal === "true") {
+                    showToast(`A value is required after the field '${matchedField.caption || matchedField.name || lastToken}'.`);
+                    return;
+                }
+            }
+        }
+
+        const handler = VIEW_HANDLERS[type];
+
+
+
+
+        if (!handler) {
+            // console.log("Error: Unsupported View Type");
+            showToast("Error: Unsupported View Type");
+            return;
+        }
+
+
+        if (type === "ads") {
+
+            const adsName = cleanCommandToken(tokens[1]);
+            const filters = extractAdsFilters(tokens);
+
+            if (filters && filters.length > 0) {
+                const colSourceKey = `axi_adscolumnlist_${adsName}`.toLowerCase();
+                let colList = axDatasourceObj[colSourceKey];
+                if (!colList) {
+                    try {
+                        colList = await getList("axi_adscolumnlist", adsName);
+                        if (colList) axDatasourceObj[colSourceKey] = colList;
+                    } catch (err) {
+                        // console.error("Failed to fetch column list for validation", err);
+                    }
+                }
+
+                if (colList && Array.isArray(colList)) {
+                    for (let f of filters) {
+                        const rawField = f.field || "";
+                        if (!rawField) continue;
+
+                        const fieldNames = rawField.split(",").map(s => s.trim().toLowerCase());
+                        for (let colName of fieldNames) {
+                            if (!colName) continue;
+                            const matched = colList.find(c => {
+                                const cName = (c.name || "").toLowerCase().trim();
+                                const cDisplay = (c.displaydata || "").toLowerCase().replace(/\s*\(.*?\)/g, "").replace(/\s*\[[^\]]+\]\s*$/, "").trim();
+                                const isHidden = c.hide === "T" || c.hidden === "T" || c.hide === true || c.hidden === true;
+                                return (cName === colName || cDisplay === colName) && !isHidden;
+                            });
+
+                            if (!matched) {
+                                showToast(`Column '${colName}' is invalid or hidden.`, 4000, "info");
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // console.log("Ads Filters: ", filters);
+
+            redirectToSmartView({
+                adsName: adsName,
+                filters: filters
+            });
+            return;
+
+
+        } else if (type === "page") {
+
+
+
+
+
+            let rawFieldValue = cleanCommandToken(tokens[1]);
+            redirectToHtmlPages(rawFieldValue, tokens, commandConfig);
+            return;
+
+        } else if (type === "iview") {
+            redirectToIView(transId, rawStruct);
+            return;
+
+        }
+
+
+        //const extraSourceKey = `${extraDataSource}_${transId}`.toLowerCase();
+
+
+        let preferredType = type;
+        if (preferredType) {
+            preferredType = preferredType.toLowerCase();
+            if (preferredType === "tstruct") preferredType = "t";
+            if (preferredType === "iview") preferredType = "i";
+        }
+
+        const struct_rowList = axDatasourceObj[viewDataSourceKey];
+        const struct_row = struct_rowList ? (struct_rowList.find(r =>
+            r.name === transId &&
+            (!preferredType || (r.stype || "").toLowerCase() === preferredType)
+        ) || struct_rowList.find(r => r.name === transId)) : null;
+
+        const primaryField = struct_row?.keyfield;
+
+        if (!primaryField) {
+            // console.error(`Keyfield is empty in ADS datasource: ${struct_source}`);
+            showToast("Please try again later...");
+            return [];
+        }
+
+        setEditSessionState(transId);
+
+        if (tokens.length === 2) {
+            handler({
+                transId,
+                fieldName: primaryField,
+                fieldValue: "",
+                rawStruct
+            });
+            return;
+        }
+
+        let tokenIndex;
+        let tokenBasedBooleanCheck;
+        let targetFieldName = primaryField;
+
+        if (tokens.length > 3) {
+            tokenIndex = 3;
+            tokenBasedBooleanCheck = false;
+            const fieldToken = cleanCommandToken(tokens[2]);
+            const matchedFld = getMatchedField(fieldToken, transId);
+            if (matchedFld && matchedFld.name) {
+                targetFieldName = matchedFld.name;
+            } else if (matchedFld && matchedFld.displaydata) {
+                const fnameMatch = matchedFld.displaydata.match(/\((.*?)\)/);
+                targetFieldName = fnameMatch ? fnameMatch[1].trim() : (matchedFld.caption || fieldToken);
+            } else {
+                const resolvedFld = tryResolveToken(2, fieldToken, commandConfig, false);
+                targetFieldName = (resolvedFld && resolvedFld.value) ? resolvedFld.value : (fieldToken || primaryField);
+            }
+        } else {
+            tokenIndex = 2;
+            tokenBasedBooleanCheck = true;
+            targetFieldName = primaryField;
+        }
+
+        rawFieldValue = cleanCommandToken(tokens[tokenIndex]);
+        const { value: resolvedFieldValue } = tryResolveToken(tokenIndex, rawFieldValue, commandConfig, tokenBasedBooleanCheck);
+        fieldValue = resolvedFieldValue;
+        fieldUniqueId = getUniqueId(fieldValue);
+
+        // Fetch struct data list from localStorage (axi_axi_getstructsdata_...) to resolve record ID
+        const structDataList = getStructDataListFromStorage(transId, targetFieldName);
+        let matchedItem = null;
+
+        const candidates = [fieldValue, fieldUniqueId, rawFieldValue]
+            .filter(v => v !== undefined && v !== null && String(v).trim() !== "")
+            .map(v => String(v).trim());
+
+        if (Array.isArray(structDataList) && structDataList.length > 0) {
+            matchedItem = findMatchingRecordItem(structDataList, candidates);
+        }
+
+        const hasUserProvidedRecord = (tokens.length > 2 && candidates.length > 0);
+
+        // If record wasn't preloaded, perform on-demand server lookup
+        if (!matchedItem && hasUserProvidedRecord) {
+            // What the user typed first, then the resolved value (may be an id the server search cannot match)
+            const candidateSearch = [rawFieldValue, ...candidates];
+            if (candidateSearch.some(t => cleanString(String(t ?? "")).replace(/\[.*?\]/g, "").trim())) {
+                try {
+                    const lookupParams = processParamforEditndView(tokens, commandConfig, transId, tokenIndex);
+                    if (lookupParams) {
+                        matchedItem = await lookupRecordOnServer(lookupParams, candidateSearch, candidates);
+                    } else {
+                        console.warn("[AxiCMD] Record lookup skipped: no lookup parameters for", transId);
+                    }
+                } catch (lookupErr) {
+                    console.warn("[AxiCMD] On-demand view record resolution failed:", lookupErr);
+                }
+            }
+        }
+
+        const transRecordId = matchedItem ? (matchedItem.transrecordid ?? matchedItem.TRANSRECORDID) : null;
+        const hasTransRecordId = transRecordId !== undefined && transRecordId !== null && String(transRecordId).trim() !== "" && String(transRecordId).trim() !== "0";
+
+        if (hasTransRecordId) {
+            redirectToEntityForm(transId, rawStruct, String(transRecordId).trim());
+        } else if (!matchedItem && fieldValue && fieldValue.includes("[") && fieldValue.includes("]") && fieldUniqueId && fieldUniqueId !== "0" && fieldUniqueId !== fieldValue && /^\d+$/.test(fieldUniqueId)) {
+            // Fallback: If item had bracketed numeric record ID from autocomplete
+            redirectToEntityForm(transId, rawStruct, fieldUniqueId);
+        } else if (fieldUniqueId && /^\d+$/.test(fieldUniqueId) && fieldUniqueId !== "0" && String(fieldValue).trim() !== String(rawFieldValue).trim()) {
+            // Only a picked suggestion carries a record id; a number the user typed is a key value (#273)
+            redirectToEntityForm(transId, rawStruct, fieldUniqueId);
+        } else if (hasUserProvidedRecord && !matchedItem) {
+            showToast(`Record '${rawFieldValue || fieldValue}' not found in ${rawStruct}.`);
+            return;
+        } else {
+            handler({
+                transId,
+                fieldName: targetFieldName,
+                fieldValue: fieldUniqueId,
+                rawStruct
+            });
+        }
+
+    }
+
+
+
+    // function handleViewCommand({ tokens, commandConfig }) {
+
+    //     let transId = "";
+    //     let type = "";
+    //     let fieldName;
+    //     let fieldValue;
+    //     let rawFieldName;
+    //     let rawFieldValue;
+    //     let fieldUniqueId;
+    //     let fieldValueIndex = 0;
+
+
+    //     if (tokens.length < 2) {
+    //         // console.warn("View Command required atleast two tokens");
+    //         showToast("view command requires atleast two tokens");
+    //         return;
+    //     }
+
+    //     // console.log(JSON.stringify(commandConfig));
+
+
+    //     const promptValues = commandConfig?.prompts?.[0].promptValues;
+    //     const viewDataSource = commandConfig?.prompts?.[0].promptSource;
+    //     const extraDataSource = commandConfig?.prompts?.[1].extraParams;
+
+
+    //     const viewDataSourceKey = `${viewDataSource}`.toLowerCase();
+    //     let rawStruct = cleanCommandToken(tokens[1]);
+    //     transId = tryResolveToken(1, rawStruct, commandConfig, false);
+
+
+    //     type = getType(viewDataSourceKey, transId, promptValues, tokens, commandConfig);
+
+    //     const handler = VIEW_HANDLERS[type];
+
+
+
+
+    //     if (!handler) {
+    //         // console.log("Error: Unsupported View Type");
+    //         showToast("Error: Unsupported View Type");
+    //         return;
+    //     }
+
+
+    //     if (type === "ads") {
+
+
+    //         const adsName = cleanCommandToken(tokens[1]);
+    //         const filters = extractAdsFilters(tokens);
+
+    //         // console.log("Ads Filters: ", filters);
+
+
+
+    //         redirectToSmartView({
+    //             adsName: adsName,
+    //             filters: filters
+    //         });
+    //         return;
+
+
+    //     } else if (type === "page") {
+
+
+
+
+
+    //         let rawFieldValue = cleanCommandToken(tokens[1]);
+    //         redirectToHtmlPages(rawFieldValue, tokens, commandConfig);
+    //         return;
+
+    //     }
+
+
+    //     const extraSourceKey = `${extraDataSource}_${transId}`.toLowerCase();
+
+
+    //     if (tokens.length > 3) {
+    //         fieldValueIndex = 3;
+
+
+    //     } else {
+    //         fieldValueIndex = 2;
+
+
+    //     }
+
+
+
+
+    //     const extraList = axDatasourceObj[extraSourceKey];
+
+    //     if (extraList && extraList.length > 0) {
+    //         fieldName = extraList[0].fname ?? extraList[0].keyfield ?? extraList[0].name ?? extraList[0].displaydata ?? null;
+    //     } else {
+    //         // console.warn("Hidden field name not found in cache");
+    //     }
+
+    //     rawFieldValue = cleanCommandToken(tokens[fieldValueIndex]);
+    //     fieldValue = tryResolveToken(fieldValueIndex, rawFieldValue, commandConfig, false);
+    //     fieldUniqueId = getUniqueId(fieldValue);
+
+
+    //     // console.log(
+    //         `view Data ? TStruct=${transId}, Field=${fieldName}, Value=${fieldValue}`
+    //     );
+
+    //     handler({
+    //         transId,
+    //         fieldName,
+    //         fieldValue: fieldUniqueId,
+    //         rawStruct
+    //     })
+
+    // }
+
+
+    /**
+     * Drops everything cached about a form after its key field changed. The key field decides which value
+     * edit/view search by, so the cached form list (it carries the key field) and the cached record lists
+     * (rows were fetched by the old key) must not be reused. Refresh does exactly that reset for every
+     * cache layer (memory, localStorage "axi_" keys, paging state) and reloads the lists, so it is reused here.
+     * @param {string} transId - Form whose key field was changed.
+     * @returns {void}
+     */
+    function invalidateKeyfieldCaches(transId) {
+        clearStructSearchCache(transId);
+        if (btnRefresh) btnRefresh.click();
+    }
+
+    /**
+     * Handles setting keyfield values for entity records.
+     * @async
+     * @param {object} context - Execution context.
+     * @param {string[]} context.tokens - Command tokens.
+     * @param {object} context.commandConfig - Command configuration schema.
+     * @returns {Promise<void>}
+     */
+    async function handleKeyfield({ tokens, commandConfig }) {
+
+        const tstructName = cleanString(tokens[2]);
+        const keyField = cleanString(tokens[3]);
+        const { value: actualFieldName } = tryResolveToken(3, keyField, commandConfig, false);
+        const { value: transId } = tryResolveToken(2, tstructName, commandConfig, false);
+        if (!tstructName || !keyField) {
+            showToast("TStruct and Key Field are required");
+            // console.log("TStruct and Key Field are required");
+            return;
+        }
+
+        const appname = getProjectName() || "";
+        const username = window.mainUserName ||
+            (typeof callParentNew === "function" && callParentNew("mainUserName")) ||
+            (typeof parent !== "undefined" && parent.mainUserName) ||
+            (typeof top !== "undefined" && top.mainUserName) ||
+            "";
+
+        if (!appname) {
+            showToast("Application session is not available. App name is required.");
+            return;
+        }
+
+        if (!username) {
+            showToast("User session is not available. Username is required.");
+            return;
+        }
+
+        try {
+            const res = await fetch(axiKeyfieldUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    appName: appname,
+                    transId: transId,
+                    keyField: actualFieldName,
+                    username: username
+                })
+            });
+
+            let dataObj = null;
+            try {
+                dataObj = await res.json();
+            } catch (e) { }
+
+            if (!res.ok || (dataObj && dataObj.success === false)) {
+                const errorMessage = dataObj?.message || (dataObj?.result?.message) || "Failed to set key field";
+                showToast(`Error: ${errorMessage}`);
+                return;
+            }
+
+            if (dataObj && (dataObj.success === true || dataObj.message?.toLowerCase() === "success")) {
+                showToast(`Key field-${keyField} has been set for the form ${tstructName}`, 5000, true);
+                invalidateKeyfieldCaches(transId);
+                return;
+            }
+        } catch (err) {
+            showToast(`Error: ${err.message || err}`);
+        }
+    }
+
+    // ---------------------------------------------------------------------------------------------------------
+    // Configure Product / Plugin / ChangeRequest (prompt_option_type 'commandsetting')
+    // ---------------------------------------------------------------------------------------------------------
+    const COMMAND_SETTING_LABELS = { product: "Product", plugin: "Plugin", changerequest: "Change Request" };
+    const commandSettingSavedCache = {};   // type -> { t, v } ; v = { accountname, reponame } or null when the GET failed
+    const commandSettingPending = {};      // type -> true while a GET is running
+    const COMMAND_SETTING_RETRY_MS = 30000;
+    // new code: loader while a save runs; the state (commandSettingSaving) is declared at the top with the other palette state
+    const COMMAND_SETTING_SAVE_TIMEOUT_MS = 30000;
+
+    /**
+     * Builds the spinner row the palette shows while something loads (same markup as "Searching...").
+     * @param {string} text - Text next to the spinner.
+     * @returns {HTMLLIElement}
+     */
+    function createSuggestionLoadingRow(text) {
+        const li = document.createElement("li");
+        li.className = "axi-suggestion-loading d-flex align-items-center justify-content-center py-3 px-4 text-muted gap-2";
+        li.style.fontSize = "13px";
+        li.style.textAlign = "center";
+        li.innerHTML = `
+                    <span class="spinner-border h-15px w-15px align-middle text-gray-400" role="status" aria-hidden="true" style="border-width: 2px; margin-inline-end: 6px;"></span>
+                    <span><bdi></bdi></span>
+                `;
+        li.querySelector("bdi").textContent = text;
+        return li;
+    }
+
+    /**
+     * Draws the "Saving ... repository..." row in the palette. render() calls it instead of the suggestions while a save runs.
+     * @returns {void}
+     */
+    function drawCommandSettingSavingRow() {
+        if (!list) return;
+        list.innerHTML = "";
+        list.classList.remove("My-Command-Wrapper");
+        if (favouritesCard) favouritesCard.style.display = "none";
+        if (commandHeader) commandHeader.style.display = "none";
+        list.appendChild(createSuggestionLoadingRow(`Saving ${commandSettingSaving} repository...`));
+        list.style.display = "block";
+        if (megaDropdown) megaDropdown.style.display = "flex";
+    }
+
+    /**
+     * Starts the save loader: palette stays open with the command, input is read-only so it cannot run twice.
+     * @param {string} label - Option label (Product / Plugin / Change Request).
+     * @returns {void}
+     */
+    function startCommandSettingSaving(label) {
+        commandSettingSaving = label;
+        if (input) input.readOnly = true;
+        drawCommandSettingSavingRow();
+    }
+
+    /**
+     * Ends the save loader. On success the palette closes; otherwise it reopens with the typed command so it can be fixed.
+     * @param {boolean} success - True when the save went through.
+     * @returns {void}
+     */
+    function endCommandSettingSaving(success) {
+        commandSettingSaving = null;
+        if (input) input.readOnly = false;
+        if (success) {
+            hide();
+            return;
+        }
+        reopenPaletteForCommandSetting();
+    }
+
+    /**
+     * Shows the palette again with the typed command (cursor at the end) after a failed or refused save.
+     * Deferred, because the command runner calls hide() right after the handler returns.
+     * @returns {void}
+     */
+    function reopenPaletteForCommandSetting() {
+        setTimeout(() => {
+            try {
+                if (!input) return;
+                suppressFocusSuggestions = true; // the focus listener then skips its own handleInput
+                input.focus();
+                suppressFocusSuggestions = false; // in case the input already had focus and no focus event fired
+                input.setSelectionRange(input.value.length, input.value.length);
+                handleInput();
+            } catch (e) { }
+        }, 0);
+    }
+
+    /**
+     * Validates an account / repository name token for the commandsetting options.
+     * @param {string} raw - Raw token.
+     * @returns {{ok: boolean, value: string, message: string}} Result with the cleaned value.
+     */
+    function validateCommandSettingName(raw) {
+        const value = cleanCommandToken(raw == null ? "" : String(raw));
+        if (!value) return { ok: false, value: "", message: "Name is required" };
+        if (value.length > 100) return { ok: false, value, message: "Name must be 100 characters or fewer" };
+        if (!/^[A-Za-z0-9._-]+$/.test(value)) return { ok: false, value, message: "Name can contain only letters, numbers, dot, underscore and hyphen" };
+        return { ok: true, value, message: "" };
+    }
+
+    /**
+     * Returns the configure row of a typed option when that option is a commandsetting one.
+     * @param {string} tokenName - Typed option token (tokens[1]).
+     * @returns {object|null} Configure row or null.
+     */
+    function getCommandSettingRow(tokenName) {
+        const opt = cleanCommandToken(tokenName || "");
+        if (!opt) return null;
+        const row = getCommandConfigRow("Configure", opt);
+        if (!row) return null;
+        const optType = (row.promptOptionType || row.prompt_option_type || row.PromptOptionType || "").toLowerCase();
+        return optType === "commandsetting" ? row : null;
+    }
+
+    /**
+     * True when the typed configure option is a commandsetting option (Product, Plugin, ChangeRequest).
+     * @param {string} tokenName - Typed option token (tokens[1]).
+     * @returns {boolean}
+     */
+    function isCommandSettingOption(tokenName) {
+        return !!getCommandSettingRow(tokenName);
+    }
+
+    /**
+     * True when the configure option typed is a "shellaction" one (Trace On, Trace Off, Trace Files). The option may
+     * be one quoted token ("Trace On") or two words (Trace On), so both forms are checked.
+     * @param {string[]} tokens - Command tokens (tokens[0] is "configure").
+     * @returns {boolean}
+     */
+    function isShellActionOption(tokens) {
+        if (!Array.isArray(tokens) || tokens.length < 2) return false;
+        const single = cleanCommandToken(tokens[1] || "");
+        const joined = tokens.slice(1).map(t => cleanCommandToken(t || "")).filter(Boolean).join(" ");
+        return [single, joined].some(opt => {
+            const row = opt ? getCommandConfigRow("Configure", opt) : null;
+            return !!row && (row.promptOptionType || row.prompt_option_type || row.PromptOptionType || "").toLowerCase() === "shellaction";
+        });
+    }
+
+    /**
+     * Go is offered only once both the account and the repo name are present and valid.
+     * @param {string[]} tokens - Command tokens.
+     * @returns {boolean}
+     */
+    function shouldOfferCommandSettingGo(tokens) {
+        // old code
+        // return !!tokens && tokens.length > 3 && validateCommandSettingName(tokens[2]).ok && validateCommandSettingName(tokens[3]).ok;
+        // new code: words after the repo name mean a name with a space was typed, so no Go
+        return !!tokens && tokens.length > 3 && !hasCommandSettingExtraWords(tokens)
+            && validateCommandSettingName(tokens[2]).ok && validateCommandSettingName(tokens[3]).ok;
+    }
+
+    /**
+     * True when anything other than blanks follows the repo name (configure product <account> <repo> ...).
+     * @param {string[]} tokens - Command tokens.
+     * @returns {boolean}
+     */
+    function hasCommandSettingExtraWords(tokens) {
+        return !!tokens && tokens.slice(4).some(t => cleanCommandToken(t || "").trim() !== "");
+    }
+
+    /**
+     * Property type (product / plugin / changerequest) of a commandsetting row.
+     * @param {object} row - Configure row.
+     * @param {string} tokenName - Typed option, used when the row has no prompt id.
+     * @returns {string} Lower-case property type.
+     */
+    function getCommandSettingType(row, tokenName) {
+        const id = row ? (row.promptId || row.prompt_id || row.PromptId || "") : "";
+        return (id || cleanCommandToken(tokenName || "")).toString().trim().toLowerCase();
+    }
+
+    /**
+     * Human label for a property type.
+     * @param {string} type - Property type.
+     * @returns {string} Label.
+     */
+    function getCommandSettingLabel(type) {
+        return COMMAND_SETTING_LABELS[(type || "").toLowerCase()] || type;
+    }
+
+    /**
+     * Reads accountname / reponame from a response properties object, tolerating casing.
+     * @param {object} props - Properties object.
+     * @returns {{accountname: string, reponame: string}} Values ("" when missing).
+     */
+    function readCommandSettingProps(props) {
+        const p = props || {};
+        const pick = (...keys) => {
+            for (const k of keys) { if (p[k] !== undefined && p[k] !== null) return String(p[k]); }
+            return "";
+        };
+        return { accountname: pick("accountname", "accountName", "AccountName", "Accountname"), reponame: pick("reponame", "repoName", "RepoName", "Reponame") };
+    }
+
+    /**
+     * Gets username from the shell session.
+     * @returns {string} Username.
+     */
+    function getCommandSettingUser() {
+        return window.mainUserName ||
+            (typeof callParentNew === "function" && callParentNew("mainUserName")) ||
+            (typeof parent !== "undefined" && parent.mainUserName) ||
+            (typeof top !== "undefined" && top.mainUserName) ||
+            "";
+    }
+
+    /**
+     * Loads the currently saved value of a commandsetting type once (cached for the palette session) and
+     * redraws the suggestions when it arrives. A failed GET shows no suggestion and is retried after a while.
+     * @param {string} type - Property type.
+     * @returns {void}
+     */
+    function loadSavedCommandSetting(type) {
+        if (!type || !axiCommandSettingsUrl || commandSettingPending[type]) return;
+        const cached = commandSettingSavedCache[type];
+        if (cached && (cached.v || (Date.now() - cached.t) < COMMAND_SETTING_RETRY_MS)) return;
+        const appname = getProjectName() || "";
+        if (!appname) return;
+        commandSettingPending[type] = true;
+        fetch(`${axiCommandSettingsUrl}?appname=${encodeURIComponent(appname)}&category=axicmd&type=${encodeURIComponent(type)}`)
+            .then(res => res.ok ? res.json() : Promise.reject(new Error("HTTP " + res.status)))
+            .then(data => {
+                const props = data && (data.properties || data.Properties);
+                commandSettingSavedCache[type] = { t: Date.now(), v: readCommandSettingProps(props) };
+            })
+            .catch(() => { commandSettingSavedCache[type] = { t: Date.now(), v: null }; })
+            .finally(() => {
+                delete commandSettingPending[type];
+                try {
+                    const cur = getTokens(input.value);
+                    if (cur.length > 2 && cleanCommandToken(cur[0]).toLowerCase() === "configure" && getCommandSettingType(getCommandSettingRow(cur[1]), cur[1]) === type && commandSettingSavedCache[type].v) {
+                        handleInput();
+                    }
+                } catch (e) { }
+            });
+    }
+
+    /**
+     * Suggestions for "configure <product|plugin|changerequest> <account> <repo>": hint and Go only (no saved value).
+     * @param {string[]} tokens - Command tokens.
+     * @returns {Array} Suggestion list (may include goOption).
+     */
+    function getCommandSettingSuggestions(tokens) {
+        const row = getCommandSettingRow(tokens[1]);
+        const type = getCommandSettingType(row, tokens[1]);
+        const wordNo = tokens.length;
+        let list = [];
+        filteredObjects = [];
+
+        if (wordNo === 3) updateDynamicHintFromPrompt({ prompt: "account name" });
+        else if (wordNo === 4) updateDynamicHintFromPrompt({ prompt: "repo name" });
+        else updateDynamicHintFromPrompt(null);
+
+        // old code
+        // if (wordNo === 3 || wordNo === 4) {
+        //     loadSavedCommandSetting(type);
+        //     const saved = commandSettingSavedCache[type] && commandSettingSavedCache[type].v;
+        //     const savedValue = saved ? (wordNo === 3 ? saved.accountname : saved.reponame) : "";
+        //     const partial = cleanCommandToken(tokens[wordNo - 1] || "").toLowerCase();
+        //     if (savedValue && savedValue.toLowerCase().startsWith(partial) && savedValue.toLowerCase() !== partial) {
+        //         list = [savedValue];
+        //         filteredObjects = [{ name: savedValue, displaydata: savedValue }];
+        //     }
+        // }
+        // new code: the saved account / repo from axi_command_settings is no longer offered as a suggestion;
+        // only the account name / repo name hint and Go are shown
+
+        if (shouldOfferCommandSettingGo(tokens)) {
+            // old code
+            // list.unshift(goOption);
+            // filteredObjects.unshift(goOption);
+            // new code: Save instead of Go (the command saves the account / repo setting)
+            list.unshift(saveOption);
+            filteredObjects.unshift(saveOption);
+        }
+        // new code: nothing to pick yet, so say what to type instead of "No Data"
+        if (list.length === 0) {
+            if (wordNo === 3) list = ["Type GitHub account name"];
+            else if (wordNo === 4) list = ["Type GitHub repository name"];
+        }
+        return list;
+    }
+
+    /**
+     * Saves the account / repo pair for a commandsetting option through the CommandSettings API.
+     * @async
+     * @param {object} context - Execution context.
+     * @param {string[]} context.tokens - Command tokens.
+     * @param {object} context.configRow - Matching configure row.
+     * @returns {Promise<void>}
+     */
+    async function handleCommandSetting({ tokens, commandConfig, configRow }) {
+        // new code: a save is already running (loader on screen), so ignore a second Go / Enter
+        if (commandSettingSaving) return;
+
+        const propertyType = getCommandSettingType(configRow, tokens[1]);
+        const label = getCommandSettingLabel(propertyType);
+
+        const perms = getAccessPermissions();
+        if (!(perms.appMgrAccess && perms.buildAccess)) {
+            showToast(`User '${window.mainUserName}' has no access to configure ${label}`);
+            return;
+        }
+
+        // old code
+        // const account = validateCommandSettingName(tokens[2]);
+        // if (!account.ok) { showToast(`Account name: ${account.message}`); return; }
+        // const repo = validateCommandSettingName(tokens[3]);
+        // if (!repo.ok) { showToast(`Repo name: ${repo.message}`); return; }
+        // // new code: account and repo names cannot contain spaces, so extra words are an error, not ignored
+        // if (hasCommandSettingExtraWords(tokens)) { showToast(`Only an account name and a repo name are expected after '${label}'`); return; }
+        // new code: on a refused name the palette reopens with the command, so it can be corrected
+        const account = validateCommandSettingName(tokens[2]);
+        if (!account.ok) { showToast(`Account name: ${account.message}`); reopenPaletteForCommandSetting(); return; }
+        const repo = validateCommandSettingName(tokens[3]);
+        if (!repo.ok) { showToast(`Repo name: ${repo.message}`); reopenPaletteForCommandSetting(); return; }
+        // account and repo names cannot contain spaces, so extra words are an error, not ignored
+        if (hasCommandSettingExtraWords(tokens)) { showToast(`Only an account name and a repo name are expected after '${label}'`); reopenPaletteForCommandSetting(); return; }
+
+        const appname = getProjectName() || "";
+        const username = getCommandSettingUser();
+        if (!appname) { showToast("Application session is not available. App name is required."); return; }
+        if (!username) { showToast("User session is not available. Username is required."); return; }
+
+        // new code: loader in the palette until the API answers; set before the first await, so the hide() the
+        // command runner calls after this handler returns keeps the palette open
+        startCommandSettingSaving(label);
+        let savedOk = false;
+        // old code
+        // const abortCtrl = (typeof AbortController !== "undefined") ? new AbortController() : null;
+        // const abortTimer = abortCtrl ? setTimeout(() => abortCtrl.abort(), COMMAND_SETTING_SAVE_TIMEOUT_MS) : null;
+        // new code: the save timeout starts after the repository check, which has its own timeout
+        const abortCtrl = (typeof AbortController !== "undefined") ? new AbortController() : null;
+        let abortTimer = null;
+
+        try {
+            // new code: a repository GitHub does not know is not saved; when GitHub cannot be asked, save and warn
+            const repoCheck = await verifyCommandSettingRepo(propertyType, account.value, repo.value);
+            if (repoCheck.blocked) {
+                showToast(`Error: ${repoCheck.message} Check the account and repo names.`);
+                return;
+            }
+            abortTimer = abortCtrl ? setTimeout(() => abortCtrl.abort(), COMMAND_SETTING_SAVE_TIMEOUT_MS) : null;
+
+            const res = await fetch(`${axiCommandSettingsUrl}?appname=${encodeURIComponent(appname)}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                signal: abortCtrl ? abortCtrl.signal : undefined,
+                body: JSON.stringify({
+                    username: username,
+                    propertyCategory: "axicmd",
+                    propertyType: propertyType,
+                    properties: { accountname: account.value, reponame: repo.value }
+                })
+            });
+
+            // old code
+            // let dataObj = null;
+            // try { dataObj = await res.json(); } catch (e) { }
+            // new code: a 400 from the API is a plain-text message, so read text and parse JSON only when it is JSON
+            let dataObj = null;
+            let bodyText = "";
+            try { bodyText = await res.text(); dataObj = JSON.parse(bodyText); } catch (e) { }
+
+            if (!res.ok || (dataObj && dataObj.success === false)) {
+                const plainMessage = (typeof dataObj === "string" ? dataObj : (!dataObj ? bodyText : "")).trim();
+                const errorMessage = dataObj?.message || dataObj?.Message || dataObj?.error || dataObj?.title || plainMessage || "Failed to save " + label + " repository";
+                showToast(`Error: ${errorMessage}`);
+                return;
+            }
+
+            const saved = readCommandSettingProps(dataObj?.properties || dataObj?.Properties);
+            const prev = readCommandSettingProps(dataObj?.previous || dataObj?.Previous);
+            const newAccount = saved.accountname || account.value;
+            const newRepo = saved.reponame || repo.value;
+            const wasText = (prev.accountname || prev.reponame) ? `${prev.accountname}/${prev.reponame}` : "not set";
+
+            delete commandSettingSavedCache[propertyType];
+            clearInstallCaches(propertyType);
+            savedOk = true;
+            // old code
+            // showToast(`${label} repository set to ${newAccount}/${newRepo} (was ${wasText})`, 5000, true);
+            // new code: say when the repository could not be checked
+            if (repoCheck.warning) {
+                showToast(`${label} repository set to ${newAccount}/${newRepo} (was ${wasText}), but it could not be checked on GitHub: ${repoCheck.warning}`, 8000, "warning");
+            } else {
+                showToast(`${label} repository set to ${newAccount}/${newRepo} (was ${wasText})`, 5000, true);
+            }
+        } catch (err) {
+            // old code
+            // showToast(`Error: ${err.message || err}`);
+            // new code: say so when the save was stopped by the timeout
+            if (err && err.name === "AbortError") {
+                showToast(`Error: saving the ${label} repository took too long. Please try again.`);
+            } else {
+                showToast(`Error: ${err.message || err}`);
+            }
+        } finally {
+            // new code: loader off; palette closes on success, reopens with the command on failure
+            if (abortTimer) clearTimeout(abortTimer);
+            endCommandSettingSaving(savedOk);
+        }
+    }
+
+    // ---------------------------------------------------------------------------------------------------------
+    // Install Product / Plugin / ChangeRequest:  install <product|plugin|changerequest> <directory> [version]
+    // Account / repo come from the CommandSettings API (set with "configure <type> <account> <repo>"), the
+    // directories and versions from the AxiGit listdirectories API, and Go pushes the request to the ARM queue.
+    // axi_git_directories / axi_git_versions in the prompt rows are markers resolved here, never sent to the ADS.
+    // The pure helpers (tokenizer, validation, cache, payload) are mirrored in tests/axi-install-command.test.js.
+    // ---------------------------------------------------------------------------------------------------------
+    // old code
+    // const AXI_INSTALL_QUEUE_NAME = "AxiInstallQueue";
+    // new code: queue the AxiInstallConsumerPackage consumer listens on
+    const AXI_INSTALL_QUEUE_NAME = "axiinstallpackagesqueue";
+    const AXI_INSTALL_QUEUE_OK = "QUEUEDATAINSERTEDSUCESSFULLY";
+    const INSTALL_DEFAULT_VERSION = "Latest";   // sent when the command has no version
+    const INSTALL_TYPES = { product: "product", plugin: "plugin", changerequest: "changerequest" };
+    const INSTALL_CACHE_TTL_MS = 30 * 60 * 1000;
+    const INSTALL_REQUEST_TIMEOUT_MS = 30000;
+    const INSTALL_RETRY_MS = 30000;
+    const INSTALL_AUTOCLOSE_MS = 6000;
+    const INSTALL_STEP_MIN_MS = 250;   // each modal step stays visible at least this long
+    const installDirsCache = {};     // cache key -> { t, d } ; d = whole listdirectories response
+    const installDirsPending = {};   // cache key -> Promise while a listdirectories call runs
+    const installDirsError = {};     // cache key -> { t, message } of the last failed call
+    const installRepoCache = {};     // type -> { t, v } ; v = { account, repo } or null (not configured / GET failed)
+    const installRepoPending = {};   // type -> Promise while the CommandSettings GET runs (shared by every caller)
+    let installModal = null;         // the open progress modal, if any
+
+    /**
+     * Splits an install command into words. A double-quoted text is one word and the quotes are removed,
+     * so  install product "My Dir" Latest  gives [install, product, My Dir, Latest]. Only the install command uses it.
+     * @param {string} str - Raw command text.
+     * @returns {string[]} Words without quotes.
+     */
+    function tokenizeInstallCommand(str) {
+        const words = [];
+        if (!str || typeof str !== "string") return words;
+        const re = /"([^"]*)"?|([^\s"]+)/g;
+        let m;
+        while ((m = re.exec(str)) !== null) {
+            words.push(m[1] !== undefined ? m[1] : m[2]);
+        }
+        return words;
+    }
+
+    /**
+     * Words of the install command as the palette needs them while typing: an empty last word is added when the
+     * text ends with a space (outside an open quote), so the word being typed is always the last one.
+     * @param {string} str - Raw command text.
+     * @returns {string[]} Words without quotes.
+     */
+    function getInstallWords(str) {
+        const words = tokenizeInstallCommand(str);
+        const text = typeof str === "string" ? str : "";
+        const quoteCount = (text.match(/"/g) || []).length;
+        if (/\s$/.test(text) && quoteCount % 2 === 0) words.push("");
+        return words;
+    }
+
+    /**
+     * Maps the typed type word to the managerType the AxiGit API expects.
+     * @param {string} typeWord - Typed word (Product, ChangeRequest, "change request" ...).
+     * @returns {string} product / plugin / changerequest, or "" when it is not a type.
+     */
+    function getInstallManagerType(typeWord) {
+        const key = String(typeWord == null ? "" : typeWord).replace(/["\s]/g, "").toLowerCase();
+        return INSTALL_TYPES[key] || "";
+    }
+
+    /**
+     * Checks a typed install command against the directories of the repository.
+     * A directory with versions needs one of them; a directory without versions takes none; extra words are refused.
+     * @param {string[]} words - Words of the command (install, type, directory, version).
+     * @param {Array<{name: string, versions: string[]}>} directories - Directories from listdirectories.
+     * @returns {{ok: boolean, message: string, directory: string, version: string}} Result with the exact names.
+     */
+    function validateInstallArgs(words, directories) {
+        const fail = (message) => ({ ok: false, message, directory: "", version: "" });
+        const list = Array.isArray(directories) ? directories : [];
+        if (!words || words.length < 2 || !getInstallManagerType(words[1])) return fail("Install expects product, plugin or changerequest");
+        const dirWord = words[2] === undefined || words[2] === null ? "" : String(words[2]).trim();
+        if (!dirWord) return fail("Directory is required");
+        const dir = list.find(d => String(d.name).toLowerCase() === dirWord.toLowerCase());
+        if (!dir) return fail(`Directory '${dirWord}' was not found in the repository`);
+        const versions = Array.isArray(dir.versions) ? dir.versions : [];
+        const extra = words.slice(versions.length > 0 ? 4 : 3).filter(w => String(w).trim() !== "");
+        if (extra.length > 0) {
+            return fail(versions.length > 0
+                ? "Only a directory and a version are expected after the type"
+                : `'${dir.name}' has no versions, only the directory is expected after the type`);
+        }
+        // old code
+        // if (versions.length === 0) return { ok: true, message: "", directory: dir.name, version: "" };
+        // const verWord = words[3] === undefined || words[3] === null ? "" : String(words[3]).trim();
+        // if (!verWord) return fail(`Version is required for '${dir.name}'`);
+        // const ver = versions.find(v => String(v).toLowerCase() === verWord.toLowerCase());
+        // if (!ver) return fail(`Version '${verWord}' was not found for '${dir.name}'`);
+        // return { ok: true, message: "", directory: dir.name, version: ver };
+        // new code: a directory without versions in the AxiGitAPI answer is installed as Latest (versionDefaulted says so,
+        // the typed command had no version word); a directory with versions needs one of them
+        if (versions.length === 0) return { ok: true, message: "", directory: dir.name, version: INSTALL_DEFAULT_VERSION, versionDefaulted: true };
+        const verWord = words[3] === undefined || words[3] === null ? "" : String(words[3]).trim();
+        // if (!verWord) return { ok: true, message: "", directory: dir.name, version: INSTALL_DEFAULT_VERSION, versionDefaulted: true };
+        if (!verWord) return fail(`Version is required for '${dir.name}'`);
+        const ver = versions.find(v => String(v).toLowerCase() === verWord.toLowerCase());
+        if (!ver) return fail(`Version '${verWord}' was not found for '${dir.name}'`);
+        return { ok: true, message: "", directory: dir.name, version: ver, versionDefaulted: false };
+    }
+
+    /**
+     * Cache key (localStorage and memory) of a repository's directory listing.
+     * @param {string} type - product / plugin / changerequest.
+     * @param {string} account - Account name.
+     * @param {string} repo - Repo name.
+     * @returns {string} Key.
+     */
+    function buildInstallCacheKey(type, account, repo) {
+        return `axi_install_dirs_${type}_${account}_${repo}_v1`;
+    }
+
+    /**
+     * Reads a stored cache entry ({t, d} JSON) and returns it when it is still within the 30 minute TTL.
+     * @param {string|null} raw - Stored text.
+     * @param {number} now - Current time in ms.
+     * @returns {{t: number, d: object}|null} The entry or null.
+     */
+    function readInstallCacheEntry(raw, now) {
+        if (!raw) return null;
+        try {
+            const entry = JSON.parse(raw);
+            if (entry && typeof entry.t === "number" && entry.d && (now - entry.t) < INSTALL_CACHE_TTL_MS) return entry;
+        } catch (e) { }
+        return null;
+    }
+
+    /**
+     * Message of a failed AxiGit call: the ProblemDetails detail or title, else the plain text, else the HTTP status.
+     * @param {number} status - HTTP status.
+     * @param {string} text - Response body.
+     * @returns {string} Message.
+     */
+    function getInstallProblemMessage(status, text) {
+        let obj = null;
+        try { obj = JSON.parse(text); } catch (e) { }
+        const msg = obj && typeof obj === "object" ? (obj.detail || obj.title || obj.message || "") : "";
+        return String(msg || (obj === null ? text : "") || "").trim() || `Request failed (HTTP ${status})`;
+    }
+
+    /**
+     * Message of a failed directory listing as shown by install: a "not found" (404) also says how to change the saved repository.
+     * @param {string} type - product / plugin / changerequest.
+     * @param {string} message - Error message.
+     * @param {number} status - HTTP status of the failure (0 when there was no answer).
+     * @returns {string} Message.
+     */
+    function getInstallDirsErrorText(type, message, status) {
+        const text = String(message || "Could not load the directories").trim();
+        return status === 404 ? `${text} Run configure ${type} <account> <repo> to change it.` : text;
+    }
+
+    /**
+     * Checks a repository before "configure" saves it, through the listdirectories call install uses.
+     * Not found (404) or refused input (400) blocks the save; no answer, GitHub down (502) or a server error only warns,
+     * so an outage does not stop configuring.
+     * @async
+     * @param {string} type - product / plugin / changerequest.
+     * @param {string} account - Account name.
+     * @param {string} repo - Repo name.
+     * @returns {Promise<{blocked: boolean, warning: string, message: string}>} Result.
+     */
+    async function verifyCommandSettingRepo(type, account, repo) {
+        if (!AxiArmUrl) return { blocked: false, warning: "the ARM url is not set", message: "" };
+        try {
+            await fetchInstallDirectories(type, account, repo, true);
+            return { blocked: false, warning: "", message: "" };
+        } catch (err) {
+            const message = (err && err.message) || "Could not check the repository";
+            if (err && (err.status === 404 || err.status === 400)) return { blocked: true, warning: "", message };
+            return { blocked: false, warning: message, message: "" };
+        }
+    }
+
+    /**
+     * Id of one install request (the consumer can dedupe on it): crypto.randomUUID, or a random v4-shaped id when it is missing.
+     * @returns {string} Id.
+     */
+    function generateInstallRequestId() {
+        try {
+            if (typeof crypto !== "undefined" && crypto && typeof crypto.randomUUID === "function") return crypto.randomUUID();
+        } catch (e) { }
+        return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
+            const r = Math.floor(Math.random() * 16);
+            return (c === "x" ? r : ((r % 4) + 8)).toString(16);
+        });
+    }
+
+    /**
+     * Payload of the install request that goes to the queue.
+     * @param {object} p - Values (type, account, repo, directory, version, commitSha, appname, username, now).
+     * @returns {object} Payload.
+     */
+    function buildInstallPayload(p) {
+        // old code
+        // return {
+        //     action: "install",
+        //     requestId: p.requestId || "",
+        //     type: p.type,
+        //     account: p.account,
+        //     repo: p.repo,
+        //     managerType: p.type,
+        //     directory: p.directory,
+        //     version: p.version || "",
+        //     commitSha: p.commitSha || "",
+        //     appname: p.appname,
+        //     username: p.username,
+        //     requestedOn: p.requestedOn || (p.now instanceof Date ? p.now : new Date()).toISOString()
+        // };
+        // new code: field names the install consumer reads (appName, packageName, packageVersion, requestedBy, requestId)
+        return {
+            action: "install",
+            requestId: p.requestId || "",
+            type: p.type,
+            account: p.account,
+            repo: p.repo,
+            managerType: p.type,
+            packageName: p.directory,
+            packageVersion: p.version || "",
+            commitSha: p.commitSha || "",
+            appName: p.appname,
+            requestedBy: p.username,
+            requestedOn: p.requestedOn || (p.now instanceof Date ? p.now : new Date()).toISOString()
+        };
+    }
+
+    /**
+     * Body of ARMPushToQueue for a payload.
+     * @param {object} payload - Install payload.
+     * @returns {object} Request body.
+     */
+    function buildInstallQueueBody(payload) {
+        return { queuename: AXI_INSTALL_QUEUE_NAME, queuedata: JSON.stringify(payload), queuejson: payload, trace: false };
+    }
+
+    /**
+     * Reads the ARMPushToQueue answer. Success is an ok status and the success word in the body, which may be plain text or JSON-wrapped.
+     * @param {boolean} ok - HTTP ok flag.
+     * @param {number} status - HTTP status.
+     * @param {string} text - Response body.
+     * @returns {{success: boolean, message: string}} Result.
+     */
+    function parseInstallQueueResult(ok, status, text) {
+        const body = typeof text === "string" ? text : "";
+        if (ok && body.indexOf(AXI_INSTALL_QUEUE_OK) !== -1) return { success: true, message: "" };
+        let obj = null;
+        try { obj = JSON.parse(body); } catch (e) { }
+        // new code: ARM's response filter answers {"result":{"message":"queue Inserted Successfully","success":true}}
+        const wrapped = (obj && typeof obj === "object" && obj.result && typeof obj.result === "object") ? obj.result : null;
+        if (ok && ((wrapped && wrapped.success === true) || (obj && typeof obj === "object" && obj.success === true))) return { success: true, message: "" };
+        if (wrapped) obj = wrapped;
+        let msg = "";
+        if (obj && typeof obj === "object") msg = obj.message || obj.Message || obj.error || obj.detail || obj.title || "";
+        else if (typeof obj === "string") msg = obj;
+        else msg = body;
+        msg = String(msg || "").trim();
+        if (!msg) msg = ok ? "The queue did not confirm the request" : `Request failed (HTTP ${status})`;
+        return { success: false, message: msg };
+    }
+
+    /**
+     * Forgets the install caches of one type (memory and localStorage): after a configure save, or on Refresh (type omitted = all).
+     * @param {string} [type] - product / plugin / changerequest.
+     * @returns {void}
+     */
+    function clearInstallCaches(type) {
+        const prefix = type ? `axi_install_dirs_${type}_` : "axi_install_dirs_";
+        Object.keys(installDirsCache).forEach(k => { if (k.indexOf(prefix) === 0) delete installDirsCache[k]; });
+        Object.keys(installDirsError).forEach(k => { if (k.indexOf(prefix) === 0) delete installDirsError[k]; });
+        if (type) delete installRepoCache[type]; else Object.keys(installRepoCache).forEach(k => delete installRepoCache[k]);
+        try {
+            const drop = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                if (k && k.indexOf(prefix) === 0) drop.push(k);
+            }
+            drop.forEach(k => localStorage.removeItem(k));
+        } catch (e) { }
+    }
+
+    /**
+     * Redraws the suggestions when the palette still shows an install command (after a background load finished).
+     * @returns {void}
+     */
+    function refreshInstallSuggestions() {
+        try {
+            if (installModal) return;
+            // old code
+            // if (!megaDropdown || getComputedStyle(megaDropdown).display === "none") return;
+            // new code: the dropdown was closed while loading (Esc, click away): drop the "Loading..." hint, which would
+            // otherwise stay until the next keystroke
+            if (!megaDropdown || getComputedStyle(megaDropdown).display === "none") {
+                if (hintDiv && hintDiv.textContent === hintText("Loading") + "...") hintDiv.textContent = "";
+                return;
+            }
+            if (input && (tokenizeInstallCommand(input.value)[0] || "").toLowerCase() === "install") handleInput();
+        } catch (e) { }
+    }
+
+    /**
+     * Account / repo saved for a type. Returns the cached value, or starts the GET (once) and says it is loading.
+     * @param {string} type - product / plugin / changerequest.
+     * @returns {{loading: boolean, value: {account: string, repo: string}|null}} State.
+     */
+    function getInstallRepoState(type) {
+        const cached = installRepoCache[type];
+        if (cached && (cached.v || (Date.now() - cached.t) < INSTALL_RETRY_MS)) return { loading: false, value: cached.v };
+        if (!installRepoPending[type]) loadInstallRepo(type).then(refreshInstallSuggestions);
+        return { loading: true, value: null };
+    }
+
+    /**
+     * Reads the saved account / repo of a type through the CommandSettings GET.
+     * @async
+     * @param {string} type - product / plugin / changerequest.
+     * @returns {Promise<{account: string, repo: string}|null>} Value, or null when not configured / not reachable.
+     */
+    function loadInstallRepo(type) {
+        const cached = installRepoCache[type];
+        if (cached && (cached.v || (Date.now() - cached.t) < INSTALL_RETRY_MS)) return Promise.resolve(cached.v);
+        if (installRepoPending[type]) return installRepoPending[type];
+        const appname = getProjectName() || "";
+        if (!axiCommandSettingsUrl || !appname) { installRepoCache[type] = { t: Date.now(), v: null }; return Promise.resolve(null); }
+        installRepoPending[type] = (async () => {
+            let value = null;
+            try {
+                const res = await fetch(`${axiCommandSettingsUrl}?appname=${encodeURIComponent(appname)}&category=axicmd&type=${encodeURIComponent(type)}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    const props = readCommandSettingProps(data && (data.properties || data.Properties));
+                    if (props.accountname && props.reponame) value = { account: props.accountname, repo: props.reponame };
+                }
+            } catch (e) { value = null; }
+            delete installRepoPending[type];
+            installRepoCache[type] = { t: Date.now(), v: value };
+            return value;
+        })();
+        return installRepoPending[type];
+    }
+
+    /**
+     * Directory listing of a repository: memory, then localStorage (30 minutes), then POST listdirectories.
+     * @async
+     * @param {string} type - product / plugin / changerequest (the managerType).
+     * @param {string} account - Account name.
+     * @param {string} repo - Repo name.
+     * @param {boolean} [force=false] - Skip the caches and ask the API (the cache is then updated with the answer).
+     * @returns {Promise<object>} The listdirectories response. Rejects with an Error whose message is shown to the user.
+     */
+    function fetchInstallDirectories(type, account, repo, force = false) {
+        const key = buildInstallCacheKey(type, account, repo);
+        const mem = installDirsCache[key];
+        if (!force && mem && (Date.now() - mem.t) < INSTALL_CACHE_TTL_MS) return Promise.resolve(mem.d);
+        if (!force) {
+            try {
+                const stored = readInstallCacheEntry(localStorage.getItem(key), Date.now());
+                if (stored) { installDirsCache[key] = stored; return Promise.resolve(stored.d); }
+            } catch (e) { }
+        }
+        if (installDirsPending[key]) return installDirsPending[key];
+
+        installDirsPending[key] = (async () => {
+            const abortCtrl = (typeof AbortController !== "undefined") ? new AbortController() : null;
+            const abortTimer = abortCtrl ? setTimeout(() => abortCtrl.abort(), INSTALL_REQUEST_TIMEOUT_MS) : null;
+            try {
+                // old code
+                // const res = await fetch(`${AxiArmUrl}/AxiGit/api/git/listdirectories`, {
+                // new code
+                const res = await fetch(`${AxiArmUrl}/AxiGitAPI/api/git/listdirectories`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    signal: abortCtrl ? abortCtrl.signal : undefined,
+                    body: JSON.stringify({ account: account, repo: repo, managerType: type })
+                });
+                const text = await res.text();
+                // old code
+                // if (!res.ok) throw new Error(getInstallProblemMessage(res.status, text));
+                // new code: keep the HTTP status, so callers can tell "repository not found" (404) from "GitHub down" (502)
+                if (!res.ok) {
+                    const httpErr = new Error(getInstallProblemMessage(res.status, text));
+                    httpErr.status = res.status;
+                    throw httpErr;
+                }
+                let data = null;
+                try { data = JSON.parse(text); } catch (e) { }
+                if (!data || typeof data !== "object") throw new Error("The directory list could not be read");
+                if (!Array.isArray(data.directories)) data.directories = [];
+                const entry = { t: Date.now(), d: data };
+                installDirsCache[key] = entry;
+                delete installDirsError[key];
+                try { localStorage.setItem(key, JSON.stringify(entry)); } catch (e) { }
+                return data;
+            } catch (err) {
+                const message = (err && err.name === "AbortError") ? "Loading the directories took too long. Please try again." : (err && err.message) || String(err);
+                // old code
+                // installDirsError[key] = { t: Date.now(), message };
+                // throw new Error(message);
+                // new code: the status travels with the error (0 = no HTTP answer: timeout or network)
+                const status = (err && err.status) || 0;
+                installDirsError[key] = { t: Date.now(), message, status };
+                const outErr = new Error(message);
+                outErr.status = status;
+                throw outErr;
+            } finally {
+                if (abortTimer) clearTimeout(abortTimer);
+                delete installDirsPending[key];
+            }
+        })();
+        return installDirsPending[key];
+    }
+
+    /**
+     * State of the directory listing for the suggestions: the data, or loading (call started), or the last error (kept 30 s, no call loop).
+     * @param {string} type - product / plugin / changerequest.
+     * @param {string} account - Account name.
+     * @param {string} repo - Repo name.
+     * @returns {{loading: boolean, error: string, data: object|null}} State.
+     */
+    function getInstallDirsState(type, account, repo) {
+        const key = buildInstallCacheKey(type, account, repo);
+        const mem = installDirsCache[key];
+        if (mem && (Date.now() - mem.t) < INSTALL_CACHE_TTL_MS) return { loading: false, error: "", data: mem.d };
+        const err = installDirsError[key];
+        // old code
+        // if (err && (Date.now() - err.t) < INSTALL_RETRY_MS) return { loading: false, error: err.message, data: null };
+        // if (!installDirsPending[key]) {
+        //     fetchInstallDirectories(type, account, repo).then(refreshInstallSuggestions, (e) => {
+        //         showToast(e.message || "Could not load the directories");
+        //         refreshInstallSuggestions();
+        //     });
+        // }
+        // new code: a "not found" also says how to change the saved repository
+        if (err && (Date.now() - err.t) < INSTALL_RETRY_MS) return { loading: false, error: getInstallDirsErrorText(type, err.message, err.status), data: null };
+        if (!installDirsPending[key]) {
+            fetchInstallDirectories(type, account, repo).then(refreshInstallSuggestions, (e) => {
+                showToast(getInstallDirsErrorText(type, e && e.message, e && e.status));
+                refreshInstallSuggestions();
+            });
+        }
+        // a stored copy answers at once, without waiting for the promise
+        const filled = installDirsCache[key];
+        if (filled) return { loading: false, error: "", data: filled.d };
+        return { loading: true, error: "", data: null };
+    }
+
+    /**
+     * Grey "Loading..." hint in the command bar while the install settings or the AxiGit directories are fetched.
+     * @returns {void}
+     */
+    function setInstallLoadingHint() {
+        hintDiv.dir = isArabicUi() ? "rtl" : "";
+        hintDiv.textContent = hintText("Loading") + "...";
+        hintDiv.style.color = "#94a3b8";
+    }
+
+    /**
+     * Suggestions for "install <type> <directory> [version]" from the third word on: directories, versions or Go.
+     * @param {string} text - Raw input text.
+     * @returns {Array} Suggestion list (strings and goOption); filteredObjects is set to match.
+     */
+    function getInstallSuggestions(text) {
+        const words = getInstallWords(text);
+        const type = getInstallManagerType(words[1]);
+        filteredObjects = [];
+        updateDynamicHintFromPrompt(null);
+        if (!type || !getAccessPermissions().buildAccess) return [];
+
+        // old code
+        // const repoState = getInstallRepoState(type);
+        // if (repoState.loading) return ["Fetching repository settings..."];
+        // if (!repoState.value) return [`Run configure ${type} <account> <repo> first`];
+        // const { account, repo } = repoState.value;
+        //
+        // const dirsState = getInstallDirsState(type, account, repo);
+        // if (dirsState.loading) return ["Fetching directories..."];
+        // if (dirsState.error) return [`Error: ${dirsState.error}`];
+        // const dirs = (dirsState.data && dirsState.data.directories) || [];
+        // if (dirs.length === 0) return [`No directories found in ${account}/${repo}`];
+        // new code: while the settings / AxiGit directories load, or when they could not be loaded, the hint must
+        // not say "Ready to Run" (the null prompt above sets it): show "Loading..." while fetching, nothing otherwise
+        const repoState = getInstallRepoState(type);
+        if (repoState.loading) { setInstallLoadingHint(); return ["Fetching repository settings..."]; }
+        if (!repoState.value) { hintDiv.textContent = ""; return [`Run configure ${type} <account> <repo> first`]; }
+        const { account, repo } = repoState.value;
+
+        const dirsState = getInstallDirsState(type, account, repo);
+        if (dirsState.loading) { setInstallLoadingHint(); return ["Fetching directories..."]; }
+        if (dirsState.error) { hintDiv.textContent = ""; return [`Error: ${dirsState.error}`]; }
+        const dirs = (dirsState.data && dirsState.data.directories) || [];
+        if (dirs.length === 0) { hintDiv.textContent = ""; return [`No directories found in ${account}/${repo}`]; }
+
+        const asObjects = (names) => names.map(n => ({ name: n, displaydata: n }));
+
+        if (words.length === 3) {
+            updateDynamicHintFromPrompt({ prompt: "directory" });
+            const partial = words[2].toLowerCase();
+            const names = dirs.map(d => d.name).filter(n => String(n).toLowerCase().includes(partial));
+            names.sort((a, b) => (String(b).toLowerCase().startsWith(partial) ? 1 : 0) - (String(a).toLowerCase().startsWith(partial) ? 1 : 0));
+            filteredObjects = asObjects(names);
+            return names;
+        }
+
+        const dir = dirs.find(d => String(d.name).toLowerCase() === String(words[2]).trim().toLowerCase());
+        // old code
+        // if (!dir) return [];
+        // new code: an unknown directory cannot run, so the hint must not say "Ready to Run" (set by the null prompt above)
+        if (!dir) { hintDiv.textContent = ""; return []; }
+        const versions = Array.isArray(dir.versions) ? dir.versions : [];
+
+        if (versions.length === 0) {
+            // no versions: Go right after the directory, anything else typed is an extra word
+            if (words.length === 4 && words[3] === "") { filteredObjects = [goOption]; return [goOption]; }
+            // old code
+            // return [];
+            // new code: extra word after a directory without versions: not runnable, no "Ready to Run"
+            hintDiv.textContent = "";
+            return [];
+        }
+        if (words.length === 4) {
+            updateDynamicHintFromPrompt({ prompt: "version" });
+            const partial = words[3].toLowerCase();
+            const names = versions.filter(v => String(v).toLowerCase().startsWith(partial));
+            // old code: the version was optional, so Go was offered before one was typed
+            // if (!partial) {
+            //     filteredObjects = [goOption, ...asObjects(names)];
+            //     return [goOption, ...names];
+            // }
+            // new code: a directory with versions needs one, so only the versions are offered until one is chosen
+            if (partial && versions.some(v => String(v).toLowerCase() === partial)) {
+                // exact match: Go first, the other versions starting with the typed text stay in the list
+                filteredObjects = [goOption, ...asObjects(names)];
+                return [goOption, ...names];
+            }
+            filteredObjects = asObjects(names);
+            return names;
+        }
+        if (words.length === 5 && words[4] === "" && validateInstallArgs(words.slice(0, 4), dirs).ok) {
+            filteredObjects = [goOption];
+            return [goOption];
+        }
+        // old code
+        // return [];
+        // new code: an invalid version or extra words: not runnable, no "Ready to Run"
+        hintDiv.textContent = "";
+        return [];
+    }
+
+    /**
+     * Runs "install <type> <directory> [version]": checks it against the repository, then opens the progress modal.
+     * @async
+     * @param {string} text - Typed command.
+     * @returns {Promise<void>}
+     */
+    async function handleInstallCommand(text) {
+        const words = tokenizeInstallCommand(text);
+        const type = getInstallManagerType(words[1]);
+        if (!getAccessPermissions().buildAccess) {
+            showToast(`User '${window.mainUserName}' has no access for command: ${text}`);
+            return;
+        }
+        if (!type) { showToast("Install expects product, plugin or changerequest"); reopenPaletteForCommandSetting(); return; }
+
+        const appname = getProjectName() || "";
+        const username = getCommandSettingUser();
+        if (!appname) { showToast("Application session is not available. App name is required."); return; }
+        if (!username) { showToast("User session is not available. Username is required."); return; }
+
+        const repoInfo = await loadInstallRepo(type);
+        if (!repoInfo) { showToast(`Run configure ${type} <account> <repo> first`); reopenPaletteForCommandSetting(); return; }
+
+        let data;
+        try {
+            data = await fetchInstallDirectories(type, repoInfo.account, repoInfo.repo);
+        } catch (err) {
+            // old code
+            // showToast(err.message || "Could not load the directories");
+            // new code
+            showToast(getInstallDirsErrorText(type, err && err.message, err && err.status));
+            reopenPaletteForCommandSetting();
+            return;
+        }
+        const checked = validateInstallArgs(words, data.directories);
+        if (!checked.ok) { showToast(checked.message); reopenPaletteForCommandSetting(); return; }
+
+        openInstallModal({
+            type: type,
+            directory: checked.directory,
+            version: checked.version,
+            // new code: the modal re-checks the command as typed, without the Latest added for a missing version
+            versionDefaulted: !!checked.versionDefaulted,
+            account: repoInfo.account,
+            repo: repoInfo.repo,
+            commitSha: data.commitSha || "",
+            appname: appname,
+            username: username
+        });
+    }
+
+    /**
+     * Pushes the install request to the ARM queue (no auth headers, 30 s timeout).
+     * @async
+     * @param {object} payload - Install payload.
+     * @returns {Promise<{success: boolean, message: string}>} Result.
+     */
+    async function pushInstallToQueue(payload) {
+        const abortCtrl = (typeof AbortController !== "undefined") ? new AbortController() : null;
+        const abortTimer = abortCtrl ? setTimeout(() => abortCtrl.abort(), INSTALL_REQUEST_TIMEOUT_MS) : null;
+        try {
+            const res = await fetch(`${AxiArmUrl}/ARM_APIs/api/v1/ARMPushToQueue`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                signal: abortCtrl ? abortCtrl.signal : undefined,
+                body: JSON.stringify(buildInstallQueueBody(payload))
+            });
+            const text = await res.text();
+            return parseInstallQueueResult(res.ok, res.status, text);
+        } catch (err) {
+            if (err && err.name === "AbortError") return { success: false, message: "The request took too long. Please try again." };
+            return { success: false, message: (err && err.message) || String(err) };
+        } finally {
+            if (abortTimer) clearTimeout(abortTimer);
+        }
+    }
+
+    // ---- Install progress modal -------------------------------------------------------------------------------
+    // old code
+    /* const INSTALL_MODAL_CSS = `
+.axi-install-root{--ai-surface:#ffffff;--ai-ink:#1d2547;--ai-muted:#5b6482;--ai-rule:#dde1eb;--ai-paper:#f4f5f9;--ai-signal:#3f51c2;--ai-signal-tint:#eceffc;--ai-ok:#177a4a;--ai-ok-tint:#e4f4ea;--ai-err:#a3261a;--ai-err-tint:#fcefed;--ai-shadow:0 24px 60px -12px rgba(29,37,71,.35),0 4px 14px rgba(29,37,71,.12);position:fixed;inset:0;z-index:100001;display:flex;align-items:center;justify-content:center;padding:16px;font-family:"Segoe UI",system-ui,-apple-system,"Noto Sans Arabic",sans-serif;color:var(--ai-ink);line-height:1.4}
+:is(html.dark,html.dark-theme,body.dark,body.dark-theme,[data-bs-theme="dark"]) .axi-install-root{--ai-surface:#1e2230;--ai-ink:#e8ebf7;--ai-muted:#9aa3c4;--ai-rule:#2f3652;--ai-paper:#171a26;--ai-signal:#8d9bff;--ai-signal-tint:#262c4d;--ai-ok:#4cc38a;--ai-ok-tint:#16302a;--ai-err:#ff8f80;--ai-err-tint:#3a2224;--ai-shadow:0 24px 60px -12px rgba(0,0,0,.65),0 4px 14px rgba(0,0,0,.4)}
+.axi-install-root *{box-sizing:border-box}
+.axi-install-backdrop{position:absolute;inset:0;background:rgba(19,24,48,.48);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);animation:axi-install-fade .2s ease-out both}
+.axi-install-dialog{position:relative;width:min(440px,100%);max-height:calc(100vh - 32px);overflow:auto;background:var(--ai-surface);border:1px solid var(--ai-rule);border-radius:16px;box-shadow:var(--ai-shadow);outline:none;animation:axi-install-rise .28s cubic-bezier(.2,.8,.2,1) both}
+.axi-install-root.axi-install-leaving .axi-install-backdrop{animation:axi-install-fade .16s ease-in reverse both}
+.axi-install-root.axi-install-leaving .axi-install-dialog{animation:axi-install-rise .16s ease-in reverse both}
+.axi-install-head{display:flex;align-items:center;gap:14px;padding:22px 24px 14px}
+.axi-install-badge{flex:none;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:var(--ai-signal-tint);color:var(--ai-signal)}
+.axi-install-badge svg{width:24px;height:24px}
+.axi-install-titles{min-width:0}
+.axi-install-title{margin:0;font-size:17px;font-weight:600;letter-spacing:-.01em}
+.axi-install-sub{margin:2px 0 0;font-size:13px;color:var(--ai-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.axi-install-body{padding:6px 24px 8px}
+.axi-install-steps{list-style:none;margin:0;padding:0;display:grid;transition:opacity .2s ease}
+.axi-install-step{position:relative;display:grid;grid-template-columns:24px 1fr;gap:12px;align-items:center;min-height:42px}
+.axi-install-step:not(:last-child)::before{content:"";position:absolute;left:11px;top:31px;bottom:-7px;width:2px;border-radius:2px;background:var(--ai-rule)}
+.axi-install-step:not(:last-child)::after{content:"";position:absolute;left:11px;top:31px;bottom:-7px;width:2px;border-radius:2px;background:var(--ai-ok);transform:scaleY(0);transform-origin:top;transition:transform .35s ease}
+.axi-install-step[data-state="done"]:not(:last-child)::after{transform:scaleY(1)}
+.axi-install-marker{position:relative;width:24px;height:24px;border-radius:50%;border:2px solid var(--ai-rule);background:var(--ai-surface);display:grid;place-items:center;transition:background-color .25s ease,border-color .25s ease}
+.axi-install-marker svg{position:absolute;width:14px;height:14px;opacity:0;transform:scale(.5);transition:opacity .2s ease,transform .25s cubic-bezier(.2,1.4,.4,1)}
+.axi-install-spin{position:absolute;inset:-2px;border-radius:50%;border:2px solid transparent;opacity:0}
+.axi-install-step[data-state="active"] .axi-install-marker{border-color:var(--ai-signal-tint)}
+.axi-install-step[data-state="active"] .axi-install-spin{opacity:1;border-top-color:var(--ai-signal);border-right-color:var(--ai-signal);animation:axi-install-spin .8s linear infinite}
+.axi-install-step[data-state="done"] .axi-install-marker{background:var(--ai-ok);border-color:var(--ai-ok);color:#fff}
+.axi-install-step[data-state="done"] .axi-install-ico-ok,.axi-install-step[data-state="error"] .axi-install-ico-err{opacity:1;transform:scale(1)}
+.axi-install-step[data-state="error"] .axi-install-marker{background:var(--ai-err);border-color:var(--ai-err);color:#fff}
+.axi-install-label{font-size:14px;color:var(--ai-muted);transition:color .2s ease}
+.axi-install-step[data-state="active"] .axi-install-label{color:var(--ai-ink);font-weight:600}
+.axi-install-step[data-state="done"] .axi-install-label{color:var(--ai-ink)}
+.axi-install-step[data-state="error"] .axi-install-label{color:var(--ai-err);font-weight:600}
+.axi-install-collapse{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s ease}
+.axi-install-collapse>div{min-height:0;overflow:hidden}
+.axi-install-error{margin-top:10px;padding:12px 14px;border-radius:10px;background:var(--ai-err-tint);color:var(--ai-err);font-size:13px;word-break:break-word}
+.axi-install-error strong{display:block;margin-bottom:2px}
+.axi-install-success{text-align:center;padding:4px 0 6px}
+.axi-install-check{position:relative;width:64px;height:64px;margin:6px auto 12px}
+.axi-install-check::before{content:"";position:absolute;inset:0;border-radius:50%;background:var(--ai-ok-tint);animation:axi-install-halo .9s ease-out both}
+.axi-install-check svg{position:relative;width:64px;height:64px}
+.axi-install-check circle{fill:none;stroke:var(--ai-ok);stroke-width:3;stroke-dasharray:176;stroke-dashoffset:176;animation:axi-install-draw .55s .05s ease-out forwards}
+.axi-install-check path{fill:none;stroke:var(--ai-ok);stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:40;stroke-dashoffset:40;animation:axi-install-draw .35s .5s ease-out forwards}
+.axi-install-ok-title{margin:0;font-size:18px;font-weight:600;letter-spacing:-.01em}
+.axi-install-ok-text{margin:4px 0 14px;font-size:13.5px;color:var(--ai-muted)}
+.axi-install-card{margin:0;padding:12px 14px;border-radius:12px;background:var(--ai-paper);border:1px solid var(--ai-rule);display:grid;grid-template-columns:auto 1fr;gap:6px 14px;text-align:start;font-size:13px}
+.axi-install-card dt{color:var(--ai-muted)}
+.axi-install-card dd{margin:0;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.axi-install-card .axi-install-mono{font-family:Consolas,"Cascadia Mono","Courier New",monospace;font-weight:500}
+.axi-install-foot{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:14px 24px 20px;min-height:68px}
+.axi-install-note{margin-inline-end:auto;font-size:12.5px;color:var(--ai-muted)}
+.axi-install-btn{appearance:none;border:1px solid var(--ai-rule);background:var(--ai-surface);color:var(--ai-ink);font:inherit;font-size:14px;font-weight:600;padding:8px 18px;border-radius:9px;cursor:pointer;transition:background-color .15s ease,border-color .15s ease,transform .1s ease}
+.axi-install-btn:hover{background:var(--ai-paper)}
+.axi-install-btn:active{transform:translateY(1px)}
+.axi-install-btn:focus-visible{outline:2px solid var(--ai-signal);outline-offset:2px}
+.axi-install-btn-primary{background:var(--ai-signal);border-color:var(--ai-signal);color:#fff}
+.axi-install-btn-primary:hover{background:var(--ai-signal);filter:brightness(1.08)}
+:is(html.dark,html.dark-theme,body.dark,body.dark-theme,[data-bs-theme="dark"]) .axi-install-btn-primary{color:#10142a}
+.axi-install-bar{position:absolute;left:0;right:0;bottom:0;height:3px;background:transparent;overflow:hidden}
+.axi-install-bar>i{display:block;height:100%;background:var(--ai-ok);transform-origin:left;transform:scaleX(1)}
+.axi-install-root [hidden]{display:none!important}
+.axi-install-root.axi-install--success .axi-install-steps{display:none}
+.axi-install-root.axi-install--error .axi-install-note,.axi-install-root.axi-install--success .axi-install-note{display:none}
+.axi-install-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);border:0;white-space:nowrap}
+@keyframes axi-install-fade{from{opacity:0}to{opacity:1}}
+@keyframes axi-install-rise{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes axi-install-spin{to{transform:rotate(360deg)}}
+@keyframes axi-install-draw{to{stroke-dashoffset:0}}
+@keyframes axi-install-halo{from{transform:scale(.6);opacity:0}60%{opacity:1}to{transform:scale(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){
+.axi-install-root *,.axi-install-root *::before,.axi-install-root *::after{animation-duration:.001s!important;animation-delay:0s!important;transition-duration:.001s!important}
+.axi-install-step[data-state="active"] .axi-install-spin{animation:none;border-color:var(--ai-signal)}
+}
+`; */
+    // new code
+    // Follows DESIGN.md ("The Quiet Console"), like the version dialog: a solid sheet over the plain navy scrim, ruled
+    // rows, Console Ink for text, done steps and the primary action, Signal Indigo only for the current step and focus.
+    const INSTALL_MODAL_CSS = `
+.axi-install-root{--ai-ink:#1d2547;--ai-ink-hover:#2c3766;--ai-slate:#5b6482;--ai-paper:#f4f5f9;--ai-sheet:#fff;--ai-rule:#dde1eb;--ai-field:#c9cedb;--ai-signal:#3f51c2;--ai-signal-tint:#eceffb;--ai-err:#a3261a;--ai-err-tint:#fcefed;--ai-display:Bahnschrift,"DIN Alternate","Segoe UI",system-ui,sans-serif;position:fixed;inset:0;z-index:100001;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;font:13px/1.45 "Segoe UI",system-ui,-apple-system,"Noto Sans Arabic",sans-serif;color:var(--ai-ink)}
+.axi-install-root *{box-sizing:border-box}
+.axi-install-root ::selection{background:var(--ai-signal-tint);color:var(--ai-ink)}
+.axi-install-backdrop{position:absolute;inset:0;background:rgba(29,37,71,.28);animation:axi-install-fade .14s ease-out both}
+.axi-install-dialog{position:relative;width:min(400px,100%);max-height:calc(100vh - 32px);overflow:auto;background:var(--ai-sheet);border:1px solid var(--ai-rule);border-radius:8px;box-shadow:0 24px 56px -24px rgba(29,37,71,.5);outline:none;animation:axi-install-in .18s cubic-bezier(.22,1,.36,1) both}
+.axi-install-root.axi-install-leaving .axi-install-backdrop{animation:axi-install-fade .12s ease-in reverse both}
+.axi-install-root.axi-install-leaving .axi-install-dialog{animation:axi-install-in .12s ease-in reverse both}
+.axi-install-head{display:flex;align-items:flex-start;gap:12px;padding:16px 20px 0}
+.axi-install-titles{flex:1;min-width:0}
+.axi-install-title{margin:0;font:600 16px/1.25 var(--ai-display);color:var(--ai-ink)}
+.axi-install-sub{margin:8px 0 0;display:flex;align-items:baseline;gap:8px;min-width:0;font-size:14px;unicode-bidi:isolate}
+.axi-install-dir{min-width:0;font-weight:600;color:var(--ai-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.axi-install-ver{flex:none;font-family:var(--ai-display);font-variant-numeric:tabular-nums;color:var(--ai-slate)}
+.axi-install-repo{margin:2px 0 0;font-size:12px;color:var(--ai-slate);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;unicode-bidi:plaintext}
+.axi-install-x{flex:none;width:30px;height:30px;margin-block-start:-5px;margin-inline-end:-6px;padding:0;display:inline-flex;align-items:center;justify-content:center;color:var(--ai-slate);background:transparent;border:0;border-radius:6px;cursor:pointer}
+.axi-install-x:hover{color:var(--ai-ink);background:var(--ai-paper)}
+.axi-install-x:disabled{opacity:.4;cursor:default;background:transparent}
+.axi-install-x svg{width:16px;height:16px}
+.axi-install-meter{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:16px 20px 0}
+.axi-install-meter>i{height:3px;border-radius:2px;background:var(--ai-rule);transition:background-color .2s ease-out}
+.axi-install-meter>i[data-state="active"]{background:var(--ai-signal)}
+.axi-install-meter>i[data-state="done"]{background:var(--ai-ink)}
+.axi-install-meter>i[data-state="error"]{background:var(--ai-err)}
+.axi-install-body{padding:12px 20px 0}
+.axi-install-steps{list-style:none;margin:0;padding:0;border-top:1px solid var(--ai-rule)}
+.axi-install-step{display:grid;grid-template-columns:18px minmax(0,1fr) auto;align-items:center;gap:12px;min-height:40px;padding:8px 0;border-bottom:1px solid var(--ai-rule)}
+.axi-install-marker{position:relative;width:18px;height:18px;border-radius:50%;border:1.5px solid var(--ai-field);display:grid;place-items:center;color:#fff;transition:background-color .16s ease-out,border-color .16s ease-out}
+.axi-install-marker svg{position:absolute;width:11px;height:11px;opacity:0}
+.axi-install-spin{position:absolute;inset:-1.5px;border-radius:50%;border:1.5px solid transparent;opacity:0}
+.axi-install-step[data-state="active"] .axi-install-marker{border-color:var(--ai-signal-tint)}
+.axi-install-step[data-state="active"] .axi-install-spin{opacity:1;border-top-color:var(--ai-signal);animation:axi-install-spin .7s linear infinite}
+.axi-install-step[data-state="done"] .axi-install-marker{background:var(--ai-ink);border-color:var(--ai-ink)}
+.axi-install-step[data-state="done"] .axi-install-ico-ok{opacity:1}
+.axi-install-step[data-state="done"] .axi-install-ico-ok path{stroke-dasharray:24;stroke-dashoffset:24;animation:axi-install-draw .2s ease-out forwards}
+.axi-install-step[data-state="error"] .axi-install-marker{background:var(--ai-err);border-color:var(--ai-err)}
+.axi-install-step[data-state="error"] .axi-install-ico-err{opacity:1}
+.axi-install-label{min-width:0;color:var(--ai-slate);unicode-bidi:plaintext}
+.axi-install-step[data-state="active"] .axi-install-label{color:var(--ai-ink);font-weight:600}
+.axi-install-step[data-state="done"] .axi-install-label{color:var(--ai-ink)}
+.axi-install-step[data-state="error"] .axi-install-label{color:var(--ai-err);font-weight:600}
+.axi-install-time{font:12px/1 var(--ai-display);font-variant-numeric:tabular-nums;color:var(--ai-slate);unicode-bidi:isolate}
+.axi-install-error{margin-top:12px;padding:10px 12px;border:1px solid #efc9c3;border-radius:6px;background:var(--ai-err-tint);color:var(--ai-err);overflow-wrap:anywhere;unicode-bidi:plaintext}
+.axi-install-error strong{display:block;margin-bottom:2px}
+.axi-install-info{margin:0 0 12px;padding:10px 12px;border:1px solid #d5dbf5;border-radius:6px;background:var(--ai-signal-tint);color:var(--ai-ink);unicode-bidi:plaintext}
+.axi-install-readout{margin:0;border-top:1px solid var(--ai-rule)}
+.axi-install-row{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--ai-rule)}
+.axi-install-row dt{flex:none;font-weight:600;color:var(--ai-slate)}
+.axi-install-row dd{min-width:0;margin:0;font-weight:600;color:var(--ai-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;unicode-bidi:isolate}
+.axi-install-row dd.axi-install-num{font-family:var(--ai-display);font-variant-numeric:tabular-nums}
+.axi-install-row dd.axi-install-code{font:400 12.5px/1.45 Consolas,"Cascadia Mono","Courier New",monospace;direction:ltr}
+.axi-install-foot{position:relative;display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:16px 20px 20px}
+.axi-install-note{margin-inline-end:auto;font-size:12px;color:var(--ai-slate);font-variant-numeric:tabular-nums;unicode-bidi:plaintext}
+.axi-install-btn{min-height:34px;padding:0 14px;font:inherit;font-weight:600;color:var(--ai-ink);background:var(--ai-sheet);border:1px solid var(--ai-field);border-radius:6px;cursor:pointer;transition:background-color .12s ease-out}
+.axi-install-btn:hover{background:var(--ai-paper)}
+.axi-install-btn-primary{color:#fff;background:var(--ai-ink);border-color:var(--ai-ink)}
+.axi-install-btn-primary:hover{background:var(--ai-ink-hover);border-color:var(--ai-ink-hover)}
+.axi-install-btn:focus-visible,.axi-install-x:focus-visible{outline:2px solid var(--ai-signal);outline-offset:2px}
+.axi-install-bar{position:absolute;inset-inline:0;bottom:0;height:2px;overflow:hidden}
+.axi-install-bar>i{display:block;height:100%;background:var(--ai-signal);transform-origin:left}
+:is([dir="rtl"],.btextDir-rtl) .axi-install-bar>i{transform-origin:right}
+.axi-install-root [hidden]{display:none!important}
+.axi-install-root.axi-install--success .axi-install-steps{display:none}
+.axi-install-root.axi-install--error .axi-install-note{display:none}
+.axi-install-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);border:0;white-space:nowrap}
+@keyframes axi-install-fade{from{opacity:0}to{opacity:1}}
+@keyframes axi-install-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes axi-install-spin{to{transform:rotate(360deg)}}
+@keyframes axi-install-draw{to{stroke-dashoffset:0}}
+@media (prefers-reduced-motion:reduce){
+.axi-install-root *,.axi-install-root *::before,.axi-install-root *::after{animation-duration:.001s!important;animation-delay:0s!important;transition-duration:.001s!important}
+.axi-install-step[data-state="active"] .axi-install-spin{animation:none;border-color:var(--ai-signal)}
+}
+`;
+
+    const INSTALL_ICON_CLOSE = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg>';
+    const INSTALL_ICON_PACKAGE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/><path d="M3.3 7.5L12 12l8.7-4.5"/><path d="M12 12v9"/></svg>';
+    const INSTALL_ICON_OK = '<svg class="axi-install-ico-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+    const INSTALL_ICON_ERR = '<svg class="axi-install-ico-err" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>';
+    const INSTALL_ICON_BIG_CHECK = '<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="28"/><path d="M20 33l8 8 16-17"/></svg>';
+
+    /**
+     * Adds the modal's single scoped <style> once.
+     * @returns {void}
+     */
+    function ensureInstallStyles() {
+        if (document.getElementById("axi-install-styles")) return;
+        const style = document.createElement("style");
+        style.id = "axi-install-styles";
+        style.textContent = INSTALL_MODAL_CSS;
+        document.head.appendChild(style);
+    }
+
+    /**
+     * Closes the install modal that is open, if any.
+     * @param {boolean} [immediate=false] - Skip the leave animation.
+     * @returns {void}
+     */
+    function closeInstallModal(immediate = false) {
+        if (installModal) installModal.close(immediate);
+    }
+
+    /**
+     * Opens the install progress modal and runs the steps: checking the repository and resolving the version come from the
+     * cached listing (short staged delays), queuing is the real ARMPushToQueue call, then the success or error state shows.
+     * @param {object} ctx - type, directory, version, account, repo, commitSha, appname, username.
+     * @returns {void}
+     */
+    function openInstallModal(ctx) {
+        closeInstallModal(true);
+        ensureInstallStyles();
+
+        const label = getCommandSettingLabel(ctx.type);
+        // old code
+        // const sha7 = ctx.commitSha ? String(ctx.commitSha).slice(0, 7) : "";
+        // const stepLabels = [
+        //     "Checking repository",
+        //     sha7 ? `Resolving version @ ${sha7}` : "Resolving version",
+        //     "Queuing install",
+        //     "Installation started"
+        // ];
+        // new code: three steps; the directory / version re-check is part of "Checking repository"
+        const stepLabels = [
+            "Checking repository",
+            "Queuing install request",
+            "Installation request queued"
+        ];
+        const prevFocus = document.activeElement;
+        // one id and one timestamp per install: Retry sends the same ones, so the consumer can dedupe
+        const m = {
+            inflight: false, closed: false, hover: false, kbdFocus: false, timer: null, remaining: INSTALL_AUTOCLOSE_MS,
+            requestId: generateInstallRequestId(), requestedOn: new Date().toISOString(), resumeFrom: 0, fresh: null
+        };
+
+        const mk = (tag, cls, text) => {
+            const node = document.createElement(tag);
+            if (cls) node.className = cls;
+            if (text !== undefined) node.textContent = text;
+            return node;
+        };
+
+        const titleId = "axi-install-title-" + Date.now();
+        const root = mk("div", "axi-install-root axi-install--running");
+        const backdrop = mk("div", "axi-install-backdrop");
+        const dialog = mk("div", "axi-install-dialog");
+        dialog.setAttribute("role", "dialog");
+        dialog.setAttribute("aria-modal", "true");
+        dialog.setAttribute("aria-labelledby", titleId);
+        dialog.tabIndex = -1;
+
+        // header
+        // old code
+        // const head = mk("div", "axi-install-head");
+        // const badge = mk("div", "axi-install-badge");
+        // badge.innerHTML = INSTALL_ICON_PACKAGE;
+        // const titles = mk("div", "axi-install-titles");
+        // const title = mk("h2", "axi-install-title", `Installing ${label}`);
+        // title.id = titleId;
+        // const sub = mk("p", "axi-install-sub", `${ctx.directory} · ${ctx.version || "no version"}`);
+        // sub.title = sub.textContent;
+        // titles.appendChild(title);
+        // titles.appendChild(sub);
+        // head.appendChild(badge);
+        // head.appendChild(titles);
+        // new code
+        // title, then the directory (Console Ink) and its version (Slate, Bahnschrift), then account/repo; a close icon at the end
+        const head = mk("div", "axi-install-head");
+        const titles = mk("div", "axi-install-titles");
+        const title = mk("h2", "axi-install-title", `Installing ${label}`);
+        title.id = titleId;
+        const sub = mk("p", "axi-install-sub");
+        const subDir = mk("span", "axi-install-dir", ctx.directory);
+        subDir.title = ctx.directory;
+        sub.appendChild(subDir);
+        // old code
+        // sub.appendChild(mk("span", "axi-install-ver", ctx.version || "No version"));
+        // new code
+        sub.appendChild(mk("span", "axi-install-ver", ctx.version || INSTALL_DEFAULT_VERSION));
+        const repoLine = mk("p", "axi-install-repo", `${ctx.account}/${ctx.repo}`);
+        titles.appendChild(title);
+        titles.appendChild(sub);
+        titles.appendChild(repoLine);
+        const xBtn = mk("button", "axi-install-x");
+        xBtn.type = "button";
+        xBtn.setAttribute("aria-label", "Close");
+        xBtn.innerHTML = INSTALL_ICON_CLOSE;
+        head.appendChild(titles);
+        head.appendChild(xBtn);
+
+        // one meter segment per step: Signal Indigo for the current one, Console Ink when done, Error Red when failed
+        const meter = mk("div", "axi-install-meter");
+        meter.setAttribute("aria-hidden", "true");
+        // new code: the stylesheet lays out four segments; one column per step instead
+        meter.style.gridTemplateColumns = `repeat(${stepLabels.length},1fr)`;
+
+        // body: stepper, error, success
+        const body = mk("div", "axi-install-body");
+        const live = mk("div", "axi-install-sr");
+        live.setAttribute("aria-live", "polite");
+        live.setAttribute("role", "status");
+        const steps = mk("ol", "axi-install-steps");
+        const labelEls = [];
+        // new code
+        const timeEls = [];
+        const segEls = [];
+        const stepStart = [];
+        const stepEls = stepLabels.map((text) => {
+            const li = mk("li", "axi-install-step");
+            li.dataset.state = "pending";
+            const marker = mk("span", "axi-install-marker");
+            marker.appendChild(mk("span", "axi-install-spin"));
+            marker.insertAdjacentHTML("beforeend", INSTALL_ICON_OK + INSTALL_ICON_ERR);
+            li.appendChild(marker);
+            const labelEl = mk("span", "axi-install-label", text);
+            labelEls.push(labelEl);
+            li.appendChild(labelEl);
+            // new code
+            const timeEl = mk("span", "axi-install-time", "");
+            timeEls.push(timeEl);
+            li.appendChild(timeEl);
+            const seg = document.createElement("i");
+            seg.dataset.state = "pending";
+            segEls.push(seg);
+            meter.appendChild(seg);
+            steps.appendChild(li);
+            return li;
+        });
+
+        const errorBox = mk("div", "axi-install-error");
+        errorBox.hidden = true;
+        errorBox.setAttribute("role", "alert");
+        const errorHead = mk("strong", "", "Installation could not be started");
+        const errorMsg = mk("span", "", "");
+        errorBox.appendChild(errorHead);
+        errorBox.appendChild(errorMsg);
+
+        // old code
+        // const success = mk("div", "axi-install-success");
+        // success.hidden = true;
+        // const check = mk("div", "axi-install-check");
+        // check.innerHTML = INSTALL_ICON_BIG_CHECK;
+        // const okTitle = mk("h3", "axi-install-ok-title", "Your installation has started");
+        // const okText = mk("p", "axi-install-ok-text", "You'll get a notification when it finishes.");
+        // const card = mk("dl", "axi-install-card");
+        // const addRow = (k, v, mono) => {
+        //     const dt = mk("dt", "", k);
+        //     card.appendChild(dt);
+        //     const dd = mk("dd", mono ? "axi-install-mono" : "", v);
+        //     dd.title = v;
+        //     card.appendChild(dd);
+        //     return { dt, dd };
+        // };
+        // addRow("Type", label);
+        // addRow("Directory", ctx.directory);
+        // addRow("Version", ctx.version || "no version");
+        // addRow("Repository", `${ctx.account}/${ctx.repo}`);
+        // const commitRow = addRow("Commit", sha7, true);
+        // commitRow.dt.hidden = commitRow.dd.hidden = !sha7;
+        // success.appendChild(check);
+        // success.appendChild(okTitle);
+        // success.appendChild(okText);
+        // success.appendChild(card);
+        // new code
+        // success: an info note, then a ruled readout like the version dialog (the header title changes to "... started")
+        const success = mk("div", "axi-install-success");
+        success.hidden = true;
+        const okText = mk("p", "axi-install-info", "You'll get a notification when it finishes.");
+        const card = mk("dl", "axi-install-readout");
+        const addRow = (k, v, cls) => {
+            const row = mk("div", "axi-install-row");
+            const dt = mk("dt", "", k);
+            const dd = mk("dd", cls || "", v);
+            dd.title = v;
+            row.appendChild(dt);
+            row.appendChild(dd);
+            card.appendChild(row);
+            return { row, dt, dd };
+        };
+        // old code
+        // addRow("Directory", ctx.directory);
+        // addRow("Version", ctx.version || "No version", ctx.version ? "axi-install-num" : "");
+        // addRow("Repository", `${ctx.account}/${ctx.repo}`);
+        // const commitRow = addRow("Commit", sha7, "axi-install-code");
+        // commitRow.row.hidden = !sha7;
+        // addRow("Request", String(m.requestId).slice(0, 8), "axi-install-code");
+        // new code: no Commit and Request rows (both are still sent in the payload)
+        // addRow("Directory", ctx.directory);
+        // the row is named after the manager type (Product / Plugin / Change Request) instead of "Directory"
+        addRow(label, ctx.directory);
+        addRow("Version", ctx.version || INSTALL_DEFAULT_VERSION, "axi-install-num");
+        addRow("Repository", `${ctx.account}/${ctx.repo}`);
+        success.appendChild(okText);
+        success.appendChild(card);
+
+        body.appendChild(live);
+        body.appendChild(steps);
+        body.appendChild(errorBox);
+        body.appendChild(success);
+
+        // footer
+        const foot = mk("div", "axi-install-foot");
+        const note = mk("span", "axi-install-note", "This only takes a moment.");
+        const countdown = mk("span", "axi-install-note", "");
+        countdown.hidden = true;
+        const retryBtn = mk("button", "axi-install-btn axi-install-btn-primary", "Retry");
+        retryBtn.type = "button";
+        retryBtn.hidden = true;
+        const closeBtn = mk("button", "axi-install-btn", "Close");
+        closeBtn.type = "button";
+        closeBtn.hidden = true;
+        const doneBtn = mk("button", "axi-install-btn axi-install-btn-primary", "Done");
+        doneBtn.type = "button";
+        doneBtn.hidden = true;
+        [note, countdown, closeBtn, retryBtn, doneBtn].forEach(n => foot.appendChild(n));
+
+        const bar = mk("div", "axi-install-bar");
+        const barFill = document.createElement("i");
+        bar.appendChild(barFill);
+        bar.hidden = true;
+
+        dialog.appendChild(head);
+        dialog.appendChild(meter);
+        dialog.appendChild(body);
+        dialog.appendChild(foot);
+        dialog.appendChild(bar);
+        root.appendChild(backdrop);
+        root.appendChild(dialog);
+
+        const setStep = (i, state) => {
+            stepEls[i].dataset.state = state;
+            // new code
+            segEls[i].dataset.state = state;
+            if (state === "active") stepStart[i] = Date.now();
+            timeEls[i].textContent = (state === "done" || state === "error") && stepStart[i]
+                ? `${((Date.now() - stepStart[i]) / 1000).toFixed(1)}s`
+                : "";
+            if (state === "active") live.textContent = `Step ${i + 1} of ${stepLabels.length}: ${stepLabels[i]}`;
+            if (state === "error") live.textContent = `Failed at step ${i + 1}: ${stepLabels[i]}`;
+        };
+        const setMode = (mode) => {
+            root.classList.remove("axi-install--running", "axi-install--error", "axi-install--success");
+            root.classList.add("axi-install--" + mode);
+            note.hidden = mode !== "running";
+        };
+
+        m.close = (immediate) => {
+            if (m.closed) return;
+            m.closed = true;
+            if (m.timer) clearInterval(m.timer);
+            document.removeEventListener("keydown", onDocKey, true);
+            if (installModal === m) installModal = null;
+            const remove = () => { if (root.parentNode) root.parentNode.removeChild(root); };
+            if (immediate) remove();
+            else { root.classList.add("axi-install-leaving"); setTimeout(remove, 180); }
+            try {
+                if (prevFocus && prevFocus !== input && prevFocus !== document.body && document.contains(prevFocus) && typeof prevFocus.focus === "function") prevFocus.focus();
+            } catch (e) { }
+        };
+
+        const onDocKey = (e) => {
+            if (e.key === "Escape") {
+                e.stopPropagation();
+                e.preventDefault();
+                if (!m.inflight) m.close(false);
+                return;
+            }
+            if (e.key !== "Tab") return;
+            m.kbdFocus = true;
+            const focusables = Array.from(dialog.querySelectorAll("button")).filter(b => !b.hidden && !b.disabled);
+            if (focusables.length === 0) { e.preventDefault(); dialog.focus(); return; }
+            const first = focusables[0];
+            const last = focusables[focusables.length - 1];
+            const active = document.activeElement;
+            if (!dialog.contains(active) || active === dialog) { e.preventDefault(); (e.shiftKey ? last : first).focus(); }
+            else if (e.shiftKey && active === first) { e.preventDefault(); last.focus(); }
+            else if (!e.shiftKey && active === last) { e.preventDefault(); first.focus(); }
+        };
+        document.addEventListener("keydown", onDocKey, true);
+
+        backdrop.addEventListener("mousedown", () => { if (!m.inflight) m.close(false); });
+        closeBtn.addEventListener("click", () => m.close(false));
+        xBtn.addEventListener("click", () => { if (!m.inflight) m.close(false); });
+        doneBtn.addEventListener("click", () => m.close(false));
+        dialog.addEventListener("mouseenter", () => { m.hover = true; });
+        dialog.addEventListener("mouseleave", () => { m.hover = false; });
+        dialog.addEventListener("focusout", (e) => { if (!e.relatedTarget || !dialog.contains(e.relatedTarget)) m.kbdFocus = false; });
+
+        const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+        const showSuccess = () => {
+            setMode("success");
+            success.hidden = false;
+            errorBox.hidden = true;
+            retryBtn.hidden = true;
+            closeBtn.hidden = true;
+            doneBtn.hidden = false;
+            countdown.hidden = false;
+            bar.hidden = false;
+            // old code
+            // live.textContent = "Your installation has started. You'll get a notification when it finishes.";
+            // title.textContent = `${label} installation started`;
+            // new code: the request is queued; the installation itself is reported by the notification
+            live.textContent = "Your installation request is queued. You'll get a notification when it finishes.";
+            title.textContent = `${label} installation request queued`;
+            doneBtn.focus();
+            m.remaining = INSTALL_AUTOCLOSE_MS;
+            let last = Date.now();
+            const paint = () => {
+                barFill.style.transform = `scaleX(${Math.max(0, m.remaining / INSTALL_AUTOCLOSE_MS)})`;
+                countdown.textContent = `Closing in ${Math.max(1, Math.ceil(m.remaining / 1000))}s`;
+            };
+            paint();
+            m.timer = setInterval(() => {
+                const now = Date.now();
+                const dt = now - last;
+                last = now;
+                if (m.hover || m.kbdFocus) return;
+                m.remaining -= dt;
+                if (m.remaining <= 0) { m.close(false); return; }
+                paint();
+            }, 100);
+        };
+
+        const showError = (message) => {
+            setMode("error");
+            errorMsg.textContent = message;
+            errorBox.hidden = false;
+            retryBtn.hidden = false;
+            closeBtn.hidden = false;
+            doneBtn.hidden = true;
+            retryBtn.focus();
+        };
+
+        // old code
+        // // the commit of the fresh listing replaces the one seen when the command was typed
+        // const setSha = (sha) => {
+        //     ctx.commitSha = sha || "";
+        //     const short = ctx.commitSha.slice(0, 7);
+        //     stepLabels[1] = short ? `Resolving version @ ${short}` : "Resolving version";
+        //     labelEls[1].textContent = stepLabels[1];
+        //     commitRow.dd.textContent = short;
+        //     commitRow.dd.title = short;
+        //     // old code
+        //     // commitRow.dt.hidden = commitRow.dd.hidden = !short;
+        //     // new code
+        //     commitRow.row.hidden = !short;
+        // };
+        const waitAtLeast = (promise, ms) => Promise.all([promise, delay(ms)]).then(r => r[0]);
+        const failStep = (i, message, resumeFrom) => {
+            m.resumeFrom = resumeFrom;
+            setStep(i, "error");
+            showError(message);
+        };
+
+        // Steps: 1 fresh listdirectories (cache updated), 2 resolve the commit and re-check directory / version, 3 queue call, 4 started
+        const run = async (from) => {
+            if (from <= 0) {
+                setStep(0, "active");
+                let fresh;
+                try {
+                    fresh = await waitAtLeast(fetchInstallDirectories(ctx.type, ctx.account, ctx.repo, true), INSTALL_STEP_MIN_MS);
+                } catch (err) {
+                    if (m.closed) return;
+                    // old code
+                    // failStep(0, (err && err.message) || "Could not check the repository", 0);
+                    // new code
+                    failStep(0, getInstallDirsErrorText(ctx.type, (err && err.message) || "Could not check the repository", err && err.status), 0);
+                    return;
+                }
+                if (m.closed) return;
+                // old code
+                // m.fresh = fresh;
+                // setStep(0, "done");
+                // new code: the directory / version re-check and the fresh commit belong to this step now
+                m.fresh = fresh;
+                const words = ["install", ctx.type, ctx.directory];
+                if (ctx.version && !ctx.versionDefaulted) words.push(ctx.version);
+                const checked = validateInstallArgs(words, m.fresh && m.fresh.directories);
+                if (!checked.ok) {
+                    failStep(0, `The repository changed since the command was typed. ${checked.message}`, 0);
+                    return;
+                }
+                ctx.commitSha = (m.fresh && m.fresh.commitSha) || ctx.commitSha || "";
+                setStep(0, "done");
+            }
+            // old code
+            // if (from <= 1) {
+            //     setStep(1, "active");
+            //     const words = ["install", ctx.type, ctx.directory];
+            //     if (ctx.version) words.push(ctx.version);
+            //     const checked = validateInstallArgs(words, m.fresh && m.fresh.directories);
+            //     await delay(INSTALL_STEP_MIN_MS);
+            //     if (m.closed) return;
+            //     if (!checked.ok) {
+            //         failStep(1, `The repository changed since the command was typed. ${checked.message}`, 0);
+            //         return;
+            //     }
+            //     setSha(m.fresh.commitSha);
+            //     setStep(1, "done");
+            // }
+            // setStep(2, "active");
+            // setStep(3, "pending");
+            // new code: step 2 is the queue call, step 3 the queued confirmation
+            setStep(1, "active");
+            setStep(2, "pending");
+            m.inflight = true;
+            xBtn.disabled = true;
+            const result = await waitAtLeast(pushInstallToQueue(buildInstallPayload({
+                requestId: m.requestId,
+                type: ctx.type,
+                account: ctx.account,
+                repo: ctx.repo,
+                directory: ctx.directory,
+                // old code
+                // version: ctx.version,
+                // new code
+                version: ctx.version || INSTALL_DEFAULT_VERSION,
+                commitSha: ctx.commitSha,
+                appname: ctx.appname,
+                username: ctx.username,
+                requestedOn: m.requestedOn
+            })), INSTALL_STEP_MIN_MS);
+            m.inflight = false;
+            xBtn.disabled = false;
+            if (m.closed) return;
+            // old code
+            // if (!result.success) {
+            //     failStep(2, result.message, 2);
+            //     return;
+            // }
+            // setStep(2, "done");
+            // setStep(3, "active");
+            // await delay(INSTALL_STEP_MIN_MS);
+            // if (m.closed) return;
+            // setStep(3, "done");
+            // new code
+            if (!result.success) {
+                failStep(1, result.message, 1);
+                return;
+            }
+            setStep(1, "done");
+            setStep(2, "active");
+            await delay(INSTALL_STEP_MIN_MS);
+            if (m.closed) return;
+            setStep(2, "done");
+            await delay(300);
+            if (m.closed) return;
+            showSuccess();
+        };
+
+        retryBtn.addEventListener("click", () => {
+            if (m.inflight) return;
+            const from = m.resumeFrom;
+            for (let i = from; i < stepEls.length; i++) setStep(i, "pending");
+            setMode("running");
+            errorBox.hidden = true;
+            retryBtn.hidden = true;
+            closeBtn.hidden = true;
+            dialog.focus();
+            run(from);
+        });
+
+        installModal = m;
+        document.body.appendChild(root);
+        dialog.focus();
+        run(0);
+    }
+
+    // function getType(axDatasourceKey, text, paramValuesCsv, tokens, commandConfig) {
+    //     const paramList = paramValuesCsv?.split(",").map(v => v.trim().toLowerCase()).filter(Boolean);
+    //     const VALID_TYPES = new Set(paramList);
+
+    //     let paramValue;
+    //     // if (axDatasourceKey.toLowerCase() === "axi_viewlist") {
+
+    //     if (axDatasourceKey.toLowerCase() === "axi_structmetalist") {
+    //         paramValue = processExtraParams(tokens, commandConfig);
+    //         axDatasourceKey += "_" + paramValue.toLowerCase();
+    //     }
+
+
+
+    //     const data = axDatasourceObj?.[axDatasourceKey];
+
+    //     if (!data || !Array.isArray(data)) return null;
+
+    //     // console.log(JSON.stringify(data));
+
+    //     const resolvedText = typeof text === 'object' ? (text?.value || "") : (text || "");
+
+    //     const resolvedType =
+    //         typeof text === "object"
+    //             ? (text?.type || "")
+    //             : "";
+
+
+
+    //     // const normalizedText = text.trim().toLowerCase();
+    //     const normalizedText = resolvedText.trim().toLowerCase();
+
+    //     // const rawTokenText = tokens[1] ? cleanCommandToken(tokens[1]).toLowerCase() : normalizedText;
+    //     const rawTokenText =
+    //         normalizedText ||
+    //         (tokens?.[1]
+    //             ? cleanCommandToken(tokens[1]).toLowerCase()
+    //             : "");
+
+    //     let bestMatch = null;
+
+    //     // const item = data?.find(d => {
+    //     //     if (typeof d.displaydata !== "string") return false;
+
+    //     //     if (d.name && d.name.toLowerCase() === normalizedText) {
+    //     //         return true;
+    //     //     }
+
+
+    //     //     const pureCaption = d.displaydata
+    //     //         .replace(/\s*\(.*?\)\s*(?=\[[^\]]+\]$)/, "")
+    //     //         .replace(/\s*\[[^\]]+\]\s*$/, "")
+    //     //         .trim()
+    //     //         .toLowerCase();
+
+    //     //     return pureCaption === normalizedText;
+    //     // });
+
+    //     bestMatch = data.find(d => typeof d.displaydata === "string" && d.displaydata.toLowerCase() === rawTokenText.toLowerCase());
+
+    //     if (!bestMatch) {
+    //         bestMatch = data.find(d => d.name && d.name.toLowerCase() === normalizedText);
+    //     }
+
+    //     if (!bestMatch) {
+    //         bestMatch = data.find(d => {
+    //             if (typeof d.displaydata !== "string") return false;
+
+    //             const pureCaption = d.displaydata
+    //                 .replace(/\s*\(.*?\)\s*(?=\[[^\]]+\]$)/, "")
+    //                 .replace(/\s*\[[^\]]+\]\s*$/, "")
+    //                 .trim()
+    //                 .toLowerCase();
+
+    //             return pureCaption === normalizedText || pureCaption === rawTokenText;
+    //         });
+    //     }
+
+    //     // if (!bestMatch || typeof bestMatch.displaydata !== "string") {
+    //     //     return null;
+    //     // }
+
+    //     // const matches = [...bestMatch.displaydata.matchAll(/\[([^\]]+)\]/g)];
+
+    //     // if (matches.length === 0) {
+    //     //     return null;
+    //     // }
+
+    //     // const candidate = matches[matches.length - 1][1].toLowerCase();
+
+    //     // return VALID_TYPES.has(candidate) ? candidate : null;
+
+    //     if (!bestMatch)
+    //         return resolvedType || "";
+
+    //     let candidate = "";
+
+
+    //     if (bestMatch.stype) {
+
+    //         const stypeMap = {
+    //             t: "tstruct",
+    //             i: "iview",
+    //             ads: "ads",
+    //             p: "page"
+    //         };
+
+    //         candidate =
+    //             stypeMap[
+    //             bestMatch.stype
+    //                 .toLowerCase()
+    //             ] || "";
+    //     }
+
+
+    //     if (
+    //         !candidate &&
+    //         typeof bestMatch.displaydata === "string"
+    //     ) {
+
+    //         const matches = [
+    //             ...bestMatch.displaydata.matchAll(/\[([^\]]+)\]/g)
+    //         ];
+
+    //         if (matches.length > 0) {
+    //             candidate =
+    //                 matches[
+    //                     matches.length - 1
+    //                 ][1].toLowerCase();
+    //         }
+    //     }
+
+
+    //     if (!candidate) {
+    //         candidate = resolvedType || "";
+    //     }
+
+    //     return VALID_TYPES.has(candidate)
+    //         ? candidate
+    //         : "";
+
+
+    // }
+
+    /**
+     * Determines navigation route and entity type from datasource metadata.
+     * @param {string} axDatasourceKey - Datasource key.
+     * @param {string} text - Command text.
+     * @param {string} paramValuesCsv - Parameter values CSV.
+     * @param {string[]} tokens - Command tokens.
+     * @param {object} commandConfig - Command configuration schema.
+     * @returns {object} Route type configuration.
+     */
+    function getType(axDatasourceKey, text, paramValuesCsv, tokens, commandConfig) {
+
+        // -----------------------------------
+        // VALID TYPES FROM promptValues
+        // Example:
+        // tstruct,iview,ads,page
+        // -----------------------------------
+        const paramList = paramValuesCsv
+            ?.split(",")
+            .map(v => v.trim().toLowerCase())
+            .filter(Boolean);
+
+        const VALID_TYPES = new Set(paramList);
+        VALID_TYPES.add("inbox");
+        VALID_TYPES.add("page");
+
+        let paramValue;
+
+        // -----------------------------------
+        // HANDLE axi_structmetalist
+        // -----------------------------------
+        if (
+            axDatasourceKey?.toLowerCase() ===
+            "axi_structmetalist"
+        ) {
+            paramValue = processExtraParams(
+                tokens,
+                commandConfig
+            );
+
+            axDatasourceKey +=
+                "_" + paramValue.toLowerCase();
+        }
+
+        const data =
+            axDatasourceObj?.[axDatasourceKey];
+
+        if (!Array.isArray(data))
+            return "";
+
+        // console.log(JSON.stringify(data));
+
+        // -----------------------------------
+        // text may be:
+        //
+        // "slord"
+        //
+        // OR
+        //
+        // {
+        //   value:"slord",
+        //   type:"i"
+        // }
+        // -----------------------------------
+        const resolvedText =
+            typeof text === "object"
+                ? (text?.value || "")
+                : (text || "");
+
+        const resolvedType =
+            typeof text === "object"
+                ? (text?.type || "")
+                    .trim()
+                    .toLowerCase()
+                : "";
+
+        const normalizedText =
+            resolvedText
+                .trim()
+                .toLowerCase();
+
+        let bestMatch = null;
+
+        // -----------------------------------
+        // stype -> actual type
+        // -----------------------------------
+        const stypeMap = {
+            t: "tstruct",
+            tstruct: "tstruct",
+            i: "iview",
+            iview: "iview",
+            ads: "ads",
+            a: "ads",
+            v: "ads",
+            p: "page",
+            page: "page",
+            inbox: "inbox"
+        };
+
+        // -----------------------------------
+        // normalize resolvedType
+        //
+        // i -> iview
+        // t -> tstruct
+        // -----------------------------------
+        let normalizedResolvedType =
+            stypeMap[
+            resolvedType
+            ] || resolvedType;
+
+        if (!normalizedResolvedType && normalizedText === "inbox") {
+            normalizedResolvedType = "inbox";
+        }
+
+        // ===================================
+        // STRICT TYPE MODE
+        //
+        // resolvedType exists
+        //
+        // 1. find ALL text matches
+        // 2. then match TYPE
+        //
+        // handles:
+        //
+        // slord[t]
+        // slord[i]
+        // ===================================
+        if (normalizedResolvedType) {
+
+            // -----------------------------
+            // TEXT MATCHES FIRST
+            // -----------------------------
+            const matchingRows =
+                data.filter(d => {
+
+                    const displayMatch =
+                        typeof d.displaydata ===
+                        "string" &&
+                        d.displaydata
+                            .toLowerCase() ===
+                        normalizedText;
+
+                    const nameMatch =
+                        d.name &&
+                        d.name
+                            .toLowerCase() ===
+                        normalizedText;
+
+                    const captionMatch =
+                        typeof d.displaydata ===
+                        "string" &&
+                        d.displaydata
+                            .replace(
+                                /\s*\(.*?\)\s*(?=\[[^\]]+\]$)/,
+                                ""
+                            )
+                            .replace(
+                                /\s*\[[^\]]+\]\s*$/,
+                                ""
+                            )
+                            .trim()
+                            .toLowerCase() ===
+                        normalizedText;
+
+                    return (
+                        displayMatch ||
+                        nameMatch ||
+                        captionMatch
+                    );
+                });
+
+            // -----------------------------
+            // THEN TYPE MATCH
+            // -----------------------------
+            bestMatch =
+                matchingRows.find(d => {
+
+                    let itemType = "";
+
+                    // stype priority
+                    if (d.stype) {
+                        itemType =
+                            stypeMap[
+                            d.stype
+                                .toLowerCase()
+                            ] || "";
+                    }
+
+                    // [type] fallback
+                    if (
+                        !itemType &&
+                        typeof d.displaydata ===
+                        "string"
+                    ) {
+
+                        const matches = [
+                            ...d.displaydata.matchAll(
+                                /\[([^\]]+)\]/g
+                            )
+                        ];
+
+                        if (
+                            matches.length > 0
+                        ) {
+
+                            itemType =
+                                matches[
+                                    matches.length - 1
+                                ][1]
+                                    .toLowerCase();
+                        }
+                    }
+
+                    // compare type
+                    return (
+                        itemType ===
+                        normalizedResolvedType
+                    );
+                });
+
+            // -----------------------------
+            // STRICT MODE
+            //
+            // no fallback to first slord
+            // -----------------------------
+            if (bestMatch) {
+
+                let candidate = "";
+
+                if (bestMatch.stype) {
+                    candidate =
+                        stypeMap[
+                        bestMatch.stype
+                            .toLowerCase()
+                        ] || "";
+                }
+
+                if (isInboxStructure(bestMatch)) {
+                    candidate = "inbox";
+                }
+
+                if (
+                    !candidate &&
+                    typeof bestMatch.displaydata ===
+                    "string"
+                ) {
+
+                    const matches = [
+                        ...bestMatch.displaydata.matchAll(
+                            /\[([^\]]+)\]/g
+                        )
+                    ];
+
+                    if (
+                        matches.length > 0
+                    ) {
+
+                        candidate =
+                            matches[
+                                matches.length - 1
+                            ][1]
+                                .toLowerCase();
+                    }
+                }
+
+                return VALID_TYPES.has(candidate)
+                    ? candidate
+                    : "";
+            }
+
+            return VALID_TYPES.has(
+                normalizedResolvedType
+            )
+                ? normalizedResolvedType
+                : "";
+        }
+
+        // ===================================
+        // NORMAL MODE
+        //
+        // resolvedType empty
+        // old behavior
+        // ===================================
+
+        // displaydata
+        if (!bestMatch) {
+            bestMatch = data.find(d =>
+                typeof d.displaydata ===
+                "string" &&
+                d.displaydata
+                    .toLowerCase() ===
+                normalizedText
+            );
+        }
+
+        // name
+        if (!bestMatch) {
+            bestMatch = data.find(d =>
+                d.name &&
+                d.name
+                    .toLowerCase() ===
+                normalizedText
+            );
+        }
+
+        // caption
+        if (!bestMatch) {
+            bestMatch = data.find(d => {
+
+                if (
+                    typeof d.displaydata !==
+                    "string"
+                )
+                    return false;
+
+                const pureCaption =
+                    d.displaydata
+                        .replace(
+                            /\s*\(.*?\)\s*(?=\[[^\]]+\]$)/,
+                            ""
+                        )
+                        .replace(
+                            /\s*\[[^\]]+\]\s*$/,
+                            ""
+                        )
+                        .trim()
+                        .toLowerCase();
+
+                return (
+                    pureCaption ===
+                    normalizedText
+                );
+            });
+        }
+
+        if (!bestMatch)
+            return "";
+
+        // ===================================
+        // FINAL TYPE RESOLUTION
+        // ===================================
+        let candidate = "";
+
+        // stype priority
+        if (bestMatch.stype) {
+            candidate =
+                stypeMap[
+                bestMatch.stype
+                    .toLowerCase()
+                ] || "";
+        }
+        if (isInboxStructure(bestMatch)) {
+            candidate = "inbox";
+        }
+
+        // [type] fallback
+        if (
+            !candidate &&
+            typeof bestMatch.displaydata ===
+            "string"
+        ) {
+
+            const matches = [
+                ...bestMatch.displaydata.matchAll(
+                    /\[([^\]]+)\]/g
+                )
+            ];
+
+            if (matches.length > 0) {
+
+                candidate =
+                    matches[
+                        matches.length - 1
+                    ][1]
+                        .toLowerCase();
+            }
+        }
+
+        return VALID_TYPES.has(candidate)
+            ? candidate
+            : "";
+    }
+
+
+    /**
+     * Navigates main window or iframe to a custom HTML page.
+     * @param {string} text - Page path or name.
+     * @param {string[]} tokens - Command tokens.
+     * @param {object} commandConfig - Command configuration schema.
+     * @returns {void}
+     */
+    function redirectToHtmlPages(text, tokens, commandConfig) {
+
+        let paramValue = processExtraParams(tokens, commandConfig);
+
+        //const viewList = axDatasourceObj["axi_viewlist".toLowerCase() + "_" + paramValue];
+        const viewList = axDatasourceObj["axi_structmetalist".toLowerCase() + "_" + paramValue.toLowerCase()];
+
+
+
+        // const item = viewList.find(v => v.displaydata.includes(text));
+        const normalizedText = text.trim().toLowerCase();
+
+        const rawTokenText = tokens[1] ? cleanCommandToken(tokens[1]).toLowerCase() : normalizedText;
+
+        let bestMatch = null;
+
+        // const item = data?.find(d => {
+        //     if (typeof d.displaydata !== "string") return false;
+
+        //     if (d.name && d.name.toLowerCase() === normalizedText) {
+        //         return true;
+        //     }
+
+
+        //     const pureCaption = d.displaydata
+        //         .replace(/\s*\(.*?\)\s*(?=\[[^\]]+\]$)/, "")
+        //         .replace(/\s*\[[^\]]+\]\s*$/, "")
+        //         .trim()
+        //         .toLowerCase();
+
+        //     return pureCaption === normalizedText;
+        // });
+
+        if (!Array.isArray(viewList)) return null;
+
+        bestMatch = viewList.find(d => {
+            const isPageType = ['p', 'page'].includes((d.stype || "").toLowerCase());
+            return isPageType && typeof d.displaydata === "string" && d.displaydata.toLowerCase() === rawTokenText.toLowerCase();
+        });
+
+        if (!bestMatch) {
+            bestMatch = viewList.find(d => {
+                const isPageType = ['p', 'page'].includes((d.stype || "").toLowerCase());
+                if (!isPageType) return false;
+
+                if (d.name && d.name.toLowerCase() === rawTokenText.toLowerCase()) {
+                    return true;
+                }
+                if (typeof d.displaydata !== "string") return false;
+
+                const pureCaption = d.displaydata
+                    .replace(/\s*\(.*?\)\s*(?=\[[^\]]+\]$)/, "")
+                    .replace(/\s*\[[^\]]+\]\s*$/, "")
+                    .trim()
+                    .toLowerCase();
+
+                return (pureCaption === normalizedText || pureCaption === rawTokenText);
+            });
+        }
+
+        if (!bestMatch || typeof bestMatch.displaydata !== "string") {
+            // The page may simply not be in the loaded part of the paged structure list: look it up on the server
+            requestStructSearch(rawTokenText, paramValue);
+            return null;
+        }
+
+        const requestUrl = bestMatch.name;
+        // console.log(requestUrl);
+
+        setCommandRoutes(input.value.trim(), requestUrl);
+
+        if (popUpOption) {
+
+            openPopOption(requestUrl + `&caption=${encodeURIComponent(bestMatch.caption)}`)
+        }
+        else {
+            window.LoadIframe(requestUrl);
+        }
+
+
+    }
+
+    /***************************************************
+* OPEN COMMAND FUNCTION
+* **************************************************
+*/
+
+    /**
+     * Opens entity source configuration in Developer Studio.
+     * @param {object} context - Execution context.
+     * @param {string[]} context.tokens - Command tokens.
+     * @param {object} context.commandConfig - Command configuration schema.
+     * @returns {void}
+     */
+    function handleOpenSource({ tokens, commandConfig }) {
+        hide();
+
+        const type = cleanCommandToken(tokens[1]);
+        let rawName = cleanCommandToken(tokens[2]);
+
+        const devKey = (type.toLowerCase() === "tstruct" || type.toLowerCase() === "t") ? "tstruct" : ((type.toLowerCase() === "iview" || type.toLowerCase() === "i") ? "iview" : ((type.toLowerCase() === "page" || type.toLowerCase() === "p") ? "page" : type.toLowerCase()));
+        if (!isDevOptionAllowed(devKey)) {
+            showToast(`User '${window.mainUserName}' has no access for SDK option: ${type}`);
+            return;
+        }
+
+        if (type.toLowerCase() === "page" || type.toLowerCase() === "p") {
+            if (rawName && rawName.toLowerCase() === "create new") {
+                const targetUrl = `../aspx/tstruct.aspx?transid=sect&hltype=open&createaxiflag=true&isDupTab=false&dummyload=false?`;
+                setCommandRoutes(input.value.trim(), targetUrl);
+                top.window.LoadIframe(targetUrl);
+                return;
+            }
+            let { value: resolvedName } = tryResolveToken(2, rawName, commandConfig, false);
+            const targetUrl = `../aspx/tstruct.aspx?transid=sect&pagename=${encodeURIComponent(resolvedName || rawName)}&act=load&dummyload=false?`;
+            setCommandRoutes(input.value.trim(), targetUrl);
+            top.window.LoadIframe(targetUrl);
+            return;
+        }
+
+        if (rawName && rawName.toLowerCase() === "create new") {
+            const targetUrl = type.toLowerCase() === "tstruct"
+                ? "developerstudio:tstruct:new_tstruct"
+                : "developerstudio:iview:new_iview";
+            setCommandRoutes(input.value.trim(), targetUrl);
+
+            if (type.toLowerCase() === "tstruct") {
+                safeOpenDeveloperStudio("tstreact", "new_tstruct", true);
+                return;
+            } else if (type.toLowerCase() === "iview") {
+                safeOpenDeveloperStudio("ivreact", "new_iview", true);
+                return;
+            }
+        }
+
+        let { value: resolvedName } = tryResolveToken(2, rawName, commandConfig, false);
+
+
+        if (resolvedName === rawName) {
+            const listKey =
+                type.toLowerCase() === "tstruct"
+                    ? "Axi_TStructList".toLowerCase()
+                    : type.toLowerCase() === "iview"
+                        ? "Axi_IViewList".toLowerCase()
+                        : null;
+
+            if (!listKey) {
+                alert("Unknown source type: " + type);
+                return;
+            }
+
+            const list = axDatasourceObj[listKey];
+            const found = list?.find(
+                x => x.caption?.toLowerCase() === rawName.toLowerCase()
+            );
+
+            if (!found || !found.name) {
+                // console.error(`Source not found: ${rawName}`);
+                return;
+            }
+
+            resolvedName = found.name;
+        }
+        const targetUrl = `developerstudio:${type.toLowerCase()}:${resolvedName}`;
+
+        setCommandRoutes(input.value.trim(), targetUrl);
+
+        if (type.toLowerCase() === "tstruct") {
+            safeOpenDeveloperStudio("tstreact", resolvedName, true);
+        } else if (type.toLowerCase() === "iview") {
+            safeOpenDeveloperStudio("ivreact", resolvedName, true);
+        } else {
+            alert("Unknown source type: " + type);
+        }
+    }
+
+    /**
+     * 
+     * Run commands 
+     */
+
+    /**
+     * Handles execution of 'Run' command to trigger toolbar actions, scripts, or reports.
+     * @param {object} context - Execution context.
+     * @param {string[]} context.tokens - Command tokens.
+     * @param {object} context.commandConfig - Command configuration schema.
+     * @returns {void}
+     */
+    function handleRunCommand({ tokens, commandConfig }) {
+        if (tokens.length < 2) {
+            showToast("Invalid Command! Run commands requires atleast 2 tokens!");
+            return;
+        }
+        const structType = getStructType();
+        let buttonLabel = cleanCommandToken(tokens[1]);
+        let allButtons = null;
+
+
+        if (!buttonLabel) return;
+
+
+
+        if (structType === "o") {
+            // console.error("Invalid Struct type");
+            showToast("Invalid Struct type");
+            return;
+        }
+
+        switch (structType) {
+            case "t":
+            case "i":
+
+                const isDesign = isTstructDesignMode();
+                if (isDesign) {
+                    designModeToolbarButtons = getDesignModeToolbarButtons();
+                    allButtons = [...Object.values(designModeToolbarButtons)];
+                } else {
+                    bottomToolbarButtons = getBottomToolbarButtons();
+                    topToolbarButtons = getTopToolbarButtons();
+                    utilityButtons = getIViewUtilityButtons();
+                    actionButtons = getIViewActionDropdownButtons();
+                    allButtons = [...Object.values(bottomToolbarButtons),
+                    ...Object.values(topToolbarButtons),
+                    ...Object.values(utilityButtons),
+                    ...Object.values(actionButtons)];
+                }
+
+                break;
+
+            case "e":
+            case "ef":
+            case "c":
+                entityToolbarButtons = getEntityToolbarButtons();
+                utilityButtons = getIViewUtilityButtons();
+                topToolbarButtons = getTopToolbarButtons();
+                allButtons = [...Object.values(entityToolbarButtons), ...Object.values(utilityButtons), ...Object.values(topToolbarButtons)];
+                break;
+
+            case "pf":
+                pfToolbarButtons = getPFToolbarButtons();
+                topToolbarButtons = getTopToolbarButtons();
+                allButtons = [...Object.values(pfToolbarButtons), ...Object.values(topToolbarButtons)];
+                break;
+
+            case "s":
+                settingsPageButtons = getButtons(".Config-cont");
+                allButtons = [...Object.values(settingsPageButtons)];
+                break;
+
+            case "im":
+            case "ex":
+                importExportButtons = getButtons(".card-footer");
+                allButtons = [...Object.values(importExportButtons)];
+                break;
+
+            default:
+                break;
+        }
+
+        if (allButtons && Array.isArray(allButtons)) {
+            /**
+             * Checks whether the currently active iframe or window is a CSQ list page.
+             * @returns {boolean} True if the current page is a CSQ list page, false otherwise.
+             */
+            const isCsqlistPage = () => {
+                try {
+                    const { doc } = getIViewDocumentAndWindow();
+                    if (doc && doc.location) {
+                        const url = doc.location.href.toLowerCase();
+                        if ((url.includes("iview.aspx") || url.includes("ivtoivload.aspx")) && url.includes("ivname=csqlist")) {
+                            return true;
+                        }
+                    }
+                } catch (e) { }
+                return false;
+            };
+
+            const seenKeys = new Set();
+            allButtons = allButtons.filter(btn => {
+                if (!btn) return false;
+                const key = (btn.id || "") + "_" + (btn.label || "").toLowerCase();
+                if (seenKeys.has(key)) return false;
+                seenKeys.add(key);
+
+                if (isTargetListingPageForParamsRestriction()) {
+                    const btnDisplayLower = (btn.label || "").toLowerCase().trim();
+                    const btnNameLower = (btn.id || "").toLowerCase();
+                    const isParamsBtn = (btnDisplayLower === "params" ||
+                        btnDisplayLower === "param" ||
+                        btnDisplayLower === "parameters" ||
+                        btnDisplayLower === "parameter" ||
+                        btnNameLower === "params" ||
+                        btnNameLower === "param" ||
+                        btnNameLower === "ivirparams" ||
+                        btnNameLower === "iconsnewparams" ||
+                        btnNameLower === "btnparams") &&
+                        !btnDisplayLower.includes("refresh") &&
+                        !btnNameLower.includes("refresh");
+                    if (isParamsBtn) return false;
+                }
+
+                if (isResponsibilityListingPage()) {
+                    const btnDisplayLower = (btn.label || "").toLowerCase().trim();
+                    const btnNameLower = (btn.id || "").toLowerCase();
+                    const restrictedList = ["print", "pdf", "excel", "csv", "html", "json", "copy", "word"];
+                    const isRestricted = restrictedList.some(r => btnDisplayLower === r || btnDisplayLower.includes(r) || btnNameLower === r || btnNameLower.includes(r));
+                    if (isRestricted) return false;
+                }
+
+                if (isCsqlistPage() && structType === "i") {
+                    const btnDisplayLower = (btn.label || "").toLowerCase().trim();
+                    const btnNameLower = (btn.id || "").toLowerCase();
+                    const isSearchBtn = btnDisplayLower.includes("search") || btnNameLower.includes("search");
+                    const isNewBtn = btnDisplayLower.includes("add new") || btnDisplayLower === "new" || btnNameLower.includes("new") || btnNameLower.includes("addnew") || btnDisplayLower.includes("create");
+                    if (!isSearchBtn && !isNewBtn) return false;
+                }
+
+                return true;
+            });
+        }
+
+        // console.log("All Buttons: " + JSON.stringify(allButtons));
+
+        let { value: resolvedBtnId, type } = tryResolveToken(1, buttonLabel, commandConfig, false);
+
+        // console.log(`Run Command Debug: Label="${buttonLabel}", ResolvedID="${resolvedBtnId}"`);
+
+        let targetBtn = null;
+
+        if (resolvedBtnId && resolvedBtnId !== buttonLabel) {
+            targetBtn = allButtons.find(btn => btn.id === resolvedBtnId);
+        }
+
+        if (!targetBtn && resolvedBtnId) {
+            targetBtn = allButtons.find(btn => btn.id === resolvedBtnId);
+        }
+
+
+        if (!targetBtn) {
+            targetBtn = allButtons.find(btn => {
+                const normalizedInputLabel = buttonLabel.toLowerCase().replace(/[\r\n\t]+/g, ' ').trim();
+
+                const rawLabel = btn.label || "";
+                const normalizedBtnLabel = rawLabel.toLowerCase().replace(/[\r\n\t]+/g, ' ').trim();
+                if (normalizedBtnLabel === normalizedInputLabel || normalizedBtnLabel.includes(normalizedInputLabel) || normalizedInputLabel.includes(normalizedBtnLabel)) return true;
+
+                const element = btn.element;
+                if (element) {
+                    const titleAttr = (element.getAttribute("title") || "").toLowerCase().replace(/[\r\n\t]+/g, ' ').trim();
+                    if (titleAttr === normalizedInputLabel || titleAttr.includes(normalizedInputLabel)) return true;
+
+                    const textContentVal = (element.textContent || "").toLowerCase().replace(/[\r\n\t]+/g, ' ').trim();
+                    if (textContentVal === normalizedInputLabel || textContentVal.includes(normalizedInputLabel)) return true;
+
+                    const btnId = (btn.id || element.id || "").toLowerCase();
+                    if (btnId && (btnId.includes(normalizedInputLabel) || normalizedInputLabel.includes(btnId))) return true;
+                }
+
+                return false;
+            });
+        }
+
+
+        if (!targetBtn) {
+            // console.error(`Button not found for label: ${buttonLabel}`);
+            showToast(`Button '${buttonLabel}' not found`, 3000);
+            return;
+        }
+
+        // console.log(`Clicking button: ${targetBtn.label} (${targetBtn.id})`);
+
+        targetBtn.click();
+
+
+
+    }
+
+    /**
+     * Parses and formats date string into standardized ISO date format.
+     * @param {string} val - Raw date string.
+     * @returns {string} Standardized date string.
+     */
+    function normalizeDate(val) {
+        if (!val.includes("/")) return val;
+        const [d, m, y] = val.split("/");
+        return `${y}-${m}-${d}`; // ISO
+    }
+
+    //function resolveLikeOperator(rawValue) {
+
+    //    if (!rawValue.includes("%")) {
+    //        return { operator: "equal", value: rawValue };
+    //    }
+
+    //    const startsWithPercent = rawValue.startsWith("%");
+    //    const endsWithPercent = rawValue.endsWith("%");
+
+    //    if (startsWithPercent && endsWithPercent) {
+    //        return {
+    //            operator: "contains",
+    //            value: rawValue.slice(1, -1)
+    //        };
+    //    }
+
+    //    if (startsWithPercent) {
+    //        return {
+    //            operator: "endswith",
+    //            value: rawValue.slice(1)
+    //        };
+    //    }
+
+    //    if (endsWithPercent) {
+    //        return {
+    //            operator: "startswith",
+    //            value: rawValue.slice(0, -1)
+    //        };
+    //    }
+
+    //    return { operator: "equal", value: rawValue };
+    //}
+
+    /**
+     * Extracts field-value filter pairs for ADS commands from tokens.
+     * @param {string[]} tokens - Command tokens.
+     * @returns {object} Filter key-value map.
+     */
+    function extractAdsFilters(tokens) {
+
+        const filters = [];
+        let i = 2;
+
+        while (i < tokens.length) {
+
+            const rawColToken = cleanCommandToken(tokens[i]);
+            if (!rawColToken) {
+                i++;
+                continue;
+            }
+
+            let nextTokenRaw = cleanCommandToken(tokens[i + 1] || "");
+
+            let operator = "";
+            let rawValue = "";
+
+
+            let matchedOperator = null;
+
+            for (let op of OPERATORS_LIST) {
+                if (nextTokenRaw.startsWith(op)) {
+                    matchedOperator = op;
+                    break;
+                }
+            }
+
+
+            let colMetadata = adsfieldvalueanddt[rawColToken] || {};
+
+            if (matchedOperator && colMetadata.datatype != "c" && colMetadata.datatype != 't' && colMetadata?.datatype != "d") {
+
+                operator = matchedOperator;
+                rawValue = nextTokenRaw.slice(matchedOperator.length);
+                i += 2;
+
+            }
+            else {
+
+                rawValue = nextTokenRaw;
+
+                if (colMetadata?.datatype === "c" || colMetadata.datatype === 't' || colMetadata.datatype === "d") {
+                    if (rawValue.startsWith("%") && rawValue.endsWith("%")) {
+                        operator = "contains";
+                        rawValue = rawValue.slice(1, -1);
+                    }
+                    else if (rawValue.endsWith("%")) {
+                        operator = "startswith";
+                        rawValue = rawValue.slice(0, -1);
+                    }
+                    else if (rawValue.startsWith("%")) {
+                        operator = "endswith";
+                        rawValue = rawValue.slice(1);
+                    }
+                    else {
+                        operator = "equal";
+                        if (matchedOperator)
+                            rawValue = nextTokenRaw.slice(matchedOperator.length);
+                    }
+                }
+                else {
+                    operator = "equal";
+                }
+
+                i += 2;
+            }
+
+            colMetadata = adsfieldvalueanddt[rawColToken] || {};
+
+            if (colMetadata?.datatype === "d") {
+                rawValue = normalizeDate(rawValue);
+            }
+
+            let filterDatatype = colMetadata.datatype;
+            if (rawColToken && rawColToken.includes(",")) {
+                filterDatatype = rawColToken.split(",")
+                    .map(colName => adsfieldvalueanddt[colName.trim()]?.datatype || "c")
+                    .join(",");
+            }
+
+            filters.push({
+                field: rawColToken,
+                operator: operator,
+                value: rawValue,
+                datatype: filterDatatype,
+                isAccept: colMetadata.isAccept
+            });
+        }
+
+        return filters;
+    }
+    //function extractAdsFilters(tokens) {
+    //    const filters = [];
+
+
+    //    let i = 2;
+
+    //    while (i < tokens.length) {
+
+    //        const rawColToken = cleanCommandToken(tokens[i]);
+    //        if (!rawColToken) { i++; continue; }
+
+
+    //        let nextTokenRaw = cleanCommandToken(tokens[i + 1] || "");
+
+    //        let operator = "=";
+    //        let valueTokenIndex = -1;
+    //        let rawValue = "";
+
+    //        if (OPERATORS_SET.has(nextTokenRaw)) {
+
+    //            operator = nextTokenRaw;
+    //            rawValue = cleanCommandToken(tokens[i + 2] || "");
+    //            valueTokenIndex = i + 2;
+
+
+    //            i += 3;
+    //        } else {
+
+    //            operator = "=";
+    //            rawValue = nextTokenRaw;
+    //            valueTokenIndex = i + 1;
+
+
+    //            i += 2;
+    //        }
+
+    //        const colMetadata = adsfieldvalueanddt[rawColToken] || {};
+
+    //        if (colMetadata?.datatype === "d") {
+    //            rawValue = normalizeDate(rawValue);
+    //        }
+
+    //        filters.push({
+    //            field: rawColToken,
+    //            operator: operator,
+    //            value: rawValue,
+    //            datatype: colMetadata.datatype,
+    //            isAccept: colMetadata.isAccept
+    //        });
+    //    }
+
+    //    return filters;
+    //}
+
+
+
+    /**
+     * Collects utility buttons from active IView toolbar.
+     * @returns {Array<HTMLElement>} Array of toolbar button elements.
+     */
+    function getIViewUtilityButtons() {
+        const { doc, win, iframe } = getIViewDocumentAndWindow();
+        if (!doc) return {};
+
+        const rawContainers = Array.from(doc.querySelectorAll(".newRequestJson, [id^='iconsNew'], [id^='dvRefresh'], .iviewRefresh, #iconsNewSearch, #iconsNewRefresh, #iconsNewNew, #iconsNewRemove, #iconsNewUtility, #iconsNewOption, #dvRefreshParam, #dvRefreshParamIcon, #dvRefreshFromLoad"));
+        const containers = Array.from(new Set(rawContainers));
+        if (containers.length === 0) return {};
+
+        const links = [];
+        containers.forEach((container) => {
+            const dropdownLinks = Array.from(container.querySelectorAll(".menu-sub-dropdown a, .dropdown-menu a, ul a, li a"));
+            if (dropdownLinks.length > 0) {
+                dropdownLinks.forEach(child => {
+                    if (!links.includes(child)) links.push(child);
+                });
+            } else {
+                if (container.matches("a, button, [onclick], [title], [data-bs-original-title]")) {
+                    links.push(container);
+                }
+                const children = Array.from(container.querySelectorAll("a, button, [onclick]"));
+                children.forEach(child => {
+                    if (!links.includes(child)) links.push(child);
+                });
+            }
+        });
+
+        if (links.length === 0) return {};
+
+        const result = {};
+        const structType = getStructType();
+
+        links.forEach((link) => {
+            const dropDownItem = link.closest(".dropDownButton__item, .dropDownButton__list");
+            if (structType === "i" && dropDownItem) {
+                const val = dropDownItem.getAttribute("data-dropdown-value") || link.getAttribute("data-dropdown-value");
+                if (val !== "chart" && val !== "saveAs") return;
+            }
+
+            const isDropdownItem = link.closest(".menu-sub-dropdown, .dropdown-menu, ul.menu, li.menu-item") !== null;
+
+            if (!isDropdownItem) {
+                if (link.classList.contains("d-none") || link.closest(".d-none") || link.closest("[hidden]")) return;
+            }
+
+            const title = link.getAttribute("title") ||
+                link.getAttribute("data-bs-original-title") ||
+                link.getAttribute("data-original-title") ||
+                link.parentElement?.getAttribute("title") ||
+                link.parentElement?.getAttribute("data-bs-original-title") ||
+                link.parentElement?.getAttribute("data-original-title") ||
+                link.closest("[title]")?.getAttribute("title") ||
+                link.closest("[data-bs-original-title]")?.getAttribute("data-bs-original-title") || "";
+            let label = title.trim();
+            if (!label) {
+                const nameSpan = link.querySelector(".dropdownIconName");
+                if (nameSpan) {
+                    label = nameSpan.textContent.trim();
+                } else {
+                    const cloned = link.cloneNode(true);
+                    cloned.querySelectorAll(".material-icons, .material-icons-style, .symbol").forEach(node => node.remove());
+                    label = (cloned.textContent || "").trim();
+                }
+            }
+            label = label.replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
+            if (!label) return;
+            if (label.toLowerCase() === "utility" || label.toLowerCase() === "options") return;
+
+            const normLabel = label.toLowerCase();
+            if (Object.values(result).some(item => item.label.toLowerCase() === normLabel)) return;
+
+            const id = link.id || link.getAttribute("id") || `utility_${normLabel.replace(/\s+/g, '_')}`;
+
+            result[id] = {
+                id,
+                label,
+                element: link,
+                click: () => {
+                    const btnInside = link.querySelector("button, a, [onclick]") || link;
+                    safeExecuteButtonClick(btnInside, win);
+                }
+            };
+        });
+
+        return result;
+    }
+
+    /**
+     * Resolves document and window objects of active IView iframe.
+     * @returns {{ doc: Document|null, win: Window|null }} Frame document and window.
+     */
+    function getIViewDocumentAndWindow() {
+        let topIframe = document.getElementById("middle1");
+        let mainWin = window;
+        let mainDoc = document;
+
+        if (topIframe) {
+            try {
+                mainWin = topIframe.contentWindow || mainWin;
+                mainDoc = topIframe.contentDocument || mainWin.document || mainDoc;
+            } catch (e) { }
+        }
+
+        try {
+            if (mainDoc) {
+                const innerFrame = mainDoc.querySelector("#rightIframe, #newrightIframe, iframe[src*='iview.aspx'], iframe[src*='ivtoivload.aspx']");
+                if (innerFrame) {
+                    const innerWin = innerFrame.contentWindow;
+                    const innerDoc = innerFrame.contentDocument || innerWin?.document;
+                    if (innerDoc && innerDoc.body) {
+                        return { doc: innerDoc, win: innerWin, iframe: innerFrame };
+                    }
+                }
+            }
+        } catch (e) { }
+
+        return { doc: mainDoc, win: mainWin, iframe: topIframe };
+    }
+
+    /**
+     * Simulates click on action button or menu item inside active IView.
+     * @param {string} val - Action name.
+     * @param {HTMLElement} item - Button or item element.
+     * @param {string} link - Action target link.
+     * @returns {void}
+     */
+    function executeIViewAction(val, item, link) {
+        const { doc, win } = getIViewDocumentAndWindow();
+        const targetEl = link || item || (doc ? doc.querySelector(`[data-dropdown-value="${val}"]`) : null);
+        const parentItem = item || (targetEl ? targetEl.closest(".dropDownButton__item, .dropDownButton__list, li") : null);
+
+        try {
+            if (targetEl) {
+                const evt = new MouseEvent('click', { bubbles: true, cancelable: true, view: win });
+                targetEl.dispatchEvent(evt);
+                if (parentItem && parentItem !== targetEl) parentItem.dispatchEvent(evt);
+            }
+        } catch (e) {
+            try { if (targetEl) targetEl.click(); } catch (err) { }
+        }
+
+        try {
+            if (win && win.$) {
+                if (targetEl) win.$(targetEl).trigger('click');
+                if (parentItem && parentItem !== targetEl) win.$(parentItem).trigger('click');
+
+                if (val) {
+                    const $input = win.$('#IvirActions, .js-dropdown__input');
+                    if ($input.length) {
+                        $input.val("").val(val).trigger('change');
+                    }
+                }
+            }
+        } catch (e) { }
+
+        try {
+            if (win && val === "chart") {
+                const chartModal = win.document ? (win.document.getElementById("ivirCreateChart") || win.document.getElementById("dvCharts")) : null;
+                const isVisible = chartModal && (chartModal.offsetWidth > 0 || chartModal.offsetHeight > 0 || chartModal.style.display === "block");
+                if (!isVisible) {
+                    if (typeof win.ShowCharts === "function") {
+                        try { win.ShowCharts(); } catch (err) { }
+                    }
+                    if (typeof win.getChartHtml === "function" && typeof win.ivirActionDialog === "function") {
+                        const chartHtml = win.getChartHtml();
+                        if (chartHtml) {
+                            const title = (win.callParentNew && typeof win.callParentNew === "function" && win.callParentNew('lcm')) ? win.callParentNew('lcm')[410] : "Chart";
+                            win.ivirActionDialog(title, "chart", chartHtml, "ivirCreateChart");
+                        }
+                    }
+                }
+            } else if (win && val === "saveAs") {
+                const saveAsModal = win.document ? (win.document.getElementById("ivirSaveAsView") || win.document.getElementById("divFilterView")) : null;
+                const isVisible = saveAsModal && (saveAsModal.offsetWidth > 0 || saveAsModal.offsetHeight > 0 || saveAsModal.style.display === "block");
+                if (!isVisible) {
+                    if (typeof win.ShowViewPopup === "function") {
+                        try { win.ShowViewPopup(); } catch (err) { }
+                    }
+                    if (typeof win.getAddViewHtml === "function" && typeof win.ivirActionDialog === "function") {
+                        const addViewHtml = win.getAddViewHtml();
+                        const title = (win.callParentNew && typeof win.callParentNew === "function" && win.callParentNew('lcm')) ? win.callParentNew('lcm')[442] : "Add View";
+                        win.ivirActionDialog(title, "saveAs", addViewHtml, "ivirSaveAsView");
+                    }
+                }
+            }
+        } catch (e) { }
+    }
+
+    /**
+     * Extracts action buttons from dropdown menus inside active IView.
+     * @returns {Array<HTMLElement>} List of action buttons.
+     */
+    function getIViewActionDropdownButtons() {
+        const { doc } = getIViewDocumentAndWindow();
+        if (!doc) return {};
+
+        const items = Array.from(doc.querySelectorAll(".dropDownButton__list li.dropDownButton__item, li.dropDownButton__item"));
+        if (items.length === 0) return {};
+
+        const result = {};
+        items.forEach((item) => {
+            const dropdownVal = item.getAttribute("data-dropdown-value") || "";
+            if (dropdownVal !== "chart" && dropdownVal !== "saveAs") return;
+
+            const link = item.querySelector("a") || item;
+
+            let title = item.getAttribute("title") || link.getAttribute("title") || "";
+            let label = title.trim();
+            if (!label) {
+                const tempNode = link.cloneNode(true);
+                const icons = tempNode.querySelectorAll("span, i, .material-icons");
+                icons.forEach(node => node.remove());
+                label = tempNode.textContent.trim();
+            }
+            label = label.replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
+            if (!label) return;
+
+            const id = item.id || link.id || `action_${dropdownVal}`;
+
+            result[id] = {
+                id,
+                label,
+                element: item,
+                click: () => executeIViewAction(dropdownVal, item, link)
+            };
+        });
+
+        return result;
+    }
+
+    /**
+     * Collects action buttons from bottom toolbar of active form.
+     * @returns {Array<HTMLElement>} Toolbar buttons.
+     */
+    function getBottomToolbarButtons() {
+        const { doc, win } = getIViewDocumentAndWindow();
+        if (!doc) return {};
+        const toolbar = doc.querySelector(".BottomToolbarBar, .tstructMainBottomFooter, #icons, [id^='iconsNew'], [id^='dvRefresh'], .newRequestJson, .toolbarRightMenu, .toolbarIcons, .card-toolbar, .toolbar");
+        let buttons = [];
+        if (toolbar) {
+            buttons = Array.from(toolbar.querySelectorAll("a, button, input[type='button'], input[type='submit'], div[data-kt-menu-trigger], div.btn"));
+        }
+        if (buttons.length === 0) {
+            buttons = Array.from(doc.querySelectorAll(".BottomToolbarBar a, .BottomToolbarBar button, .tstructMainBottomFooter a, .tstructMainBottomFooter button, #icons a, #icons button, [id^='dvRefresh'] button, .card-toolbar a, .card-toolbar button, .toolbar a, .toolbar button, input[type='button'], input[type='submit']"));
+        }
+        if (buttons.length === 0) return {};
+
+        const result = {};
+        const structType = getStructType();
+
+        buttons.forEach((btn) => {
+            const dropDownItem = btn.closest(".dropDownButton__item, .dropDownButton__list");
+            if (structType === "i" && dropDownItem) {
+                const val = dropDownItem.getAttribute("data-dropdown-value") || btn.getAttribute("data-dropdown-value");
+                if (val !== "chart" && val !== "saveAs") return;
+            }
+
+            // Check if element or its parent is hidden
+            if (btn.offsetParent === null) return;
+            if (btn.classList.contains("d-none") || btn.closest(".d-none") || btn.closest("[style*='display: none']")) return;
+
+            const id = btn.id || btn.getAttribute("data-id") || btn.getAttribute("data-extra") || btn.getAttribute("title") || btn.getAttribute("onclick");
+            if (!id) return;
+            if (id === "ivirActionButton") return;
+
+            const label = extractButtonLabel(btn);
+            if (!label) return;
+            if (label.toLowerCase() === "plugin custom code") return;
+            if (label.toLowerCase() === "data" || btn.classList.contains("js-dropdown") || btn.classList.contains("ivirActionDrpDwn")) return;
+
+            result[id] = {
+                id,
+                label,
+                element: btn,
+                click: () => safeExecuteButtonClick(btn, win)
+            };
+        });
+
+        return result;
+    }
+
+    /**
+     * Checks if preview modal dialog is currently open.
+     * @returns {boolean} True if preview modal is open.
+     */
+    function isPreviewModalOpen() {
+        // Check if current window or frameElement indicates it is inside the loadPopUpPage modal or middle1 frame
+        try {
+            if (window.frameElement) {
+                const el = window.frameElement;
+                if (el.id === "loadPopUpPage" || el.name === "loadPopUpPage" || el.id === "middle1" || el.name === "middle1" || el.classList.contains("middle") || el.classList.contains("middle1")) {
+                    // console.log("Axi: running inside loadPopUpPage or middle1 iframe");
+                    return true;
+                }
+            }
+            if (window.name === "loadPopUpPage" || window.name === "middle" || window.name === "middle1") {
+                // console.log("Axi: running inside frame with name loadPopUpPage, middle or middle1");
+                return true;
+            }
+        } catch (e) {
+            // Ignore cross-origin errors
+        }
+
+        let rootWin = window;
+        try {
+            if (window.top && window.top.document) {
+                rootWin = window.top;
+            }
+        } catch (e) {
+            // console.warn("Axi: Failed to access window.top due to cross-origin boundary.");
+        }
+
+        /**
+         * Validates accessibility and permissions of a target window/iframe.
+         * @param {Window} win - Target window object.
+         * @returns {boolean} True if window is accessible.
+         */
+        function checkWindow(win) {
+            try {
+                if (!win || !win.document) return false;
+
+                // Check for loadPopUpPage modal
+                const loadPopUpPageModal = win.document.getElementById("loadPopUpPage");
+                if (loadPopUpPageModal) {
+                    if (loadPopUpPageModal.offsetWidth > 0 || loadPopUpPageModal.offsetHeight > 0 || loadPopUpPageModal.style.display === "block" || loadPopUpPageModal.classList.contains("show")) {
+                        // console.log("Axi: found active preview modal via loadPopUpPage");
+                        return true;
+                    }
+                }
+
+                // Check inside middle1 iframe document
+                const middleIframe = win.document.getElementById("middle1");
+                if (middleIframe) {
+                    const middleDoc = middleIframe.contentDocument || middleIframe.contentWindow?.document;
+                    if (middleDoc) {
+                        const innerModal = middleDoc.getElementById("loadPopUpPage");
+                        if (innerModal) {
+                            if (innerModal.offsetWidth > 0 || innerModal.offsetHeight > 0 || innerModal.style.display === "block" || innerModal.classList.contains("show")) {
+                                // console.log("Axi: found active preview modal inside middle1 iframe");
+                                return true;
+                            }
+                        }
+                    }
+                }
+
+                // 1. Check for remodal wrapper containing the popupIframeRemodal
+                const openedModal = win.document.querySelector(".remodal-wrapper.remodal-is-opened #popupIframeRemodal");
+                if (openedModal) {
+                    // console.log("Axi: found active preview modal via remodal selector");
+                    return true;
+                }
+
+                // 2. Check for remodal wrapper containing any htmlPages.aspx iframe
+                const htmlPagesModal = win.document.querySelector(".remodal-wrapper.remodal-is-opened iframe[src*='htmlPages.aspx']");
+                if (htmlPagesModal) {
+                    // console.log("Axi: found active preview modal via htmlPages src selector");
+                    return true;
+                }
+
+                // 3. Fallback check for popupIframeRemodal direct element
+                const modal = win.document.getElementById("popupIframeRemodal");
+                if (modal) {
+                    const wrapper = win.document.getElementById("axpertPopupWrapper") || win.document.querySelector("[data-remodal-id=axpertPopupModal]");
+                    if (wrapper) {
+                        if (wrapper.offsetWidth > 0 || wrapper.offsetHeight > 0 || wrapper.classList.contains("remodal-is-opened")) {
+                            // console.log("Axi: found active preview modal via wrapper visibility/class");
+                            return true;
+                        }
+                    } else if (modal.offsetWidth > 0 || modal.offsetHeight > 0) {
+                        // console.log("Axi: found active preview modal via modal direct visibility");
+                        return true;
+                    }
+                }
+
+                // 4. Recursively check iframes
+                const frames = win.document.querySelectorAll("iframe");
+                for (let i = 0; i < frames.length; i++) {
+                    const frameWin = frames[i].contentWindow;
+                    if (frameWin && checkWindow(frameWin)) {
+                        return true;
+                    }
+                }
+            } catch (err) {
+                // Ignore cross-origin error on frame access
+            }
+            return false;
+        }
+
+        const result = checkWindow(rootWin);
+        // console.log("Axi: isPreviewModalOpen returning:", result);
+        return result;
+    }
+
+    /**
+     * Checks if View Designer modal dialog is currently displayed.
+     * @returns {boolean} True if View Designer modal is open.
+     */
+    function isViewDesignerModalOpen() {
+        const iframe = document.getElementById("middle1");
+        if (!iframe) return false;
+
+        let doc = null;
+        try {
+            doc = iframe.contentDocument || iframe.contentWindow?.document;
+        } catch (e) {
+            // Ignore cross-origin error
+        }
+        if (!doc) return false;
+
+        const modal = doc.getElementById("newViewTabId") || doc.querySelector("#newViewTabId");
+        if (modal) {
+            return modal.offsetWidth > 0 || modal.offsetHeight > 0 || modal.style.display === "block" || modal.classList.contains("show");
+        }
+        return false;
+    }
+
+    /**
+     * Checks whether the 'Run' command should be disabled on the active page URL.
+     * @param {string} src - Page URL.
+     * @returns {boolean} True if Run is disabled.
+     */
+    function isRunDisabledForPage(src) {
+        if (!src) {
+            const iframe = document.getElementById("middle1");
+            if (!iframe) return false;
+            src = iframe.getAttribute("src") || "";
+        }
+        const srcLower = src.toLowerCase();
+
+        // 1. Dev Studio check
+        if (srcLower.includes("qadev") || srcLower.includes("adinfo=") || srcLower.includes("adinfo%3d") || srcLower.includes("axidev")) {
+            return true;
+        }
+
+        // 2. Specific non-runnable pages check
+        if (srcLower.includes("arrangemenu.aspx")) return true;
+        if (srcLower.includes("axdbscript.aspx")) return true;
+        if (srcLower.includes("tstruct.aspx") && srcLower.includes("transid=ad_lg")) return true;
+        if (srcLower.includes("iview.aspx") && srcLower.includes("ivname=inmemdb")) return true;
+        if (srcLower.includes("processflow.aspx") && (srcLower.includes("dashboard=t") || srcLower.includes("calendar=t"))) return true;
+
+        return false;
+    }
+
+    /**
+     * Collects action buttons from top toolbar of active form.
+     * @returns {Array<HTMLElement>} Top toolbar buttons.
+     */
+    function getTopToolbarButtons() {
+        const { doc, win } = getIViewDocumentAndWindow();
+        if (!doc) return {};
+
+        const toolbar = doc.querySelector(".toolbarRightMenu");
+
+        const toolbarButtons = toolbar ? Array.from(toolbar.querySelectorAll("a, button, input[type='button'], input[type='submit'], div[data-kt-menu-trigger], div.btn")) : [];
+        const dropdownButtons = Array.from(doc.querySelectorAll(".menu-sub-dropdown a, .menu-sub-dropdown button, .menu-sub-dropdown .menu-link, .dropdown-menu a, .dropdown-menu button"));
+
+        const buttons = [...toolbarButtons, ...dropdownButtons];
+        const result = {};
+
+        buttons.forEach((btn) => {
+            const structType = getStructType();
+            const dropDownItem = btn.closest(".dropDownButton__item, .dropDownButton__list");
+            const val = dropDownItem ? (dropDownItem.getAttribute("data-dropdown-value") || btn.getAttribute("data-dropdown-value")) : btn.getAttribute("data-dropdown-value");
+
+            if (structType === "i" && dropDownItem) {
+                if (val !== "chart" && val !== "saveAs") return;
+            }
+
+            const isDropdownItem = !!btn.closest(".menu-sub-dropdown, .menu-sub, .dropdown-menu");
+
+            // Check if element or its parent is hidden (exempt collapsed dropdown items from offsetParent === null check)
+            if (!isDropdownItem && btn.offsetParent === null) return;
+            if (btn.classList.contains("d-none") || btn.closest(".d-none") || btn.closest(".hidden")) return;
+
+            const id = btn.id || btn.getAttribute("data-id") || btn.getAttribute("data-extra") || btn.getAttribute("title") || btn.getAttribute("onclick");
+            if (!id) return;
+            if (id === "ivirActionButton") return;
+
+            const label = extractButtonLabel(btn);
+            if (!label) return;
+            if (label.toLowerCase() === "plugin custom code") return;
+            if (label.toLowerCase() === "data" || btn.classList.contains("js-dropdown") || btn.classList.contains("ivirActionDrpDwn")) return;
+
+            result[id] = {
+                id,
+                label,
+                element: btn,
+                click: () => {
+                    if (val === "chart" || val === "saveAs") {
+                        executeIViewAction(val, dropDownItem, btn);
+                    } else {
+                        safeExecuteButtonClick(btn, win);
+                    }
+                }
+            };
+        });
+
+        return result;
+    }
+
+    /**
+     * Collects buttons with specific attribute from active Tstruct form.
+     * @param {string} attributeName - Attribute name to query.
+     * @returns {Array<HTMLElement>} Matching buttons.
+     */
+    function getTStructButtons(attributeName) {
+        const iframe = document.getElementById("middle1");
+        if (!iframe) return {};
+
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!doc) return {};
+
+        const toolbar = doc.querySelector(`.${attributeName}`);  //|| doc.querySelector(`#${attributeName}`);
+        if (!toolbar) return {};
+
+        const buttons = toolbar.querySelectorAll("a");
+
+        const result = {};
+
+        buttons.forEach((btn) => {
+            const id = btn.id || btn.getAttribute("data-id");
+            if (!id) return;
+            const label = btn.innerText.trim();
+            // Same as the other button readers: buttons without a label and "Plugin Custom Code" are not listed (#277)
+            if (!label || label.toLowerCase() === "plugin custom code") return;
+
+
+
+            result[label] = {
+                id,
+                label,
+                element: btn,
+                click: () => btn.click()
+            };
+        });
+
+        return result;
+    }
+
+    /**
+     * Determines structure type (tstruct, iview, dashboard) loaded in active iframe.
+     * @returns {string} Structure type string.
+     */
+    function getStructType() {
+        const { doc: iframeDoc, win: iframeWin, iframe } = getIViewDocumentAndWindow();
+
+        let src = iframe ? (iframe.getAttribute("src") || "") : "";
+        let docHref = "";
+        try {
+            docHref = iframeDoc?.location?.href || iframeWin?.location?.href || "";
+        } catch (e) { }
+
+        const combinedUrl = (src + " " + docHref).toLowerCase();
+
+        if (isRunDisabledForPage(src) || isRunDisabledForPage(docHref)) {
+            return "o";
+        }
+
+        const cardContainer = document.querySelector(".cardsPageWrapper");
+        const isCardContainerHidden = cardContainer ? cardContainer.classList.contains("d-none") : true;
+
+        let bodyId = "";
+        if (iframeDoc) {
+            try {
+                bodyId = iframeDoc.body?.id || "";
+            } catch (e) { }
+        }
+
+        // Tstruct page
+        if ((combinedUrl.includes("tstruct.aspx") || combinedUrl.includes("transid=")) && bodyId !== "Entitymanagement_Body" && isCardContainerHidden) {
+            return "t";
+        }
+
+        // IView page (iview.aspx, ivtoivload.aspx, ivname=, or live iview DOM markers)
+        const isIViewDom = !!(iframeDoc && (
+            iframeDoc.getElementById("IvirActions") ||
+            iframeDoc.getElementById("txtViewName") ||
+            iframeDoc.querySelector(".iviewTableWrapperNew, #chartActionLi, .dropDownButton__list, .iviewRefresh, #ivirMainChartWrapper, #dvRefresh")
+        ));
+
+        if ((combinedUrl.includes("iview.aspx") || combinedUrl.includes("ivtoivload.aspx") || combinedUrl.includes("ivname=") || isIViewDom) && isCardContainerHidden) {
+            return "i";
+        }
+
+        // Entity page
+        if (combinedUrl.includes("entity.aspx") && bodyId === "Entitymanagement_Body" && isCardContainerHidden) {
+            return "e";
+        }
+
+        // Entity Form page
+        if ((combinedUrl.includes("entityform.aspx") || bodyId === "Entitymanagement_Body") && isCardContainerHidden) {
+            return "ef";
+        }
+
+        // Custom page
+        if ((combinedUrl.includes("/custompages") || combinedUrl.includes("/axidev") || combinedUrl.includes("/htmlpages")) && isCardContainerHidden) {
+            return "c";
+        }
+
+        // Import page
+        if (combinedUrl.includes("importall.aspx") && isCardContainerHidden) {
+            return "im";
+        }
+
+        // Export page
+        if (combinedUrl.includes("exportnew.aspx") && isCardContainerHidden) {
+            return "ex";
+        }
+
+        // Process flow page
+        if (combinedUrl.includes("processflow.aspx") && isCardContainerHidden) {
+            return "pf";
+        }
+
+        // Settings page
+        if (combinedUrl.includes("configuration.aspx") && isCardContainerHidden) {
+            return "s";
+        }
+
+        // Axibot page
+        if (combinedUrl.includes("axibot.html")) {
+            return "b";
+        }
+
+        if (isIViewDom && isCardContainerHidden) {
+            return "i";
+        }
+
+        return "o";
+    }
+
+    /**
+     * Extracts human-readable caption/label from a button element.
+     * @param {HTMLElement} btn - Button element.
+     * @returns {string} Clean button label.
+     */
+    function extractButtonLabel(btn) {
+        if (btn && btn.id === "smartviewFilterToolbarBtn") {
+            return "Filter";
+        }
+
+        const dataExtra = btn.getAttribute("data-extra");
+        if (dataExtra) return dataExtra.trim();
+
+        const dropdownIconName = btn.querySelector(".dropdownIconName");
+        if (dropdownIconName && dropdownIconName.textContent.trim()) {
+            return dropdownIconName.textContent.trim();
+        }
+
+        const menuTitle = btn.querySelector(".menu-title");
+        if (menuTitle && menuTitle.textContent.trim()) return menuTitle.textContent.trim();
+
+        const text = Array.from(btn.childNodes)
+            .filter(n => n.nodeType === Node.TEXT_NODE && n.textContent.trim())
+            .map(n => n.textContent.trim())
+            .join(" ")
+            .trim();
+
+        if (text) {
+            return text;
+        }
+
+        const title = btn.getAttribute("title") ||
+            btn.getAttribute("data-bs-original-title") ||
+            btn.getAttribute("data-original-title") ||
+            btn.getAttribute("data-bs-title");
+        if (title) return title.trim();
+
+        const cloned = btn.cloneNode(true);
+        cloned.querySelectorAll(".material-icons, .material-icons-style, .symbol").forEach(node => node.remove());
+        return cloned.innerText.trim();
+    }
+
+    /**
+     * Checks if a button element has an attached click action or onclick handler.
+     * @param {HTMLElement} btn - Button element to inspect.
+     * @returns {boolean} True if button has an action.
+     */
+    function hasAction(btn) {
+        const isDisabled = btn.classList.contains("disabled");
+        if (btn.getAttribute("onclick") && !isDisabled) return true;
+
+
+
+        if (btn.tagName === "A" && !isDisabled) {
+            const href = btn.getAttribute("href");
+
+            if (href && href !== "#" && href !== "javascript:void(0)") return true;
+
+        }
+
+
+
+
+
+        return false;
+    }
+
+
+    /**
+     * Safely simulates a user click event on a button inside an iframe.
+     * @param {HTMLElement} btn - Target button element.
+     * @param {Window} win - Frame window containing button.
+     * @returns {void}
+     */
+    function safeExecuteButtonClick(btn, win) {
+        if (!btn) return;
+        const targetWin = win || window;
+
+        // 1. Native .click() execution
+        try {
+            if (typeof btn.click === "function") {
+                btn.click();
+                return;
+            }
+        } catch (e) { }
+
+        // 2. MouseEvent fallback if .click() failed
+        try {
+            const evt = new MouseEvent('click', { bubbles: true, cancelable: true, view: targetWin });
+            btn.dispatchEvent(evt);
+            return;
+        } catch (e) { }
+
+        // 3. jQuery trigger fallback
+        if (targetWin && targetWin.$) {
+            try {
+                targetWin.$(btn).trigger('click');
+                return;
+            } catch (e) { }
+        }
+
+        // 4. Inline onclick fallback
+        try {
+            const onclickAttr = btn.getAttribute("onclick");
+            if (onclickAttr && targetWin) {
+                targetWin.eval(onclickAttr);
+                return;
+            }
+        } catch (e) { }
+
+        // 5. javascript: href fallback
+        try {
+            const hrefAttr = btn.getAttribute("href") || "";
+            if (hrefAttr && hrefAttr.startsWith("javascript:") && targetWin) {
+                targetWin.eval(decodeURIComponent(hrefAttr.replace(/^javascript:/i, '')));
+                return;
+            }
+        } catch (e) { }
+    }
+
+    /**
+     * Gathers toolbar buttons from active entity iframe.
+     * @returns {Array<HTMLElement>} List of toolbar buttons.
+     */
+    function getEntityToolbarButtons() {
+        const { doc, win } = getIViewDocumentAndWindow();
+        if (!doc) return {};
+
+        const toolbar = doc.querySelector(".card-toolbar, #icons, .toolbarRightMenu, .toolbar");
+        const buttons = [];
+        if (toolbar) {
+            buttons.push(...Array.from(toolbar.querySelectorAll("a, button, input[type='button'], input[type='submit']")));
+        }
+
+        const filterBtn = doc.querySelector("#smartviewFilterToolbarBtn");
+        if (filterBtn && !buttons.includes(filterBtn)) {
+            buttons.push(filterBtn);
+        }
+
+        if (buttons.length === 0) return {};
+
+        const result = {};
+
+        buttons.forEach((btn, index) => {
+            if (btn.classList.contains("d-none") || btn.closest(".d-none") || btn.classList.contains("disabled") || btn.closest(".disabled") || btn.closest("[hidden]")) return;
+            if (btn.getAttribute("data-kt-menu-attach") === "parent") return;
+            if (btn.querySelector(".menu-title") && btn.hasAttribute("data-kt-menu-trigger")) return;
+
+            const id = btn.id || btn.getAttribute("data-id") || btn.getAttribute("title") || `toolbar-btn-${index}`;
+            if (!id) return;
+
+            const label = extractButtonLabel(btn);
+            if (!label) return;
+            const labelLower = label.toLowerCase();
+            if (labelLower === "plugin custom code" || labelLower === "export" || labelLower === "theme" || labelLower === "field captions" || labelLower === "view" || labelLower === "pattern") return;
+
+            const dataElement = (btn.getAttribute("data-kt-element") || "").toLowerCase();
+            const dataTarget = (btn.getAttribute("data-target") || "").toLowerCase();
+            const btnId = (btn.id || btn.getAttribute("data-id") || "").toLowerCase();
+            const btnTitle = (btn.getAttribute("title") || "").toLowerCase().trim();
+            const btnOnclick = (btn.getAttribute("onclick") || "").toLowerCase();
+            const isEntityPage = getStructType() === "e" || (doc && doc.location && doc.location.href.toLowerCase().includes("smartview"));
+
+            if (isEntityPage || getStructType() === "e") {
+                const isDeleteBtn = btnId === "deleteselectedbutton" ||
+                    labelLower === "delete" ||
+                    btnTitle === "delete" ||
+                    btnOnclick.includes("deleteselectedrecords");
+
+                if (isDeleteBtn) return;
+
+                const isThemeMode = dataElement === "mode" ||
+                    labelLower === "light" ||
+                    labelLower === "dark" ||
+                    labelLower === "gradient" ||
+                    labelLower === "system" ||
+                    labelLower === "compact" ||
+                    labelLower.includes("light theme") ||
+                    labelLower.includes("dark theme") ||
+                    labelLower.includes("gradient theme") ||
+                    dataTarget.includes("lighttheme") ||
+                    dataTarget.includes("blacktheme") ||
+                    dataTarget.includes("gradtheme") ||
+                    dataTarget.includes("compacttheme") ||
+                    btnId.includes("theme_mode");
+
+                if (isThemeMode) return;
+            }
+
+            result[id] = {
+                id,
+                label: label.toLowerCase(),
+                element: btn,
+                click: () => safeExecuteButtonClick(btn, win)
+            };
+        });
+
+        return result;
+    }
+
+    /**
+     * Queries buttons inside active frame matching given CSS selector.
+     * @param {string} querySelector - CSS selector string.
+     * @returns {Array<HTMLElement>} Matching button elements.
+     */
+    function getButtons(querySelector) {
+        const iframe = document.getElementById("middle1");
+        if (!iframe) return {};
+
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!doc) return {};
+
+        const container = doc.querySelector(`${querySelector}`);
+        if (!container) return {};
+
+        const buttons = getAllActionButtons(container);
+
+        const result = {};
+
+        buttons.forEach((btn) => {
+            // if (!hasAction(btn)) return;
+            if (btn.type === "hidden") return;
+            if (btn.style.display === "none") return;
+            if (btn.offsetParent === null) return;
+            if (btn.classList.contains("disabled")) return;
+
+            const id = btn.id || btn.getAttribute("data-id") || btn.getAttribute("title") || btn.name || btn.getAttribute("data-kt-stepper-action");
+            if (!id) return;
+            // const label = btn.innerText.trim();
+            const label = extractButtonLabel(btn);
+            // Same as the other button readers: buttons without a label and "Plugin Custom Code" are not listed (#277)
+            if (!label || label.toLowerCase() === "plugin custom code") return;
+
+
+
+            result[id] = {
+                id,
+                label,
+                element: btn,
+                click: () => btn.click()
+            };
+        });
+
+        return result;
+    }
+
+    /**
+     * Collects all clickable action buttons across the document.
+     * @param {Document} doc - Target document.
+     * @returns {Array<HTMLElement>} All action buttons.
+     */
+    function getAllActionButtons(doc) {
+        return doc.querySelectorAll(`
+        a,
+        button,
+        input[type="button"],
+        input[type="submit"]
+    `);
+    }
+
+    /**
+     * Sets up an observer to listen for changes to form design mode state.
+     * @param {Function} callback - Callback function on mode change.
+     * @returns {void}
+     */
+    function watchDesignModeChange(callback) {
+        const iframe = document.getElementById("middle1");
+        if (!iframe) return;
+
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!doc) return;
+
+        const target = doc.querySelector("#divDc1");
+        if (!target) return;
+
+        const observer = new MutationObserver(() => {
+            callback(target.classList.contains("tstructDesignMode"));
+        });
+
+        observer.observe(target, {
+            attributes: true,
+            attributeFilter: ["class"]
+        });
+    }
+
+
+    /**
+     * Retrieves buttons available in design mode.
+     * @returns {Array<HTMLElement>} Design mode toolbar buttons.
+     */
+    function getDesignModeToolbarButtons() {
+        const { doc, win } = getIViewDocumentAndWindow();
+        if (!doc) return {};
+
+        const toolbar = doc.querySelector("#designModeToolbar, .designModeToolbar");
+        if (!toolbar) return {};
+
+        const buttons = toolbar.querySelectorAll("a, button");
+        const result = {};
+
+        buttons.forEach((btn, index) => {
+            const id = btn.id || btn.getAttribute("data-id") || btn.getAttribute("title") || `toolbar-btn-${index}`;
+            if (!id) return;
+
+            const label = extractButtonLabel(btn);
+            if (!label) return;
+            if (label.toLowerCase() === "plugin custom code") return;
+
+            result[id] = {
+                id,
+                label: label.toLowerCase(),
+                element: btn,
+                click: () => {
+                    try {
+                        const evt = new MouseEvent('click', { bubbles: true, cancelable: true, view: win || window });
+                        btn.dispatchEvent(evt);
+                    } catch (e) {
+                        try { btn.click(); } catch (err) { }
+                    }
+                    try {
+                        if (win && win.$) {
+                            win.$(btn).trigger('click');
+                        }
+                    } catch (e) { }
+                    try {
+                        const onclickAttr = btn.getAttribute("onclick");
+                        if (onclickAttr && win) {
+                            win.eval(onclickAttr);
+                        }
+                    } catch (e) { }
+                }
+            };
+        });
+
+        return result;
+
+    }
+
+    /**
+     * Checks if active Tstruct is currently in design mode.
+     * @returns {boolean} True if in design mode.
+     */
+    function isTstructDesignMode() {
+        const iframe = document.getElementById("middle1");
+        if (!iframe) return false;
+
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!doc) return false;
+
+        const root = doc.querySelector("#divDc1");
+        if (!root) return false;
+
+        return root.classList.contains("tstructDesignMode");
+    }
+
+    /**
+     * Collects toolbar buttons from active Process Flow viewer.
+     * @returns {Array<HTMLElement>} Process flow buttons.
+     */
+    function getPFToolbarButtons() {
+        const iframe = document.getElementById("middle1");
+        if (!iframe) return {};
+
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!doc) return {};
+
+        let docsToSearch = [doc];
+
+        // Check if processflow page contains an inner iframe (like #rightIframe or #newrightIframe or tstruct.aspx iframe)
+        try {
+            const innerIframe = doc.getElementById("rightIframe") || doc.getElementById("newrightIframe") || doc.querySelector("iframe.displayBlock") || doc.querySelector("iframe[src*='tstruct.aspx']");
+            if (innerIframe) {
+                const innerDoc = innerIframe.contentDocument || innerIframe.contentWindow?.document;
+                if (innerDoc) {
+                    docsToSearch = [innerDoc, doc];
+                }
+            }
+        } catch (e) {
+            // Ignore cross-origin errors
+        }
+
+        const result = {};
+
+        // Process Flow toolbar zones
+        const containers = [
+            ".Page-Title-Bar",
+            ".Tkts-toolbar-Left",
+            ".Tkts-toolbar-Right",
+            ".toolbarRightMenu",
+            ".card-toolbar",
+            ".card-header",
+            ".header-toolbar",
+            ".BottomToolbarBar"
+        ];
+
+        docsToSearch.forEach(targetDoc => {
+            let foundElements = [];
+
+            containers.forEach(selector => {
+                const root = targetDoc.querySelector(selector);
+                if (!root) return;
+
+                const elements = Array.from(root.querySelectorAll("button, a, input[type='button'], input[type='submit'], div.btn, div[data-kt-menu-trigger]"));
+                foundElements.push(...elements);
+            });
+
+            if (foundElements.length === 0) {
+                foundElements = Array.from(targetDoc.querySelectorAll(".Page-Title-Bar button, .Page-Title-Bar a, .toolbarRightMenu a, .toolbarRightMenu button, div.menu-sub-dropdown a, div.menu-sub-dropdown button, a.btn, button.btn"));
+            }
+
+            foundElements.forEach((el, index) => {
+                const isDropdownItem = !!el.closest(".menu-sub-dropdown, .menu-sub, .dropdown-menu");
+                if (!isDropdownItem && el.offsetParent === null) return;
+                if (el.classList.contains("d-none") || el.closest(".d-none") || el.classList.contains("disabled") || el.closest(".disabled") || el.closest("[hidden]")) return;
+
+                const label = extractButtonLabel(el);
+                if (!label) return;
+                if (label.toLowerCase() === "plugin custom code") return;
+
+                const id =
+                    el.id ||
+                    el.getAttribute("data-id") ||
+                    el.getAttribute("data-bs-title") ||
+                    el.getAttribute("data-bs-original-title") ||
+                    el.getAttribute("title") ||
+                    `process-btn-${label.toLowerCase().replace(/\s+/g, "_")}-${index}`;
+
+                result[id] = {
+                    id,
+                    label: label.toLowerCase(),
+                    element: el,
+                    click: () => el.click()
+                };
+            });
+        });
+
+        return result;
+    }
+
+    /**
+     * Checks whether an item represents a system notification message.
+     * @param {object} item - Message item to check.
+     * @returns {boolean} True if system message.
+     */
+    function isSystemMessage(item) {
+        if (!item) return false;
+
+        const text = typeof item === 'string' ? item : (item.displaydata || "");
+
+        return text.startsWith("Loading") ||
+            text.startsWith("Waiting") ||
+            text.startsWith("Error") ||
+            text.startsWith("Fetching") ||
+            text.startsWith("Searching") ||
+            text.startsWith("Type at least") ||
+            // new code: "Type GitHub account name" / "Type GitHub repository name" (configure product / plugin / changerequest)
+            text.startsWith("Type GitHub") ||
+            text.startsWith("No matching") ||
+            text.startsWith("Run configure ") ||
+            text.startsWith("No directories") ||
+            text === "No Data" ||
+            text === "Please type the value..." ||
+            text === "Please type Valid date using / (ex: DD / MM / YYYY)" ||
+            text === "Please Type the date";
+
+    }
+
+
+    /**
+     * Handles execution of 'Analyse' command for charts and analytics.
+     * @param {object} context - Execution context.
+     * @param {string[]} context.tokens - Command tokens.
+     * @param {object} context.commandConfig - Command configuration schema.
+     * @returns {void}
+     */
+    function handleAnalyse({ tokens, commandConfig }) {
+
+        if (tokens < 1) {
+            showToast("Error:Invalid Tokens, Analyze command requires atleast 2 tokens");
+            // console.error("Error:Invalid Tokens, Analyze command requires atleast 2 tokens");
+            return;
+        }
+
+
+        let targetUrl = "../AxpertPlugins/AxiCMD/HTMLPages/Analytics.html";
+
+        // if (tokens.length === 1) {
+        //     targetUrl += "?calendar=t";
+        //     targetUrl += `&isDupTab=true-${Date.now()}`;
+        //     targetUrl += "&hdnbElapsTime=0";
+        // }
+
+
+        // else {
+
+        const captionSelected = cleanString(tokens[1]);
+        const { value: transIdAnalyse, type: resolvedType } = tryResolveToken(1, captionSelected, commandConfig);
+        const paramValuesCsv = "tstruct,ads"
+
+        // const type = getType(commandConfig?.prompts?.[0]?.promptSource.toLowerCase(), transIdAnalyse, paramValuesCsv, tokens, commandConfig);
+        const type = getType(commandConfig?.prompts?.[0]?.promptSource.toLowerCase(), { value: transIdAnalyse, type: resolvedType }, paramValuesCsv, tokens, commandConfig);
+
+        targetUrl += `?entity=${encodeURIComponent(transIdAnalyse)}`;
+
+        if (tokens.length == 3) {
+            let groupByFieldCaption = cleanString(tokens[2]);
+            const { value: groupByFiedlname } = tryResolveToken(2, groupByFieldCaption, commandConfig);
+            targetUrl += `&groupby=${encodeURIComponent(groupByFiedlname)}`;
+        }
+        else if (tokens.length > 3) {
+            showToast("Analyse commands requires only 3 tokens");
+            return;
+        }
+
+        targetUrl += "&calendar=t";
+        targetUrl += `&type=${type}`
+        // targetUrl += "&isDupTab=true-1770626614111";
+        targetUrl += `&isDupTab=true-${Date.now()}`;
+
+        targetUrl += "&hdnbElapsTime=0";
+        // }
+
+        setCommandRoutes(input.value.trim(), targetUrl);
+        // console.log("Target URL from analyse command : " + targetUrl);
+        window.LoadIframe(targetUrl);
+    }
+
+
+
+
+
+    /**
+     * Clears field-value staging state for Set/Create operations.
+     * @returns {void}
+     */
+    function resetSetCommandState() {
+        SET_COMMAND_STATE.isNextField = false;
+        SET_COMMAND_STATE.currentField = null;
+        SET_COMMAND_STATE.currentFieldType = null;
+        SET_COMMAND_STATE.isFirst = true;
+        SET_COMMAND_STATE.transid = null;
+        SET_COMMAND_STATE.currentFieldValue = null;
+        SET_COMMAND_STATE.isDropDown = false;
+        //createfieldnamevaluesList = [];
+    }
+
+    /**
+     * Prepares suggestions for 'Create' command fields and values.
+     * @param {string[]} tokens - Command tokens.
+     * @param {object} commandConfig - Command definition schema.
+     * @param {object} createsourceObj - Source metadata object.
+     * @returns {Array<object>} Suggestions list.
+     */
+    function createCommandHandling(tokens, commandConfig, createsourceObj) {
+        //const viewSource = commandConfig?.prompts?.[0]?.promptSource?.toLowerCase();
+        const viewSource = createsourceObj;
+
+        if (SET_COMMAND_STATE.isDropDown) {
+            let acceptedValue = cleanString(tokens[tokens.length - 2]);
+            if (acceptedValue)
+                SET_COMMAND_STATE.currentFieldValue = acceptedValue;
+
+            SET_COMMAND_STATE.isDropDown = false;
+        }
+
+
+        if (SET_COMMAND_STATE.currentFieldType == 'n') {
+
+            return processCreateCommand(tokens, commandConfig, viewSource);
+        }
+        else if (SET_COMMAND_STATE.currentFieldType == 'd') {
+            let prevValueInSet = tokens[tokens.length - 2].toLowerCase();
+
+            if (prevValueInSet === "today" || prevValueInSet === "yesterday" || prevValueInSet === "tomorrow" ||
+                prevValueInSet === "lastweek" || prevValueInSet === "nextweek" || prevValueInSet === "thisweek" ||
+                prevValueInSet === "lastmonth" || prevValueInSet === "thismonth" || prevValueInSet === "nextmonth" ||
+                prevValueInSet === "thisquarter" || prevValueInSet === "lastquarter" || prevValueInSet === "nextquarter" ||
+                prevValueInSet === "thisyear" || prevValueInSet === "lastyear" || prevValueInSet === "nextyear" || prevValueInSet === "custom") {
+                dateControlBoolean = true;
+            }
+
+            if (dateControlBoolean) {
+
+                if (prevValueInSet === "today" || prevValueInSet === "yesterday" || prevValueInSet === "tomorrow" ||
+                    prevValueInSet === "lastweek" || prevValueInSet === "nextweek" || prevValueInSet === "thisweek" ||
+                    prevValueInSet === "lastmonth" || prevValueInSet === "thismonth" || prevValueInSet === "nextmonth" ||
+                    prevValueInSet === "thisquarter" || prevValueInSet === "lastquarter" || prevValueInSet === "nextquarter" ||
+                    prevValueInSet === "thisyear" || prevValueInSet === "lastyear" || prevValueInSet === "nextyear") {
+
+                    const dateResult = getDateByFilter(prevValueInSet);
+                    let date = dateResult.date;
+
+                    if (date !== null || date !== undefined) {
+                        let settokens = [...tokens]
+                        let lastIndex = settokens.length - 2;
+                        let lastToken = settokens[lastIndex];
+
+
+                        ///We need to use System Date Format
+                        date = formatDate(date, dateString);
+
+                        // console.log("Final date:", date);
+
+                        settokens[lastIndex] = date;
+
+                        input.value = settokens.join(" ");
+
+                        SET_COMMAND_STATE.currentFieldValue = date;
+                        dateControlBoolean = false;
+
+                    }
+                }
+                else {
+                    if (prevValueInSet.toLowerCase() == "custom") {
+                        //let settokens = tokens
+                        //let lastIndex = tokens.length - 2;
+                        //let lastToken = tokens[lastIndex];
+                        let settokens = [...tokens]
+                        let lastIndex = settokens.length - 2;
+                        let lastToken = settokens[lastIndex];
+
+                        settokens[lastIndex] = "";
+
+                        input.value = settokens.join(" ");
+
+                        showToast("Please Type the date", 5000, true);
+                        updateDynamicHintFromPrompt({ prompt: "fieldValue" })
+                        return ["Please Type the date"];
+                    }
+                    else {
+                        //const partialDate = tokens[tokens.length - 1]
+                        const partialDate = tokens[tokens.length - 1]
+
+                        let isSetValidDate = isValidDate(partialDate)
+
+                        if (isSetValidDate) {
+
+                            ///We need to use System Date Format
+                            const formattedDate = formatDate(partialDate, dateString);
+                            date = formattedDate;
+                            // console.log("Final date:", date);
+                            SET_COMMAND_STATE.currentFieldValue = date;
+                            SET_COMMAND_STATE.currentFieldType = null;
+                            SET_COMMAND_STATE.isNextField = true;
+                            dateControlBoolean = false;
+
+                        }
+                        else
+                            return ["Please type Valid date using / (ex: DD / MM / YYYY)"];
+                    }
+                }
+            }
+            else {
+                let acceptedValue = cleanString(tokens[tokens.length - 1]).toLowerCase();
+
+                const list = [
+                    "Custom",
+                    "Today",
+                    "Yesterday",
+                    "Tomorrow",
+                    "LastWeek",
+                    "NextWeek",
+                    "ThisWeek",
+                    "LastMonth",
+                    "ThisMonth",
+                    "NextMonth",
+                    "ThisQuarter",
+                    "LastQuarter",
+                    "NextQuarter",
+                    "ThisYear",
+                    "LastYear",
+                    "NextYear"
+                ];
+
+                let filtered = list.filter(col => {
+
+                    const rawDisplay = col.toLowerCase();
+
+                    const normalizedTypedValue = (acceptedValue ?? "")
+                        .toLowerCase();
+
+                    return rawDisplay.includes(normalizedTypedValue);
+                });
+
+
+                if (acceptedValue && filtered.length === 0) {
+                    // console.log("User given value which is not in the date list");
+                    showToast("Please select a valid Option from the list", 5000, true);
+
+                    let lastIndex = tokens.length - 1;
+                    let lastToken = tokens[lastIndex];
+                    tokens[lastIndex] = "";
+
+                    input.value = tokens.join(" ");
+
+                    filtered = list;
+                }
+
+
+                return filtered;
+            }
+
+            return processCreateCommand(tokens, commandConfig, viewSource);
+
+        }
+        else
+            return processCreateCommand(tokens, commandConfig, viewSource);
+    }
+
+    /**
+     * Processes field value pairs during Create command typing.
+     * @param {string[]} tokens - Command tokens.
+     * @param {object} commandConfig - Command definition schema.
+     * @param {object} createCommandSourceObj - Source metadata object.
+     * @returns {Array<object>} Suggestions list.
+     */
+    function processCreateCommand(tokens, commandConfig, createCommandSourceObj) {
+        let targetIndex = tokens.length - 1;
+        const partialTyped = cleanString(tokens[targetIndex]);
+
+        const createTransId = cleanCommandToken(tokens[1]);
+        // setCommandTransid = tryResolveToken(1, createTransId, commandConfig, false);
+        const { value, type } = tryResolveToken(1, createTransId, commandConfig, false);
+        setCommandTransid = value;
+
+        if (SET_COMMAND_STATE.transid === null || setCommandTransid !== SET_COMMAND_STATE.transid) {
+            SET_COMMAND_STATE = {
+                isNextField: false,
+                currentField: null,
+                currentFieldType: null,
+                isFirst: true,
+                transid: setCommandTransid,
+                currentFieldValue: null,
+                isDropDown: false
+
+            };
+        }
+
+
+        if (targetIndex % 2 !== 0) {
+            const sourceName = createCommandSourceObj.toLowerCase();
+            const sourceKey = `${sourceName}_${setCommandTransid}`.toLowerCase();
+
+            if (SET_COMMAND_STATE.currentField) {
+                let previousColumnName = SET_COMMAND_STATE.currentField;
+                // previousColumnName = tryResolveToken(targetIndex - 2, previousColumnName, commandConfig, false);
+                const { value, type } = tryResolveToken(targetIndex - 2, previousColumnName, commandConfig, false);
+                previousColumnName = value;
+                let previousColumnValue = SET_COMMAND_STATE.currentFieldValue;
+                //AddFieldstoList(previousColumnName, 1, previousColumnValue);
+                AddFieldstoList(previousColumnName, 1, previousColumnValue, setCommandTransid);
+            }
+
+
+            if (!axDatasourceObj[sourceKey]) {
+                loadList(sourceName, setCommandTransid);
+                return ["Loading Field list..."];
+            }
+
+            const list = axDatasourceObj[sourceKey];
+            if (!Array.isArray(list)) return [];
+
+
+            const usedColumns = new Set();
+            for (let i = 3; i < targetIndex; i += 2) {
+                const usedToken = cleanString(tokens[i]).toLowerCase();
+                usedColumns.add(usedToken);
+            }
+
+            const filtered = list.filter(col => {
+                const rawDisplay = (col?.displaydata || col?.name)?.toLowerCase();
+                const cleanDisplay = rawDisplay
+                    .replace(/\s*\(.*?\)/g, "")
+                    .replace(/\s*\[[^\]]+\]\s*$/, "")
+                    .trim();
+                const rawName = (col.name || "").toLowerCase();
+                const isUsed = usedColumns.has(cleanDisplay) || usedColumns.has(rawName);
+                const matchesInput = cleanDisplay.includes(partialTyped.toLowerCase());
+                return !isUsed && matchesInput;
+            });
+
+            filteredObjects = filtered;
+
+            let resultList = filtered.map(item => item.displaydata || item.caption || item.name || item.fname || item.keyfield);
+
+            if ((SET_COMMAND_STATE.currentField || (targetIndex % 2 !== 0 && targetIndex >= 4)) && filteredObjects.length > 0) {
+
+                resultList.unshift(saveOption);
+                resultList.unshift(popOption);
+                resultList.unshift(goOption);
+                filteredObjects.unshift(saveOption);
+                filteredObjects.unshift(popOption);
+                filteredObjects.unshift(goOption);
+            }
+            else if (tokens.length >= 3 && filteredObjects.length > 0) {
+
+                resultList.unshift(popOption);
+                resultList.unshift(goOption);
+                filteredObjects.unshift(popOption);
+                filteredObjects.unshift(goOption);
+
+            }
+
+            SET_COMMAND_STATE.currentField = null;
+            SET_COMMAND_STATE.currentFieldType = null
+            SET_COMMAND_STATE.currentFieldValue = null;
+            SET_COMMAND_STATE.isNextField = false;
+            SET_COMMAND_STATE.isDropDown = false;
+
+
+
+
+            return resultList;
+        }
+
+
+        else {
+
+            if (!SET_COMMAND_STATE.isNextField) {
+                let prevColumnName
+                if (!SET_COMMAND_STATE.currentField) {
+                    prevColumnName = cleanString(tokens[targetIndex - 1]);
+                    SET_COMMAND_STATE.currentField = prevColumnName;
+                }
+                else
+                    prevColumnName = SET_COMMAND_STATE.currentField;
+
+
+                const colSourceKey = createCommandSourceObj + `_${setCommandTransid}`.toLowerCase();
+                const colList = axDatasourceObj[colSourceKey];
+
+                if (!colList) {
+                    // console.log("In processCreateCommand " + createCommandSourceObj + " is empty");
+                    showToast("Please Try Again Later.");
+                    return [];
+                }
+
+                const columnMetadata = colList.find(
+                    c =>
+                        c.name?.toLowerCase() === prevColumnName.toLowerCase() ||
+                        c.displaydata?.toLowerCase().replace(/\s*\(.*?\)/g, '').trim() === prevColumnName.toLowerCase()
+                ) || null;
+
+                if (!columnMetadata) {
+
+                    //// console.log("In processEditCommond " + createCommandSourceObj + " is empty");
+                    //showToast("Please Try Again Later.");
+
+                    // console.log("Selected Field Name is Not in the List " + prevColumnName);
+                    showToast("Please Select Field from the list", 5000, true);
+
+                    let settokens = [...tokens]
+                    let lastIndex = settokens.length - 2;
+                    let lastToken = settokens[lastIndex];
+
+                    settokens[lastIndex] = "";
+
+                    targetIndex = targetIndex - 1;
+
+                    input.value = settokens.join(" ");
+                    updateDynamicHintFromPrompt({ prompt: "fieldName" })
+                    //return [];
+
+
+                    const usedColumns = new Set();
+                    for (let i = 3; i < targetIndex; i += 2) {
+                        const usedToken = cleanString(tokens[i]).toLowerCase();
+                        usedColumns.add(usedToken);
+                    }
+
+                    const filtered = colList.filter(col => {
+                        const rawDisplay = (col.displaydata || col.name).toLowerCase();
+                        const cleanDisplay = rawDisplay
+                            .replace(/\s*\(.*?\)/g, "")
+                            .replace(/\s*\[[^\]]+\]\s*$/, "")
+                            .trim();
+                        const rawName = (col.name || "").toLowerCase();
+                        const isUsed = usedColumns.has(cleanDisplay) || usedColumns.has(rawName);
+                        return !isUsed;
+                    });
+
+                    filteredObjects = filtered;
+
+                    let resultList = filtered.map(item => item.displaydata || item.caption || item.name || item.fname || item.keyfield);
+
+                    SET_COMMAND_STATE.currentField = null;
+
+                    if (SET_COMMAND_STATE.currentField || (targetIndex % 2 !== 0 && targetIndex >= 4)) {
+
+                        resultList.unshift(saveOption);
+                        resultList.unshift(popOption);
+                        resultList.unshift(goOption);
+                        filteredObjects.unshift(saveOption);
+                        filteredObjects.unshift(popOption);
+                        filteredObjects.unshift(goOption);
+
+                    }
+                    else if (tokens.length >= 3) {
+                        resultList.unshift(popOption);
+                        resultList.unshift(goOption);
+                        filteredObjects.unshift(popOption);
+                        filteredObjects.unshift(goOption);
+                    }
+
+
+                    SET_COMMAND_STATE.currentField = null;
+                    SET_COMMAND_STATE.currentFieldType = null
+                    SET_COMMAND_STATE.currentFieldValue = null;
+                    SET_COMMAND_STATE.isNextField = false;
+                    SET_COMMAND_STATE.isDropDown = false;
+
+
+
+
+                    return resultList;
+                }
+
+                let isAccept;
+
+                if (columnMetadata.moe === "a") {
+                    isAccept = true;
+                } else {
+                    isAccept = false;
+                }
+
+
+
+                let datatype;
+
+                if (SET_COMMAND_STATE.currentFieldType === null) {
+                    datatype = columnMetadata.datatype;
+                    SET_COMMAND_STATE.currentFieldType = datatype;
+                }
+                else datatype = SET_COMMAND_STATE.currentFieldType;
+
+
+                if (datatype === 'c' || datatype === 'n' || datatype === "t") {
+                    if (isAccept) {
+                        let acceptedValue = cleanString(tokens[tokens.length - 1]);
+                        if (acceptedValue) {
+                            SET_COMMAND_STATE.currentFieldValue = acceptedValue;
+                            return [];
+                        }
+                        else {
+                            return ["Please type the value..."];
+                        }
+                        return [];
+
+                    }
+                    else {
+
+                        SET_COMMAND_STATE.isDropDown = true;
+                        const acceptedValue = cleanString(tokens[tokens.length - 1]);
+                        const sourceName = "axi_firesql";
+
+
+                        var params1 = columnMetadata.fldsql;
+                        var params2 = prepareKeyValueString(allGloblVars);
+                        // console.log(params2);
+                        var params3 = columnMetadata.normalized;
+                        var params4 = columnMetadata.fromlist;
+
+                        params2 += ";" + getFieldNameandItsValue(createfieldnamevaluesList[setCommandTransid], commandConfig);
+
+                        // console.log(params2);
+
+
+
+                        const paramValue = `${params1}$#$${params2}$#$${params3}$#$${params4}`;
+                        const sourceKey = `${sourceName}_${paramValue}`.toLowerCase();
+
+                        if (!axDatasourceObj[sourceKey]) {
+                            loadList(sourceName, paramValue);
+                            return ["Loading values..."];
+                        }
+
+                        const list = axDatasourceObj[sourceKey];
+                        if (!Array.isArray(list)) return [];
+
+                        let filtered = list.filter(col => {
+                            const rawDisplay = String(col.displaydata || col.name)
+                                .toLowerCase();
+
+                            const normalizedTypedValue = (acceptedValue ?? "")
+                                .toLowerCase();
+
+                            return !normalizedTypedValue || rawDisplay.includes(normalizedTypedValue);
+                        });
+
+                        if (acceptedValue && filtered.length === 0) {
+                            // console.log("User given value is not in the dropdown");
+                            showToast("Please select a valid value from the dropdown", 5000, true);
+
+                            let lastIndex = tokens.length - 1;
+                            let lastToken = tokens[lastIndex];
+                            tokens[lastIndex] = "";
+
+                            input.value = tokens.join(" ");
+
+                            filtered = list;
+                        }
+
+
+                        return filtered.map(col => col.displaydata || col.name);
+                    }
+                }
+                else if (datatype === 'd') {
+
+
+                    const acceptedValue = cleanString(tokens[tokens.length - 1]);
+
+                    const list = [
+                        "Custom",
+                        "Today",
+                        "Yesterday",
+                        "Tomorrow",
+                        "LastWeek",
+                        "NextWeek",
+                        "ThisWeek",
+                        "LastMonth",
+                        "ThisMonth",
+                        "NextMonth",
+                        "ThisQuarter",
+                        "LastQuarter",
+                        "NextQuarter",
+                        "ThisYear",
+                        "LastYear",
+                        "NextYear"
+                    ];
+
+                    const filtered = list.filter(col => {
+
+                        const rawDisplay = col.toLowerCase();
+
+                        const normalizedTypedValue = (acceptedValue ?? "")
+                            .toLowerCase();
+
+                        return rawDisplay.includes(normalizedTypedValue);
+                    });
+
+
+                    return filtered;
+
+
+                }
+
+                //else if (datatype === 'd') {
+
+                //}
+            }
+            else return [];
+        }
+    }
+
+    /**
+     * Prepares suggestions for 'Edit' command field updates.
+     * @param {string[]} tokens - Command tokens.
+     * @param {object} commandConfig - Command definition schema.
+     * @param {object} createsourceObj - Source metadata object.
+     * @returns {Array<object>} Suggestions list.
+     */
+    function editCommandHandling(tokens, commandConfig, createsourceObj) {
+        //const viewSource = commandConfig?.prompts?.[0]?.promptSource?.toLowerCase();
+        const viewSource = createsourceObj;
+
+        if (SET_COMMAND_STATE.isDropDown) {
+            let acceptedValue = cleanString(tokens[tokens.length - 2]);
+            if (acceptedValue)
+                SET_COMMAND_STATE.currentFieldValue = acceptedValue;
+
+            SET_COMMAND_STATE.isDropDown = false;
+        }
+
+
+        if (SET_COMMAND_STATE.currentFieldType == 'n') {
+
+            return processEditCommand(tokens, commandConfig, viewSource);
+        }
+        else if (SET_COMMAND_STATE.currentFieldType == 'd') {
+            let prevValueInSet = tokens[tokens.length - 2].toLowerCase();
+
+            if (prevValueInSet === "today" || prevValueInSet === "yesterday" || prevValueInSet === "tomorrow" ||
+                prevValueInSet === "lastweek" || prevValueInSet === "nextweek" || prevValueInSet === "thisweek" ||
+                prevValueInSet === "lastmonth" || prevValueInSet === "thismonth" || prevValueInSet === "nextmonth" ||
+                prevValueInSet === "thisquarter" || prevValueInSet === "lastquarter" || prevValueInSet === "nextquarter" ||
+                prevValueInSet === "thisyear" || prevValueInSet === "lastyear" || prevValueInSet === "nextyear" || prevValueInSet === "custom") {
+                dateControlBoolean = true;
+            }
+
+            if (dateControlBoolean) {
+
+                if (prevValueInSet === "today" || prevValueInSet === "yesterday" || prevValueInSet === "tomorrow" ||
+                    prevValueInSet === "lastweek" || prevValueInSet === "nextweek" || prevValueInSet === "thisweek" ||
+                    prevValueInSet === "lastmonth" || prevValueInSet === "thismonth" || prevValueInSet === "nextmonth" ||
+                    prevValueInSet === "thisquarter" || prevValueInSet === "lastquarter" || prevValueInSet === "nextquarter" ||
+                    prevValueInSet === "thisyear" || prevValueInSet === "lastyear" || prevValueInSet === "nextyear") {
+
+                    const dateResult = getDateByFilter(prevValueInSet);
+                    let date = dateResult.date;
+
+                    if (date !== null || date !== undefined) {
+                        let settokens = [...tokens]
+                        let lastIndex = settokens.length - 2;
+                        let lastToken = settokens[lastIndex];
+
+
+                        ///We need to use System Date Format
+                        date = formatDate(date, dateString);
+
+                        // console.log("Final date:", date);
+
+                        settokens[lastIndex] = date;
+
+                        input.value = settokens.join(" ");
+
+                        SET_COMMAND_STATE.currentFieldValue = date;
+                        dateControlBoolean = false;
+
+                    }
+                }
+                else {
+                    if (prevValueInSet.toLowerCase() == "custom") {
+                        //let settokens = tokens
+                        //let lastIndex = tokens.length - 2;
+                        //let lastToken = tokens[lastIndex];
+                        let settokens = [...tokens]
+                        let lastIndex = settokens.length - 2;
+                        let lastToken = settokens[lastIndex];
+
+                        settokens[lastIndex] = "";
+
+                        input.value = settokens.join(" ");
+
+                        showToast("Please Type the date", 5000, true);
+                        updateDynamicHintFromPrompt({ prompt: "fieldValue" })
+                        return ["Please Type the date"];
+                    }
+                    else {
+                        //const partialDate = tokens[tokens.length - 1]
+                        const partialDate = tokens[tokens.length - 1]
+
+                        let isSetValidDate = isValidDate(partialDate)
+
+                        if (isSetValidDate) {
+
+                            ///We need to use System Date Format
+                            const formattedDate = formatDate(partialDate, dateString);
+                            date = formattedDate;
+                            // console.log("Final date:", date);
+                            SET_COMMAND_STATE.currentFieldValue = date;
+                            SET_COMMAND_STATE.currentFieldType = null;
+                            SET_COMMAND_STATE.isNextField = true;
+                            dateControlBoolean = false;
+
+                        }
+                        else
+                            return ["Please type Valid date using / (ex: DD / MM / YYYY)"];
+                    }
+                }
+            }
+            else {
+                let acceptedValue = cleanString(tokens[tokens.length - 1]).toLowerCase();
+
+                const list = [
+                    "Custom",
+                    "Today",
+                    "Yesterday",
+                    "Tomorrow",
+                    "LastWeek",
+                    "NextWeek",
+                    "ThisWeek",
+                    "LastMonth",
+                    "ThisMonth",
+                    "NextMonth",
+                    "ThisQuarter",
+                    "LastQuarter",
+                    "NextQuarter",
+                    "ThisYear",
+                    "LastYear",
+                    "NextYear"
+                ];
+
+                let filtered = list.filter(col => {
+
+                    const rawDisplay = col.toLowerCase();
+
+                    const normalizedTypedValue = (acceptedValue ?? "")
+                        .toLowerCase();
+
+                    return rawDisplay.includes(normalizedTypedValue);
+                });
+
+
+                if (acceptedValue && filtered.length === 0) {
+                    // console.log("User given value which is not in the date list");
+                    showToast("Please select a valid Option from the list", 5000, true);
+
+                    let lastIndex = tokens.length - 1;
+                    let lastToken = tokens[lastIndex];
+                    tokens[lastIndex] = "";
+
+                    input.value = tokens.join(" ");
+
+                    filtered = list;
+                }
+
+
+                return filtered;
+            }
+
+            return processEditCommand(tokens, commandConfig, viewSource);
+
+        }
+        else
+            return processEditCommand(tokens, commandConfig, viewSource);
+    }
+
+    /**
+     * Processes field value pairs during Edit command typing.
+     * @param {string[]} tokens - Command tokens.
+     * @param {object} commandConfig - Command definition schema.
+     * @param {object} createCommandSourceObj - Source metadata object.
+     * @returns {Array<object>} Suggestions list.
+     */
+    function processEditCommand(tokens, commandConfig, createCommandSourceObj) {
+        let targetIndex = tokens.length - 1;
+        const partialTyped = cleanString(tokens[targetIndex]);
+
+        const createTransId = cleanCommandToken(tokens[1]);
+        // setCommandTransid = tryResolveToken(1, createTransId, commandConfig, false);
+        const { value, type } = tryResolveToken(1, createTransId, commandConfig, false);
+        setCommandTransid = value;
+
+        if (SET_COMMAND_STATE.transid === null || setCommandTransid !== SET_COMMAND_STATE.transid) {
+            SET_COMMAND_STATE = {
+                isNextField: false,
+                currentField: null,
+                currentFieldType: null,
+                isFirst: true,
+                transid: setCommandTransid,
+                currentFieldValue: null,
+                isDropDown: false
+
+            };
+        }
+
+
+        if (targetIndex % 2 == 0) {
+            const sourceName = createCommandSourceObj.toLowerCase();
+            const sourceKey = `${sourceName}_${setCommandTransid}`.toLowerCase();
+
+            if (SET_COMMAND_STATE.currentField) {
+                let previousColumnName = SET_COMMAND_STATE.currentField;
+                // previousColumnName = tryResolveToken(targetIndex - 2, previousColumnName, commandConfig, false);
+                const { value, type } = tryResolveToken(targetIndex - 2, previousColumnName, commandConfig, false);
+                previousColumnName = value;
+                let previousColumnValue = SET_COMMAND_STATE.currentFieldValue;
+                AddFieldstoList(previousColumnName, 1, previousColumnValue, setCommandTransid);
+            }
+
+
+            if (!axDatasourceObj[sourceKey]) {
+                loadList(sourceName, setCommandTransid);
+                return ["Loading Field list..."];
+            }
+
+            const list = axDatasourceObj[sourceKey];
+            if (!Array.isArray(list)) return [];
+
+
+            const usedColumns = new Set();
+            for (let i = 4; i < targetIndex; i += 2) {
+                const usedToken = cleanString(tokens[i]).toLowerCase();
+                usedColumns.add(usedToken);
+            }
+
+            const filtered = list.filter(col => {
+                const rawDisplay = (col?.displaydata || col?.name)?.toLowerCase();
+                const cleanDisplay = rawDisplay
+                    .replace(/\s*\(.*?\)/g, "")
+                    .replace(/\s*\[[^\]]+\]\s*$/, "")
+                    .trim();
+                const rawName = (col.name || "").toLowerCase();
+                const isUsed = usedColumns.has(cleanDisplay) || usedColumns.has(rawName);
+                const matchesInput = cleanDisplay.includes(partialTyped.toLowerCase());
+                return !isUsed && matchesInput;
+            });
+
+            filteredObjects = filtered;
+
+            let resultList = filtered.map(item => item.displaydata || item.caption || item.name || item.fname || item.keyfield);
+
+            //if ((SET_COMMAND_STATE.currentField || (targetIndex % 2 == 0 && targetIndex >= 4)) && filteredObjects.length > 0) {
+            if ((SET_COMMAND_STATE.currentField || (targetIndex % 2 == 0 && targetIndex >= 4))) {
+                //resultList.unshift(goOption);
+                resultList.unshift(saveOption);
+                //filteredObjects.unshift(goOption);
+                filteredObjects.unshift(saveOption);
+            }
+            //else if (tokens.length >= 3) {
+            //    //resultList.unshift(goOption);
+            //    //filteredObjects.unshift(goOption);
+            //}
+
+
+            SET_COMMAND_STATE.currentField = null;
+            SET_COMMAND_STATE.currentFieldType = null
+            SET_COMMAND_STATE.currentFieldValue = null;
+            SET_COMMAND_STATE.isNextField = false;
+            SET_COMMAND_STATE.isDropDown = false;
+
+
+
+
+            return resultList;
+        }
+
+        //else if (targetIndex <=3) {
+        //    const sourceName = createCommandSourceObj.toLowerCase();
+        //    const sourceKey = `${sourceName}_${setCommandTransid}`.toLowerCase();
+
+        //    if (!axDatasourceObj[sourceKey]) {
+        //        loadList(sourceName, setCommandTransid);
+        //        return ["Loading Field list..."];
+        //    }
+
+        //    const list = axDatasourceObj[sourceKey];
+        //    if (!Array.isArray(list)) return [];
+
+
+        //    const filtered = list.filter(col => {
+        //        const rawDisplay = (col.displaydata || col.name).toLowerCase();
+        //        const cleanDisplay = rawDisplay
+        //            .replace(/\s*\(.*?\)/g, "")
+        //            .replace(/\s*\[[^\]]+\]\s*$/, "")
+        //            .trim();
+        //        const rawName = (col.name || "").toLowerCase();
+        //        const isUsed = usedColumns.has(cleanDisplay) || usedColumns.has(rawName);
+        //        const matchesInput = cleanDisplay.includes(partialTyped.toLowerCase());
+        //        return !isUsed && matchesInput;
+        //    });
+
+        //    filteredObjects = filtered;
+
+        //    let resultList = filtered.map(item => item.displaydata || item.caption || item.name || item.fname || item.keyfield);
+
+        //    return resultList;
+        //}
+        else {
+
+            if (!SET_COMMAND_STATE.isNextField) {
+                let prevColumnName
+                if (!SET_COMMAND_STATE.currentField) {
+                    prevColumnName = cleanString(tokens[targetIndex - 1]);
+                    SET_COMMAND_STATE.currentField = prevColumnName;
+                }
+                else
+                    prevColumnName = SET_COMMAND_STATE.currentField;
+
+
+                const colSourceKey = createCommandSourceObj + `_${setCommandTransid}`.toLowerCase();
+                const colList = axDatasourceObj[colSourceKey];
+
+                if (!colList) {
+                    // console.log("In processEditCommond " + createCommandSourceObj + " is empty");
+                    showToast("Please Try Again Later.");
+                    return [];
+                }
+
+                const columnMetadata = colList.find(
+                    c =>
+                        c.name?.toLowerCase() === prevColumnName.toLowerCase() ||
+                        c.displaydata?.toLowerCase().replace(/\s*\(.*?\)/g, '').trim() === prevColumnName.toLowerCase()
+                ) || null;
+
+                if (!columnMetadata) {
+                    //// console.log("In processEditCommond " + createCommandSourceObj + " is empty");
+                    //showToast("Please Try Again Later.");
+
+                    // console.log("Selected Field Name is Not in the List " + prevColumnName);
+                    showToast("Please Select Field only from the list", 5000, true);
+
+                    let settokens = [...tokens]
+                    let lastIndex = settokens.length - 2;
+                    let lastToken = settokens[lastIndex];
+
+                    settokens[lastIndex] = "";
+
+                    targetIndex = targetIndex - 1;
+
+                    input.value = settokens.join(" ");
+                    updateDynamicHintFromPrompt({ prompt: "fieldName" })
+
+                    //return [];
+
+
+                    const usedColumns = new Set();
+                    for (let i = 4; i < targetIndex; i += 2) {
+                        const usedToken = cleanString(tokens[i]).toLowerCase();
+                        usedColumns.add(usedToken);
+                    }
+
+                    const filtered = colList.filter(col => {
+                        const rawDisplay = (col.displaydata || col.name).toLowerCase();
+                        const cleanDisplay = rawDisplay
+                            .replace(/\s*\(.*?\)/g, "")
+                            .replace(/\s*\[[^\]]+\]\s*$/, "")
+                            .trim();
+                        const rawName = (col.name || "").toLowerCase();
+                        const isUsed = usedColumns.has(cleanDisplay) || usedColumns.has(rawName);
+                        return !isUsed;
+                    });
+
+                    filteredObjects = filtered;
+
+                    let resultList = filtered.map(item => item.displaydata || item.caption || item.name || item.fname || item.keyfield);
+
+                    SET_COMMAND_STATE.currentField = null;
+
+                    if (SET_COMMAND_STATE.currentField || (targetIndex % 2 == 0 && targetIndex >= 4)) {
+                        //resultList.unshift(goOption);
+                        resultList.unshift(saveOption);
+                        //filteredObjects.unshift(goOption);
+                        filteredObjects.unshift(saveOption);
+                    }
+                    //else if (tokens.length >= 3) {
+                    //    //resultList.unshift(goOption);
+                    //    //filteredObjects.unshift(goOption);
+                    //}
+
+
+                    SET_COMMAND_STATE.currentField = null;
+                    SET_COMMAND_STATE.currentFieldType = null
+                    SET_COMMAND_STATE.currentFieldValue = null;
+                    SET_COMMAND_STATE.isNextField = false;
+                    SET_COMMAND_STATE.isDropDown = false;
+
+
+
+
+                    return resultList;
+
+                }
+
+                let isAccept;
+
+                if (columnMetadata.moe === "a") {
+                    isAccept = true;
+                } else {
+                    isAccept = false;
+                }
+
+
+
+                let datatype;
+
+                if (SET_COMMAND_STATE.currentFieldType === null) {
+                    datatype = columnMetadata.datatype;
+                    SET_COMMAND_STATE.currentFieldType = datatype;
+                }
+                else datatype = SET_COMMAND_STATE.currentFieldType;
+
+
+                if (datatype === 'c' || datatype === 'n' || datatype === "t") {
+                    if (isAccept) {
+                        let acceptedValue = cleanString(tokens[tokens.length - 1]);
+                        if (acceptedValue) {
+                            SET_COMMAND_STATE.currentFieldValue = acceptedValue;
+                            return [];
+                        }
+                        else {
+                            return ["Please type the value..."];
+                        }
+
+                    }
+                    else {
+
+                        SET_COMMAND_STATE.isDropDown = true;
+                        const acceptedValue = cleanString(tokens[tokens.length - 1]);
+                        const sourceName = "axi_firesql";
+
+
+
+                        var params1 = columnMetadata.fldsql;
+                        var params2 = prepareKeyValueString(allGloblVars);
+                        // console.log(params2);
+                        var params3 = columnMetadata.normalized;
+                        var params4 = columnMetadata.fromlist;
+
+
+                        params2 += ";" + getFieldNameandItsValue(createfieldnamevaluesList[setCommandTransid], commandConfig);
+
+                        // console.log(params2);
+
+
+
+                        const paramValue = `${params1}$#$${params2}$#$${params3}$#$${params4}`;
+                        const sourceKey = `${sourceName}_${paramValue}`.toLowerCase();
+
+                        if (!axDatasourceObj[sourceKey]) {
+                            loadList(sourceName, paramValue);
+                            return ["Loading values..."];
+                        }
+
+                        const list = axDatasourceObj[sourceKey];
+                        if (!Array.isArray(list)) return [];
+
+                        let filtered = list.filter(col => {
+                            const rawDisplay = String(col.displaydata || col.name)
+                                .toLowerCase();
+
+                            const normalizedTypedValue = (acceptedValue ?? "")
+                                .toLowerCase();
+
+                            return !normalizedTypedValue || rawDisplay.includes(normalizedTypedValue);
+                        });
+
+                        if (acceptedValue && filtered.length === 0) {
+                            // console.log("User given value which is not in the dropdown");
+                            showToast("Please select a valid value from the dropdown", 5000, true);
+
+                            let lastIndex = tokens.length - 1;
+                            let lastToken = tokens[lastIndex];
+                            tokens[lastIndex] = "";
+
+                            input.value = tokens.join(" ");
+
+                            filtered = list;
+                        }
+
+
+
+                        return filtered.map(col => col.displaydata || col.name);
+                    }
+                }
+                else if (datatype === 'd') {
+
+
+                    const acceptedValue = cleanString(tokens[tokens.length - 1]).toLowerCase();
+
+                    const list = [
+                        "Custom",
+                        "Today",
+                        "Yesterday",
+                        "Tomorrow",
+                        "LastWeek",
+                        "NextWeek",
+                        "ThisWeek",
+                        "LastMonth",
+                        "ThisMonth",
+                        "NextMonth",
+                        "ThisQuarter",
+                        "LastQuarter",
+                        "NextQuarter",
+                        "ThisYear",
+                        "LastYear",
+                        "NextYear"
+                    ];
+
+                    //if (list.some(item => item.toLowerCase() === acceptedValue.toLowerCase())) {
+                    //    SET_COMMAND_STATE.currentFieldType = datatype;
+                    //    return editCommandHandling(tokens, commandConfig, createCommandSourceObj);
+
+                    //}
+                    //else SET_COMMAND_STATE.currentFieldType = null;
+
+                    const filtered = list.filter(col => {
+
+                        const rawDisplay = col.toLowerCase();
+
+                        const normalizedTypedValue = (acceptedValue ?? "")
+                            .toLowerCase();
+
+                        return rawDisplay.includes(normalizedTypedValue);
+                    });
+
+
+                    return filtered;
+
+
+                }
+
+                //else if (datatype === 'd') {
+
+                //}
+            }
+            else return [];
+        }
+    }
+    /**
+     * Adds a field-value entry to save payload list.
+     * @param {string} fieldName - Field name.
+     * @param {number} rowNo - Row index number.
+     * @param {*} value - Field value.
+     * @param {string} transid - Transaction structure ID.
+     * @returns {void}
+     */
+    function AddFieldstoList(fieldName, rowNo, value, transid) {
+
+        if (!fieldName || !value || !transid) return;
+
+        if (!createfieldnamevaluesList[transid]) {
+            createfieldnamevaluesList[transid] = [];
+        }
+
+        const currentList = createfieldnamevaluesList[transid];
+
+        const keyPrefix = `${fieldName}~${rowNo}=`;
+        const existingIndex = currentList.findIndex(item =>
+            item.startsWith(keyPrefix)
+        );
+
+        const formatted = `${fieldName}~${rowNo}=${value}`;
+
+        if (existingIndex !== -1) {
+            if (currentList[existingIndex] !== formatted) {
+                currentList[existingIndex] = formatted;
+            }
+        } else {
+            currentList.push(formatted);
+        }
+    }
+
+
+    /**
+     * Retrieves transaction ID from active form or session.
+     * @returns {string} Transaction ID.
+     */
+    function getTransID() {
+
+        // const iframes = document.querySelectorAll("iframe");
+
+        // // console.log(iframes);
+
+        const currentIframe = document.getElementById("middle1");
+
+        let transID;
+
+        if (currentIframe) {
+            //  const src = currentIframe.src;
+            //  const fetchTransidfromUrl = src.match(/[?&](transid|tstid)=([^&]+)/i);
+
+            //const key = fetchTransidfromUrl ? fetchTransidfromUrl[1] : null;
+            //const value = fetchTransidfromUrl ? fetchTransidfromUrl[2] : null;
+            //// console.log(key, value);
+            //transID = value;
+            transID = currentIframe.contentWindow.transid;
+
+            if (transID) {
+                //// console.log("iFrame Found");
+                return transID;
+            }
+            else
+                return null;
+        }
+        else {
+            return null;
+        }
+
+
+
+    }
+
+
+    // function AxisetFieldValue(actualFieldName, value, rowNo) {
+    //     const fldid = actualFieldName + "000F" + rowNo;
+
+    //     const iframe = document.getElementById("middle1");
+
+    //     if (iframe) {
+    //         const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+    //         const iframeDocElement = iframeDoc.getElementById(fldid);
+    //         //const iframeDoc = iframe.contentWindow;
+
+    //         //$("#middle1")[0].contentWindow.CallSetFieldValue(fldid, FldVal);
+    //         //$("#middle1")[0].contentWindow.MainBlur($(fldid))
+
+    //         //$("#middle1")[0].contentWindow.MainBlur($(fldid))
+    //         //$("#middle1")[0].contentWindow.UpdateFieldArray(fldid, fldDbRowNo, fldValue, "parent", "");
+    //         //$("#middle1")[0].contentWindow.CallSetFieldValue(fldid, fldValue);
+
+    //         if (iframeDocElement) {
+
+    //             ///
+    //             /// For dependency we need to verify this logic.
+    //             ////
+
+    //             iframeDocElement.value = value;
+
+    //             iframeDocElement.dispatchEvent(new Event("input", { bubbles: true }));
+    //             iframeDocElement.dispatchEvent(new Event("change", { bubbles: true }));
+    //             iframeDocElement.dispatchEvent(new Event("blur", { bubbles: true }));
+
+
+    //             ///Product Field Set Logic
+    //             //iframeDoc.UpdateFieldArray(fldid, rowNo, value, "parent", "");
+    //             //iframeDoc.CallSetFieldValue(fldid, value);
+    //             //iframeDoc.MainBlur($(fldid));
+    //             return true;
+    //         }
+    //         else {
+    //             return false;
+    //         }
+    //     }
+    //     else return false;
+    // }
+
+    /**
+     * Sets field value directly in active Tstruct form DOM elements.
+     * @param {string} actualFieldName - Form field name.
+     * @param {*} value - Value to set.
+     * @param {number} rowNo - Form row number.
+     * @returns {void}
+     */
+    function AxisetFieldValue(actualFieldName, value, rowNo) {
+
+        const fldid = actualFieldName + "000F" + rowNo;
+        const iframe = document.getElementById("middle1");
+        if (!iframe) return false;
+
+        const iframeWin = iframe.contentWindow;
+        const iframeDoc = iframe.contentDocument || iframeWin.document;
+
+        try {
+
+            /* ---------------- MULTI SELECT (SELECT2) ---------------- */
+
+            const multiSelectEl = iframeDoc.getElementById(fldid);
+
+            if (multiSelectEl && multiSelectEl.multiple) {
+
+                const valuesArray = (value || "")
+                    .split(",")
+                    .map(v => v.trim())
+                    .filter(Boolean);
+
+                if (iframeWin.$) {
+
+                    const $el = iframeWin.$(multiSelectEl);
+
+                    // Ensure options exist
+                    valuesArray.forEach(val => {
+                        if ($el.find("option[value='" + val + "']").length === 0) {
+                            const newOption = new iframeWin.Option(val, val, true, true);
+                            $el.append(newOption);
+                        }
+                    });
+
+                    // Set UI
+                    $el.val(valuesArray).trigger("change");
+                }
+
+                // ?? VERY IMPORTANT � update Axpert internal array
+                if (typeof iframeWin.UpdateFieldArray === "function") {
+                    iframeWin.UpdateFieldArray(fldid, rowNo, value, "parent", "");
+                }
+
+                return true;
+            }
+
+            /* ---------------- SINGLE SELECT (SELECT2) ---------------- */
+
+            const singleSelectEl = iframeDoc.getElementById(fldid);
+
+            if (singleSelectEl && !singleSelectEl.multiple && singleSelectEl.classList.contains("select2-hidden-accessible")) {
+
+                if (iframeWin.$) {
+
+                    const $el = iframeWin.$(singleSelectEl);
+
+                    // If option doesn't exist, create it
+                    if ($el.find("option[value='" + value + "']").length === 0) {
+                        const newOption = new iframeWin.Option(value, value, true, true);
+                        $el.append(newOption);
+                    }
+
+                    $el.val(value).trigger("change");
+                }
+
+                if (typeof iframeWin.UpdateFieldArray === "function") {
+                    iframeWin.UpdateFieldArray(fldid, rowNo, value, "parent", "");
+                }
+
+                return true;
+            }
+
+
+            /* ---------------- CHECKBOX ---------------- */
+
+            const checkboxEl = iframeDoc.querySelector(
+                `input[type="checkbox"]#${fldid}`
+            );
+
+            if (checkboxEl) {
+
+                const normalized = (value || "").toString().toLowerCase();
+
+                checkboxEl.checked =
+                    normalized === "true" ||
+                    normalized === "1" ||
+                    normalized === "yes" ||
+                    normalized === "t" ||
+                    normalized === "y";
+
+
+                checkboxEl.dispatchEvent(new Event("change", { bubbles: true }));
+                checkboxEl.dispatchEvent(new Event("blur", { bubbles: true }));
+
+                return true;
+            }
+
+
+            /* ---------------- RADIO GROUP ---------------- */
+
+            const radioGroup = iframeDoc.querySelectorAll(
+                `input[type="radio"][name="${fldid}"]`
+            );
+
+            if (radioGroup.length > 0) {
+
+                radioGroup.forEach(r => {
+                    r.checked = (r.value === value);
+                });
+
+                radioGroup[0].dispatchEvent(
+                    new Event("change", { bubbles: true })
+                );
+
+                return true;
+            }
+
+
+            /* ---------------- NORMAL INPUT ---------------- */
+
+            const normalInput = iframeDoc.getElementById(fldid);
+
+            if (normalInput) {
+
+                normalInput.value = value;
+
+                normalInput.dispatchEvent(new Event("input", { bubbles: true }));
+                normalInput.dispatchEvent(new Event("change", { bubbles: true }));
+                normalInput.dispatchEvent(new Event("blur", { bubbles: true }));
+
+                return true;
+            }
+
+            return false;
+
+        } catch (ex) {
+            // console.error("AxisetFieldValue error:", ex);
+            return false;
+        }
+    }
+
+    /**
+     * Executes record creation via ARM save API.
+     * @param {object} context - Execution context.
+     * @param {string[]} context.tokens - Command tokens.
+     * @param {object} context.commandConfig - Command configuration schema.
+     * @returns {void}
+     */
+    function handleCreate({ tokens, commandConfig }) {
+
+        if (tokens.length < 2) {
+            // console.warn("create command requires <tstructname> <fieldname> <fieldvalue>");
+            showToast("create command requires <tstructname> <fieldname> <fieldvalue>");
+            return;
+        }
+
+        resetSetCommandState();
+
+        if (tokens.length <= 3) {
+            let rawName = cleanCommandToken(tokens[1]);
+            let { value: transId, type } = tryResolveToken(1, rawName, commandConfig, false);
+
+            // if (transId === rawName) {
+            //     const list = axDatasourceObj["Axi_TStructList".toLowerCase()];
+            //     const found = list?.find(
+            //         x => x.caption.toLowerCase() === rawName.toLowerCase()
+            //     );
+            //     if (found) transId = found.name
+            //     else {
+            //         // console.error("Invalid Tstruct name");
+            //         showToast("Invalid Tstruct name please select the valid tstruct");
+            //         return;
+            //     }
+            // }
+
+            const sourceName = commandConfig?.prompts?.[2]?.promptSource?.toLowerCase();
+            const sourceKey = `${sourceName}_${transId}`.toLowerCase();
+            const fieldsList = axDatasourceObj[sourceKey];
+
+            if (fieldsList) {
+                let startIndex = cleanCommandToken(tokens[2]).toLowerCase() === "with" ? 3 : 2;
+
+                for (let i = startIndex; i < tokens.length; i += 2) {
+                    let rawField = cleanCommandToken(tokens[i]);
+
+                    if (!rawField) continue;
+
+                    const isValidField = colList.some(c =>
+                        (c.name && c.name.toLowerCase() === rawField.toLowerCase()) ||
+                        (c.caption && c.caption.toLowerCase() === rawField.toLowerCase()) ||
+                        (c.displaydata && c.displaydata.replace(/\s*\(.*?\)/g, '').trim().toLowerCase() === rawField.toLowerCase())
+                    );
+
+                    if (!isValidField) {
+                        // console.error("Execution blocked: Invalid field name - " + rawField);
+                        showToast(`'${rawField}' is not a valid field. Please select from the list.`, 5000, false);
+                        return;
+                    }
+                }
+            }
+
+            redirectToTstruct(transId, rawName);
+            return;
+
+        }
+
+        let rawName = cleanCommandToken(tokens[1]);
+        let { value: transId, type } = tryResolveToken(1, rawName, commandConfig, false);
+
+        //if (!transId ) {
+        //    // console.log("Missing transaction ID or field values.");
+        //    showToast("Some required information is missing. Please re-enter the command and try again.");
+        //    return;
+        //}
+
+        if (!transId || !createfieldnamevaluesList || !createfieldnamevaluesList[transId] || createfieldnamevaluesList[transId].length === 0) {
+            // console.log("Missing transaction ID or field values. Tstructid : " + transId);
+            showToast("Incomplete command detected. Please clear the entire command and try again.");
+            return [];
+        }
+
+
+        //commenetd bcz of set issue for a dependency field
+
+        //let CurrentOpentstructName = getTransID();
+
+        //if (CurrentOpentstructName === transId.toLowerCase()) {
+
+        //    //for (let i = 2; i < tokens.length; i += 2) {
+
+        //    for (let i = 0; i < createfieldnamevaluesList.length; i++) {
+
+        //        const item = createfieldnamevaluesList[i];
+        //        if (!item) continue;
+
+        //        const parts = item.split("=");
+        //        if (parts.length !== 2) continue;
+
+        //        const left = parts[0];
+        //        const value = parts[1];
+        //        const leftParts = left.split("~");
+        //        if (leftParts.length !== 2) continue;
+        //        const fieldname = leftParts[0];
+        //        const rowNo = leftParts[1];
+
+        //        //const fieldname = cleanCommandToken(tokens[i]);
+        //        //const actualFieldName = tryResolveToken(i+3, fieldname, commandConfig, false);
+        //        const actualFieldName = fieldname;
+        //        //const value = cleanCommandToken(tokens[i + 1]);
+        //        //const rowNo = "1";
+
+        //        if (!fieldname || value == null || value === "") {
+        //            // console.log(`SET FAILED ? ${fieldname} = ${value}`);
+        //            continue;
+        //        }
+
+
+        //        let resultOfSetFieldValue = AxisetFieldValue(actualFieldName, value, rowNo);
+
+        //        if (resultOfSetFieldValue) {
+        //            // console.log(`SET SUCCESS ? ${fieldname} = ${value}`);
+        //            continue;
+
+        //        }
+        //        else {
+        //            // console.log(`SET FAILED ? ${fieldname} = ${value}`);
+        //        }
+        //    }
+        //    createfieldnamevaluesList = []
+        //}
+        //else 
+        //{
+        // console.log("Form not loaded. Attaching onload and redirecting...");
+
+        let iframe = null;
+
+        try {
+
+            iframe = document.getElementById("middle1");
+
+            if (!iframe) {
+                // console.log("Iframe not found");
+                return;
+            }
+
+
+            iframe.onload = function () {
+                //we can also try: 0 (minimum delay),50,100,200 (if needed)
+                // console.log("Iframe loaded. Setting all fields now...");
+                setTimeout(function () {
+                    try {
+
+
+                        // console.log(createfieldnamevaluesList[transId]);
+                        // for (let j = 2; j < tokens.length; j += 2) {
+                        for (let j = 0; j < createfieldnamevaluesList[transId].length; j++) {
+
+                            const item = createfieldnamevaluesList[transId][j];
+                            if (!item) continue;
+
+                            const parts = item.split("=");
+                            if (parts.length !== 2) continue;
+
+                            const left = parts[0];
+                            const val = parts[1];
+                            const leftParts = left.split("~");
+                            if (leftParts.length !== 2) continue;
+                            const fieldname = leftParts[0];
+                            const rowNo = leftParts[1];
+
+                            //const fname = cleanCommandToken(tokens[j]);
+                            //const actualFName = tryResolveToken(j + 3, fieldname, commandConfig, false);
+                            const actualFName = fieldname;
+                            //const value = cleanCommandToken(tokens[i + 1]);
+                            //let rowNo = "1";
+
+                            if (!actualFName || val == null || val === "") {
+                                // console.log(`SET FAILED ? ${fname} = ${val}`);
+                                continue;
+                            }
+
+                            let resultOfSetFieldValue = AxisetFieldValue(actualFName, val, rowNo);
+
+                            if (resultOfSetFieldValue) {
+                                // console.log(`SET SUCCESS ? ${actualFName} = ${val}`);
+                            }
+                            else {
+                                // console.log(`SET FAILED ? ${actualFName} = ${val}`);
+                            }
+                        }
+
+                    }
+                    catch (ex) {
+                        // console.error("Error while setting fields after iframe load:", ex);
+                    }
+                    finally {
+                        iframe.onload = null;
+                        ///comment bcz go option should work based on command not based on list so when we remove it but 
+                        //actual command / tokens exits these creates confusion and so many bugs(25-02 - 2026)
+                        //createfieldnamevaluesList = [];
+                    }
+                }, 1000);
+            };
+
+            setEditSessionState(transId);
+
+            redirectToTstruct(transId, rawName);
+
+        }
+        catch (ex) {
+            // console.log("Error in handleCreate: " + ex);
+            showToast("Incomplete command detected. Please clear the entire command and try again.");
+            //createfieldnamevaluesList = [];
+        }
+        //finally {
+        //    if (iframe) {
+        //        iframe.onload = iframe.onload;
+        //    }
+        //}
+
+
+        //}
+    }
+
+    /**
+     * Converts field-value object into key-value formatted string.
+     * @param {object} data - Field-value data object.
+     * @returns {string} Formatted key-value string.
+     */
+    function prepareKeyValueString(data) {
+        if (!data || !Array.isArray(data.globalVars)) return "";
+
+        return data.globalVars
+            .map(obj => {
+                const key = Object.keys(obj)[0];
+                const value = obj[key];
+                return key + "~" + value;
+            })
+            .join(";");
+    }
+    /**
+     * Maps raw tokens to form field names and values.
+     * @param {Array<object>} fieldValueList - List of field value objects.
+     * @param {object} commandConfig - Command definition schema.
+     * @returns {object} Mapped field-value pairs.
+     */
+    function getFieldNameandItsValue(fieldValueList, commandConfig) {
+
+        let fieldValue = "";
+
+        if (!fieldValueList || fieldValueList.length === 0) {
+            return fieldValue;
+        }
+
+        for (let i = 0; i < fieldValueList.length; i++) {
+
+            let item = fieldValueList[i];
+
+            if (!item) continue;
+
+            let parts = item.split("=");
+
+            if (parts.length !== 2) continue;
+
+            let leftPart = parts[0];
+            let valuePart = parts[1];
+
+            let fieldParts = leftPart.split("~");
+
+            let fieldName = fieldParts[0];
+
+            fieldValue += fieldName + "~" + valuePart + ";";
+        }
+
+        return fieldValue;
+    }
+
+
+
+    /**
+     * Validates whether input string represents a valid date format.
+     * @param {string} value - Date string to validate.
+     * @returns {boolean} True if valid date.
+     */
+    function isValidDate(value) {
+        if (!value || typeof value !== "string") return false;
+
+        value = value.trim();
+
+        if (value.length === 0) {
+            return false;
+        }
+
+        let day, month, year;
+
+        // Format: DD/MM/YYYY or D/M/YYYY or DD-MM-YYYY or D-M-YYYY
+        let dmyRegex = /^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/;
+
+        // Format: YYYY-MM-DD
+        let ymdRegex = /^(\d{4})-(\d{1,2})-(\d{1,2})$/;
+
+        if (dmyRegex.test(value)) {
+            const match = value.match(dmyRegex);
+            day = parseInt(match[1], 10);
+            month = parseInt(match[2], 10);
+            year = parseInt(match[3], 10);
+        }
+        else if (ymdRegex.test(value)) {
+            const match = value.match(ymdRegex);
+            year = parseInt(match[1], 10);
+            month = parseInt(match[2], 10);
+            day = parseInt(match[3], 10);
+        }
+        else {
+            return false; // format mismatch
+        }
+
+        // Month range
+        if (month < 1 || month > 12) return false;
+
+        // Day range
+        const daysInMonth = new Date(year, month, 0).getDate();
+        if (day < 1 || day > daysInMonth) return false;
+
+        return true;
+    }
+
+
+
+    /**
+     * Formats a Date object into specified string pattern.
+     * @param {Date} date - Date object.
+     * @param {string} format - Date format pattern.
+     * @returns {string} Formatted date string.
+     */
+    function formatDate(date, format) {
+        if (!date) return null;
+
+        if (typeof date === "string") {
+            let m;
+            if ((m = date.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/)) || (m = date.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/))) {
+                date = new Date(
+                    m[1].length === 4 ? m[1] : m[3],
+                    (m[1].length === 4 ? m[2] : m[2]) - 1,
+                    m[1].length === 4 ? m[3] : m[1]
+                );
+
+            } else {
+                return null;
+            }
+        }
+
+        if (!(date instanceof Date) || isNaN(date.getTime())) {
+            return null;
+        }
+
+        const dd = String(date.getDate()).padStart(2, "0");
+        const mm = String(date.getMonth() + 1).padStart(2, "0");
+        const yyyy = date.getFullYear();
+
+
+
+        const now = new Date();
+        const HH = String(now.getHours()).padStart(2, "0");
+        const MI = String(now.getMinutes()).padStart(2, "0");
+        const SS = String(now.getSeconds()).padStart(2, "0");
+        const time = `${HH}:${MI}:${SS}`;
+
+
+        switch (format.toLowerCase()) {
+            case "YYYYMMDD".toLowerCase():
+                return `${yyyy}${mm}${dd}`;
+
+            case "DDMMYYYY".toLowerCase():
+                return `${dd}${mm}${yyyy}`;
+
+            case "YYYY-MM-DD".toLowerCase():
+                return `${yyyy}-${mm}-${dd}`;
+
+            case "DD-MM-YYYY".toLowerCase():
+                return `${dd}-${mm}-${yyyy}`;
+
+            case "YYYY/MM/DD".toLowerCase():
+                return `${yyyy}/${mm}/${dd}`;
+
+            case "DD/MM/YYYY".toLowerCase():
+                return `${dd}/${mm}/${yyyy}`;
+
+            case "YYYY.MM.DD".toLowerCase():
+                return `${yyyy}.${mm}.${dd}`;
+
+            case "DD.MM.YYYY".toLowerCase():
+                return `${dd}.${mm}.${yyyy}`;
+
+            case "MMDDYYYY".toLowerCase():
+                return `${mm}${dd}${yyyy}`;
+
+            case "MM-DD-YYYY".toLowerCase():
+                return `${mm}-${dd}-${yyyy}`;
+
+            case "MM/DD/YYYY".toLowerCase():
+                return `${mm}/${dd}/${yyyy}`;
+
+            case "MM.DD.YYYY".toLowerCase():
+                return `${mm}.${dd}.${yyyy}`;
+
+            case "YYYY-MM-DD HH:MM:SS".toLowerCase():
+                return `${yyyy}-${mm}-${dd} ${time}`;
+
+            case "DD-MM-YYYY HH:MM:SS".toLowerCase():
+                return `${dd}-${mm}-${yyyy} ${time}`;
+
+            case "YYYY/MM/DD HH:MM:SS".toLowerCase():
+                return `${yyyy}/${mm}/${dd} ${time}`;
+
+            case "DD/MM/YYYY HH:MM:SS".toLowerCase():
+                return `${dd}/${mm}/${yyyy} ${time}`;
+
+            case "YYYY-MM-DDTHH:MM:SS".toLowerCase():
+                return `${yyyy}-${mm}-${dd}T${time}`;
+
+            case "YYYYMMDDHHMMSS".toLowerCase():
+                return `${yyyy}${mm}${dd}${HH}${MI}${SS}`;
+
+            case "YYYY-MM-DDTHH:MM:SSZ".toLowerCase():
+                return `${yyyy}-${mm}-${dd}T${time}Z`;
+
+            case "DD MMM YYYY".toLowerCase():
+                const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                return `${dd}-${months[date.getMonth()]}-${yyyy}`;
+
+            default:
+                return `${dd}/${mm}/${yyyy}`;
+        }
+    }
+
+    /**
+     * Calculates date string for relative date tokens (today, yesterday, etc.).
+     * @param {string} type - Relative date token type.
+     * @returns {string} Computed date string.
+     */
+    function getDateByFilter(type) {
+        const baseDate = new Date();
+        baseDate.setHours(0, 0, 0, 0);
+
+        let date = null;
+        type = type.toLowerCase().replace(/\s/g, "");
+
+        switch (type) {
+
+            case "today":
+                date = formatDate(baseDate, "DD/MM/YYYY");
+                break;
+
+            case "yesterday": {
+                const d = new Date(baseDate);
+                d.setDate(d.getDate() - 1);
+                date = formatDate(d, "DD/MM/YYYY");
+                break;
+            }
+
+            case "tomorrow": {
+                const d = new Date(baseDate);
+                d.setDate(d.getDate() + 1);
+                date = formatDate(d, "DD/MM/YYYY");
+                break;
+            }
+
+            case "lastweek": {
+                const d = new Date(baseDate);
+                d.setDate(d.getDate() - 7);
+                date = formatDate(d, "DD/MM/YYYY");
+                break;
+            }
+
+            case "nextweek": {
+                const d = new Date(baseDate);
+                d.setDate(d.getDate() + 7);
+                date = formatDate(d, "DD/MM/YYYY");
+                break;
+            }
+
+            case "thisweek": {
+                const d = new Date(baseDate);
+                const day = d.getDay();
+                d.setDate(d.getDate() - day);
+                date = formatDate(d, "DD/MM/YYYY");
+                break;
+            }
+
+            case "thismonth": {
+                const d = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
+                date = formatDate(d, "DD/MM/YYYY");
+                break;
+            }
+
+            case "lastmonth": {
+                const d = new Date(baseDate.getFullYear(), baseDate.getMonth() - 1, 1);
+                date = formatDate(d, "DD/MM/YYYY");
+                break;
+            }
+
+            case "nextmonth": {
+                const d = new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 1);
+                date = formatDate(d, "DD/MM/YYYY");
+                break;
+            }
+
+            case "thisquarter": {
+                const quarter = Math.floor(baseDate.getMonth() / 3);
+                const d = new Date(baseDate.getFullYear(), quarter * 3, 1);
+                date = formatDate(d, "DD/MM/YYYY");
+                break;
+            }
+
+            case "lastquarter": {
+                const quarter = Math.floor(baseDate.getMonth() / 3) - 1;
+                const d = new Date(baseDate.getFullYear(), quarter * 3, 1);
+                date = formatDate(d, "DD/MM/YYYY");
+                break;
+            }
+
+            case "nextquarter": {
+                const quarter = Math.floor(baseDate.getMonth() / 3) + 1;
+                const d = new Date(baseDate.getFullYear(), quarter * 3, 1);
+                date = formatDate(d, "DD/MM/YYYY");
+                break;
+            }
+
+            case "thisyear": {
+                const d = new Date(baseDate.getFullYear(), 0, 1);
+                date = formatDate(d, "DD/MM/YYYY");
+                break;
+            }
+
+            case "lastyear": {
+                const d = new Date(baseDate.getFullYear() - 1, 0, 1);
+                date = formatDate(d, "DD/MM/YYYY");
+                break;
+            }
+
+            case "nextyear": {
+                const d = new Date(baseDate.getFullYear() + 1, 0, 1);
+                date = formatDate(d, "DD/MM/YYYY");
+                break;
+            }
+
+            case "custom":
+            default:
+                return {
+                    date: "",
+                    openDatePicker: true
+                };
+        }
+
+        return {
+            date,
+            openDatePicker: false
+        };
+    }
+    //function getDateByFilter(type) {
+    //    const baseDate = new Date();
+    //    baseDate.setHours(0, 0, 0, 0);
+
+    //    let date = null;
+    //    type = type.toLowerCase();
+
+    //    switch (type) {
+    //        case "today":
+    //            date = formatDate(baseDate, "DD/MM/YYYY");
+    //            break;
+
+    //        case "yesterday": {
+    //            const d = new Date(baseDate);
+    //            d.setDate(d.getDate() - 1);
+    //            date = formatDate(d, "DD/MM/YYYY");
+    //            break;
+    //        }
+
+    //        case "tomorrow": {
+    //            const d = new Date(baseDate);
+    //            d.setDate(d.getDate() + 1);
+    //            date = formatDate(d, "DD/MM/YYYY");
+    //            break;
+    //        }
+
+    //        case "lastweek": {
+    //            const d = new Date(baseDate);
+    //            d.setDate(d.getDate() - 7);
+    //            date = formatDate(d, "DD/MM/YYYY");
+    //            break;
+    //        }
+
+    //        case "nextweek": {
+    //            const d = new Date(baseDate);
+    //            d.setDate(d.getDate() + 7);
+    //            date = formatDate(d, "DD/MM/YYYY");
+    //            break;
+    //        }
+
+    //        case "lastyear": {
+    //            const d = new Date(baseDate);
+    //            d.setFullYear(d.getFullYear() - 1);
+    //            date = formatDate(d, "DD/MM/YYYY");
+    //            break;
+    //        }
+
+    //        case "custom":
+    //        default:
+    //            return {
+    //                date: "",
+    //                openDatePicker: true
+    //            };
+    //    }
+
+    //    return {
+    //        date,
+    //        openDatePicker: false
+    //    };
+    //}
+
+
+    /**
+     * Retrieves active ARM session identifier token.
+     * @async
+     * @returns {Promise<string>} ARM session ID.
+     */
+    async function getARMSessionId() {
+        if (cachedSessionId) return cachedSessionId;
+
+        const res = await fetch(webUrl + "/WebService.asmx/GetSession", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ key: "ARM_SessionId" })
+        });
+
+        const data = await res.json();
+        cachedSessionId = data.d;
+
+        return cachedSessionId;
+    }
+
+
+
+    //function AxisaveDataFn(createfieldnamevaluesList, transid, sourceName, isCreate) {
+
+
+    //    //const sessionResponse = fetch("GetSession", {
+    //    //    method: "POST"
+    //    //});
+    //    let sessionId;
+    //    getARMSessionId().then(sessionIdFetch => {
+    //        sessionId = sessionIdFetch;
+    //        // console.log(sessionIdFetch);
+    //    });
+
+    //    if (!sessionId) return ["Session expired"]
+
+    //    //const sessionId = getSession("ARM_SessionId");
+    //    //if (!sessionId) return ["Session expired"];
+
+    //    const colSourceKey = (sourceName + "_" + transid).toLowerCase();
+    //    const colList = axDatasourceObj[colSourceKey];
+
+    //    const submitdata = {};
+
+    //    for (let i = 0; i < createfieldnamevaluesList.length; i++) {
+
+    //        const item = createfieldnamevaluesList[i];
+
+    //        const parts = item.split("=");
+    //        const left = parts[0];
+    //        const value = parts[1];
+
+    //        const leftParts = left.split("~");
+    //        const fieldName = leftParts[0];
+    //        const rowNo = leftParts[1];
+
+    //        const columnMetadata = colList.find(c =>
+    //            c.name?.toLowerCase() === fieldName.toLowerCase()
+    //        );
+
+    //        if (!columnMetadata) continue;
+
+    //        const dcName = columnMetadata.dcname;
+    //        const isGrid = columnMetadata.asgrid;
+
+    //        if (!submitdata[dcName]) {
+    //            submitdata[dcName] = {};
+    //        }
+
+    //        const rowKey = isGrid ? "row" + rowNo : "row1";
+
+    //        if (!submitdata[dcName][rowKey]) {
+    //            submitdata[dcName][rowKey] = {};
+    //        }
+
+    //        // If EDIT ? add edit-specific fields
+    //        if (!isCreate) {
+    //            submitdata[dcName][rowKey]["axrow_action"] = "edit";
+    //        }
+
+    //        submitdata[dcName][rowKey][fieldName] = value;
+    //    }
+
+    //    //const sessionResult = sessionResponse.json();
+    //    //const sessionId = sessionResult.d;
+    //    //if (!sessionId) return ["Session expired"];
+
+    //    const payload = {
+    //        ARMSessionId: sessionId,
+    //        trace: true,
+    //        data: [
+    //            {
+    //                transid: transid,
+    //                action: isCreate ? "create" : "edit",
+    //                submitdata: submitdata
+    //            }
+    //        ]
+    //    };
+
+    //    // console.log("AxPut Payload created : " + payload);
+    //    //If EDIT ? attach keyfield & keyvalue at root level
+    //    if (!isCreate) {
+    //        payload.data[0]["keyfield"] = "recordid";
+    //        payload.data[0]["keyvalue"] = "";
+    //    }
+
+    //    var apiUrl = armUrl + "/api/v1/AxPut";
+
+    //    try {
+
+    //        const response = fetch(apiUrl, {
+    //            method: "POST",
+    //            headers: {
+    //                "Content-Type": "application/json"
+    //            },
+    //            body: JSON.stringify(payload)
+    //        });
+
+    //        //const result = await response.json();
+
+    //    } catch (error) {
+    //        // console.log("Error from Axput : "+ error);
+    //    }
+
+
+    //}
+
+    //function AxisaveDataFn(createfieldnamevaluesList, transid, sourcename, iscreate = true) {
+
+    //    let isSuccessCheck = true;
+    //    var result = preparePayload(createfieldnamevaluesList, transid, sourcename, iscreate = true);
+
+    //    if (result.isSuccess) {
+    //        // console.log("Payload Ready");
+    //        // console.log(result.payload);
+    //        payload = result.payload;
+    //    } else {
+    //        // console.log("Payload is empty");
+    //        payload = {};
+    //    }
+
+    //    var apiUrl = armUrl + "/api/v1/AxPut";
+
+    //        try {
+
+    //            const response = fetch(apiUrl, {
+    //                method: "POST",
+    //                headers: {
+    //                    "Content-Type": "application/json"
+    //                },
+    //                body: JSON.stringify(payload)
+    //            });
+
+    //            //const result = await response.json();
+    //            if (response.isSuccess) {
+    //                showToast("Your Data is submitted Successfully!!");
+    //                // console.log("Data is submitted Successfully!!");
+    //            }
+
+    //        } catch (error) {
+    //            showToast("Your Data is not Submitted..Please Submit it Manually!!");
+    //            // console.log("Error from Axput : "+ error);
+    //        }
+
+
+    //}
+
+    /**
+     * Saves record data via Axpert ARM WebService or REST API.
+     * @param {Array<object>} saveListWithFieldNamendValues - Field value pairs.
+     * @param {string} transid - Transaction structure ID.
+     * @param {string} sourcename - Source name.
+     * @param {boolean} isCreate - True if create, false if update.
+     * @param {string[]} inputTokens - Command tokens.
+     * @param {object} inputCommandConfig - Command configuration schema.
+     * @returns {void}
+     */
+    function AxisaveDataFn(saveListWithFieldNamendValues, transid, sourcename, isCreate, inputTokens, inputCommandConfig) {
+
+        //getARMSessionId()
+        //    .then(sessionId => {
+
+        //        if (!sessionId) {
+        //            showToast("Session not found. Please login again....");
+        //            return;
+        //        }
+
+        //        // console.log("Fetched Session ID: " + sessionId);
+
+        // ?? Call preparePayload AFTER session is ready
+
+        //if (!transid || saveListWithFieldNamendValues.length == 0) {
+        if (!transid || !saveListWithFieldNamendValues || !saveListWithFieldNamendValues[transid] || saveListWithFieldNamendValues[transid].length === 0) {
+            // console.log("Missing transaction ID or field values.");
+            showToast("Incomplete command detected. Please clear the entire command and try again.");
+
+            return [];
+        }
+
+        let keyFieldValue = cleanCommandToken(inputTokens[2]);
+        let keyfieldName;
+        if (!isCreate) {
+            //const extraPromptSource = "axi_keyfieldList";
+            const struct_source = inputCommandConfig.prompts[0].promptSource;
+
+            // extra params
+            let struct_paramValue
+            if (struct_source.toLowerCase() === "axi_structmetalist")
+                struct_paramValue = processExtraParams(inputTokens, inputCommandConfig);
+
+            const struct_sourceKey = (struct_paramValue ? `${struct_source}_${struct_paramValue}` : struct_source).toLowerCase();
+
+            // load datasource if not exists
+            if (!axDatasourceObj[struct_sourceKey]) {
+
+                const struct_hasParams = !struct_prompt.promptParams ||
+                    (struct_paramValue && struct_paramValue.replace(/,/g, '').trim().length > 0);
+
+                if (struct_hasParams) {
+                    loadList(struct_source, struct_paramValue);
+                    return [`Loading ${struct_source}...`];
+                }
+            }
+
+            const struct_dataList = axDatasourceObj[struct_sourceKey];
+
+            // The structure list is paged; look the form up by name and ask the server if it is not loaded.
+            const struct_row = findStructRow(struct_dataList, transid);
+            if (!struct_row) requestStructSearch(transid, struct_paramValue);
+
+            const primaryField = struct_row?.keyfield
+
+            //if (!primaryField) {
+            //    throw new Error("Key Field List is missing");;
+            //}
+
+            //const extraSourceKey = `${extraPromptSource}_${transid}`.toLowerCase();
+
+            //const extraList = axDatasourceObj[extraSourceKey];
+
+            //if (extraList.length == 0) {
+
+            //}
+            //const field = extraList[0];
+
+            //keyfieldName = field.fname ?? field.keyfield ?? field.name ?? field.displaydata;
+
+            keyfieldName = primaryField;
+
+        }
+        preparePayload(saveListWithFieldNamendValues[transid] || [], transid, sourcename, isCreate, keyFieldValue, keyfieldName).then(result => {
+
+            if (!result || !result.isSuccess) {
+                throw new Error("Payload is empty or invalid");
+            }
+
+            // console.log("Payload is Created successfully " + "\n");
+            // console.log(result.payload);
+
+            var payload = result.payload;
+
+
+            var SaveDataapiUrl = mainArmRestDllPath + "ASBTStructrest.dll/datasnap/rest/TASBTstruct/savedata";
+
+            // console.log("SaveDataapi URL : " + SaveDataapiUrl);
+
+            showToast("Saving Data is in progress....", 5000, true);
+
+            return fetch(SaveDataapiUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            })
+
+                //})
+                .then(response => {
+
+                    if (!response) throw new Error("API SaveData return Empty response");;
+
+                    if (!response.ok) {
+                        throw new Error("API SaveData Error");
+                    }
+
+                    return response.json();
+                })
+                .then(data => {
+
+                    if (!data) {
+                        throw new Error("Invalid API response");
+                    }
+
+                    const firstResult = data.result?.[0];
+
+                    if (!firstResult) {
+                        throw new Error("Invalid API response");
+                    }
+
+                    if (firstResult.error) {
+                        showToast(`Save Failed : ${firstResult.error.msg}`);
+                        // console.log(`Save Failed : ${firstResult.error.msg}`);
+                        // console.log(data);
+                        return [];
+                    }
+
+                    if (firstResult.message?.[0]) {
+                        const msgObj = firstResult.message[0];
+                        const msg = msgObj.msg || "Saved Successfully";
+                        //const msg = "Set Success"
+                        const recordId = msgObj.recordid || "";
+                        const sid = msgObj.SID || "";
+                        showToast(`${msg}`, 5000, true);
+                        clearStructSearchCache(transid);
+                        // console.log("Data submitted successfully,Record-ID : " + recordId);
+                        // console.log(data);
+
+                        //saveListWithFieldNamendValues = [];
+                        //createfieldnamevaluesList = [];
+                        return [];
+                    }
+
+                    // console.log(data);
+                    throw new Error("Unexpected API response structure");
+
+                })
+                .catch(error => {
+
+                    //showToast("Your Data is not Submitted,Please Submit it Manually using(Ctrl + Enter)!");
+                    // showToast("Save failed.Please retry with Ctrl + Enter.");
+                    showToast("Save failed.Please try again later.");
+                    // console.log("Error from AxiSaveDataFn :" + error);
+                    return [];
+
+                });
+
+        });
+        //var result = preparePayload(saveListWithFieldNamendValues, transid, sourcename, isCreate, keyFieldValue, keyfieldName);
+
+        //if (!result || !result.isSuccess) {
+        //    throw new Error("Payload is empty or invalid");
+        //}
+
+
+    }
+
+
+    /**
+     * Retrieves cached user credentials for API calls if required.
+     * @param {string} username - User login name.
+     * @returns {string} Cached password or empty string.
+     */
+    function getUserPassword(username) {
+
+        const sourceName = "axi_userpwd";
+        const paramValue = username;
+        const sourceKey = `${sourceName}_${paramValue}`.toLowerCase();
+
+        if (axDatasourceObj[sourceKey]) {
+            return Promise.resolve(
+                axDatasourceObj[sourceKey]?.[0]?.password || null
+            );
+        }
+
+        return loadList(sourceName, paramValue)
+            .then(() =>
+                axDatasourceObj[sourceKey]?.[0]?.password || null
+            );
+    }
+
+    /**
+     * Reads the user's licactivation flag from axusers (ADS axi_userlicactivation).
+     * The value comes as a string (true / false / T / F, any case); a missing row, null or a failed call counts as false.
+     * @param {string} username - User login name.
+     * @returns {Promise<boolean>} True when licactivation is on for the user.
+     */
+    function getUserLicActivation(username) {
+        if (!username) return Promise.resolve(false);
+
+        const sourceName = "axi_userlicactivation";
+        const sourceKey = `${sourceName}_${username}`.toLowerCase();
+        const isOn = () => {
+            const row = axDatasourceObj[sourceKey]?.[0];
+            const flag = String(row?.licactivation ?? row?.LICACTIVATION ?? "").trim().toLowerCase();
+            return flag === "t" || flag === "true";
+        };
+
+        return loadList(sourceName, username).then(isOn, () => false);
+    }
+    /**
+     * Builds JSON/XML payload for saving data through ARM API.
+     * @param {Array<object>} saveListWithFieldNamendValueswithTransId - Field values.
+     * @param {string} transid - Transaction ID.
+     * @param {string} sourcename - Source name.
+     * @param {boolean} iscreate - True if create, false if update.
+     * @param {string} inputKeyFieldValue - Key field value.
+     * @param {string} inputKeyFieldName - Key field name.
+     * @returns {object} Built payload object.
+     */
+    function preparePayload(saveListWithFieldNamendValueswithTransId, transid, sourcename, iscreate, inputKeyFieldValue, inputKeyFieldName) {
+
+        let isSuccess = true;
+        let payloadUsername = mainUserName;
+
+        if (!payloadUsername || payloadUsername.trim() === "") {
+            // console.log("Username not found or invalid.");
+            return Promise.resolve({
+                isSuccess: false,
+                payload: {}
+            });
+        }
+
+        return getUserPassword(payloadUsername).then(password => {
+
+            let payload;
+            /**
+             * Formats a row index number as a 3-digit zero-padded string (e.g., 001).
+             * @param {number|string} n - Number to format.
+             * @returns {string} Zero-padded string.
+             */
+            const formatRowNo = (n) => String(n).padStart(3, "0");
+            const dcMap = {};
+
+            const colSourceKey = (sourcename + "_" + transid).toLowerCase();
+            const colList = axDatasourceObj[colSourceKey];
+
+            if (!colList) {
+                // console.warn("Column metadata not found for:", colSourceKey);
+                return {
+                    isSuccess: false,
+                    payload: {}
+                };
+            }
+
+
+            // Record level variables
+            var recordid = iscreate ? "0" : "";
+            var keyfield = iscreate ? "" : "";
+            var keyvalue = iscreate ? "" : "";
+
+            // In edit mode you will later assign:
+            if (!iscreate) {
+                keyfield = inputKeyFieldName;
+                keyvalue = inputKeyFieldValue;
+            }
+            try {
+                for (let i = 0; i < saveListWithFieldNamendValueswithTransId.length; i++) {
+
+                    const item = saveListWithFieldNamendValueswithTransId[i];
+                    if (!item) continue;
+
+                    const sep = item.includes("=") ? "=" : " ";
+                    const parts = item.split(sep);
+                    if (parts.length < 2) continue;
+
+                    const left = parts[0];
+                    const value = parts.slice(1).join(sep).trim();
+
+                    const leftParts = left.split("~");
+                    const fieldName = leftParts[0];
+                    const rowNo = leftParts.length > 1 ? leftParts[1] : "1";
+
+                    const columnMetadata = colList.find(c =>
+                        c.name?.toLowerCase() === fieldName.toLowerCase()
+                    );
+
+                    if (!columnMetadata || !columnMetadata.dcname) continue;
+
+                    const dcName = columnMetadata.dcname;
+                    const recKey = `axp_recid${dcName.replace("dc", "")}`;
+
+                    if (!dcMap[recKey]) {
+                        dcMap[recKey] = [];
+                    }
+
+                    let rowObj = dcMap[recKey].find(
+                        r => r.rowno === formatRowNo(rowNo)
+                    );
+
+                    if (!rowObj) {
+                        rowObj = {
+                            rowno: formatRowNo(rowNo),
+                            text: recordid,
+                            columns: {}
+                        };
+                        dcMap[recKey].push(rowObj);
+                    }
+
+                    rowObj.columns[fieldName] = value;
+                    if (fieldName !== keyfield) rowObj.columns[keyfield] = keyvalue;
+                }
+
+                const recdata = Object.keys(dcMap).map(recKey => ({
+                    [recKey]: dcMap[recKey]
+                }));
+
+
+                if (!password || password.trim() === "") {
+                    throw new Error("Password not found or invalid.");
+                }
+                if (!mainProject || mainProject.trim() === "") {
+                    throw new Error("ProjectName not found or invalid.");
+                }
+                if (!mainSessionId || mainSessionId.trim() === "") {
+                    throw new Error("SessionId not found or invalid.");
+                }
+
+
+                payload = {
+                    savedata: {
+                        cachedsave: "false",
+                        axpapp: mainProject,
+                        //appsessionkey: "010198670011016401680166017301540168015301640101009800994939364141171051310018",
+                        transid: transid,
+                        s: mainSessionId,
+                        username: payloadUsername,
+                        password: password,
+                        changedrows: {},
+                        trace: "true",
+                        forpaybooks: "true",
+                        dataupdate: "false",
+                        primarykey: keyfield,
+                        recordid: recordid,
+                        keyfield: keyfield,
+                        keyvalue: keyvalue,
+                        recdata: recdata,
+                        globalvars: {},
+                        uservars: {},
+                        axapps: {}
+                    }
+                };
+
+                // console.log("PreparedPayload : Payload is created successfully with isCreate :", iscreate);
+
+            }
+            catch (ex) {
+                isSuccess = false;
+                // console.log("Error in preparePayload Payload creation :" + ex);
+            }
+
+            if (payload && Object.keys(payload).length > 0 && isSuccess) {
+                return {
+                    isSuccess: isSuccess,
+                    payload: payload
+                };
+            }
+            else {
+                return {
+                    isSuccess: false,
+                    payload: {}
+                };
+            }
+        })
+
+    }
+
+
+
+
+
+    /**
+     * Opens AxiBot AI assistant panel.
+     * @returns {void}
+     */
+    function redirectToAxibot() {
+
+
+        // let targetUrl = "../CustomPages/axibot.html";
+        // let targetUrl = `${getAppBaseUrl()}/CustomPages/axibot.html`;
+        let targetUrl = `${getAppBaseUrl()}/AxpertPlugins/AxiCMD/HTMLPages/axibot.html`;
+        // let targetUrl = "../axidev/HTMLPages/axibot_1770979038509.html";
+
+
+
+
+        // console.log("Target Url for AxiBot:  " + targetUrl);
+
+
+        setCommandRoutes(input.value.trim(), targetUrl);
+        top.window.LoadIframe(targetUrl);
+
+
+    }
+
+    /**
+     * Initializes AxiBot conversation session.
+     * @returns {void}
+     */
+    function handleAiStart() {
+        mode = "ai";
+        commands = aiModeCommands;
+
+        redirectToAxibot();
+
+    }
+
+    /**
+     * Retrieves action buttons from AxiBot interface.
+     * @returns {Array<HTMLElement>} AxiBot buttons.
+     */
+    function getAxiBotActionButtons() {
+        const iframe = document.getElementById("middle1");
+        if (!iframe) return {};
+
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!doc) return {};
+
+        const buttons = doc.querySelectorAll(".actionGroup button");
+        const result = {};
+
+        buttons.forEach((btn, index) => {
+            if (btn.classList.contains("d-none") || btn.closest(".d-none") || btn.classList.contains("disabled") || btn.closest(".disabled") || btn.closest("[hidden]")) return;
+
+            const id =
+                btn.id ||
+                btn.getAttribute("title") ||
+                `axibot-btn-${index}`;
+
+            const label = btn.innerText?.trim();
+            if (!label) return;
+
+            result[id] = {
+                id,
+                label: label.toLowerCase(),
+                element: btn,
+                click: () => btn.click()
+            };
+        });
+
+        const uploadBtn = doc.getElementById("openUpload");
+
+        if (uploadBtn) {
+            result["openUpload"] = {
+                id: "openUpload",
+                label: "upload files",
+                element: uploadBtn,
+                click: () => uploadBtn.click()
+            }
+        }
+
+        return result;
+    }
+
+
+    /**
+     * Triggers action button in AxiBot interface.
+     * @param {string} btnId - Button identifier.
+     * @returns {void}
+     */
+    function handleAiButtons(btnId) {
+        const axiButtons = getAxiBotActionButtons();
+        // console.log(axiButtons);
+
+
+        if (axiButtons) {
+            axiButtons[btnId].click();
+
+
+        } else {
+            // console.error("Cannot get Axi bot action buttons");
+            showToast("Error: Cannot get Axi bot action buttons")
+        }
+
+    }
+
+    /**
+     * Sends message text to AxiBot chat.
+     * @param {string} text - Message text to send.
+     * @returns {void}
+     */
+    function handleSendAxiMessageToAxiBot(text) {
+
+        const iframe = document.getElementById("middle1");
+
+        if (!iframe) {
+            // console.error("Axi bot: Iframe middle1 not found.");
+            return;
+        }
+
+        const iframeWindow = iframe.contentWindow;
+
+        if (!iframeWindow) {
+            // console.error("Axi Bot: Cannot access iframe window.");
+            return;
+        }
+
+        if (typeof iframeWindow.sendAxiMessageToAxibot === "function") {
+            // console.log(`Sending to AxiBot: "${text}"`);
+            iframeWindow.sendAxiMessageToAxibot(text);
+        } else {
+            // console.warn("Axi Bot: Script not fully loaded in iframe yet.");
+            if (typeof showToast === 'function') showToast("Chatbot is loading...");
+        }
+
+    }
+
+    /**
+     * Extracts prompt text for 'Ask' AI command.
+     * @param {string[]} tokens - Command tokens.
+     * @returns {string} Extracted question text.
+     */
+    function getAskText(tokens) {
+        const askIndex = tokens.findIndex(t => t.toLowerCase() === "ask");
+
+        return askIndex !== -1
+            ? tokens.slice(askIndex + 1).join(" ")
+            : "";
+    }
+
+    /**
+     * Handles execution of 'Ask' AI query.
+     * @param {object} context - Execution context.
+     * @param {string[]} context.tokens - Command tokens.
+     * @param {object} context.commandConfig - Command configuration schema.
+     * @returns {void}
+     */
+    function handleAiAsk({ tokens, commandConfig }) {
+        const text = getAskText(tokens);
+
+        handleSendAxiMessageToAxiBot(text);
+
+
+    }
+
+    /**
+     * Ends current AxiBot session.
+     * @returns {void}
+     */
+    function handleAiEnd() {
+        if (mode === "") {
+            return;
+        }
+        mode = "";
+        cachedCommands = localStorage.getItem("axi_commands_v1");
+        initCommands();
+        window.LoadIframe("loadhomepage");
+        // console.log(JSON.stringify(commands));
+    }
+
+    /**
+     * Saves executed command to local history stack.
+     * @param {string} text - Command text to save.
+     * @returns {void}
+     */
+    function saveToHistory(text) {
+        if (!text || text.trim() === "") return;
+
+        commandHistory = commandHistory.filter(item => item.toLowerCase() !== text.toLowerCase());
+
+        commandHistory.unshift(text);
+
+        if (commandHistory.length > MAX_HISTORY) {
+            commandHistory.pop();
+        };
+
+        localStorage.setItem(`axi_command_history_${getAppBaseUrl()}_${window.mainUserName}`, JSON.stringify(commandHistory));
+
+        historyIndex = -1;
+    }
+
+    /**
+     * Loads command history list from localStorage.
+     * @returns {string[]} List of command history strings.
+     */
+    function loadCommandHistory() {
+        try {
+            commandHistory = JSON.parse(localStorage.getItem(`axi_command_history_${getAppBaseUrl()}_${window.mainUserName}`));
+        } catch (ex) {
+            commandHistory = [];
+        }
+    }
+
+    /**
+     * Navigates up/down through command history stack.
+     * @param {string} direction - Direction ('up' or 'down').
+     * @returns {void}
+     */
+    function navigateHistory(direction) {
+        if (commandHistory.length === 0) {
+            showToast("No command History available");
+            return;
+        }
+
+        if (direction === "open") {
+            historyIndex = 0;
+        } else if (direction === "prev") {
+            if (historyIndex < commandHistory.length - 1) {
+                historyIndex++;
+            }
+        } else if (direction === "next") {
+            if (historyIndex > 0) {
+                historyIndex--;
+            } else {
+                historyIndex = -1;
+                input.value = "";
+                handleInput();
+                return;
+            }
+        }
+
+        if (historyIndex >= 0 && historyIndex < commandHistory.length) {
+            input.value = commandHistory[historyIndex] + " ";
+            executeCommandsV2(true);
+
+
+            // setTimeout(() => {
+            input.focus();
+            input.setSelectionRange(input.value.length, input.value.length);
+            handleInput();
+            hide();
+            // }, 10); 
+        }
+    }
+
+    /**
+     * Loads and populates favorites dropdown UI.
+     * @returns {void}
+     */
+    function loadFavorites() {
+        if (!axicmdenabled) return;
+        const appUrl = getAppBaseUrl();
+        const appname = getProjectName();
+        commandFavorites = AxiFavoritesManager.loadLocalFavorites(appUrl, window.mainUserName);
+
+        renderFavoritesUI();
+
+        if (axiFavoritesUrl) {
+            fetch(`${axiFavoritesUrl}?username=${window.mainUserName}&appname=${appname}`)
+                .then(res => {
+                    isCommandsLoading = true;
+                    input.disabled = false;
+                    input.placeholder = "Axpert AI";
+
+
+                    return res.json()
+                })
+                .then(data => {
+                    // console.log("Fetched favorites from backend: ", data);
+                    // console.log("type : ", typeof data);
+                    if (data && Array.isArray(data)) {
+                        commandFavorites = data.map(item => ({
+                            favouritesId: item?.favouritesId,
+                            username: item?.username,
+
+
+                            commandText: item?.commandText || item?.commandtext,
+                            originalCommandText: item.originalCommandText,
+                            favOrder: item.favOrder,
+                            targetUrl: item.targetUrl || item.targetURL || item.targeturl,
+                            createdOn: item.createdOn
+                        }));
+                        AxiFavoritesManager.saveLocalFavorites(appUrl, window.mainUserName, commandFavorites);
+                        renderFavoritesUI();
+                    }
+                })
+                .catch(err => {
+                    // console.error("Axi: Failed to sync favorites from backend", err);
+                    showToast("Axi: Axi: Failed to sync favorites from backend");
+
+                }).finally(() => {
+                    isCommandsLoading = false;
+                    input.disabled = false;
+                    input.placeholder = "Axpert AI"
+
+                });
+
+        }
+
+
+    }
+
+    /**
+     * Adds or removes a command from favorites.
+     * @param {string} cmdText - Command text.
+     * @param {boolean} [isAdding=false] - True to add, false to remove.
+     * @returns {void}
+     */
+    function toggleFavorite(cmdText, isAdding = false) {
+        loadFavorites();
+        let cmdIndex;
+        if (!AxiFavoritesManager.isFavAllowed(cmdText)) {
+            showToast("You cannot add this command to Favorites!");
+            return;
+        }
+        const appUrl = getAppBaseUrl();
+        const appname = getProjectName();
+        const favKey = AxiFavoritesManager.getStorageKey(appUrl, window.mainUserName);
+
+        if (isAdding) {
+            cmdIndex = commandFavorites.findIndex(fav => fav?.originalCommandText?.toLowerCase() === cmdText.toLowerCase());
+        } else {
+            cmdIndex = commandFavorites.findIndex(fav => fav?.commandText?.toLowerCase() === cmdText.toLowerCase());
+        }
+
+
+
+        let commandRoute = commandRoutes.find(route => route.commandText.toLowerCase() === cmdText.toLowerCase());
+
+        if (!commandRoute) {
+            const cmdTokens = getTokens(cmdText);
+            if (cmdTokens.length === 1 && isTargetEntity(cmdTokens[0])) {
+                const viewCmd = "view " + cmdText;
+                commandRoute = commandRoutes.find(route => route.commandText.toLowerCase() === viewCmd.toLowerCase());
+            } else if (cmdTokens.length >= 2 && cmdTokens[0].toLowerCase() === "sdk") {
+                const subType = cmdTokens[1].toLowerCase();
+                const lastToken = cmdTokens.slice(2).join(" ").replace(/^["']|["']$/g, "").toLowerCase();
+                let targetUrl = "";
+                if (lastToken === "create new") {
+                    if (subType === "tstruct") {
+                        targetUrl = "developerstudio:tstruct:new_tstruct";
+                    } else if (subType === "iview") {
+                        targetUrl = "developerstudio:iview:new_iview";
+                    } else if (subType === "page") {
+                        targetUrl = "../aspx/tstruct.aspx?transid=sect";
+                    } else if (subType === "ads" || subType === "axpert data sources") {
+                        targetUrl = "../aspx/tstruct.aspx?transid=b_sql";
+                    }
+                }
+                if (targetUrl) {
+                    commandRoute = { commandText: cmdText, targetUrl };
+                    setCommandRoutes(cmdText, targetUrl);
+                }
+            }
+        }
+
+        if (isAdding) {
+            const targetUrl = commandRoute?.targetUrl || "";
+            if (targetUrl && isDuplicateFavorite(targetUrl)) {
+                showToast("This command is already in your Favorites.");
+                return;
+            }
+        }
+
+        if (cmdIndex !== -1) {
+            if (isAdding) {
+                showToast("This command is already in your Favorites.");
+                return;
+            }
+            // const removedFav = commandFavorites.splice(cmdIndex, 1);
+            // showToast(`Removed '${cmdText}' from Favorites`);
+            // localStorage.setItem(favKey, JSON.stringify(commandFavorites));
+            // renderFavoritesUI();
+            // render(); 
+
+            // if (axiFavoritesUrl) {
+            //     fetch(`${axiFavoritesUrl}?appname=${appname}`, {
+            //         method: "POST",
+            //         headers: { "Content-Type": "application/json" },
+            //         body: JSON.stringify({
+            //             username: window.mainUserName,
+            //             commandText: removedFav.commandText,
+            //             action: "remove",
+            //             favOrder: 0,
+            //             targetURL: removedFav?.targetUrl || removedFav?.targetURL || removedFav?.targeturl
+            //         })
+            //     }).catch(err => // console.error("Axi: Failed to update on backend", err));
+            // }
+
+            showDeleteFavoriteModal(cmdText);
+        } else {
+            if (!commandRoute) {
+                showToast("Please Execute the command at least once before adding to favorites");
+                return;
+            }
+            if (commandFavorites.length >= MAX_FAVORITES) {
+                showToast(`Maximum of ${MAX_FAVORITES} favorites allowed. Please remove some favorites before adding new ones.`);
+                return;
+            }
+            // commandFavorites.unshift({ commandText: cmdText, targetUrl: commandRoute.targetUrl });
+
+            // showToast(`Added '${cmdText}' to favorites`, 3000, true);
+
+            showFavoriteModel(cmdText, commandRoute.targetUrl);
+        }
+
+        // localStorage.setItem(favKey, JSON.stringify(commandFavorites));
+
+        // renderFavoritesUI();
+        // render();
+
+        // if (axiFavoritesUrl) {
+        //     fetch(`${axiFavoritesUrl}?appname=${appname}`, {
+        //         method: "POST",
+        //         headers: { "Content-Type": "application/json" },
+        //         body: JSON.stringify({
+        //             username: window.mainUserName,
+        //             commandText: cmdText,
+        //             action: isAdding ? "add" : "remove",
+        //             favOrder: 0,
+        //             targetURL: commandRoute?.targetUrl
+
+        //         })
+        //     }).catch(err => {
+        //         showToast("Axi: Failed to update favorite on backend, Please check AxiApi Configuration");
+        //         // console.error("Axi: Failed to update favorite on backend", err)
+        //     });
+        // }
+
+    }
+
+    /**
+     * Renders favorites list in dropdown UI.
+     * @param {Array<object>} [itemsToRender] - Items to render.
+     * @returns {void}
+     */
+    function renderFavoritesUI(itemsToRender = commandFavorites) {
+        if (!favouritesCard) return;
+
+        const wrapper = favouritesCard.querySelector(".My-Fav-Items-Wrapper");
+
+        if (!wrapper) return;
+
+        wrapper.innerHTML = "";
+        const axiFavoritesCount = document.getElementById("axiFavoriteCount");
+
+        if (axiFavoritesCount) {
+            axiFavoritesCount.textContent = commandFavorites.length;
+
+
+        }
+
+        if (itemsToRender.length === 0) {
+            wrapper.innerHTML = `<div style="padding: 15px; color: #999; text-align: center; width: 100%;">No favorites yet. Pin commands to see them here.</div>`;
+            return;
+
+        }
+
+
+
+
+
+        itemsToRender.forEach(fav => {
+            const cmdText = fav.commandText || fav.commandtext || "";
+            const titleText = cmdText.replace(/"/g, '&quot;');
+            // const favHtml = `
+            //     <div class="My-Fav-Items">
+            //         <div class="symbol symbol-40px symbol-circle me-5">
+            //             <span class="symbol-label bg-light-warning">
+            //                 <span class="material-icons material-icons-style material-icons-2">grade</span>                            
+            //             </span>
+            //         </div>
+            //         <div class="My-Fav-Items-Content">
+            //             <a href="javascript:void(0);" class="My-Fav-Name" data-bs-toggle="tooltip" data-bs-placement="bottom"
+            //    data-bs-original-title="${titleText}" title="${titleText}">${cmdText}</a>
+            //             <div class="My-Fav-Name-Type">Command</div>
+            //         </div>
+            //         <div class="edit-fav" style="cursor: pointer;" title="Rename">                        
+            //             <span class="material-icons material-icons-style material-icons-2" style="color: brown;">edit</span>                          
+            //         </div>
+            //         <div class="Delete-Fav" style="cursor: pointer;">                        
+            //             <span class="material-icons material-icons-style material-icons-2">clear</span>                          
+            //         </div>
+            //     </div>
+            // `;
+
+            const favHtml = `
+                <div class="My-Fav-Items">
+                    <div class="fav-icon symbol symbol-40px symbol-circle me-5">
+                        <span class="symbol-label bg-light-warning">
+                            <span class="material-icons material-icons-style material-icons-2">grade</span>                            
+                        </span>
+                    </div>
+                    
+                    <div class="My-Fav-Items-Content" style="display: flex; align-items: center; justify-content: space-between;">
+                        <div style="flex-grow: 1; overflow: hidden; margin-right: 10px;">
+                            <a href="javascript:void(0);" class="My-Fav-Name" data-bs-toggle="tooltip" data-bs-placement="bottom"
+                   data-bs-original-title="${titleText}" title="${titleText}">${cmdText}</a>
+                            <div class="My-Fav-Name-Type">Command</div>
+                        </div>
+                        
+                        <div class="edit-fav" style="cursor: pointer; padding: 5px;" title="Rename">                        
+                            <span class="material-icons material-icons-style material-icons-2" style="font-size: 16px !important; color: #6b7280;">edit</span>                          
+                        </div>
+                    </div>
+
+                    <div class="Delete-Fav" style="cursor: pointer; margin-left: auto;" title="Delete">                        
+                        <span class="material-icons material-icons-style material-icons-2">clear</span>                          
+                    </div>
+                </div>
+            `;
+
+            const div = document.createElement('div');
+            div.innerHTML = favHtml.trim();
+            const element = div.firstChild;
+
+            element.querySelector('.Delete-Fav').addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleFavorite(cmdText);
+            });
+
+            element.querySelector(".edit-fav").addEventListener("click", (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                const targetUrl = fav.targetUrl || fav.targetURL || fav.targeturl || "";
+                showFavoriteModel(cmdText, targetUrl, true);
+            })
+
+            element.querySelector('.My-Fav-Items-Content').addEventListener("click", (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                executeFavorite(fav);
+            })
+
+            element.querySelector('.fav-icon').addEventListener("click", (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                executeFavorite(fav);
+            })
+
+            wrapper.appendChild(element);
+
+        });
+    }
+
+    /**
+     * Displays favorites popup menu without triggering command input.
+     * @returns {void}
+     */
+    function showFavoritesPopupOnly() {
+        const filterInput = document.getElementById("axiFavFilterInput");
+        if (filterInput) filterInput.value = "";
+
+        if (megaDropdown) {
+            megaDropdown.style.display = "flex";
+        }
+        if (favouritesCard) {
+            favouritesCard.style.display = "flex";
+        }
+        const suggCard = list.closest(".card");
+        if (suggCard) {
+            suggCard.style.display = "none";
+        }
+    }
+
+    // async function executeFavorite(cmdText) {
+    //     hide(); 
+    //     input.value = ""; 
+    //     input.focus(); 
+
+    //     const minTypingSpeed = 30;
+    //     const maxTypingSpeed = 80;
+
+    //     const tokens = getTokens(cmdText); 
+    //     let simulatedText = ""; 
+
+    //     for (let i=0; i < cmdText.length; i++) {
+    //         input.value += cmdText[i]; 
+    //         handleInput(); 
+    //         while (activeFetches.size > 0) {
+    //             await new Promise(resolve => setTimeout(resolve, 50));
+    //         }
+
+    //         const delay = Math.floor(Math.random() * (maxTypingSpeed - minTypingSpeed + 1)) + minTypingSpeed;
+    //         await new Promise(resolve => setTimeout(resolve, delay));
+    //     }
+
+    //     input.value = cmdText + ""; 
+
+    //     while (activeFetches.size > 0) {
+    //        await new Promise(resolve => setTimeout(resolve, 50));
+    //     }
+
+    //     executeCommandsV2(); 
+
+    //     hide(); 
+    // }
+
+
+    /**
+     * Executes a saved favorite command.
+     * @param {object} favObj - Favorite item object.
+     * @returns {void}
+     */
+    function executeFavorite(favObj) {
+        if (document.querySelector(".AXI-Sec")?.classList.contains("axi-tour-active")) {
+            return;
+        }
+
+        const cmdText = favObj?.originalCommandText || favObj?.originalcommandtext || favObj?.commandText || favObj?.commandtext || "";
+        const tokens = getTokens(cmdText);
+
+        const accessPermissions = getAccessPermissions();
+        // AppMgrAccess(Config)
+        // ImportAccess(Upload)
+        // ExportAccess(Download)
+        // Build(Open)
+
+        for (const [permissionKey, hasAccess] of Object.entries(accessPermissions)) {
+            if (!hasAccess || hasAccess === false) {
+                switch (permissionKey) {
+                    case "appMgrAccess":
+                        if (tokens[0].toLowerCase() === "configure") {
+                            showToast(`User:${window.mainUserName} has no access for command:${favObj.commandText}`);
+
+                            return;
+                        }
+                        break;
+
+                    case 'importAccess':
+                        if (tokens[0].toLowerCase() === "upload") {
+                            showToast(`User '${window.mainUserName}' has no access for command '${favObj.commandText}'`);
+
+                            return;
+                        }
+
+                        break;
+                    case 'exportAccess':
+                        if (tokens[0].toLowerCase() === "download") {
+                            showToast(`User '${window.mainUserName}' has no access for command '${favObj.commandText}'`);
+
+                            return;
+                        }
+                        break;
+
+                    case 'buildAccess':
+                        if (tokens[0].toLowerCase() === "sdk" || tokens[0].toLowerCase() === "source") {
+                            showToast(`User '${window.mainUserName}' has no access for command '${favObj.commandText}'`);
+                            return;
+
+                        }
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+        }
+
+        if (favObj.targetUrl && favObj.targetUrl.trim() !== "" && !favObj.targetUrl.startsWith("developerstudio:")) {
+            // console.log("Executing Favorite directly via Target URL:", favObj.targetUrl);
+            const params = new URLSearchParams(favObj.targetUrl.split("?")[1]);
+            const transId = params.get("transid");
+            if (transId) {
+                setEditSessionState(transId);
+            }
+            top.window.LoadIframe(favObj.targetUrl);
+        } else if (favObj.targetUrl && favObj.targetUrl.startsWith("developerstudio:")) {
+            // console.log("Executing Favorite via Developer Studio custom target URL:", favObj.targetUrl);
+            const parts = favObj.targetUrl.split(":");
+            const type = parts[1]; // tstruct or iview
+            const name = parts[2]; // the resolved name
+            if (type === "tstruct") {
+                safeOpenDeveloperStudio("tstreact", name, true);
+            } else if (type === "iview") {
+                safeOpenDeveloperStudio("ivreact", name, true);
+            }
+        } else {
+            const firstToken = tokens[0] ? tokens[0].toLowerCase() : "";
+            const secondToken = tokens[1] ? tokens[1].toLowerCase() : "";
+            let nameToken = tokens[2] ? tokens[2].trim() : "";
+            if (tokens.length > 3) {
+                nameToken = tokens.slice(2).join(" ").replace(/^["']|["']$/g, "").trim();
+            }
+
+            if (firstToken === "sdk") {
+                const resolvedName = (nameToken.toLowerCase() === "create new")
+                    ? (secondToken === "tstruct" ? "new_tstruct" : "new_iview")
+                    : nameToken;
+
+                if (secondToken === "tstruct") {
+                    safeOpenDeveloperStudio("tstreact", resolvedName, true);
+                } else if (secondToken === "iview") {
+                    safeOpenDeveloperStudio("ivreact", resolvedName, true);
+                } else if (secondToken === "page") {
+                    top.window.LoadIframe("../aspx/tstruct.aspx?transid=sect");
+                } else if (secondToken === "ads" || (secondToken === "axpert" && tokens[1].toLowerCase() === "axpert data sources")) {
+                    top.window.LoadIframe("../aspx/tstruct.aspx?transid=b_sql");
+                }
+            }
+        }
+
+        hide();
+
+
+
+
+
+    }
+
+    /**
+     * Registers route mapping for a command.
+     * @param {string} cmdText - Command text.
+     * @param {string} targetUrl - Target navigation URL.
+     * @returns {void}
+     */
+    function setCommandRoutes(cmdText, targetUrl) {
+        const existingCommandRoute = commandRoutes.find(route => route.commandText.toLowerCase() === cmdText.toLowerCase());
+
+        if (existingCommandRoute) {
+            // console.log("Command route for ", cmdText, " already exists");
+            return;
+        }
+
+        commandRoutes.push({
+            commandText: cmdText,
+            targetUrl: targetUrl
+        })
+
+        // console.log("Command Routes: " + JSON.stringify(commandRoutes));
+    }
+
+    /**
+     * Generates standardized key for cache storage.
+     * @param {string} name - Cache category name.
+     * @param {string} params - Parameters string.
+     * @returns {string} Cache key string.
+     */
+    function generateLocalStorageKey(name, params) {
+        const prefixKey = "axi";
+
+        return `${prefixKey}_${name}_${params}`;
+    }
+
+    /**
+     * Fetches developer options configuration from server.
+     * @returns {object} Developer options.
+     */
+    function getAxpertDevOpt() {
+        let devOpt = "";
+        try {
+            if (typeof axpertDevOpt !== "undefined" && axpertDevOpt) {
+                devOpt = axpertDevOpt;
+            } else if (typeof window !== "undefined" && typeof window.axpertDevOpt !== "undefined" && window.axpertDevOpt) {
+                devOpt = window.axpertDevOpt;
+            } else if (typeof parent !== "undefined" && parent && typeof parent.axpertDevOpt !== "undefined" && parent.axpertDevOpt) {
+                devOpt = parent.axpertDevOpt;
+            } else if (typeof top !== "undefined" && top && typeof top.axpertDevOpt !== "undefined" && top.axpertDevOpt) {
+                devOpt = top.axpertDevOpt;
+            } else if (typeof callParentNew === "function") {
+                devOpt = callParentNew("axpertDevOpt") || "";
+            }
+        } catch (e) { }
+        return (devOpt || "").toString().trim();
+    }
+
+    const SDK_DEV_OPT_MAP = {
+        "tstruct": "tstruct",
+        "iview": "iview",
+        "axpert data sources": "ads",
+        "page": "custompages",
+        "arrange menu": "arrangemenu",
+        "dev option": "devoptions",
+        "app variables": "appvariables",
+        "db explorer": "devexplorer",
+        "api plugin": "apiplugins",
+        "axpert job": "axpertjobs",
+        "language": "devlanguages",
+        "publish": "devpublish",
+        "custom data type": "customdatatype",
+        "email definition": "emaildefinitions",
+        "table field descriptor": "tabledescriptor",
+        "custom plugin": "plugincustomcode",
+        "queue listing": "queuelisting",
+        "out bound queue": "queuelisting",
+        "in bound queue": "queuelisting",
+        "mem db console": "memdbconsole"
+    };
+
+    /**
+     * Checks if SDK option is allowed for current user role.
+     * @param {string} sdkOptionName - Option name.
+     * @returns {boolean} True if allowed.
+     */
+    function isDevOptionAllowed(sdkOptionName) {
+        const accessPermissions = getAccessPermissions();
+        if (!accessPermissions || accessPermissions.buildAccess === false) {
+            return false;
+        }
+        const rawDevOpt = getAxpertDevOpt();
+        const lowerDevOpt = (rawDevOpt || "").toLowerCase();
+
+        // "nooptions" or "all" -> show/allow all SDK options
+        if (lowerDevOpt === "nooptions" || lowerDevOpt === "all") {
+            return true;
+        }
+        // Empty string -> all developer options were removed, block SDK
+        if (!rawDevOpt) {
+            return false;
+        }
+
+        const allowedOpts = rawDevOpt.split(",").map(o => o.trim().toLowerCase()).filter(Boolean);
+        if (allowedOpts.length === 0) {
+            return false;
+        }
+        const cleanOpt = (sdkOptionName || "").toString().trim().toLowerCase();
+
+        // If it is a built-in Axpert studio tool, check specific permission
+        if (SDK_DEV_OPT_MAP[cleanOpt]) {
+            const devOptKey = SDK_DEV_OPT_MAP[cleanOpt];
+            return allowedOpts.includes(devOptKey);
+        }
+
+        // Custom / Dynamic SDK options configured via axi_command_config are allowed for users with buildAccess
+        return true;
+    }
+
+    let cachedAccessPermissions = null;
+
+    /**
+     * Fetches access permissions object for current user.
+     * @returns {object} Access permissions.
+     */
+    function getAccessPermissions() {
+        // AppMgrAccess(Config)
+        // ImportAccess(Upload)
+        // ExportAccess(Download)
+        // Build(Open/sdk)
+        if (cachedAccessPermissions) {
+            return cachedAccessPermissions;
+        }
+        const getSess = (typeof getSessionValue === "function")
+            ? getSessionValue
+            : (window.getSessionValue || (top && top.getSessionValue) || (parent && parent.getSessionValue) || (() => ""));
+
+        cachedAccessPermissions = {
+            appMgrAccess: strToBool(getSess("AppMgrAccess")),
+            importAccess: strToBool(getSess("ImportAccess")),
+            exportAccess: strToBool(getSess("ExportAccess")),
+            buildAccess: strToBool(getSess("Build")),
+        };
+        return cachedAccessPermissions;
+    }
+
+    /**
+     * Filters command dictionary according to user permissions.
+     * @param {object} commandsFromDb - Raw commands from DB.
+     * @param {object} accessPermissions - User permissions object.
+     * @param {boolean} [canActivateUsers=false] - axusers.licactivation is on for the user (User Activation is shown only then, admin included).
+     * @returns {object} Filtered commands dictionary.
+     */
+    function buildCommandsByAccessPermissions(commandsFromDb, accessPermissions, canActivateUsers = false) {
+        const currentUserRole = window.AxUserRoles;
+        const currentUserName = window.mainUserName;
+
+
+        for (const [permissionKey, hasAccess] of Object.entries(accessPermissions)) {
+            if (!hasAccess || hasAccess === false) {
+                switch (permissionKey) {
+                    case "appMgrAccess":
+                        delete commandsFromDb["Configure"];
+                        break;
+
+                    case 'importAccess':
+                        delete commandsFromDb['Upload'];
+                        break;
+                    case 'exportAccess':
+                        delete commandsFromDb['Download']
+                        break;
+
+                    case 'buildAccess':
+                        delete commandsFromDb['SDK'];
+                        delete commandsFromDb['Source'];
+                        delete commandsFromDb['Install'];
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+        }
+
+        // Apply axpertDevOpt filtering for SDK and Source only when build = true
+        if (accessPermissions && accessPermissions.buildAccess !== false && commandsFromDb["SDK"]) {
+            const rawDevOpt = getAxpertDevOpt();
+            const lowerDevOpt = (rawDevOpt || "").toLowerCase();
+
+            if (lowerDevOpt === "nooptions" || lowerDevOpt === "all") {
+                // "nooptions" or "all" -> retain all SDK options
+            } else if (!rawDevOpt) {
+                // Empty string -> all developer options were removed, delete SDK from command metadata
+                delete commandsFromDb["SDK"];
+                delete commandsFromDb["Source"];
+            } else {
+                const allowedOpts = rawDevOpt.split(",").map(o => o.trim().toLowerCase()).filter(Boolean);
+                if (allowedOpts.length > 0) {
+                    const sdkPrompts = commandsFromDb["SDK"].prompts;
+                    const typePrompt = sdkPrompts?.find(p => p.prompt === "type" || p.wordPos === 2);
+                    const namePrompt = sdkPrompts?.find(p => p.prompt === "name" || p.wordPos === 3);
+
+                    if (typePrompt && typePrompt.promptValues) {
+                        const types = typePrompt.promptValues.split(",");
+                        const sources = (namePrompt && namePrompt.promptSource) ? namePrompt.promptSource.split(",") : [];
+
+                        const filteredTypes = [];
+                        const filteredSources = [];
+
+                        for (let i = 0; i < types.length; i++) {
+                            const rawType = types[i].trim();
+                            const lowType = rawType.toLowerCase();
+                            const isExempt = lowType === "tstruct" || lowType === "iview";
+                            const isActive = isExempt || ((axiCommandConfigList && axiCommandConfigList.length > 0) ? !!getCommandConfigRow("SDK", rawType) : true);
+                            if (isActive && isDevOptionAllowed(rawType)) {
+                                filteredTypes.push(rawType);
+                                filteredSources.push(sources[i] ? sources[i].trim() : "Axi_Dummy");
+                            }
+                        }
+
+                        if (filteredTypes.length > 0) {
+                            typePrompt.promptValues = filteredTypes.join(",");
+                            if (namePrompt) {
+                                namePrompt.promptSource = filteredSources.join(",");
+                            }
+                        } else {
+                            delete commandsFromDb["SDK"];
+                            delete commandsFromDb["Source"];
+                        }
+                    }
+                } else {
+                    delete commandsFromDb["SDK"];
+                    delete commandsFromDb["Source"];
+                }
+            }
+        }
+
+        if (!commandsFromDb["Configure"]) return commandsFromDb;
+
+        const roles = (currentUserRole || "").split(",").map(r => r.trim().toLowerCase());
+        const isAdmin = currentUserName === "admin" && roles.includes("default");
+
+        const configurePrompts = commandsFromDb["Configure"].prompts;
+        const objectTypePrompt = configurePrompts?.find(p => p.prompt === "object type" || p.wordPos === 2);
+        const objectNamePrompt = configurePrompts?.find(p => p.prompt === "object name" || p.wordPos === 3);
+
+        if (objectTypePrompt && objectTypePrompt.promptValues) {
+            const types = objectTypePrompt.promptValues.split(",");
+            const sources = (objectNamePrompt && objectNamePrompt.promptSource) ? objectNamePrompt.promptSource.split(",") : [];
+
+            const filteredTypes = [];
+            const filteredSources = [];
+
+            for (let i = 0; i < types.length; i++) {
+                const rawType = types[i].trim();
+                const isActive = (axiCommandConfigList && axiCommandConfigList.length > 0) ? !!getCommandConfigRow("Configure", rawType) : true;
+
+                // old code
+                // // User Activation: admin always; anyone else only with licactivation on
+                // if (!isAdmin && !canActivateUsers && rawType.toLowerCase() === "user activation") {
+                //     continue;
+                // }
+                // new code: User Activation only when axusers.licactivation is T / true (any case), for admin and every other user
+                if (!canActivateUsers && rawType.toLowerCase() === "user activation") {
+                    continue;
+                }
+
+                const typeRow = getCommandConfigRow("Configure", rawType);
+                if (typeRow && (typeRow.promptOptionType || typeRow.prompt_option_type || typeRow.PromptOptionType || "").toLowerCase() === "shellaction"
+                    && accessPermissions.buildAccess === false) {
+                    continue;
+                }
+
+                // Product / Plugin / ChangeRequest need both configure and build access
+                if (typeRow && (typeRow.promptOptionType || typeRow.prompt_option_type || typeRow.PromptOptionType || "").toLowerCase() === "commandsetting"
+                    && !(accessPermissions.appMgrAccess && accessPermissions.buildAccess)) {
+                    continue;
+                }
+
+                if (isActive) {
+                    filteredTypes.push(rawType);
+                    filteredSources.push(sources[i] ? sources[i].trim() : "Axi_Dummy");
+                }
+            }
+
+            objectTypePrompt.promptValues = filteredTypes.join(",");
+            if (objectNamePrompt) {
+                objectNamePrompt.promptSource = filteredSources.join(",");
+            }
+        }
+
+        return commandsFromDb;
+
+
+    }
+
+    /**
+     * Toggles loading spinner on modal buttons.
+     * @param {string} buttonId - Button element ID.
+     * @param {string} spinnerId - Spinner element ID.
+     * @param {boolean} isLoading - Loading status.
+     * @returns {void}
+     */
+    function setButtonLoading(buttonId, spinnerId, isLoading) {
+        const button = document.getElementById(buttonId);
+        const spinner = document.getElementById(spinnerId);
+        if (button) {
+            button.disabled = isLoading;
+        }
+        if (spinner) {
+            if (isLoading) {
+                spinner.classList.remove("d-none");
+            } else {
+                spinner.classList.add("d-none");
+            }
+        }
+    }
+
+    /**
+     * Converts string representation to boolean value.
+     * @param {string} str - String to convert.
+     * @returns {boolean} Boolean result.
+     */
+    function strToBool(str) {
+        if (!str) return false;
+        const s = String(str).toLowerCase().trim();
+        return s === "t" || s === "true";
+    }
+
+    /**
+     * Normalizes command string for deduplication comparison.
+     * @param {string} cmd - Command string.
+     * @returns {string} Normalized command string.
+     */
+    function normalizeCommandForCompare(cmd) {
+        if (!cmd) return "";
+        return cmd.trim().toLowerCase().replace(/\s+/g, " ");
+    }
+
+    /**
+     * Normalizes URL for duplicate detection.
+     * @param {string} url - URL string.
+     * @returns {string} Normalized URL.
+     */
+    function normalizeUrlForCompare(url) {
+        if (!url) return "";
+        try {
+            return String(url).trim().toLowerCase().replace(/\/+$/, "");
+        } catch (e) {
+            return "";
+        }
+    }
+
+    /**
+     * Checks if favorite with same URL or command already exists.
+     * @param {string} targetUrl - Target URL.
+     * @param {string} [excludeCmdText=""] - Command text to exclude.
+     * @returns {boolean} True if duplicate.
+     */
+    function isDuplicateFavorite(targetUrl, excludeCmdText = "") {
+        if (!targetUrl) return false;
+        const normalizedTarget = normalizeUrlForCompare(targetUrl);
+        if (!normalizedTarget) return false;
+
+        const normalizedExclude = normalizeCommandForCompare(excludeCmdText);
+
+        return commandFavorites.some(fav => {
+            if (normalizedExclude) {
+                const favCmd = normalizeCommandForCompare(fav?.commandText);
+                const favOrig = normalizeCommandForCompare(fav?.originalCommandText);
+                if (favCmd === normalizedExclude || favOrig === normalizedExclude) {
+                    return false;
+                }
+            }
+            const favUrl = fav?.targetUrl || fav?.targetURL || fav?.targeturl || "";
+            const normalizedFavUrl = normalizeUrlForCompare(favUrl);
+            return normalizedFavUrl && normalizedFavUrl === normalizedTarget;
+        });
+    }
+
+    /**
+     * Opens Add/Edit Favorite modal dialog.
+     * @param {string} cmdText - Command text.
+     * @param {string} targetUrl - Target URL.
+     * @param {boolean} [isEdit=false] - True if editing existing favorite.
+     * @returns {void}
+     */
+    function showFavoriteModel(cmdText, targetUrl, isEdit = false) {
+        const originalCmdTextInput = document.getElementById("axiFavOriginalCmd");
+        const favNameInput = document.getElementById("axiFavNameInput");
+        const favTargetUrlInput = document.getElementById("axiFavTargetUrl");
+        const favEditStateInput = document.getElementById("axiFavIsEdit");
+        const titleEl = document.querySelector(".axi-modal-title");
+
+        if (titleEl) titleEl.innerText = isEdit ? "Rename Favorites" : "Save to Favorites"
+
+        favEditStateInput.value = isEdit ? "true" : "false";
+
+        const axiFavModal = document.getElementById("axiFavModalOverlay");
+
+        originalCmdTextInput.value = cmdText;
+        favNameInput.value = cmdText;
+        favTargetUrlInput.value = targetUrl;
+
+        // Reset loading state on open
+        setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
+        const favCancelBtn = document.getElementById("axiFavCancelBtn");
+        if (favCancelBtn) favCancelBtn.disabled = false;
+
+        axiFavModal.style.display = "flex";
+        axiFavModal.offsetHeight; // force layout
+        axiFavModal.classList.add("open");
+        favNameInput.focus();
+        favNameInput.select();
+    }
+
+    /**
+     * Hides Favorite modal dialog.
+     * @returns {void}
+     */
+    function hideFavoriteModal() {
+        const modal = document.getElementById("axiFavModalOverlay");
+
+        if (modal) {
+            modal.classList.remove("open");
+            setTimeout(() => {
+                if (!modal.classList.contains("open")) {
+                    modal.style.display = "none";
+                }
+            }, 200);
+        }
+    }
+
+    /**
+     * Handles Save button click in Add Favorite modal.
+     * @returns {void}
+     */
+    function confirmAddFavorite() {
+        const alias = document.getElementById("axiFavNameInput").value.trim();
+        const originalCmdText = document.getElementById("axiFavOriginalCmd").value.trim();
+        const targetUrl = document.getElementById("axiFavTargetUrl").value.trim();
+        const isEdit = document.getElementById("axiFavIsEdit").value === "true";
+        const favCancelBtn = document.getElementById("axiFavCancelBtn");
+
+        if (!alias) {
+            showToast("Favorite name cannot be empty");
+            return;
+        }
+
+        const aliasTokens = getTokens(alias);
+        if (aliasTokens[0]?.toLowerCase() === "help" || aliasTokens[0]?.toLowerCase() === "version") {
+            showToast("You cannot add this command to Favorites!");
+            return;
+        }
+
+        const origTokens = getTokens(originalCmdText);
+        if (origTokens[0]?.toLowerCase() === "help" || origTokens[0]?.toLowerCase() === "version") {
+            showToast("You cannot add this command to Favorites!");
+            return;
+        }
+
+        if (aliasTokens[0]?.toLowerCase() === "run") {
+            showToast("You cannot save 'run' commands in favorites");
+            return;
+        }
+
+        if (!isEdit) {
+            if (isDuplicateFavorite(targetUrl)) {
+                showToast("This command is already in your Favorites.");
+                return;
+            }
+        } else {
+            if (isDuplicateFavorite(targetUrl, originalCmdText)) {
+                showToast("This command is already in your Favorites.");
+                return;
+            }
+        }
+
+        // Start loading
+        setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", true);
+        favCancelBtn.disabled = true;
+
+        const appUrl = getAppBaseUrl();
+        const appname = getProjectName();
+        const favKey = AxiFavoritesManager.getStorageKey(appUrl, window.mainUserName);
+
+        if (isEdit) {
+            const cmdIndex = commandFavorites.findIndex(fav => fav.commandText.toLowerCase() === originalCmdText.toLowerCase());
+            const favObj = commandFavorites.find(fav => fav.commandText.toLowerCase() === originalCmdText.toLowerCase());
+
+            if (cmdIndex !== -1) {
+                commandFavorites[cmdIndex].commandText = alias;
+            }
+
+            if (axiFavoritesUrl) {
+                fetch(`${axiFavoritesUrl}/${favObj?.favouritesId}?username=${window.mainUserName}&appname=${appname}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        commandText: alias,
+                    })
+                }
+                ).then(response => {
+                    if (response?.ok) {
+                        AxiFavoritesManager.saveLocalFavorites(appUrl, window.mainUserName, commandFavorites);
+                        renderFavoritesUI();
+                        render();
+                        hideFavoriteModal();
+                        showToast(`Renamed '${originalCmdText}' to '${alias}'`, 3000, true);
+                    } else {
+                        setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
+                        favCancelBtn.disabled = false;
+                        showToast("Failed to edit favorite");
+                    }
+                })
+                    .catch(error => {
+                        // console.error("Backend edit failed", error);
+                        showToast("An Error occured while editing favorite");
+                        setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
+                        favCancelBtn.disabled = false;
+
+                    });
+            } else {
+                setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
+            }
+        } else {
+            if (axiFavoritesUrl) {
+                fetch(`${axiFavoritesUrl}?appname=${appname}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        username: window.mainUserName,
+                        commandText: alias,
+                        originalCommandText: originalCmdText,
+                        action: "add",
+                        favOrder: 0,
+                        targetURL: targetUrl
+                    })
+                }).then(
+                    response => {
+                        if (response.ok) {
+                            return response.json();
+                        } else {
+                            throw new Error("Failed response");
+                        }
+                    }
+                ).then(data => {
+                    // console.log("Response from backend after adding favorite: ", data);
+                    const favObj = data[0];
+
+                    commandFavorites.unshift({
+                        favouritesId: favObj.favouritesId,
+                        username: favObj.username,
+                        commandText: favObj.commandText,
+                        originalCommandText: originalCmdText,
+                        favOrder: favObj.favOrder,
+                        targetUrl: targetUrl,
+                        createdOn: favObj.createdOn
+                    });
+
+                    AxiFavoritesManager.saveLocalFavorites(appUrl, window.mainUserName, commandFavorites);
+                    renderFavoritesUI();
+                    render();
+                    hideFavoriteModal();
+
+                    showToast(`'${alias}' added to favorites`, 5000, true);
+                })
+                    .catch(err => {
+                        showToast("Axi: Failed to update favorite on backend");
+                        // console.error("Backend sync failed", err);
+                        setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
+                        favCancelBtn.disabled = false;
+
+                    });
+            } else {
+                setButtonLoading("axiFavSaveBtn", "axiFavSaveSpinner", false);
+                favCancelBtn.disabled = false;
+
+            }
+        }
+    }
+
+    /**
+     * Opens Delete Favorite confirmation dialog.
+     * @param {string} cmdText - Command text to delete.
+     * @returns {void}
+     */
+    function showDeleteFavoriteModal(cmdText) {
+        const modal = document.getElementById("axiFavDeleteModalOverlay");
+
+        if (!modal) return;
+
+        const favDeleteCmdText = document.getElementById("axiFavDeleteCmd");
+
+        favDeleteCmdText.value = cmdText;
+        const deleteModalParagraph = document.getElementById("axiDeleteModalParagraph");
+        deleteModalParagraph.textContent = `Are you sure you want to remove '${cmdText}' from your favorites?`;
+
+        // Reset loading state on open
+        setButtonLoading("axiFavDeleteConfirmBtn", "axiFavDeleteSpinner", false);
+        const deleteFavCancelBtn = document.getElementById("axiFavDeleteCancelBtn");
+        if (deleteFavCancelBtn) deleteFavCancelBtn.disabled = false;
+
+        modal.style.display = "flex";
+        modal.offsetHeight; // force layout
+        modal.classList.add("open");
+    }
+
+    /**
+     * Hides Delete Favorite modal dialog.
+     * @returns {void}
+     */
+    function hideDeleteFavoriteModal() {
+        const modal = document.getElementById("axiFavDeleteModalOverlay");
+        if (modal) {
+            modal.classList.remove("open");
+            setTimeout(() => {
+                if (!modal.classList.contains("open")) {
+                    modal.style.display = "none";
+                }
+            }, 200);
+        }
+    }
+
+    /**
+     * Confirms deletion of favorite.
+     * @returns {void}
+     */
+    function confirmDeleteFavorite() {
+        const cmdText = document.getElementById("axiFavDeleteCmd").value;
+        if (!cmdText) return;
+
+        executeDeleteFavorite(cmdText);
+    }
+
+    /**
+     * Deletes favorite item from storage and updates UI.
+     * @param {string} cmdText - Command text.
+     * @returns {void}
+     */
+    function executeDeleteFavorite(cmdText) {
+        const appUrl = getAppBaseUrl();
+        const appname = getProjectName();
+        const favKey = AxiFavoritesManager.getStorageKey(appUrl, window.mainUserName);
+        const deleteFavCancelBtn = document.getElementById("axiFavDeleteCancelBtn");
+
+        const cmdIndex = commandFavorites.findIndex(fav =>
+            fav.commandText.toLowerCase() === cmdText.toLowerCase() ||
+            (fav.originalCommandText && fav.originalCommandText.toLowerCase() === cmdText.toLowerCase())
+        );
+
+        if (cmdIndex !== -1) {
+            const removedFav = commandFavorites[cmdIndex];
+
+            // Start loading
+            setButtonLoading("axiFavDeleteConfirmBtn", "axiFavDeleteSpinner", true);
+            deleteFavCancelBtn.disabled = true;
+
+            if (axiFavoritesUrl) {
+                fetch(`${axiFavoritesUrl}?appname=${appname}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        username: window.mainUserName,
+                        commandText: removedFav.commandText,
+                        originalCommandText: removedFav.originalCommandText,
+                        action: "remove",
+                        favOrder: 0,
+                        targetURL: removedFav.targetUrl || removedFav.targetURL || ""
+                    })
+                }).then(response => {
+                    if (response.ok) {
+                        commandFavorites.splice(cmdIndex, 1);
+                        showToast(`Removed '${removedFav.commandText}' from Favorites`);
+
+                        AxiFavoritesManager.saveLocalFavorites(appUrl, window.mainUserName, commandFavorites);
+                        renderFavoritesUI();
+                        render();
+
+                        hideDeleteFavoriteModal();
+                    } else {
+                        setButtonLoading("axiFavDeleteConfirmBtn", "axiFavDeleteSpinner", false);
+                        deleteFavCancelBtn.disabled = false;
+
+                        showToast("Failed to delete favorite on backend");
+                    }
+                })
+                    .catch(err => {
+                        // console.error("Axi: Failed to delete on backend", err);
+                        setButtonLoading("axiFavDeleteConfirmBtn", "axiFavDeleteSpinner", false);
+                        deleteFavCancelBtn.disabled = false;
+
+                        showToast("Error deleting favorite");
+                    });
+            } else {
+                setButtonLoading("axiFavDeleteConfirmBtn", "axiFavDeleteSpinner", false);
+                deleteFavCancelBtn.disabled = false;
+
+                showToast("Backend API URL is not configured. Cannot delete.");
+            }
+        }
+    }
+
+    /**
+     * Resolves current structure name from active window/iframe.
+     * @returns {string} Structure name.
+     */
+    function getCurrentStructName() {
+        const iframe = document.getElementById("middle1");
+
+        if (!iframe) return null;
+
+        const src = iframe.getAttribute("src");
+        const searchParams = new URLSearchParams(src.includes("?") ? src.split("?")[1] : "");
+        const adInfo = searchParams.get("adInfo");
+        if (!src) return null;
+        if (adInfo) return null;
+
+
+
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!iframeDoc) return null;
+
+        const bodyId = iframeDoc.body?.id || "";
+
+        const isEntityPage = bodyId.toLowerCase() === "entitymanagement_body";
+
+
+        const cardContainer = document.querySelector(".cardsPageWrapper");
+
+        const isCardContainerHidden = cardContainer.classList.contains("d-none");
+
+        const ivframe = iframeDoc.getElementById("iviewFrame");
+
+        if (isCardContainerHidden && (src.includes("Entity.aspx") || src.includes("EntityForm.aspx"))) {
+            try {
+                const queryString = src.includes("?") ? src.split("?")[1] : "";
+
+                const params = new URLSearchParams(queryString);
+
+                const structNameRaw = params.get("tstid");
+
+                // return params.get("tstid"); 
+                return { name: decodeURIComponent(structNameRaw), type: "entity" };
+            } catch (error) {
+                // console.error("Error parsing struct name from URL: ", error);
+                return null;
+            }
+
+        } else if (isCardContainerHidden && src.includes("tstruct.aspx")) {
+            try {
+                const queryString = src.includes("?") ? src.split("?")[1] : "";
+
+                const params = new URLSearchParams(queryString);
+
+                const structNameRaw = params.get("transid");
+
+                // return params.get("tstid"); 
+                return { name: decodeURIComponent(structNameRaw), type: "entity" };
+            } catch (error) {
+                // console.error("Error parsing struct name from URL: ", error);
+                return null;
+            }
+
+        } else if (ivframe !== null && src.includes("iview.aspx")) {
+            try {
+                const queryString = src.includes("?") ? src.split("?")[1] : "";
+                const params = new URLSearchParams(queryString);
+                const structNameRaw = params.get("ivname");
+                // return params.get("ivname"); 
+                return { name: decodeURIComponent(structNameRaw), type: "iview" };
+            } catch (error) {
+                // console.error("Error parsing struct name from URL: ", error);
+                return null;
+            }
+        } else if (src.includes("Smartview_table.html")) {
+            try {
+                const queryString = src.includes("?") ? src.split("?")[1] : "";
+                const params = new URLSearchParams(queryString);
+                const structNameRaw = params.get("ads");
+                return { name: decodeURIComponent(structNameRaw), type: "ads" };
+            } catch (error) {
+                // console.error("Error parsing struct name from URL: ", error);
+                return null;
+
+            }
+
+        }
+
+        // ../AxpertPlugins/Axi/HTMLPages/Smartview_table.html?ads=Sales%20Order&load=1769601086182&filter=eyJmaWx0ZXJzIjpbXX0=&hdnbElapsTime=0
+
+
+
+
+        return null;
+
+
+
+
+    }
+
+    /**
+     * Launches AxiCMD interactive feature tour walkthrough.
+     * @returns {void}
+     */
+    function startWalkthrough() {
+        render();
+        renderFavoritesUI();
+        if (typeof introJs !== "undefined") {
+            injectTourStyles();
+            runTour();
+            return;
+        }
+
+        const appUrl = getAppBaseUrl();
+
+        // Dynamically load CSS
+        if (!document.querySelector('link[href*="introjs.min.css"]')) {
+            const link = document.createElement("link");
+            link.rel = "stylesheet";
+            link.type = "text/css";
+            link.href = `${appUrl}/AxpertPlugins/AxiCMD/HTMLPages/css/introjs.min.css`;
+            document.head.appendChild(link);
+        }
+
+        // Dynamically load JS
+        if (!document.querySelector('script[src*="intro.min.js"]')) {
+            const script = document.createElement("script");
+            script.type = "text/javascript";
+            script.src = `${appUrl}/AxpertPlugins/AxiCMD/HTMLPages/js/intro.min.js`;
+            script.onload = () => {
+                injectTourStyles();
+                runTour();
+            };
+            script.onerror = () => {
+                showToast("Failed to load walkthrough tour. Please try again.");
+            };
+            document.head.appendChild(script);
+        } else {
+            const checkInterval = setInterval(() => {
+                if (typeof introJs !== "undefined") {
+                    clearInterval(checkInterval);
+                    injectTourStyles();
+                    runTour();
+                }
+            }, 50);
+        }
+    }
+
+    /**
+     * Injects CSS styles required for Intro.js walkthrough tour.
+     * @returns {void}
+     */
+    function injectTourStyles() {
+        if (document.getElementById("axiTourStyles")) return;
+        const style = document.createElement("style");
+        style.id = "axiTourStyles";
+        style.innerHTML = `
+            .AXI-Sec.axi-tour-active {
+                z-index: 9999999 !important;
+            }
+            .AXI-Sec.axi-tour-active #Axi-Searchinp,
+            .AXI-Sec.axi-tour-active .btn,
+            .AXI-Sec.axi-tour-active #runBtn,
+            .AXI-Sec.axi-tour-active #btnHistoryPrev,
+            .AXI-Sec.axi-tour-active #History_pages,
+            .AXI-Sec.axi-tour-active #axiFavouriteBtn,
+            .AXI-Sec.axi-tour-active #axiAddFavoriteBtn,
+            .AXI-Sec.axi-tour-active #axiViewFavoritesBtn,
+            .AXI-Sec.axi-tour-active #btnRefresh,
+            .AXI-Sec.axi-tour-active #axiSettingsBtn,
+            .AXI-Sec.axi-tour-active .clearbtn {
+                pointer-events: none !important;
+                opacity: 0.5 !important;
+                cursor: not-allowed !important;
+            }
+            /* Help tour palette follows the settings panel: navy ink on frosted white glass, blue for "help" */
+            .introjs-overlay {
+                background: rgba(20, 27, 56, 0.5) !important;
+                -webkit-backdrop-filter: blur(5px);
+                backdrop-filter: blur(5px);
+            }
+            /* The highlighted control gets a clear blue ring instead of a glow */
+            .introjs-helperLayer {
+                z-index: 10000000 !important;
+                background: rgba(255, 255, 255, 0.14) !important;
+                border: 2px solid #2563eb !important;
+                border-radius: 10px !important;
+                box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.22) !important;
+            }
+            .introjs-tooltipReferenceLayer {
+                z-index: 10000001 !important;
+            }
+            .introjs-tooltip {
+                color: #1d2547 !important;
+                font-family: inherit !important;
+                min-width: 250px !important;
+                padding: 15px !important;
+                border-radius: 18px !important;
+                background: linear-gradient(160deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.56)) !important;
+                border: 1px solid rgba(255, 255, 255, 0.85) !important;
+                -webkit-backdrop-filter: blur(24px) saturate(170%);
+                backdrop-filter: blur(24px) saturate(170%);
+                box-shadow: 0 28px 64px -16px rgba(20, 27, 56, 0.55),
+                            0 6px 16px -6px rgba(20, 27, 56, 0.25),
+                            inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+            }
+            .introjs-tooltiptext {
+                font-size: 13px !important;
+                line-height: 1.5 !important;
+                padding: 0 !important;
+            }
+            /* Help tour content: header, intro line, command rows, key caps */
+            .introjs-tooltip.axi-tour-tip {
+                min-width: 320px !important;
+                max-width: 400px !important;
+                padding: 18px 18px 14px !important;
+            }
+            .axi-tour-head {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding-bottom: 10px;
+                margin-bottom: 10px;
+                border-bottom: 1px solid rgba(29, 37, 71, 0.1);
+            }
+            .axi-tour-icon {
+                flex: none;
+                width: 32px;
+                height: 32px;
+                line-height: 32px;
+                text-align: center;
+                font-size: 19px;
+                color: #2563eb;
+                background: rgba(37, 99, 235, 0.12);
+                border: 1px solid rgba(37, 99, 235, 0.22);
+                border-radius: 10px;
+            }
+            .axi-tour-title {
+                font-size: 15px;
+                font-weight: 700;
+                line-height: 1.3;
+                color: #1d2547;
+            }
+            .axi-tour-body {
+                font-size: 12.5px;
+                line-height: 1.6;
+                color: #46506f;
+            }
+            .axi-tour-body p {
+                margin: 0 0 8px;
+            }
+            .axi-tour-row {
+                display: flex;
+                flex-direction: column;
+                gap: 3px;
+                padding: 7px 0;
+                border-top: 1px solid rgba(29, 37, 71, 0.07);
+            }
+            .axi-tour-row:first-of-type {
+                border-top: 0;
+            }
+            .axi-tour-body code {
+                align-self: flex-start;
+                padding: 2px 8px;
+                font-size: 12px;
+                color: #1d4ed8;
+                background: rgba(255, 255, 255, 0.7);
+                border: 1px solid rgba(37, 99, 235, 0.25);
+                border-radius: 7px;
+                white-space: normal;
+            }
+            .axi-tour-body kbd {
+                padding: 1px 6px;
+                font-size: 11.5px;
+                color: #1d2547;
+                background: rgba(255, 255, 255, 0.85);
+                border: 1px solid rgba(29, 37, 71, 0.2);
+                border-bottom-width: 2px;
+                border-radius: 5px;
+            }
+            .axi-tour-note {
+                margin-top: 8px;
+                padding: 8px 10px;
+                font-size: 12px;
+                color: #7a4a05;
+                background: rgba(245, 158, 11, 0.14);
+                border-left: 3px solid #f59e0b;
+                border-radius: 8px;
+            }
+            .introjs-arrow.bottom {
+                border-top-color: rgba(255, 255, 255, 0.85) !important;
+            }
+            .introjs-arrow.top {
+                border-bottom-color: rgba(255, 255, 255, 0.85) !important;
+            }
+            .introjs-arrow.left {
+                border-right-color: rgba(255, 255, 255, 0.85) !important;
+            }
+            .introjs-arrow.right {
+                border-left-color: rgba(255, 255, 255, 0.85) !important;
+            }
+            /* Back / Skip are quiet; Next / Done is the one solid button */
+            .introjs-button {
+                background: rgba(255, 255, 255, 0.6) !important;
+                color: #1d2547 !important;
+                border: 1px solid rgba(29, 37, 71, 0.18) !important;
+                text-shadow: none !important;
+                border-radius: 10px !important;
+                font-weight: 600 !important;
+                transition: background 0.15s ease, border-color 0.15s ease;
+                padding: 6px 14px !important;
+                pointer-events: auto !important;
+                cursor: pointer !important;
+            }
+            .introjs-button.introjs-nextbutton,
+            .introjs-button.introjs-donebutton {
+                background: #1d2547 !important;
+                border-color: #1d2547 !important;
+                color: #ffffff !important;
+            }
+            .introjs-tooltipbuttons {
+                display: flex !important;
+                gap: 8px !important;
+                justify-content: flex-end !important;
+                border-top: 0 !important;
+            }
+            .introjs-button:hover {
+                background: rgba(255, 255, 255, 0.95) !important;
+                border-color: #2563eb !important;
+                color: #1d2547 !important;
+            }
+            .introjs-button.introjs-nextbutton:hover,
+            .introjs-button.introjs-donebutton:hover {
+                background: #2563eb !important;
+                border-color: #2563eb !important;
+                color: #ffffff !important;
+            }
+            .introjs-button:focus-visible {
+                outline: 2px solid #2563eb !important;
+                outline-offset: 2px;
+            }
+            .introjs-disabled {
+                background: transparent !important;
+                border-color: rgba(29, 37, 71, 0.1) !important;
+                color: #9aa3bd !important;
+                cursor: not-allowed !important;
+            }
+            .introjs-bullets ul li a {
+                background: rgba(29, 37, 71, 0.25) !important;
+            }
+            .introjs-bullets ul li a.active {
+                background: #2563eb !important;
+                width: 16px !important;
+                border-radius: 4px !important;
+            }
+            .AXI-Sec.axi-tour-active .btn.introjs-showElement,
+            .AXI-Sec.axi-tour-active #btnRefresh.introjs-showElement {
+                opacity: 1 !important;
+            }
+            @media (prefers-reduced-motion: no-preference) {
+                .introjs-tooltip {
+                    animation: axi-tour-in 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+                }
+                @keyframes axi-tour-in {
+                    from { opacity: 0; transform: translateY(6px) scale(0.98); }
+                    to { opacity: 1; transform: none; }
+                }
+            }
+            /* Browsers without backdrop-filter get an almost opaque card so text stays readable */
+            @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+                .introjs-tooltip {
+                    background: rgba(255, 255, 255, 0.97) !important;
+                }
+            }
+            @media (max-width: 768px) {
+                .introjs-tooltipReferenceLayer {
+                    position: fixed !important;
+                    top: auto !important;
+                    left: 50% !important;
+                    bottom: 80px !important;
+                    transform: translateX(-50%) !important;
+                    width: 90% !important;
+                    max-width: 380px !important;
+                    min-width: 280px !important;
+                    z-index: 10000001 !important;
+                }
+                .introjs-tooltip {
+                    position: absolute !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                    bottom: 0 !important;
+                    top: auto !important;
+                    width: 100% !important;
+                    min-width: 0 !important;
+                    max-width: 100% !important;
+                    margin: 0 !important;
+                    box-sizing: border-box !important;
+                    padding: 12px !important;
+                    box-shadow: 0 -8px 32px rgba(20, 27, 56, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+                }
+                .introjs-arrow {
+                    display: none !important;
+                }
+                .introjs-tooltiptext {
+                    font-size: 12px !important;
+                }
+                .introjs-button {
+                    padding: 5px 10px !important;
+                    font-size: 11px !important;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    /**
+     * Configures and starts Intro.js tour steps.
+     * @returns {void}
+     */
+    function runTour() {
+        if (!axicmdenabled) return;
+        const oldVal = input.value;
+        input.value = "Help";
+        input.readOnly = true;
+        input.disabled = true;
+        document.querySelector(".AXI-Sec")?.classList.add("axi-tour-active");
+
+        // One step = icon + title, then plain-language body. Markup is styled by the .axi-tour-* rules above.
+        const tourStep = (icon, title, bodyHtml) =>
+            `<div class="axi-tour-head"><span class="axi-tour-icon material-icons">${icon}</span><span class="axi-tour-title">${title}</span></div>` +
+            `<div class="axi-tour-body">${bodyHtml}</div>`;
+        // One command example: the command to type, then what it does
+        const tourRow = (code, text) => `<div class="axi-tour-row"><code>${code}</code><span>${text}</span></div>`;
+
+        const tour = introJs();
+        tour.setOptions({
+            tooltipClass: 'axi-tour-tip',
+            steps: [
+                {
+                    element: '#Axi-Searchinp',
+                    intro: tourStep('search', 'Type a command',
+                        '<p>Type what you want to do, pick a suggestion, then press <kbd>Enter</kbd>.</p>' +
+                        tourRow('&quot;Customer Form&quot; create', 'Open a form to add a new record') +
+                        tourRow('&quot;Sales Order&quot; view &quot;SO-101&quot;', 'Open a record to read it') +
+                        tourRow('&quot;Items&quot; edit quantity 50', 'Change a field on a record') +
+                        tourRow('configure peg &lt;pegname&gt;', 'Open an administration setting') +
+                        tourRow('sdk &quot;db console&quot;','Open a developer tool')),
+                    position: 'bottom'
+                },
+                {
+                    element: '#Axi-Searchinp',
+                    intro: tourStep('code', 'Open Developer Studio with source',
+                        '<p>Use the <code>source</code> command to open a form, report, page or data source in Developer Studio.</p>' +
+                        tourRow('&quot;Sales Order&quot; source', 'Open the form or report design') +
+                        tourRow('&quot;Monthly Sales&quot; source', 'Open a page or data source definition') +
+                        '<div class="axi-tour-note">Only users with developer access can use <code>source</code>. Everyone else sees a message that they have no access.</div>'),
+                    position: 'bottom'
+                },
+                {
+                    element: '#axiAddFavoriteBtn',
+                    intro: tourStep('bookmark_add', 'Save a command as a favorite',
+                        '<p>Save the command in the box so you can run it again in one click. Give it a name you will recognize.</p>' +
+                        '<p>Commands that start with <code>run</code> cannot be saved.</p>'),
+                    position: 'bottom'
+                },
+                {
+                    element: '#axiViewFavoritesBtn',
+                    intro: tourStep('bookmarks', 'Find your favorites',
+                        '<p>Open your saved commands. Type in the filter box to narrow the list, then select one to run it.</p>'),
+                    position: 'bottom'
+                },
+                {
+                    element: '#axiSuggestions',
+                    intro: tourStep('list', 'Suggestions as you type',
+                        '<p>Forms, reports and commands that match what you typed appear here.</p>' +
+                        tourRow('Quotes', 'Press <kbd>Space</kbd> after a name with several words and quotes are added for you') +
+                        tourRow('Actions', 'The actions offered depend on the target. Forms allow create, edit and view. Reports, pages and data sources allow view only.') +
+                        tourRow('Go or Pop-Up', 'Choose to open the result here or in a pop-up')),
+                    position: 'bottom'
+                },
+                {
+                    element: '#btnRefresh',
+                    intro: tourStep('refresh', 'Reload the lists',
+                        '<p>Select this when something you just created is missing from the suggestions. It reloads forms, reports and commands.</p>'),
+                    position: 'bottom'
+                },
+                // old code: the settings button step is left out of the help tour for this release
+                // {
+                //     element: '#axiSettingsBtn',
+                //     intro: tourStep('settings', 'Choose how many records load',
+                //         '<p>Set how many records each list loads at a time. Lists with more records load the rest as you scroll.</p>' +
+                //         '<p>Pick a number from 100 to 5000, then select <strong>Save</strong>. The lists reload to use the new number.</p>' +
+                //         '<div class="axi-tour-note">A smaller number loads faster. A larger number shows more records at once.</div>'),
+                //     position: 'bottom'
+                // },
+                {
+                    element: '.searchwrap-AXI',
+                    intro: tourStep('keyboard', 'Shortcuts',
+                        tourRow('<kbd>Ctrl</kbd> + <kbd>Enter</kbd>', 'Run and open the result in this window') +
+                        tourRow('<kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Enter</kbd>', 'Run and open the result in a pop-up') +
+                        tourRow('<kbd>Esc</kbd>', 'Close the command box. Clicking outside also closes it.')),
+                    position: 'bottom'
+                }
+            ],
+            showBullets: true,
+            showStepNumbers: false,
+            exitOnOverlayClick: true,
+            scrollToElement: false,
+            doneLabel: 'Done',
+            nextLabel: 'Next &rarr;',
+            prevLabel: '&larr; Back'
+        });
+
+        tour.onchange((targetElement) => {
+            document.querySelector(".AXI-Sec")?.classList.add("axi-tour-active");
+            if (targetElement && targetElement.id === "axiSuggestions") {
+                input.value = "";
+                handleInput();
+                if (megaDropdown) {
+                    megaDropdown.style.setProperty("display", "flex", "important");
+                    megaDropdown.style.setProperty("z-index", "10000000", "important");
+                    megaDropdown.style.setProperty("opacity", "1", "important");
+                    void megaDropdown.offsetHeight;
+                }
+                // Force synchronous browser layout reflow to compute correct width/height
+                void targetElement.offsetHeight;
+            } else if (targetElement && targetElement.id === "axiViewFavoritesBtn") {
+                loadFavorites();
+                showFavoritesPopupOnly();
+            } else {
+                hide();
+                if (megaDropdown) {
+                    megaDropdown.style.zIndex = "";
+                }
+                if (targetElement && targetElement.id === "Axi-Searchinp") {
+                    input.value = "Help";
+                }
+            }
+        });
+
+        let resizeTimeout;
+        /**
+         * Handles window resize events to adjust AxiCMD layout and suggestion positions.
+         * @returns {void}
+         */
+        const handleResize = () => {
+            if (resizeTimeout) clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                try {
+                    if (tour) {
+                        tour.refresh();
+                    }
+                } catch (e) { }
+            }, 100);
+        };
+        window.addEventListener("resize", handleResize);
+
+        tour.onexit(() => {
+            window.removeEventListener("resize", handleResize);
+            if (resizeTimeout) clearTimeout(resizeTimeout);
+            input.value = oldVal;
+            input.readOnly = false;
+            input.disabled = false;
+            document.querySelector(".AXI-Sec")?.classList.remove("axi-tour-active");
+            if (megaDropdown) {
+                megaDropdown.style.zIndex = "";
+            }
+            handleInput();
+        });
+        tour.oncomplete(() => {
+            window.removeEventListener("resize", handleResize);
+            if (resizeTimeout) clearTimeout(resizeTimeout);
+            input.value = oldVal;
+            input.readOnly = false;
+            input.disabled = false;
+            document.querySelector(".AXI-Sec")?.classList.remove("axi-tour-active");
+            if (megaDropdown) {
+                megaDropdown.style.zIndex = "";
+            }
+            handleInput();
+        });
+
+        tour.start();
+    }
+
+})();
+
+
+/**
+ * Shell wrapper to navigate main iframe to target URL.
+ * @param {string} src - Target URL string.
+ * @returns {void}
+ */
+function LoadIframeac(src) {
+    try {
+        if (typeof callParentNew("addFormRuntimeDcFlag") != "undefined" && callParentNew("addFormRuntimeDcFlag") != "") {
+            AddFormDcFieldAdded('fromconfig', src);
+            return;
+        }
+    } catch (ex) {
+        callParentNew("addFormRuntimeDcFlag=", "");
+    }
+    try {
+        if (typeof callParentNew("formComponentsFlag") != "undefined" && callParentNew("formComponentsFlag") != "")
+            checkIsPageLocked();
+    } catch (ex) { }
+    isTstructSplited = false;
+    try {
+        AxOnLoadIframe();
+    }
+    catch (ex) { }
+    if (src.indexOf("iviewInteractive") !== 1)
+        src = src.replace("iviewInteractive", "iview");
+
+    if (window.globalChange) {
+        if (confirm(appGlobalVarsObject.lcm[31])) {
+            SetFormDirty(false);
+        } else {
+            return;
+        }
+    } else if ($("#middle1")[0].contentWindow.designChanged != undefined && $("#middle1")[0].contentWindow.designChanged == true) {
+
+        if (!confirm(appGlobalVarsObject.lcm[31]))
+            return;
+    }
+    var el = "";
+    let el2 = "";
+    try {
+        el2 = AxOnLoadMiddleIframe(src);
+        if (el2 != undefined || el2 != "") {
+            // el2.src = "";
+            el2.src = '../../aspx/' + src;
+        }
+    }
+    catch (ex) { }
+    if (el2 === undefined || el2 === "") {
+        el = document.getElementById('middle1');
+        // el.src = "";
+        el.src = src;
+    }
+
+    isTstructPopup = false;
+    return false;
+}
+

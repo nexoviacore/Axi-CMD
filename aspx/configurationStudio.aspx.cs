@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Web;
 using System.Web.UI;
@@ -63,6 +64,34 @@ public partial class aspx_configurationStudio : System.Web.UI.Page
             else if (Session["AxiProjectLogin"] != null && Session["AxiProjectLogin"].ToString().ToLower() == "true" && Session["AxiPrimary"] != null && Session["AxiPrimary"].ToString().ToLower() == "true")
             {
                 userActive.Visible = true;
+            }
+            else
+            {
+                try
+                {
+                    if (Session["LicActivationAccess"] == null)
+                    {
+                        DBContext objDbCont = new DBContext();
+                        DataTable dt = new DataTable();
+                        string sqlQuery = Constants.SQL_GET_AXUSERLIC;
+                        sqlQuery = sqlQuery.Replace("$USERNAME$", Session["username"].ToString());
+                        dt = objDbCont.GetDataTableInline(sqlQuery);
+                        if (dt != null && dt.Rows.Count > 0)
+                        {
+                            string licActive = dt.Rows[0]["LICACTIVATION"].ToString();
+                            if (licActive == "T")
+                                userActive.Visible = true;
+                            Session["LicActivationAccess"] = licActive;
+                        }
+                    }
+                    else
+                    {
+                        if (Session["LicActivationAccess"] != null && Session["LicActivationAccess"].ToString() == "T")
+                            userActive.Visible = true;
+                    }
+                }
+                catch (Exception ex)
+                { }
             }
         }
     }

@@ -3,7 +3,7 @@
 -- TODO: Remove this on next release. 
 <<
 DELETE FROM axiconfig where  mainpagetemplate = 'AxiCMDMainPage.html'
-<<
+>>
 
 
 -- TODO: Remove this on next release. 
@@ -60,6 +60,8 @@ VALUES (1920660000001,'F',0,NULL,'admin',TO_TIMESTAMP('2026-09-25 12:32:04','YYY
 >>
 
 -- Insert AxiCMD Developer Option into axpstructconfigproval table
+
+
 <<
 INSERT INTO axpstructconfigproval (axpstructconfigprovalid, axpstructconfigpropsid, axpstructconfigprovalrow, configvalues)
 VALUES (1920660000003, 1920660000001, 1, 'true')
@@ -76,3 +78,32 @@ VALUES (1920990000006,'F',0,NULL,'admin',TO_TIMESTAMP('2026-09-25 13:36:05','YYY
 >>
 
 
+
+-- old code: moved to axi_usersettings.sql
+-- <<
+-- DECLARE
+--     v_exists NUMBER;
+-- BEGIN
+--     -- The table holds user settings, so it is never dropped: create it only when it is not there yet
+--     SELECT COUNT(*) INTO v_exists FROM user_tables WHERE table_name = 'AXI_USERSETTINGS';
+--     IF v_exists = 0 THEN
+--         EXECUTE IMMEDIATE q'[CREATE TABLE Axi_UserSettings (
+--     Id VARCHAR2(36)
+--         DEFAULT LOWER(
+--             REGEXP_REPLACE(
+--                 RAWTOHEX(SYS_GUID()),
+--                 '(.{8})(.{4})(.{4})(.{4})(.{12})',
+--                 '\1-\2-\3-\4-\5'
+--             )
+--         )
+--         PRIMARY KEY,
+--
+--     UserName VARCHAR2(255) NOT NULL,
+--     SettingKey VARCHAR2(100) NOT NULL,
+--     SettingValue VARCHAR2(4000),
+--     ModifiedOn TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     CONSTRAINT uq_axi_usersettings UNIQUE (UserName, SettingKey)
+-- )]';
+--     END IF;
+-- END;
+-- >>

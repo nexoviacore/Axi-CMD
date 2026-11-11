@@ -1654,7 +1654,7 @@ public partial class aspx_AxPEG : System.Web.UI.Page
             CachePermissions = (props.ContainsKey("CachePermissions") && !string.IsNullOrWhiteSpace(props["CachePermissions"].ToString()) ? Convert.ToBoolean(props["CachePermissions"]) : true),
             GetAllRecordsCount = (props.ContainsKey("GetAllRecordsCount") && !string.IsNullOrWhiteSpace(props["GetAllRecordsCount"].ToString()) ? Convert.ToBoolean(props["GetAllRecordsCount"]) : false),
             PageNo = (props.ContainsKey("PageNo") && !string.IsNullOrWhiteSpace(props["PageNo"].ToString()) ? Convert.ToInt32(props["PageNo"].ToString()) : 1),
-            PageSize = (props.ContainsKey("PageSize") && !string.IsNullOrWhiteSpace(props["PageSize"].ToString()) ? Convert.ToInt32(props["PageSize"].ToString()) : 100),
+            //PageSize = (props.ContainsKey("PageSize") && !string.IsNullOrWhiteSpace(props["PageSize"].ToString()) ? Convert.ToInt32(props["PageSize"].ToString()) : 100),
             Sorting = (props.ContainsKey("Sorting") ? props["Sorting"] : null),
             Filters = (props.ContainsKey("Filters") ? props["Filters"] : null),
             AxClient_dateformat = (props.ContainsKey("axClient_dateformat") ? props["axClient_dateformat"] : null),
@@ -1663,7 +1663,15 @@ public partial class aspx_AxPEG : System.Web.UI.Page
             GroupBy_Columns = (props.ContainsKey("groupby_columns") ? props["groupby_columns"] : null)
         };
 
-        var tasks = _aUtils.CallWebAPI(tasksUrl, "POST", "application/json", JsonConvert.SerializeObject(connectionDetails));
+        //var tasks = _aUtils.CallWebAPI(tasksUrl, "POST", "application/json", JsonConvert.SerializeObject(connectionDetails));
+        //return tasks;
+        JObject payload = JObject.FromObject(connectionDetails);
+        int pageSize;
+        if (props.ContainsKey("PageSize") && int.TryParse(props["PageSize"] == null ? null : props["PageSize"].ToString(), out pageSize))
+        {
+            payload["PageSize"] = pageSize;
+        }
+        var tasks = _aUtils.CallWebAPI(tasksUrl, "POST", "application/json", JsonConvert.SerializeObject(payload));
         return tasks;
     }
 

@@ -1515,9 +1515,12 @@ table .dvdcframe .dropzone.dropzone-queue {
 #dvlayout div#pagebdy {
     padding-bottom: 60px !important;
 }
-#dvlayout .footer.tstructMainBottomFooter {
+/*#dvlayout .footer.tstructMainBottomFooter {
     position: fixed !important;
     width: 100%;
+}*/
+    .tstructMainBottomFooter  .d-flex.flex-md-row {
+  flex-grow: 1;
 }
 #dvlayout .footer.tstructMainBottomFooter .btn.btn-light-primary .material-icons.material-icons-style {
     color: #fff;
@@ -1603,8 +1606,7 @@ body.block-ui::after {
 	top: 0;
 }
 
-/*#modalIdTableField #divTable table#fldTable th ,#modalIdTableField #divTable table#fldTable th {*/
-#modalIdTableField #divTable table#fldTable th, #divTable table#fldTable th {
+#modalIdTableField #divTable table#fldTable th , #divTable table#fldTable th {
 	vertical-align: middle;
 	position: sticky;
 	top: -8px;
@@ -1614,6 +1616,8 @@ body.block-ui::after {
 #modalIdTableField .w-100.h-400px {
 	height: 98% !important;
 }
+
+
 
 /*mobile UI changes starts */
 
@@ -1645,14 +1649,53 @@ body.block-ui::after {
 		width: 100% !important;
 	}
 
+	.grid-stack-item-content div:nth-child(2):has(.input-group-text) {
+		display: flex;
+	}
+
+		.grid-stack-item-content div:nth-child(2):has(.input-group-text) span.input-group-text {
+			border-radius: 0 6px 6px 0;
+			border-left: 0 !important;
+			padding-block: 8px;
+			background: #f2f5f8;
+		}
+
+	.grid-stack-item-content textarea {
+		background: #f2f5f8;
+	}
+
+	.grid-stack-item-content div:nth-child(2):has(.input-group-text) input {
+		border-right: 0 !important;
+	}
+
+	.grid-stack-item-content select.form-control {
+		line-height: 16px;
+		height: 32px !important;
+		background-color: #f2f5f9 !important;
+		border-color: #e4e8ef !important;
+	}
+
+	.dvdcframe .grid-stack-item-content .dropzone.dropzone-queue {
+		padding: 0 !important;
+	}
+
+	.grid-stack-item-content .dropzone-panel a span.material-icons.material-icons-style.material-icons-2.float-start.mx-2-- {
+		margin-top: 7px;
+	}
+
+	.grid-stack-item-content .dropzone-panel {
+		background-color: #f2f5f9;
+		height: 32px;
+		line-height: 32px;
+	}
+
 	.input-group:has(.input-group-text) .form-control {
 		border-radius: 6px 0 0px 6px !important;
 		border-right: 0 !important;
-		width: 88%;
 	}
 
-	.input-group > .form-control, .input-group > .form-select {
-		width: 100%;
+	.input-group > .form-control:not(textarea), .input-group > .form-select {
+		/*		width: 100%;*/
 		border: 1px solid var(--border) !important;
 		background: var(--surface-sunk) !important;
 		border-radius: var(--radius-sm) !important;
@@ -1689,7 +1732,6 @@ body.block-ui::after {
 	}
 
 	.input-group > .form-control.flatpickr-input {
-		width: 88%;
 		background: #f1f5f9 !important;
 		border-right: 0 !important;
 	}
@@ -1714,55 +1756,6 @@ body.block-ui::after {
 		background: #f1f5f9 !important;
 	}
 
-
-	/*   Grid table mobile resolution*/
-
-	.griddivColumn .customSetupTableMN.gridHeader thead {
-		display: none;
-	}
-
-	.griddivColumn .customSetupTableMN.gridHeader tr {
-		display: block;
-		margin-bottom: 15px;
-		border: 1px solid #ddd;
-		padding: 10px;
-	}
-
-	.griddivColumn .customSetupTableMN.gridHeader td {
-		display: flex;
-		justify-content: space-between;
-		padding: 8px;
-		border: none;
-		border-bottom: 1px solid #eee;
-		flex-direction: column;
-		margin-block: 7px !important;
-	}
-
-		.griddivColumn .customSetupTableMN.gridHeader td::before {
-			content: attr(data-title);
-			font-weight: bold;
-			color: #555;
-		}
-
-		.griddivColumn .customSetupTableMN.gridHeader td input.form-control, .griddivColumn .customSetupTableMN.gridHeader td .form-select {
-			width: 100%;
-			border: 1px solid var(--border) !important;
-			background: var(--surface-sunk) !important;
-			border-radius: var(--radius-sm) !important;
-			padding: 10px 11px;
-			font-size: 14px;
-			color: var(--text);
-			font-family: inherit;
-			outline: none;
-			-webkit-appearance: none;
-			appearance: none;
-			transition: all 0.2s ease;
-			height: 32px !important;
-		}
-
-	.edit-mode-content.input-group-sm {
-		width: 100% !important;
-	}
 
 	/*    tab grid*/
 
@@ -1812,7 +1805,6 @@ body.block-ui::after {
 	}
 
 	.tab-content.mainIframe .input-group:has(.input-group-text) .form-control {
-		width: 85% !important;
 	}
 
 	.tab-content.mainIframe .grid-stack-item {
@@ -1860,14 +1852,13 @@ body.block-ui::after {
 	.btn-group-sm > .btn:not(.btn-outline):not(.btn-dashed):not(.border-hover):not(.border-active):not(.btn-flush):not(.btn-icon), .btn:not(.btn-outline):not(.btn-dashed):not(.border-hover):not(.border-active):not(.btn-flush):not(.btn-icon).btn-sm {
 		padding: calc(0.55rem + 1px) calc(4.3rem + 1px);
 	}
-
-	.BottomToolbarBar a .material-icons.material-icons-2x.mx-auto.material-icons-style.material-icons-2 {
-		margin-right: 5px !important;
-	}
-
+	/*
+.BottomToolbarBar a .material-icons.material-icons-2x.mx-auto.material-icons-style.material-icons-2 {margin-right: 5px !important;}
+.BottomToolbarBar a .material-icons.material-icons-2x.mx-auto.material-icons-style.material-icons-2 {	margin-left: 25% !important;}
+*/
 	.BottomToolbarBar a.btn {
 		font-size: 13px !important;
-		flex-direction: row !important;
+		/*	flex-direction: row !important;*/
 	}
 	/*    toolbar icon*/
 	.toolbar .btn {
@@ -1903,7 +1894,6 @@ body.block-ui::after {
 
 	.tab-content.mainIframe button[id^="gridRemoveBtnAdd"] {
 		padding: 5px 16px !important;
-		/* margin-top: 2px; */
 		background: #f9dad7;
 		color: red;
 		border: 1px solid red !important;
@@ -1920,13 +1910,7 @@ body.block-ui::after {
 		border-color: red !important;
 	}
 
-	.BottomToolbarBar a .material-icons.material-icons-2x.mx-auto.material-icons-style.material-icons-2 {
-		margin-left: 25% !important;
-	}
 
-	.tstructMainBottomFooter .d-flex.flex-md-row {
-		width: 100% !important;
-	}
 
 	.BottomToolbarBar {
 		width: 100%;
@@ -1944,18 +1928,18 @@ body.block-ui::after {
 		right: 9px !important;
 	}
 
-	.tab-content.mainIframe .removeformGridbutton button {
+	.tab-content.mainIframe .removeformGridbutton button[id^=gridRemoveBtnAdd] {
 		padding: 0 !important;
 		width: 28px;
 		height: 28px;
 		font-size: 0;
 	}
 
-		.tab-content.mainIframe .removeformGridbutton button:before {
-			content: "\f2ed";
-			font-family: "Font Awesome 6 Free";
-			font-weight: 900;
-			font-size: 13px;
+		.tab-content.mainIframe .removeformGridbutton button[id^=gridRemoveBtnAdd]:before {
+			content: "\e92e";
+			font-family: "Material Icons Outlined";
+			font-weight: 500;
+			font-size: 18px;
 		}
 
 	.d-flex.align-items-center.flex-nowrap.text-nowrap.mb-1.newgridbtn.gridIconBtns.ms-auto {
@@ -1963,15 +1947,20 @@ body.block-ui::after {
 	}
 	/*    delete btn changes*/
 
+
+	/*  Tkt-1072-point 2 --  after delete rows showing fields*/
+
 	.row.hide .grid-stack.grid-stack-one-column-mode > .grid-stack-item {
 		position: absolute !important;
 		padding: 0 !important;
 	}
 
 	.tab-content.mainIframe .input-group:has(.input-group-text) .form-control, .tab-content.mainIframe .grid-stack-item-content:has(.input-group-text) .form-control {
-		width: 85% !important;
+		/*    width: 85%!important;*/
 		border-radius: 6px 0 0 6px !important;
 	}
+
+	/* kt-1072-point 4---   All Field Grid Test*/
 
 	.tab-content.mainIframe .griddivColumn .customSetupTableMN.gridHeader {
 		width: 100% !important;
@@ -1993,7 +1982,7 @@ body.block-ui::after {
 		}
 
 	.edit-mode-content select.form-control {
-		background: #f2f5f9;
+		background: #f2f5f9 !important;
 		height: 32px;
 		border-color: #e4e8ef !important;
 	}
@@ -2008,10 +1997,87 @@ body.block-ui::after {
 		background: #f2f5f9 !important;
 		border-color: #e4e8ef !important;
 	}
+	/*  TKT- 1432-  grid dc table fix*/
+	.edit-mode-content.input-group-sm {
+		min-width: max-content;
+	}
 
-	.inline-edit td:first-child, .inline-edit td:nth-child(2), tr[id^="sp2R00"] td:first-child,
-	tr[id^="sp2R00"] td:nth-child(2) {
-		display: inline-block !important;
+	.customSetupTableMN.gridHeader td div.edit-mode-content.input-group-sm textarea {
+		padding-top: 0 !important;
+		min-width: 200px !important;
+		width: max-content !important;
+		height: 32px !important;
+		background: #f2f5f8;
+	}
+
+	.form-control:focus, .input-group > .form-control.flatpickr-input:focus, .edit-mode-content.input-group-sm select.form-control:focus,
+	.input-group > .form-control.flatpickr-input.active, .input-group > .form-control.flatpickr-input:focus + span.input-group-text {
+		color: #181c32;
+		background-color: #fff;
+		border: 1px solid #317f71 !important;
+		outline: 0;
+		box-shadow: 1px 1px 5px #88c55b !important;
+	}
+
+	.form-control:focus, .input-group > .form-control:focus, .input-group > .form-select:focus {
+		color: #181c32;
+		background-color: #fff;
+		border: 1px solid #317f71 !important;
+		outline: 0;
+		box-shadow: 1px 1px 5px #88c55b !important;
+	}
+
+	/*  TKT- 1419 -Buttons are overlapping with the field name for Table Field */
+	#divTable #fldTable {
+		margin: 40px 0 0 !important;
+	}
+
+	/* TKT - 1477--   when we concentrate on field ,purpose is overlapping submit button*/
+	/*.tstructMainBottomFooter .dvdisplaydetails {
+		position: fixed !important;*/
+		/* top: 60px; */
+		/* right: 20px; */
+		/*padding: 5px 15px;
+		font-weight: 700;
+		z-index: 999999 !important;
+		left: auto !important;
+		position: inherit !important;
+		display: flex;
+		align-items: center;
+		margin-right: 2px;
+	}*/
+	.tstructMainBottomFooter .dvdisplaydetails {
+		position: fixed !important;
+		left: 12px !important;
+		right: auto !important;
+		top: auto !important;
+		bottom: 70px !important;
+		z-index: 9999999 !important;
+		width: max-content;
+		max-width: calc(100vw - 24px) !important;
+		box-sizing: border-box;
+		white-space: normal;
+		overflow-wrap: anywhere;
+	}
+
+	.dvdisplaydetails:has(#lblddfooter:empty) {
+		padding: 0 !important;
+	}
+
+
+	.text-dark.BottomToolbarBar.d-flex .btn.btn-light-primary {
+		color: #fff !important;
+	}
+
+	/*TKT -1475*/
+	.grid-stack-item-content .form-control.grdattch.dz-clickable {
+		background: #f2f5f8;
+	}
+
+	.grid-stack-item-content .imageFileUpload {
+		background: #f2f5f8;
+		border: 1px solid #e8e7e7;
+		border-radius: 4px;
 	}
 }
 

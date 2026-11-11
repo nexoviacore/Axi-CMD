@@ -2487,7 +2487,16 @@ function LoadEvents(dvId) {
                 var fName = GetFieldsName(fldId);
                 var fldIndex = $j.inArray(fName, FNames);
                 if (fldIndex != undefined && fldIndex > -1) {
-                    if (typeof FldMaskType != "undefined" || typeof ScriptMaskFields != "undefined") {
+                    // Permission level mask has priority; structure level mask is checked only when absent
+                    const isPermMasked = IsPermissionMaskedField(fName);
+                    if (isPermMasked) {
+                        let permFldValue = GetFieldValue(fldId);
+                        if (permFldValue != "" && permFldValue != '0.00' && permFldValue != '0') {
+                            $j(this).val(permFldValue);
+                            $j(this).attr("value", permFldValue);
+                        }
+                    }
+                    if (!isPermMasked && (typeof FldMaskType != "undefined" || typeof ScriptMaskFields != "undefined")) {
                         let maskType = "";
                         if (ScriptMaskFields.length > 0) {
                             var idx = $j.inArray(fName, ScriptMaskFields);

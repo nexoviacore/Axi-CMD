@@ -1,0 +1,87 @@
+---
+title: Data loading
+description: How lists are fetched, paged, searched and cached.
+---
+
+Everything the palette lists comes from an Axpert Data Source (ADS) through one function, `getList`, in `axicmdmain.js`.
+
+## `getList`
+
+```js
+getList(axDatasourceName, paramValuesCsv, searchTerm, pageNo, pageSize, signal)
+```
+
+- `paramValuesCsv` is the parameter string with the values joined by `$#$`. It is split into `param1` to `paramN` and sent as `sqlParams`.
+- `searchTerm` is trimmed and lower-cased. From 3 characters it becomes a server-side filter.
+- `signal` aborts the request when a newer search starts.
+
+The request has this shape:
+
+```json
+{
+  "action": "view",
+  "adsNames": ["axi_getstructsdata"],
+  "sqlParams": { "param1": "view", "param2": "admin", "param4": "cityf" },
+  "props": {
+    "ADS": true,
+    "pageno": 1,
+    "pagesize": 100,
+    "filters": [
+      { "fldname": "displaydata", "condition": "CONTAINS", "value": "abc", "datatype": "TEXT" }
+    ]
+  }
+}
+```
+
+## Paging and search
+
+Sources listed in `PAGED_SOURCES` are paged and searched by the AxList API:
+
+```js
+const PAGED_SOURCES = ["axi_getstructsdata", "axi_structmetalist", "axi_viewlist"];
+```
+
+- `pageno` and `pagesize` go in `props`. The page size is a per-user setting (the gear button next to Refresh), default 100.
+- The typed term (3 or more characters) is sent as a `displaydata CONTAINS` filter.
+- AxList applies both only where the ADS SQL contains its marker comments, each as the last thing on its line:
+  - `--ax_ui_filter_withwhere` for the typed filter
+  - `--ax_pagination` for `LIMIT` / `OFFSET`
+
+  Without the markers every row comes back.
+- The SQL functions carry no paging parameters. Never rename an existing SQL function, and do not add paging inside the SQL as well, or the page is paged twice.
+
+<Callout type="warn" title="Postgres parameters are strings">
+  In a Postgres ADS row the engine binds every parameter as `varchar`. Cast integers explicitly, for example
+  `cast(nullif(cast(:param12 as varchar),'') as integer)`, and avoid `::`, because the `:name` parser trips on it.
+  Quotes inside the stored SQL text are doubled.
+</Callout>
+
+While a term is typed, the filter also applies to the field rows (`isfield = 't'`) of `axi_getstructsdata`, so only fields whose text contains the term come back.
+
+## The structure list is paged
+
+`axi_structmetalist` returns only a first page. Code that looks up a form or report must use `findStructRow(...)` and fall back to `requestStructSearch(...)`. Do not assume the whole list is loaded. Rows merged in from a search carry `__fromSearch` and are hidden from the plain list.
+
+## The direct AxList route
+
+`getAxListAsync` calls `callArmAxListDirect`, which posts to `{armUrl}/AxList/api/v1/AxList`:
+
+- The ARM session id and bearer token come from the session global variables `ARM_SessionId` and `ARM_Token`, read through `aspx/axinterface.aspx/GetGlobalVar` by `getArmAuth`. The pair is cached and read again once after a 401 or 400.
+- A response saying the session is not valid sends the whole application to `aspx/sess.aspx`.
+- After a network or CORS failure the direct route rests for 5 minutes.
+- The older fallback through `AxPEG.aspx` (`GetDataFromAxList`) is switched off on purpose and kept as commented-out code. When the direct route fails the caller gets an empty list and, at most every 30 seconds, a toast.
+
+## Cache layers
+
+| Layer | Where | Lifetime |
+| --- | --- | --- |
+| In memory | `axDatasourceObj`, keyed `"<source>_<params>"` in lower case. Search results use `<key>_q_<term>`. | The page session, until Refresh or a record save. |
+| Browser | `localStorage`, key `axi_<ads>_<params>_v2`, value `{ t, d }`. Size-capped. | 30 minutes (`LS_TTL_MS`). Search results of paged sources are not stored. |
+| Server | The ADS cache of the Axpert server. | `6 Hr`. |
+
+<Callout type="warn" title="After changing an ADS row or a SQL function">
+  Recycle the app pool or clear the ADS cache, otherwise the old query keeps running. To clear the browser layer, see
+  [Operations](/docs/operations).
+</Callout>
+
+The cache key includes every parameter, so changing a parameter (for example the session variables of a view filter) gives a new key. The suffix `_ent` marks the record lists of `view` and `edit` of a form, and keeps them apart from older unfiltered entries.

@@ -90,7 +90,7 @@
     <script src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js?v=2" type="text/javascript"></script>
     <script src="../Js/alerts.min.js?v=33" type="text/javascript"></script>
     
-    <script src="../Js/helper.min.js?v=178" type="text/javascript"></script>
+    <script src="../Js/helper.min.js?v=180" type="text/javascript"></script>
     <script src="../Js/ExportImport.min.js?v=34" type="text/javascript"></script>
     <script src="../Js/multiselect.min.js" type="text/javascript"></script>
     

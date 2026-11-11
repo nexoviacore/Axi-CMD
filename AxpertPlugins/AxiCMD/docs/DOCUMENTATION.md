@@ -209,6 +209,20 @@ Axi evaluates the command using **Target-First** syntax parser rules, allowing t
 *   **Description:** Fetches and displays the current plugin release version from the local version file.
 *   **Example:** `Version`
 
+### 10. `Install <product|plugin|changerequest> <directory> [version]`
+*   **Description:** Queues the installation of a product, plugin or change request from the configured Git repository. Typing the command offers the directories of the repository, then (when the directory has versions) its versions, `Latest` first. A directory name with spaces is inserted in double quotes (`"My Dir"`). Go closes the palette and opens a progress dialog with three steps: checking repository (a fresh directory listing, and the directory / version checked again), queuing install request, installation request queued. On success the dialog says the installation request is queued (a notification follows when it finishes) and shows the directory (under the type name: Product, Plugin or Change Request), version and repository and closes by itself after about 6 seconds (paused while hovered or focused). On a failure the failing step is marked, the API message is shown, and Retry repeats the queue call.
+*   **Examples:** `Install Product "My Dir" Latest`, `Install Plugin Tools` (a directory without versions takes no version, and is sent as `Latest`).
+*   **Prerequisites:**
+    *   The repository must be set first with `Configure <Product|Plugin|ChangeRequest> <account> <repo>`. Without it the palette shows "Run configure <type> <account> <repo> first" and no directories. `Configure` checks the repository with `listdirectories` before saving: an account or repo GitHub does not know (404) or a refused input (400) is not saved and the palette reopens with the command; when GitHub cannot be asked (502, 500, timeout, no ARM URL) it saves and shows a warning.
+    *   The user needs build access (`Build`). Install is not offered to other users, and a hand-typed command is refused with a message.
+*   **Rules:** when the AxiGitAPI listing has versions for the chosen directory, one of them is required (Go is offered only after it is chosen); a directory without versions accepts none and is sent as `Latest`; extra words are refused.
+*   **Endpoints used (all under the ARM URL, no auth headers):**
+    *   `GET /AxiCMDApi/api/v1/CommandSettings?appname=<app>&category=axicmd&type=<product|plugin|changerequest>` reads the saved account and repo.
+    *   `POST /AxiGitAPI/api/git/listdirectories` with `{account, repo, managerType}` returns `{commitSha, directories: [{name, versions}]}`. Errors are ProblemDetails; the `detail` (else `title`) is shown. A 404 (repository or main branch not found, or not visible to the GitHub token) also says `Run configure <type> <account> <repo> to change it.`
+    *   `POST /ARM_APIs/api/v1/ARMPushToQueue` with `{queuename, queuedata, queuejson, trace}`; the queue is `axiinstallpackagesqueue` (the one AxiInstallConsumerPackage listens on). The request counts as queued when the response is OK and contains `QUEUEDATAINSERTEDSUCESSFULLY` or is ARM's wrapped answer `{"result":{"success":true}}`. The payload is `{action: "install", requestId, type, account, repo, managerType, packageName, packageVersion, commitSha, appName, requestedBy, requestedOn}`; the consumer reads `appName`, `packageName`, `packageVersion`, `requestedBy` and `requestId`.
+*   **Caching:** the directory listing is kept in memory and in `localStorage` under `axi_install_dirs_<type>_<account>_<repo>_v1` (JSON `{t, d}`, 30 minute TTL). The palette Refresh button and a successful `Configure <type>` save clear it.
+*   **Setup:** `axi_command_tables.sql` (PostgreSQL and Oracle) adds command token 10 (`Install`) and its three prompt rows, only when absent. The prompt sources `axi_git_directories` and `axi_git_versions` are markers resolved by the palette, not Axpert Data Sources, and `axi_command_config` needs no rows.
+
 ---
 
 ## ⚙️ Installation & Deployment Steps
@@ -261,14 +275,18 @@ Execute the appropriate scripts based on your target database:
     2.  `axi_command_tables.sql`
     3.  `axi_command_config.sql`
     4.  `axi_dependent_tables.sql`
-    5.  `axi_functions.sql`
+    5.  `axi_usersettings.sql`
+    6.  `axi_command_settings.sql`
+    7.  `axi_functions.sql`
 
 *   **Oracle:** Run the scripts inside [Structures/Oracle/Scripts/](../Structures/Oracle/Scripts/):
     1.  `axi_axdirectsql_tables.sql`
     2.  `axi_command_tables.sql`
     3.  `axi_command_config.sql`
     4.  `axi_dependent_tables.sql`
-    5.  `axi_functions.sql`
+    5.  `axi_usersettings.sql`
+    6.  `axi_command_settings.sql`
+    7.  `axi_functions.sql`
 
 > [!NOTE]
 > The Oracle `axi_functions.sql` script drops functions before the types they use (for example `fn_axi_getstructures_meta` before `AXI_GETSTRUCTURES_META_tbl`), so it can be re-run safely. If a re-run still fails with `ORA-02303: cannot drop or replace a type with type or table dependents`, find what depends on the type with `SELECT name, type, referenced_name FROM user_dependencies WHERE referenced_name IN (...)`, drop those objects first, and run the script again.

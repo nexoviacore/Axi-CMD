@@ -334,6 +334,8 @@ public class Constants
     //public const string SQL_GET_AXUSERLANG = "SELECT b.axlang, b.pwdauth, b.otpauth, b.email, b.mobile, b.active, b.staysignedin, b.signinexpiry, a.img, a.blobno FROM axusers b LEFT JOIN axusrprofilepic a ON a.recordid = b.axusersid WHERE b.username = '$USERNAME$'";
     public const string SQL_GET_AXUSERLANG = "SELECT b.axlang,b.pwdauth,b.otpauth, b.email, b.mobile,CASE WHEN b.username = 'admin' THEN b.active WHEN (b.authkey IS NULL OR b.authkey = '') AND (b.userkey IS NULL OR b.userkey = '') THEN CASE WHEN b.active = 'T' THEN 'ET' ELSE 'F' END ELSE b.active END AS active,b.staysignedin,b.signinexpiry,a.img,a.blobno FROM axusers b LEFT JOIN axusrprofilepic a ON a.recordid = b.axusersid WHERE b.username = '$USERNAME$'";
 
+    public const string SQL_GET_AXUSERLIC = "SELECT licactivation FROM axusers where username = '$USERNAME$'";
+
     public const string IMP_GETTEMPLATES = "SELECT AXPDEF_IMPDATA_TEMPLATESID,TEMPLATENAME, TEMPLATECAP, IMPFIELDS, DATAUPD, FLDPKEY FROM AXPDEF_IMPDATA_TEMPLATES WHERE STRANSID = '$STRANSID$'";
     public const string IMP_DELTEMPLATES = "DELETE FROM AXPDEF_IMPDATA_TEMPLATES WHERE STRANSID = '$STRANSID$' AND TEMPLATENAME = '$TEMPLATENAME$'";
     public const string AXNOTIFYHISTORY = "AxNotifyHistory";

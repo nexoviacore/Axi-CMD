@@ -298,6 +298,9 @@ class Entity {
         var fldcap = fldProps.fldcap ? fldProps.fldcap?.replaceAll("*", "") : '';
         var fProps = fldProps.props;
         var fldValue = rowData[fldkey.toLowerCase()];
+        var displayValue = fldtype.toUpperCase() === "CURRENCY"
+            ? formatNumberBasedOnMillions(fldValue, fldProps)
+            : fldValue;
 
         // Skip "Modified On" and "Modified By" fields
         if (fldkey.toLowerCase() === 'modifiedon' || fldkey.toLowerCase() === 'username' || fldkey.toLowerCase() === 'createdby' || fldkey.toLowerCase() === 'createdon' || fldkey.toLowerCase() === 'cancel' || fldkey.toLowerCase() === 'cancelremarks') {
@@ -315,7 +318,7 @@ class Entity {
             html = `<div class="Data-fields-items" ${tooltipAttr}>
                         <div class="caption-style">
                             <span class="txt-bold Data-field-caption">${fldcap ?? ""}</span>
-                            <span class="txt-bold Data-field-value">${fldValue}</span>
+                            <span class="txt-bold Data-field-value">${displayValue}</span>
                         </div>
                     </div>`;
         }
@@ -334,7 +337,7 @@ class Entity {
                 break;
             case 'CURRENCY':
                 html = html || `<div class="Data-fields-items Department-field" ${tooltipAttr} data-name="${fldcap?.toLowerCase().replaceAll("*", "").replaceAll(" ", "") ?? ""}">
-                            <span class="material-icons material-icons-style material-icons-2">payments</span><span class="txt-bold Data-field-value">${fldValue}</span>
+                            <span class="material-icons material-icons-style material-icons-2">payments</span><span class="txt-bold Data-field-value">${displayValue}</span>
                         </div>`;
                 break;
             case 'DATE':
@@ -1677,7 +1680,7 @@ class Entity {
 
 
     openNewTstruct() {
-        _entityCommon.loadHyperLink(`../aspx/tstruct.aspx?transid=${this.entityTransId}&dummyload=false`)
+        _entityCommon.loadHyperLink(`../aspx/tstruct.aspx?transid=${this.entityTransId}&isDupTab=${callParentNew('isDuplicateTab')}&dummyload=false`)
         return true;
     }
 
@@ -1691,7 +1694,7 @@ class Entity {
         else
             pageType = "middle";
 
-        var url = `../aspx/tstruct.aspx?transid=${this.entityTransId}&recordid=${recordId}&hltype=load&torecid=false&recPos=${rowNo}&curPage=1&pageType=${pageType}&openerIV=${this.entityTransId}&isIV=false&isDupTab=false&dummyload=false`;
+        var url = `../aspx/tstruct.aspx?transid=${this.entityTransId}&recordid=${recordId}&hltype=load&torecid=false&recPos=${rowNo}&curPage=1&pageType=${pageType}&openerIV=${this.entityTransId}&isIV=false&isDupTab=${callParentNew('isDuplicateTab')}&dummyload=false`;
         _entityCommon.loadHyperLink(url);
         return true;
 
@@ -3351,9 +3354,66 @@ function formatFieldName(field) {
         .replace(/^ /, '');
 }
 
+function getEntityUserRoles() {
+    const roles = callParentNew("AxUserRoles");
+    return (Array.isArray(roles) ? roles : String(roles || "").split(","))
+        .map(role => String(role).trim().toLowerCase())
+        .filter(Boolean);
+}
+
+function hasMatchingStructureMaskRole(field, userRoles = getEntityUserRoles()) {
+    if (!field || !field.maskchar || !field.masking || !field.maskroles)
+        return false;
+
+    const maskRoles = String(field.maskroles).split(",")
+        .map(role => role.trim().toLowerCase())
+        .filter(Boolean);
+    return maskRoles.some(role => userRoles.includes(role));
+}
+
+// Permission-level mask uses a special character (e.g. "^") and produces one of these shapes:
+// 9&  / 999& -> visible leading chars, rest "^"
+// &9         -> "^" chars, visible trailing char(s)
+// &          -> all "^"
+function isPermissionLevelMasked(value) {
+    const text = String(value);
+    // mask char = one repeated special (non letter/digit/space) character, e.g. ^ * # X-free
+    return /^([^\p{L}\p{N}\s])\1*$/u.test(text)
+        || /^[\p{L}\p{N}]+([^\p{L}\p{N}\s])\1*$/u.test(text)
+        || /^([^\p{L}\p{N}\s])\1*[\p{L}\p{N}]+$/u.test(text);
+}
+
+function applyEntityStructureMask(value, field, userRoles) {
+    if (value === null || typeof value === "undefined" || value === "" || !hasMatchingStructureMaskRole(field, userRoles))
+        return value;
+
+    // permission-level mask already applied, so skip structure-level mask
+    if (isPermissionLevelMasked(value))
+        return value;
+
+    const characters = [...String(value)];
+    const maskChar = String(field.maskchar);
+
+    if (field.masking === "Mask all characters")
+        return maskChar.repeat(characters.length);
+
+    if (field.masking === "Show few characters") {
+        // firstcharmask / lastcharmask = number of characters to mask at the start / end
+        const firstMasked = Math.min(characters.length, Math.max(0, parseInt(field.firstcharmask, 10) || 0));
+        const lastMasked = Math.min(characters.length, Math.max(0, parseInt(field.lastcharmask, 10) || 0));
+
+        return characters.map((character, index) =>
+            index < firstMasked || index >= characters.length - lastMasked ? maskChar : character
+        ).join("");
+    }
+
+    return value;
+}
+
 function createTableViewHTML(listJson, _pageNo) {
     let tableBodyContainer = $('#table-body_Container');
     let tableExists = tableBodyContainer.find('table').length > 0;
+    const userRoles = getEntityUserRoles();
     let keyCol = _entity.keyField || '';
     let html = '';
     let excludedFields = new Set(['transid', 'ftransid']);
@@ -3451,6 +3511,17 @@ function createTableViewHTML(listJson, _pageNo) {
             html += `<td><a href="#" onclick="_entity.openEntityForm('${entityName}','${transId}', '${recordId}', '', ${rowNo})">--</a></td>`;
         }
 
+        // Structure-level masking for the key column (display text only)
+        if (fieldsWithData.has(keyCol.toLowerCase())) {
+            const keyMaskMeta = _entity.metaData.find(x => x.fldname.toLowerCase() == keyCol.toLowerCase());
+            const rawKeyValue = rowData[keyCol.toLowerCase()]?.toString() ?? "";
+            if (hasMatchingStructureMaskRole(keyMaskMeta, userRoles) && rawKeyValue !== "") {
+                const maskedKeyValue = applyEntityStructureMask(rawKeyValue, keyMaskMeta, userRoles);
+                html = html.substring(0, html.lastIndexOf("<td>")) +
+                    `<td><a href="#" onclick="_entity.openEntityForm('${entityName}','${transId}', '${recordId}', '${rawKeyValue.replace(/\\/g, "\\\\")}', ${rowNo})">${maskedKeyValue.replace(/\\/g, "\\\\")}</a></td>`;
+            }
+        }
+
         filteredMetaData.forEach(field => {
             if (field.fldname.toLowerCase() !== keyCol.toLowerCase() && fieldsWithData.has(field.fldname.toLowerCase()) && !excludedFields.has(field.fldname) && (!hideTransid || field.fldname.toLowerCase() !== 'transid')) {
 
@@ -3468,10 +3539,15 @@ function createTableViewHTML(listJson, _pageNo) {
                     cellContent = formatDateString(fieldValue);
 
                 } else if (field.cdatatype === 'Currency' || field.fdatatype === 'Currency') {
-                    cellContent = formatNumberBasedOnMillions(fieldValue);
+                    cellContent = formatNumberBasedOnMillions(fieldValue, field);
 
                 } else {
                     cellContent = `${fieldValue || ''}`;
+                }
+
+                // Structure-level masking based on metadata and logged-in user roles
+                if (fieldValue !== null && typeof fieldValue !== "undefined" && fieldValue !== "" && hasMatchingStructureMaskRole(field, userRoles)) {
+                    cellContent = applyEntityStructureMask(fieldValue, field, userRoles);
                 }
 
                 html += `<td>${cellContent}</td>`;
@@ -4080,109 +4156,140 @@ function toggleRightPanelUI(action) {
 function showRightPanel() {
 }
 
-function formatNumberBasedOnMillions(amount) {
-    let isMillions = ((Object.values(window.top.allGloblVars.globalVars)
+function formatNumberBasedOnMillions(amount, fieldMeta) {
+    return formatCurrencyAmount(amount, fieldMeta, shouldUseMillionGrouping());
+}
+
+function shouldUseMillionGrouping() {
+    return ((Object.values(window.top.allGloblVars.globalVars)
         .map((gv) => gv)
         .filter((gv) => gv["millions"])).length !== 0 &&
         (Object.values(window.top.allGloblVars.globalVars)
             .map((gv) => gv)
             .filter((gv) => gv["millions"])[0].millions === "T")) || false;
-
-    if (isMillions) {
-        return InsertCommas(amount);
-    } else {
-        return formatIndianNumber(amount);
-    }
 }
 
-function InsertCommas(amount) {
-    var i = parseFloat(amount);
-    if (isNaN(i)) { i = 0.00; }
-    var minus = '';
-    if (i < 0) { minus = '-'; }
-    i = Math.abs(i);
-    i = parseInt((i + .005) * 100);
-    i = i / 100;
-    s = new String(i);
-    if (s.indexOf('.') < 0) { s += '.00'; }
-    if (s.indexOf('.') === (s.length - 2)) { s += '0'; }
-    s = minus + s;
-    var formattedamt = CommaFormatted(s);
-    return formattedamt;
+function formatCurrencyAmount(amount, fieldMeta, useMillionGrouping) {
+    const normalized = normalizeCurrencyValue(amount);
+    if (!normalized) return '';
+
+    const decimalPlaces = resolveCurrencyDecimalPlaces(fieldMeta, normalized.fractionPart);
+    let { integerPart, fractionPart, isNegative, numericValue } = normalized;
+
+    if (decimalPlaces !== fractionPart.length) {
+        const fixedValue = numericValue.toFixed(decimalPlaces);
+        const [fixedIntegerPart, fixedFractionPart = ""] = fixedValue.split(".");
+        integerPart = fixedIntegerPart.replace("-", "");
+        fractionPart = fixedFractionPart;
+        isNegative = fixedValue.startsWith("-");
+    }
+
+    const groupedInteger = useMillionGrouping
+        ? groupByThousands(integerPart)
+        : groupByIndianDigits(integerPart);
+
+    return `${isNegative ? "-" : ""}${groupedInteger}${fractionPart ? `.${fractionPart}` : ""}`;
+}
+
+function normalizeCurrencyValue(amount) {
+    if (amount === null || typeof amount === "undefined") return null;
+
+    const rawValue = amount.toString().trim().replace(/,/g, "");
+    if (rawValue === "" || !/^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(rawValue)) return null;
+
+    const isNegative = rawValue.startsWith("-");
+    const unsignedValue = rawValue.replace(/^[+-]/, "");
+    const [integerDigits = "0", fractionDigits = ""] = unsignedValue.split(".");
+    const integerPart = integerDigits.replace(/^0+(?=\d)/, "") || "0";
+    const numericValue = Number(`${isNegative ? "-" : ""}${integerPart}${fractionDigits ? `.${fractionDigits}` : ""}`);
+
+    if (!Number.isFinite(numericValue)) return null;
+
+    return {
+        integerPart,
+        fractionPart: fractionDigits,
+        isNegative,
+        numericValue
+    };
+}
+
+function resolveCurrencyDecimalPlaces(fieldMeta, fractionPart) {
+    const explicitDecimalPlaces = extractCurrencyDecimalPlaces(fieldMeta);
+    if (explicitDecimalPlaces !== null) {
+        return explicitDecimalPlaces;
+    }
+
+    return fractionPart.length;
+}
+
+function extractCurrencyDecimalPlaces(fieldMeta) {
+    if (!fieldMeta) return null;
+
+    const metadataKeys = [
+        "decimal",
+        "decimals",
+        "decimalplaces",
+        "decimaldigits",
+        "noofdecimals",
+        "numdecimals",
+        "fdecimal",
+        "flddecimal"
+    ];
+
+    for (const key of metadataKeys) {
+        const parsedValue = parseDecimalCount(fieldMeta[key]);
+        if (parsedValue !== null) {
+            return parsedValue;
+        }
+    }
+
+    return extractDecimalPlacesFromProps(fieldMeta.props);
+}
+
+function parseDecimalCount(value) {
+    if (value === null || typeof value === "undefined" || value === "") return null;
+
+    const parsedValue = parseInt(value, 10);
+    return Number.isFinite(parsedValue) && parsedValue >= 0 ? parsedValue : null;
+}
+
+function extractDecimalPlacesFromProps(props) {
+    if (!props) return null;
+
+    const propString = typeof props === "string" ? props : JSON.stringify(props);
+    const decimalMatch = propString.match(/(?:decimalplaces|decimals|decimaldigits|noofdecimals|numdecimals|fdecimal|flddecimal)[=:\s~"]+(\d+)/i);
+
+    return decimalMatch ? parseDecimalCount(decimalMatch[1]) : null;
+}
+
+function InsertCommas(amount, fieldMeta) {
+    return formatCurrencyAmount(amount, fieldMeta, true);
 }
 
 function CommaFormatted(amount) {
-    var delimiter = ",";
-    var a = "";
-    if (amount.toString().indexOf(".") === -1)
-        amount = amount + ".";
+    const normalized = normalizeCurrencyValue(amount);
+    if (!normalized) return '';
 
-    a = amount.split('.');
-    var d = "";
-    if (a.length > 1)
-        d = a[1].toString();
-    var i = parseInt(a[0]);
-    if (isNaN(i)) { return ''; }
-    var minus = '';
-    if (amount < 0) { minus = '-'; }
-    i = Math.abs(i);
-    var n = new String(i);
-    var a = [];
-    try {
-        if (Parameters.length > 0 && Parameters.indexOf("millions~T") > -1) {
-            while (n.length > 3) {
-                var nn = n.substr(n.length - 3);
-                a.unshift(nn);
-                n = n.substr(0, n.length - 3);
-            }
-        } else {
-            if (n.length > 3) {
-                var nn = n.substr(n.length - 3);
-                a.unshift(nn);
-                n = n.substr(0, n.length - 3);
-            }
-            while (n.length > 2) {
-                var nn = n.substr(n.length - 2);
-                a.unshift(nn);
-                n = n.substr(0, n.length - 2);
-            }
-        }
-    } catch (ex) {
-        while (n.length > 3) {
-            var nn = n.substr(n.length - 3);
-            a.unshift(nn);
-            n = n.substr(0, n.length - 3);
-        }
-    }
-    if (n.length > 0) { a.unshift(n); }
-    n = a.join(delimiter);
-    if (d.length < 1) { amount = n; }
-    else { amount = n + '.' + d; }
-    amount = minus + amount;
-    return amount;
+    const groupedInteger = groupByThousands(normalized.integerPart);
+    return `${normalized.isNegative ? "-" : ""}${groupedInteger}${normalized.fractionPart ? `.${normalized.fractionPart}` : ""}`;
 }
 
-function formatIndianNumber(amount) {
-    if (isNaN(amount)) return '';
+function formatIndianNumber(amount, fieldMeta) {
+    return formatCurrencyAmount(amount, fieldMeta, false);
+}
 
-    let num = Math.abs(parseInt(amount, 10)).toString();
-    let result = '';
+function groupByThousands(integerPart) {
+    return integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
 
-    if (num.length > 3) {
-        result = ',' + num.slice(-3);
-        num = num.slice(0, -3);
+function groupByIndianDigits(integerPart) {
+    if (integerPart.length <= 3) {
+        return integerPart;
     }
 
-    while (num.length > 2) {
-        result = ',' + num.slice(-2) + result;
-        num = num.slice(0, -2);
-    }
-
-    if (num.length > 0) {
-        result = num + result;
-    }
-
-    return (amount < 0 ? '-' : '') + result;
+    const lastThreeDigits = integerPart.slice(-3);
+    const remainingDigits = integerPart.slice(0, -3).replace(/\B(?=(\d{2})+(?!\d))/g, ",");
+    return `${remainingDigits},${lastThreeDigits}`;
 }
 
 function ShowHideDimmer(show) {
@@ -4428,4 +4535,3 @@ class RowsCountHelper {
         _entity.getEntityListData(1);
     }
 }
-

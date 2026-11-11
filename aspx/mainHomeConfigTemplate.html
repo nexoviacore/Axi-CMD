@@ -1264,6 +1264,13 @@ Home Cunfiguration Page Templete
                                               data-bs-toggle="tooltip" data-bs-placement="bottom"
                                               title="Refresh">refresh</span>
                                     </div>
+                                    <!--Settings Button (records to load at a time)-->
+                                    <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm"
+                                         id="axiSettingsBtn" aria-label="AxiCMD Settings">
+                                        <span class="material-icons material-icons-style material-icons-2"
+                                              data-bs-toggle="tooltip" data-bs-placement="bottom"
+                                              title="Settings">settings</span>
+                                    </div>
                                     <!--Notification Button-->
                                     <div class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm tb-btn btn-sm selectbtn d-none"
                                          data-kt-menu-placement="bottom" data-kt-menu-flip="top"
@@ -1484,12 +1491,12 @@ Home Cunfiguration Page Templete
         // files.css.push("/Css/axpertUI.min.css?v=50");
     }
 
-    files.css.push("/Css/LayoutTheme.min.css?v=11");
+    files.css.push("/Css/LayoutTheme.min.css?v=12");
     files.css.push("/Css/AxNotifications.min.css?v=2");
     files.css.push("/Css/HomeConfigPageCards.min.css?v=12");
     files.js.push("/Js/signalr.min.js");
     files.js.push("/Js/axpertUI_homecards.min.js?v=30");
-    files.js.push("/Js/AxNotifications.min.js?v=16");
+    files.js.push("/Js/AxNotifications.min.js?v=17");
     files.js.push("/Js/HomeConfigPageCards.min.js?v=15");
     files.js.push("/Js/Entity-common.min.js?v=18");
 
@@ -1503,6 +1510,7 @@ Home Cunfiguration Page Templete
             $.ajax({
                 url: url,
                 type: "GET",
+                dataType: "text",
                 async: false,
                 cache: false,
                 success: function (data, textStatus, xhr) {

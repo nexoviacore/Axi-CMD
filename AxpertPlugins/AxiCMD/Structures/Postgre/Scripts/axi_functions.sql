@@ -1163,7 +1163,26 @@ v_editctrl varchar;
 v_finalcomps text;
 v_fullcontrol varchar;
 v_fieldlist_sql text;
+v_globalvars_dim varchar;
+v_vars_part text;
+v_view_filter text;
+v_pair text;
+v_varname text;
+v_varvalue text;
+v_repl text;
+v_view_check text;
 begin
+------pglobalvars = <dimension part>[@@VARS@@name=value~~name=value]; the second part carries the session variables
+------used by the form's view filter (axvarcore <transid>_filter, e.g. ':branch'). The dimension part is used as before.
+if position('@@VARS@@' in coalesce(pglobalvars,'')) > 0 then
+ v_globalvars_dim := split_part(pglobalvars,'@@VARS@@',1);
+ v_vars_part := split_part(pglobalvars,'@@VARS@@',2);
+else
+ v_globalvars_dim := pglobalvars;
+ v_vars_part := '';
+end if;
+v_globalvars_dim := case when coalesce(v_globalvars_dim,'') = '' then 'NA' else v_globalvars_dim end;
+
 ------Get flds metadata for keyfield
 select srckey,lower(srctf),lower(srcfld)
 into v_keyfield_normalized,v_keyfield_srctbl,v_keyfield_srcfld
@@ -1180,18 +1199,77 @@ where tstruct = ptransid and lower(fname)= lower(pselectedfield);
 if pdimension = 'T' then
 
  SELECT filtercnd into v_dimension_filter 
- from fn_permissions_getpermission('axi', ptransid, pusername, puserrole, pglobalvars);
+ from fn_permissions_getpermission('axi', ptransid, pusername, puserrole, v_globalvars_dim);
 
  v_dimension_filter := case when length(v_dimension_filter) > 2 then concat(' and ',replace(v_dimension_filter,'{primarytable.}','p.')) end;
 
 end if;
 
------Get included and excluded dcs, fields 
+------Get the form's view filter (record lists of 'view' / 'edit' only; the field rows are not filtered).
+------axvarcore.vpname = '<transid>_filter', vpvalue = e.g. 'and Form11.branch=:branch'. No row = list as it is.
+if lower(pcmd) in ('view','edit') then
+
+ select vpvalue into v_view_filter
+ from axvarcore
+ where lower(vpname) = lower(ptransid || '_filter') and coalesce(cancel,'F') = 'F'
+ limit 1;
+
+ if length(trim(coalesce(v_view_filter,''))) > 0 then
+
+  -- the primary table is aliased 'p' in the queries below
+  v_view_filter := replace(v_view_filter,'{primarytable.}','p.');
+  v_view_filter := regexp_replace(v_view_filter,'(^|[^A-Za-z0-9_])' || regexp_replace(coalesce(pprimarytable,'-'),'[^A-Za-z0-9_]','','g') || '[.]','\1p.','gi');
+
+  -- The same text with every placeholder that has a value removed: what is left in it has no value. Checked on this
+  -- copy so that a ':x' inside a substituted value (for example a user name with a colon) is not taken for one.
+  v_view_check := v_view_filter;
+  v_view_check := regexp_replace(v_view_check,'(^|[^:A-Za-z0-9_]):username(?![A-Za-z0-9_])','\1','gi');
+  v_view_check := regexp_replace(v_view_check,'(^|[^:A-Za-z0-9_]):userrole(?![A-Za-z0-9_])','\1','gi');
+
+  -- :username and :userrole
+  v_repl := replace(replace(quote_literal(coalesce(pusername,'')),'\','\\'),'&','\&');
+  v_view_filter := regexp_replace(v_view_filter,'(^|[^:A-Za-z0-9_]):username(?![A-Za-z0-9_])','\1' || v_repl,'gi');
+  v_repl := replace(replace(quote_literal(coalesce(puserrole,'')),'\','\\'),'&','\&');
+  v_view_filter := regexp_replace(v_view_filter,'(^|[^:A-Za-z0-9_]):userrole(?![A-Za-z0-9_])','\1' || v_repl,'gi');
+
+  -- session variables, e.g. ':branch' (only plain values are accepted)
+  for v_pair in select unnest(string_to_array(v_vars_part,'~~')) loop
+   v_varname := lower(regexp_replace(split_part(v_pair,'=',1),'[^A-Za-z0-9_]','','g'));
+   v_varvalue := regexp_replace(substr(v_pair,position('=' in v_pair)+1),'[^A-Za-z0-9_. -]','','g');
+   if v_varname <> '' and position('=' in v_pair) > 0 then
+    v_repl := replace(replace(quote_literal(v_varvalue),'\','\\'),'&','\&');
+    v_view_filter := regexp_replace(v_view_filter,'(^|[^:A-Za-z0-9_]):' || v_varname || '(?![A-Za-z0-9_])','\1' || v_repl,'gi');
+    v_view_check := regexp_replace(v_view_check,'(^|[^:A-Za-z0-9_]):' || v_varname || '(?![A-Za-z0-9_])','\1','gi');
+   end if;
+  end loop;
+
+  -- a placeholder without a value cannot be resolved. The filter exists to hide records, so it must not be dropped
+  -- (that would list every record): list no records at all until the variable is available.
+  if v_view_check ~ '(^|[^:]):[A-Za-z_]' then
+   raise notice 'fn_axi_getstructs_obj: view filter of % has an unresolved variable, no records listed', ptransid;
+   v_view_filter := ' and 1=0';
+  else
+   v_view_filter := concat(' and (',regexp_replace(trim(v_view_filter),'^and\s+','','i'),')');
+  end if;
+
+ else
+  v_view_filter := null;
+ end if;
+
+ v_dimension_filter := concat(v_dimension_filter,v_view_filter);
+
+end if;
+
+-----Get included and excluded dcs, fields
 if ppermission = 'T' then 
 
- SELECT lower(concat(view_includedc,view_includeflds)),lower(concat(view_excludedc,view_excludeflds)),viewctrl,editctrl,fullcontrol
+ -- old code: the dc list and the field list were joined without a comma ('dc1,dc2' + 'fld1,fld2' = 'dc1,dc2fld1,fld2'),
+ -- so the first included / excluded field never matched
+ -- SELECT lower(concat(view_includedc,view_includeflds)),lower(concat(view_excludedc,view_excludeflds)),viewctrl,editctrl,fullcontrol
+ -- new code: join with a comma (concat_ws skips a null list)
+ SELECT lower(concat_ws(',',view_includedc,view_includeflds)),lower(concat_ws(',',view_excludedc,view_excludeflds)),viewctrl,editctrl,fullcontrol
  into v_includedcomps,v_excludedcomps,v_viewctrl,v_editctrl ,v_fullcontrol
- from fn_permissions_getpermission('axi', ptransid, pusername, puserrole, pglobalvars);
+ from fn_permissions_getpermission('axi', ptransid, pusername, puserrole, v_globalvars_dim);
 
  if v_fullcontrol = 'T' or v_viewctrl = '0' then
   v_fieldlist_sql := format($sql$
@@ -1209,11 +1287,15 @@ if ppermission = 'T' then
          $sql$,
          ptransid);
  elsif coalesce(v_fullcontrol,'F') = 'F' and v_viewctrl = '1' then
+  -- old code: the field list had an extra column "2::numeric ord" (6 columns against 5 in the record list),
+  -- so the union failed and no rows came back for users with an "include fields" permission
+  --                't'::text AS isfield,2::numeric ord ,0 transrecordid
+  -- new code: same 5 columns as the record list
   v_fieldlist_sql := format($sql$
            SELECT (caption || ' (' || fname || ')' || ' [' || 'field' || ']')::text AS displaydata,
                  '0'::text AS id,
                  caption::text AS caption,
-                 't'::text AS isfield,2::numeric ord ,0 transrecordid
+                 't'::text AS isfield,0 transrecordid
             FROM axpflds
             WHERE tstruct = %L
          and dcname='dc1'
@@ -1423,8 +1505,22 @@ end;
 end if;
 
 
+-- new code: no field list means the permission gives this user no view access (e.g. viewctrl '4', or no permission
+-- row): list nothing. Before, the SQL built below had an empty part and failed with a syntax error.
+if pselectedfield='0' and v_fieldlist_sql is null then
+ return;
+end if;
+
 if pselectedfield='0' then
-v_sql := concat(' select * from(',v_keyfield_sql,')a',' union all',v_fieldlist_sql);
+-- old code: records first, field rows last. AxList pages the whole result, so a form with more records than one
+-- page never had its field rows on page 1 (view / edit showed no fields)
+-- v_sql := concat(' select * from(',v_keyfield_sql,')a',' union all',v_fieldlist_sql);
+-- new code: field rows first, then the records (newest first, as before)
+v_sql := concat('select displaydata,id,caption,isfield,transrecordid from (',
+                ' select f.*,1 axi_grp,row_number() over () axi_rn from (',v_fieldlist_sql,') f',
+                ' union all',
+                ' select a.*,2 axi_grp,row_number() over () axi_rn from (',v_keyfield_sql,') a',
+                ') x order by axi_grp,axi_rn');
 else
 v_sql := v_selectedfld_sql;
 end if;

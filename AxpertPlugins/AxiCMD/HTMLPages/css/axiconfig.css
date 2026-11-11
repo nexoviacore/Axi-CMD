@@ -1,0 +1,373 @@
+/* AxiCMD Config page. Runs inside the Axpert shell's middle1 iframe, so it stays plain: one white sheet on a light page.
+   Colour carries meaning: Signal (indigo) only marks what is selected or on (tab bar, Active switch, current page),
+   Ink marks actions (Add option, Save option). The command words Configure / SDK are the one large element.
+   Logical properties (inline-start / inline-end) make the page mirror itself when <html dir="rtl">. */
+:root {
+  --ink: #1d2547;
+  --ink-hover: #2c3766;
+  --slate: #5b6482;
+  --rule: #dde1eb;
+  --field: #c9cedb;
+  --paper: #f4f5f9;
+  --sheet: #ffffff;
+  --head: #f8f9fc;
+  --signal: #3f51c2;
+  --signal-tint: #eceffb;
+  --error: #a3261a;
+  --error-tint: #fcefed;
+  /* Bahnschrift ships with Windows 10+; the page loads no web fonts */
+  --display: Bahnschrift, "DIN Alternate", "Segoe UI", system-ui, sans-serif;
+  --body: "Segoe UI", system-ui, -apple-system, "Noto Sans Arabic", sans-serif;
+  --code: Consolas, "Cascadia Mono", "Courier New", monospace;
+}
+
+* { box-sizing: border-box; }
+
+/* The page scrolls as a whole: inside the shell's middle1 iframe a fixed-height page left the table a small box */
+html, body { min-height: 100%; margin: 0; }
+
+body {
+  font: 14px/1.5 var(--body);
+  color: var(--ink);
+  background: var(--paper);
+}
+
+.ac {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-height: 100vh;
+  padding: 24px clamp(14px, 2.4vw, 32px);
+}
+
+/* ---- Header ---- */
+.ac-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.ac-title { margin: 0; font: 600 20px/1.2 var(--display); }
+.ac-sub { margin: 4px 0 0; max-width: 70ch; color: var(--slate); }
+
+.ac-vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---- Command tabs, search and Add option, all sitting on one rule ---- */
+.ac-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 10px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.ac-tabs { display: flex; gap: 28px; margin-inline-end: auto; }
+
+/* The command words are what the user types in the palette, so they carry the page */
+.ac-tab {
+  padding: 0 0 8px;
+  font: 600 28px/1.15 var(--display);
+  color: var(--slate);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  cursor: pointer;
+  box-shadow: inset 0 -3px 0 transparent;
+}
+.ac-tab:hover { color: var(--ink); }
+.ac-tab[aria-selected="true"] { color: var(--ink); box-shadow: inset 0 -3px 0 var(--signal); }
+
+.ac-tabn {
+  margin-inline-start: 4px;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--slate);
+  vertical-align: 0.9em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The page script adds .ac-has-pill and one .ac-tab-pill that it moves under the selected tab, so the bar slides
+   from one command to the other instead of jumping */
+.ac-tabs.ac-has-pill { position: relative; }
+.ac-tabs.ac-has-pill .ac-tab[aria-selected="true"] { box-shadow: none; }
+.ac-tab-pill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 3px;
+  background: var(--signal);
+  pointer-events: none;
+  transition: transform 0.24s ease-out, width 0.24s ease-out;
+}
+.ac-tab-pill.ac-no-anim { transition: none; }
+
+/* All / Custom / Inactive: one joined control; the pressed choice is "selected", so it takes the Signal colours */
+.ac-filter { display: inline-flex; margin-bottom: 10px; }
+.ac-filter .ac-btn { min-height: 38px; border-radius: 0; margin-inline-start: -1px; }
+.ac-filter .ac-btn:first-child { margin-inline-start: 0; border-start-start-radius: 6px; border-end-start-radius: 6px; }
+.ac-filter .ac-btn:last-child { border-start-end-radius: 6px; border-end-end-radius: 6px; }
+.ac-filter .ac-btn[aria-pressed="true"] { position: relative; color: var(--signal); border-color: var(--signal); background: var(--signal-tint); }
+.ac-filter .ac-btn:focus-visible { position: relative; z-index: 1; }
+
+.ac-search { flex: 0 1 300px; margin-bottom: 10px; }
+.ac-search input {
+  width: 100%;
+  min-height: 38px;
+  padding: 0 12px;
+  font: inherit;
+  color: var(--ink);
+  border: 1px solid var(--field);
+  border-radius: 6px;
+  background: var(--sheet);
+}
+.ac-search input::placeholder { color: var(--slate); }
+.ac-search input:focus { border-color: var(--signal); }
+.ac-bar > .ac-btn { margin-bottom: 10px; }
+
+/* ---- Buttons ---- */
+.ac-btn {
+  min-height: 38px;
+  padding: 0 16px;
+  font: 600 13.5px/1 var(--body);
+  color: var(--ink);
+  border: 1px solid var(--field);
+  border-radius: 6px;
+  background: var(--sheet);
+  cursor: pointer;
+}
+.ac-btn:hover { background: var(--paper); }
+.ac-btn[hidden] { display: none; }
+.ac-btn:disabled { opacity: 0.55; cursor: progress; }
+.ac-btn-sm { min-height: 30px; padding: 0 10px; font-size: 12.5px; }
+.ac-btn-primary { color: #fff; border-color: var(--ink); background: var(--ink); }
+.ac-btn-primary:hover { border-color: var(--ink-hover); background: var(--ink-hover); }
+
+/* ---- Notes ---- */
+.ac-note { margin: 0; padding: 9px 12px; font-size: 13px; color: var(--ink); border: 1px solid #cdd3f1; border-radius: 6px; background: var(--signal-tint); }
+.ac-note.ac-error { color: var(--error); border-color: #efc4be; background: var(--error-tint); }
+.ac-note[hidden] { display: none; }
+
+/* The page note floats at the bottom of the iframe, so it never pushes the table down while the user works in it */
+.ac-toast {
+  position: fixed;
+  z-index: 15;
+  inset-block-end: 16px;
+  inset-inline: 16px;
+  width: fit-content;
+  max-width: 560px;
+  margin-inline: auto;
+  box-shadow: 0 10px 28px -14px rgba(29, 37, 71, 0.45);
+}
+.ac-toast:not([hidden]) { display: flex; align-items: center; gap: 12px; }
+.ac-toast .ac-btn { flex: none; }
+
+/* ---- Options table: one sheet that grows with its rows. overflow: clip keeps the corners without making a
+   scroll box, so the sticky header sticks to the top of the iframe while the page scrolls. ---- */
+.ac-scroll {
+  overflow: clip;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: var(--sheet);
+}
+
+.ac-table { width: 100%; border-collapse: collapse; }
+
+.ac-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 10px 16px;
+  text-align: start;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--slate);
+  background: var(--head);
+  border-bottom: 1px solid var(--rule);
+}
+
+.ac-table td { padding: 10px 16px; border-bottom: 1px solid var(--rule); vertical-align: middle; }
+.ac-table tbody tr:last-child td { border-bottom: 0; }
+.ac-table tbody tr:hover { background: #f7f8fc; }
+.ac-col-act { width: 1%; }
+
+/* "You type": the row reads as the palette phrase. The command word and the record source are Slate; the option name,
+   the word that differs between rows, is the strong one */
+.ac-name { font-weight: 400; }
+.ac-phrase { unicode-bidi: plaintext; }
+.ac-cmd, .ac-src { color: var(--slate); }
+.ac-src { white-space: nowrap; }
+.ac-optname { font-weight: 600; color: var(--ink); }
+.ac-type { color: var(--slate); }
+.ac-target { color: var(--slate); font: 12.5px/1.45 var(--code); overflow-wrap: anywhere; direction: ltr; text-align: start; unicode-bidi: plaintext; }
+
+.ac-badge {
+  margin-inline-start: 8px;
+  padding: 1px 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--slate);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--paper);
+  white-space: nowrap;
+}
+
+/* The option just saved: its row is tinted, then the tint fades (the page script removes .ac-flash after 2.4s) */
+.ac-table tbody tr.ac-flash { background: var(--signal-tint); }
+.ac-table tbody tr.ac-flash-out { transition: background-color 0.8s ease-out; }
+
+/* Inactive options stay listed but recede: the name drops to Slate at regular weight (no opacity, so every cell
+   keeps AA contrast); the switch and its "Inactive" label carry the state */
+.ac-off .ac-name, .ac-off .ac-optname { color: var(--slate); font-weight: 400; }
+
+/* ---- Active switch ---- */
+.ac-switch { position: relative; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+.ac-switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.ac-switch .ac-track { position: relative; flex: none; width: 34px; height: 20px; border-radius: 999px; background: #c3c8d6; transition: background 0.15s; }
+.ac-switch .ac-track::after { content: ""; position: absolute; top: 2px; inset-inline-start: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: inset-inline-start 0.15s; }
+.ac-switch input:checked + .ac-track { background: var(--signal); }
+.ac-switch input:checked + .ac-track::after { inset-inline-start: 16px; }
+.ac-switch input:focus-visible + .ac-track { outline: 2px solid var(--signal); outline-offset: 2px; }
+.ac-switch input[aria-busy="true"] { cursor: progress; }
+.ac-switch input[aria-busy="true"] + .ac-track { opacity: 0.7; }
+.ac-switch input:disabled { cursor: not-allowed; }
+.ac-switch input:disabled + .ac-track { opacity: 0.5; }
+.ac-switch-label { font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+.ac-switch-label.ac-on { color: var(--ink); }
+.ac-switch-label.ac-inactive { color: var(--slate); }
+
+.ac-status { margin: 0; padding: 32px 16px; text-align: center; color: var(--slate); }
+.ac-status[hidden] { display: none; }
+.ac-status .ac-btn { margin-inline-start: 6px; vertical-align: middle; }
+
+/* While the next page loads, the current rows stay in place, dimmed */
+.ac-table tbody[aria-busy="true"] { opacity: 0.5; transition: opacity 0.15s; }
+
+/* New rows after a tab switch fade in once, as a whole */
+.ac-table tbody[class*="ac-swap-"] { animation: ac-fade 0.18s ease-out; }
+
+/* ---- Pager: "Page 2 of 5" at the start, page buttons at the end ---- */
+.ac-pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.ac-pager[hidden] { display: none; }
+.ac-pageof { font: 14px var(--display); color: var(--slate); font-variant-numeric: tabular-nums; }
+.ac-pages, .ac-pagenums { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.ac-pages[hidden] { display: none; }
+.ac-pnum { min-width: 32px; font-family: var(--display); font-weight: 400; font-variant-numeric: tabular-nums; }
+.ac-pnum[aria-current="page"] { color: var(--signal); border-color: var(--signal); background: var(--signal-tint); font-weight: 600; cursor: default; }
+.ac-pager .ac-btn:disabled { opacity: 0.4; cursor: default; }
+.ac-gap { padding: 0 2px; color: var(--slate); }
+
+/* ---- Add / edit drawer: a sheet that slides in from the inline-end edge (right in LTR, left in RTL) ---- */
+.ac-scrim { position: fixed; inset: 0; z-index: 20; background: rgba(29, 37, 71, 0.28); opacity: 0; transition: opacity 0.2s ease; }
+.ac-scrim.ac-open { opacity: 1; }
+.ac-scrim[hidden], .ac-drawer[hidden] { display: none; }
+
+.ac-drawer {
+  --ac-slide: 100%;
+  position: fixed;
+  z-index: 21;
+  inset-block: 0;
+  inset-inline-end: 0;
+  display: flex;
+  width: min(440px, 100%);
+  background: var(--sheet);
+  border-inline-start: 1px solid var(--rule);
+  box-shadow: -16px 0 40px -20px rgba(29, 37, 71, 0.35);
+  transform: translateX(var(--ac-slide));
+  transition: transform 0.22s cubic-bezier(0.4, 0, 1, 1);
+}
+[dir="rtl"] .ac-drawer { --ac-slide: -100%; box-shadow: 16px 0 40px -20px rgba(29, 37, 71, 0.35); }
+.ac-drawer.ac-open { transform: translateX(0); transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1); }
+
+.ac-form { display: flex; flex-direction: column; width: 100%; min-height: 0; }
+.ac-drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 22px; border-bottom: 1px solid var(--rule); }
+.ac-drawer-title { margin: 0; font: 600 20px/1.2 var(--display); }
+.ac-icon-btn { width: 36px; height: 36px; font: 22px/1 var(--body); color: var(--slate); border: 0; border-radius: 6px; background: transparent; cursor: pointer; }
+.ac-icon-btn:hover { color: var(--ink); background: var(--paper); }
+
+.ac-fields { flex: 1 1 auto; overflow: auto; display: flex; flex-direction: column; gap: 16px; padding: 18px 22px; }
+.ac-hint { margin: 0; color: var(--slate); }
+.ac-field { display: flex; flex-direction: column; gap: 5px; }
+.ac-field[hidden] { display: none; }
+.ac-field label { font-size: 13px; font-weight: 600; color: var(--ink); }
+.ac-opt { font-weight: 400; color: var(--slate); }
+
+/* Advanced: a ruled disclosure under the main fields; the chevron is drawn in CSS and turns when it opens */
+.ac-advanced { border-top: 1px solid var(--rule); padding-top: 12px; }
+.ac-advanced > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  list-style: none;
+}
+.ac-advanced > summary::-webkit-details-marker { display: none; }
+.ac-advanced > summary::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-inline-end: 2px solid var(--slate);
+  border-block-end: 2px solid var(--slate);
+  transform: rotate(-45deg);
+  transition: transform 0.15s ease-out;
+}
+/* Closed: points along the reading direction; open: points down. The border corner is mirrored in RTL, so are the turns */
+.ac-advanced[open] > summary::before { transform: rotate(45deg); }
+[dir="rtl"] .ac-advanced > summary::before { transform: rotate(45deg); }
+[dir="rtl"] .ac-advanced[open] > summary::before { transform: rotate(-45deg); }
+.ac-advanced-fields { display: flex; flex-direction: column; gap: 16px; padding-top: 10px; }
+.ac-field input, .ac-field select {
+  width: 100%;
+  min-height: 38px;
+  padding: 0 10px;
+  font: inherit;
+  color: var(--ink);
+  border: 1px solid var(--field);
+  border-radius: 6px;
+  background: var(--sheet);
+}
+.ac-field input:focus, .ac-field select:focus { border-color: var(--signal); }
+.ac-field input:disabled, .ac-field select:disabled { color: var(--slate); background: var(--paper); }
+.ac-field input[aria-invalid="true"] { border-color: var(--error); }
+.ac-help { font-size: 12px; color: var(--slate); }
+.ac-err { font-size: 12.5px; font-weight: 600; color: var(--error); }
+.ac-err:empty { display: none; }
+.ac-drawer-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 22px; border-top: 1px solid var(--rule); }
+
+:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+
+/* The page's sentences are English even when the shell is right-to-left: each takes its direction from its own text,
+   so punctuation and numbers stay where they belong ("76-100 of 203", the full stop at the end) */
+.ac-sub, .ac-pageof, .ac-status, .ac-note, .ac-hint, .ac-help, .ac-err { unicode-bidi: plaintext; }
+/* ...while still lining up with the right-aligned labels and headings of a right-to-left page */
+[dir="rtl"] :is(.ac-sub, .ac-note, .ac-hint, .ac-help, .ac-err) { text-align: right; }
+
+/* Tablet and narrower: drop the Type column, let the search take a full line under the tabs */
+@media (max-width: 900px) {
+  .ac-col-type, .ac-type { display: none; }
+  .ac-table th, .ac-table td { padding-inline: 12px; }
+}
+
+@media (max-width: 600px) {
+  .ac-head { flex-direction: column; align-items: flex-start; }
+  .ac-bar { border-bottom: 0; }
+  .ac-tabs { width: 100%; margin-inline-end: 0; border-bottom: 1px solid var(--rule); }
+  .ac-tab { font-size: 24px; }
+  .ac-search { flex: 1 1 160px; margin-top: 4px; }
+  .ac-bar > .ac-btn { margin-top: 4px; }
+  /* The switch alone shows the state; its aria-label still names it */
+  .ac-switch-label { display: none; }
+  .ac-table th, .ac-table td { padding-inline: 10px; }
+  .ac-drawer { width: 100%; }
+}
+
+@keyframes ac-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Reduced motion: nothing slides; the drawer and rows simply appear */
+@media (prefers-reduced-motion: reduce) {
+  .ac-drawer, .ac-drawer.ac-open, .ac-scrim, .ac-tab-pill, .ac-switch .ac-track, .ac-switch .ac-track::after, .ac-table tbody tr.ac-flash-out, .ac-advanced > summary::before { transition: none; }
+  .ac-table tbody[class*="ac-swap-"] { animation: none; }
+}

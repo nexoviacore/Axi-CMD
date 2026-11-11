@@ -2,9 +2,10 @@
 DROP TABLE axi_commands
 >>
 
-<<
-DROP TABLE axi_command_prompts
->>
+-- axi_command_prompts is never dropped: it holds the Custom Option names added from the AxiCMD Config page.
+-- On a re-install its CREATE TABLE and the shipped INSERTs fail with "already exists" / duplicate key, which is expected.
+-- So a change to a shipped prompt row in a later release does not reach existing databases through its INSERT: add an UPDATE that keeps
+-- the Custom Option names already in the list.
 
 <<
 CREATE TABLE AXI_COMMANDS 
@@ -21,13 +22,21 @@ CREATE TABLE AXI_COMMAND_PROMPTS
 	"CMDTOKEN" NUMBER(10,0), 
 	"WORDPOS" NUMBER(10,0), 
 	"PROMPT" VARCHAR2(200), 
-	"PROMPTSOURCE" VARCHAR2(500), 
+	"PROMPTSOURCE" VARCHAR2(4000), 
 	"PROMPTPARAMS" VARCHAR2(100), 
-	"PROMPTVALUES" VARCHAR2(500), 
+	"PROMPTVALUES" VARCHAR2(4000), 
 	"PROPS" VARCHAR2(100), 
 	"EXTRAPARAMS" VARCHAR2(1000), 
 	"REQUESTURL" VARCHAR2(2000), 
 	 CONSTRAINT "AXI_COMMAND_PROMPTS_PKEY" PRIMARY KEY ("ID"))
+>>
+
+<<
+ALTER TABLE AXI_COMMAND_PROMPTS MODIFY (PROMPTSOURCE VARCHAR2(4000))
+>>
+
+<<
+ALTER TABLE AXI_COMMAND_PROMPTS MODIFY (PROMPTVALUES VARCHAR2(4000))
 >>
 	
 <<
@@ -130,7 +139,7 @@ INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PR
 >>
 
 <<
-INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) VALUES('B141E931BB7144788EC8B60253361FFB', 4, 2, 'object type', NULL, NULL, 'PEG,Form Notification,Scheduled Notification,Peg Form Notification,Rule,KeyField,User,User Listing,User Permission Setup,User Permissions,User Activation,User Group,Role,Role Listing,Role Permissions,Actor,Actor Listing,Publish Axpert API,Publish Config Studio,Card,Responsibility,Responsibility Listing,Dimension,Dimension Listing, Application Properties,Settings,Smart View Attributes,Smart View Listing', NULL, NULL, NULL)
+INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) VALUES('B141E931BB7144788EC8B60253361FFB', 4, 2, 'object type', NULL, NULL, 'PEG,Form Notification,Scheduled Notification,Peg Form Notification,Rule,KeyField,User,User Listing,User Permission Setup,User Permissions,User Activation,User Group,Role,Role Listing,Role Permissions,Actor,Actor Listing,Publish Axpert API,Publish Config Studio,Card,Responsibility,Responsibility Listing,Dimension,Dimension Listing, Application Properties,Settings,Smart View Attributes,Smart View Listing,Trace On,Trace Off,Trace Files', NULL, NULL, NULL)
 >>
 
 <<
@@ -138,7 +147,7 @@ INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PR
 >>
 
 <<
-INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) VALUES('726EB7B2772742CEA2DBC0A91AB3DA16', 4, 3, 'object name', 'Axi_PegList,Axi_FormNotifyList,Axi_ScheduleNotifyList,Axi_PEGNotifyList,Axi_RuleNamesList,axi_structmetalist,Axi_Dummy,Axi_Dummy,axi_userlist,axi_userlist,axi_useractivation,axi_usergrouplist,Axi_Dummy,Axi_Dummy,axi_rolelist,axi_actorlist,Axi_Dummy,axi_publishapi,Axi_ServernameList,axi_cardlist,axi_resposibilitylist,Axi_Dummy,axi_dimensionlist,Axi_Dummy,Axi_Dummy,Axi_Dummy,axi_smartviewlist,Axi_Dummy', NULL, NULL, NULL, ':username,:userroles,:userresp,:mode,:structtype', NULL)
+INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) VALUES('726EB7B2772742CEA2DBC0A91AB3DA16', 4, 3, 'object name', 'Axi_PegList,Axi_FormNotifyList,Axi_ScheduleNotifyList,Axi_PEGNotifyList,Axi_RuleNamesList,axi_structmetalist,Axi_Dummy,Axi_Dummy,axi_userlist,axi_userlist,axi_useractivation,axi_usergrouplist,Axi_Dummy,Axi_Dummy,axi_rolelist,axi_actorlist,Axi_Dummy,axi_publishapi,Axi_ServernameList,axi_cardlist,axi_resposibilitylist,Axi_Dummy,axi_dimensionlist,Axi_Dummy,Axi_Dummy,Axi_Dummy,axi_smartviewlist,Axi_Dummy,Axi_Dummy,Axi_Dummy,Axi_Dummy', NULL, NULL, NULL, ':username,:userroles,:userresp,:mode,:structtype', NULL)
 >>
 
 <<
@@ -161,6 +170,41 @@ INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PR
 INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) VALUES('57E65A66C98C4BF7B167B0FB182FD14F', 8, 2, 'field name', 'Axi_SetFieldList', NULL, NULL, NULL, ':transid', NULL)
 >>
 
+-- Configure: Product, Plugin and ChangeRequest options (account/repo settings). Appended to the existing lists so Custom Option names are kept.
+-- old code: the sources were guarded on ChangeRequest not being in the names yet, so once the names got it first the sources never caught up
+-- (34 names, 31 sources: the AxiCMD Config page then fails with HTTP 409 "option and source lists ... out of step")
+-- -- Run twice it changes nothing (guarded on ChangeRequest already being in the wordpos 2 list). The wordpos 3 sources go first, because its
+-- -- guard reads the wordpos 2 row, which the next statement changes. Both lists stay index-aligned: 3 options on one side, 3 Axi_Dummy on the other.
+-- <<
+-- UPDATE AXI_COMMAND_PROMPTS SET promptsource = RTRIM(promptsource, ',') || ',Axi_Dummy,Axi_Dummy,Axi_Dummy' WHERE cmdtoken = 4 AND wordpos = 3 AND EXISTS (SELECT 1 FROM AXI_COMMAND_PROMPTS p2 WHERE p2.cmdtoken = 4 AND p2.wordpos = 2 AND p2.promptvalues NOT LIKE '%ChangeRequest%')
+-- >>
 
+-- new code: the names are added first (guarded on ChangeRequest, so a re-run changes nothing). The next statement then pads the source list
+-- with Axi_Dummy (10 characters each, RPAD repeats it) until it has as many entries as the names, which also repairs a database whose sources are already short.
+<<
+UPDATE AXI_COMMAND_PROMPTS SET promptvalues = RTRIM(promptvalues, ',') || ',Product,Plugin,ChangeRequest' WHERE cmdtoken = 4 AND wordpos = 2 AND promptvalues NOT LIKE '%ChangeRequest%'
+>>
 
+<<
+UPDATE AXI_COMMAND_PROMPTS s SET promptsource = RTRIM(s.promptsource, ', ') || RPAD(',Axi_Dummy', 10 * ((SELECT REGEXP_COUNT(RTRIM(p2.promptvalues, ', '), ',') + 1 FROM AXI_COMMAND_PROMPTS p2 WHERE p2.cmdtoken = 4 AND p2.wordpos = 2) - (REGEXP_COUNT(RTRIM(s.promptsource, ', '), ',') + 1)), ',Axi_Dummy') WHERE s.cmdtoken = 4 AND s.wordpos = 3 AND (SELECT REGEXP_COUNT(RTRIM(p2.promptvalues, ', '), ',') + 1 FROM AXI_COMMAND_PROMPTS p2 WHERE p2.cmdtoken = 4 AND p2.wordpos = 2) > REGEXP_COUNT(RTRIM(s.promptsource, ', '), ',') + 1
+>>
 
+-- Install: `install <product|plugin|changerequest> <directory> [version]` (build access only). Rows are added only when absent, so a re-run changes nothing.
+-- axi_git_directories and axi_git_versions are NOT axdirectsql rows: the palette resolves them from the AxiGit listdirectories API.
+<<
+INSERT INTO axi_commands
+(cmdtoken, command_group, command, active)
+SELECT 10, 'Install', ' ', 'T' FROM dual WHERE NOT EXISTS (SELECT 1 FROM axi_commands WHERE cmdtoken = 10)
+>>
+
+<<
+INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) SELECT HEXTORAW('6474EF0115544DD7BE1BC41C8CDEE0F4'), 10, 2, 'object type', NULL, NULL, 'Product,Plugin,ChangeRequest', NULL, NULL, NULL FROM dual WHERE NOT EXISTS (SELECT 1 FROM AXI_COMMAND_PROMPTS WHERE cmdtoken = 10 AND wordpos = 2)
+>>
+
+<<
+INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) SELECT HEXTORAW('EB7DCE54C332404C984DC37AEF8FB1EB'), 10, 3, 'directory', 'axi_git_directories', NULL, NULL, NULL, NULL, NULL FROM dual WHERE NOT EXISTS (SELECT 1 FROM AXI_COMMAND_PROMPTS WHERE cmdtoken = 10 AND wordpos = 3)
+>>
+
+<<
+INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) SELECT HEXTORAW('B3B2FEA1E894496A8F6837FDCD76DDE8'), 10, 4, 'version', 'axi_git_versions', NULL, NULL, NULL, NULL, NULL FROM dual WHERE NOT EXISTS (SELECT 1 FROM AXI_COMMAND_PROMPTS WHERE cmdtoken = 10 AND wordpos = 4)
+>>
