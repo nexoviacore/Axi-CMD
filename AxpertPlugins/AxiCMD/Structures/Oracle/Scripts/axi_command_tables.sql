@@ -138,16 +138,29 @@ INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PR
 INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) VALUES('2B3247C93FFB4B04A11DCEE5901260EE', 3, 4, 'object name', 'axi_getstructsdata', NULL, NULL, NULL, ':cmd,:username,:userrole,:transid,:selectedfield,:dimension,:permission,:keyfield,:primarytable,:globalvars', NULL)
 >>
 
+-- old code: Trace On, Trace Off, Trace Files (and their 3 Axi_Dummy sources in the wordpos 3 INSERT) were in the INSERTs.
+-- AXI_COMMAND_PROMPTS is never dropped, so existing databases never got them through an INSERT; they are now added by the UPDATE further down (Trace).
+-- <<
+-- INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) VALUES('B141E931BB7144788EC8B60253361FFB', 4, 2, 'object type', NULL, NULL, 'PEG,Form Notification,Scheduled Notification,Peg Form Notification,Rule,KeyField,User,User Listing,User Permission Setup,User Permissions,User Activation,User Group,Role,Role Listing,Role Permissions,Actor,Actor Listing,Publish Axpert API,Publish Config Studio,Card,Responsibility,Responsibility Listing,Dimension,Dimension Listing, Application Properties,Settings,Smart View Attributes,Smart View Listing,Trace On,Trace Off,Trace Files', NULL, NULL, NULL)
+-- >>
+
+-- new code: the original 28 options; Trace and Product/Plugin/ChangeRequest are appended by the UPDATEs below
 <<
-INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) VALUES('B141E931BB7144788EC8B60253361FFB', 4, 2, 'object type', NULL, NULL, 'PEG,Form Notification,Scheduled Notification,Peg Form Notification,Rule,KeyField,User,User Listing,User Permission Setup,User Permissions,User Activation,User Group,Role,Role Listing,Role Permissions,Actor,Actor Listing,Publish Axpert API,Publish Config Studio,Card,Responsibility,Responsibility Listing,Dimension,Dimension Listing, Application Properties,Settings,Smart View Attributes,Smart View Listing,Trace On,Trace Off,Trace Files', NULL, NULL, NULL)
+INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) VALUES('B141E931BB7144788EC8B60253361FFB', 4, 2, 'object type', NULL, NULL, 'PEG,Form Notification,Scheduled Notification,Peg Form Notification,Rule,KeyField,User,User Listing,User Permission Setup,User Permissions,User Activation,User Group,Role,Role Listing,Role Permissions,Actor,Actor Listing,Publish Axpert API,Publish Config Studio,Card,Responsibility,Responsibility Listing,Dimension,Dimension Listing, Application Properties,Settings,Smart View Attributes,Smart View Listing', NULL, NULL, NULL)
 >>
 
 <<
 INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) VALUES('8C14DFDF564E4A06840CB160AB710385', 4, 4, 'key field', 'axi_primaryfieldlist', '3', NULL, NULL, NULL, NULL)
 >>
 
+-- old code (3 trailing Axi_Dummy for Trace On / Off / Files):
+-- <<
+-- INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) VALUES('726EB7B2772742CEA2DBC0A91AB3DA16', 4, 3, 'object name', 'Axi_PegList,Axi_FormNotifyList,Axi_ScheduleNotifyList,Axi_PEGNotifyList,Axi_RuleNamesList,axi_structmetalist,Axi_Dummy,Axi_Dummy,axi_userlist,axi_userlist,axi_useractivation,axi_usergrouplist,Axi_Dummy,Axi_Dummy,axi_rolelist,axi_actorlist,Axi_Dummy,axi_publishapi,Axi_ServernameList,axi_cardlist,axi_resposibilitylist,Axi_Dummy,axi_dimensionlist,Axi_Dummy,Axi_Dummy,Axi_Dummy,axi_smartviewlist,Axi_Dummy,Axi_Dummy,Axi_Dummy,Axi_Dummy', NULL, NULL, NULL, ':username,:userroles,:userresp,:mode,:structtype', NULL)
+-- >>
+
+-- new code: the 28 sources of the original 28 options (index-aligned); the padding UPDATE below adds the Axi_Dummy of the appended options
 <<
-INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) VALUES('726EB7B2772742CEA2DBC0A91AB3DA16', 4, 3, 'object name', 'Axi_PegList,Axi_FormNotifyList,Axi_ScheduleNotifyList,Axi_PEGNotifyList,Axi_RuleNamesList,axi_structmetalist,Axi_Dummy,Axi_Dummy,axi_userlist,axi_userlist,axi_useractivation,axi_usergrouplist,Axi_Dummy,Axi_Dummy,axi_rolelist,axi_actorlist,Axi_Dummy,axi_publishapi,Axi_ServernameList,axi_cardlist,axi_resposibilitylist,Axi_Dummy,axi_dimensionlist,Axi_Dummy,Axi_Dummy,Axi_Dummy,axi_smartviewlist,Axi_Dummy,Axi_Dummy,Axi_Dummy,Axi_Dummy', NULL, NULL, NULL, ':username,:userroles,:userresp,:mode,:structtype', NULL)
+INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) VALUES('726EB7B2772742CEA2DBC0A91AB3DA16', 4, 3, 'object name', 'Axi_PegList,Axi_FormNotifyList,Axi_ScheduleNotifyList,Axi_PEGNotifyList,Axi_RuleNamesList,axi_structmetalist,Axi_Dummy,Axi_Dummy,axi_userlist,axi_userlist,axi_useractivation,axi_usergrouplist,Axi_Dummy,Axi_Dummy,axi_rolelist,axi_actorlist,Axi_Dummy,axi_publishapi,Axi_ServernameList,axi_cardlist,axi_resposibilitylist,Axi_Dummy,axi_dimensionlist,Axi_Dummy,Axi_Dummy,Axi_Dummy,axi_smartviewlist,Axi_Dummy', NULL, NULL, NULL, ':username,:userroles,:userresp,:mode,:structtype', NULL)
 >>
 
 <<
@@ -178,6 +191,13 @@ INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PR
 -- <<
 -- UPDATE AXI_COMMAND_PROMPTS SET promptsource = RTRIM(promptsource, ',') || ',Axi_Dummy,Axi_Dummy,Axi_Dummy' WHERE cmdtoken = 4 AND wordpos = 3 AND EXISTS (SELECT 1 FROM AXI_COMMAND_PROMPTS p2 WHERE p2.cmdtoken = 4 AND p2.wordpos = 2 AND p2.promptvalues NOT LIKE '%ChangeRequest%')
 -- >>
+
+-- Configure: Trace On, Trace Off, Trace Files. Added to the option list only when Trace Files is not in it yet, so a re-run changes nothing.
+-- Runs before Product/Plugin/ChangeRequest so the list order is the same as on databases that already have both. Their 3 Axi_Dummy
+-- sources are added by the padding UPDATE below, together with the ones for Product/Plugin/ChangeRequest.
+<<
+UPDATE AXI_COMMAND_PROMPTS SET promptvalues = RTRIM(promptvalues, ',') || ',Trace On,Trace Off,Trace Files' WHERE cmdtoken = 4 AND wordpos = 2 AND (',' || promptvalues || ',') NOT LIKE '%,Trace Files,%'
+>>
 
 -- new code: the names are added first (guarded on ChangeRequest, so a re-run changes nothing). The next statement then pads the source list
 -- with Axi_Dummy (10 characters each, RPAD repeats it) until it has as many entries as the names, which also repairs a database whose sources are already short.
