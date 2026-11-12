@@ -278,7 +278,11 @@
         const formError = $("acFormError"), saveBtn = $("acSave");
         const fields = ["name", "promptId", "targetUrl", "paramField", "extraParams"];
         const inputOf = { name: $("fName"), promptId: $("fPromptId"), targetUrl: $("fTargetUrl"), paramField: $("fParamField"), extraParams: $("fExtraParams") };
-        const errOf = { name: $("eName"), promptId: $("ePromptId"), targetUrl: $("eTargetUrl"), paramField: $("eParamField"), extraParams: $("eExtraParams") };
+        // old code
+        // const errOf = { name: $("eName"), promptId: $("ePromptId"), targetUrl: $("eTargetUrl"), paramField: $("eParamField"), extraParams: $("eExtraParams") };
+        // new code: recordSource errors show under the Record source input (not part of "fields", which fill by type)
+        inputOf.recordSource = $("fSource");
+        const errOf = { name: $("eName"), promptId: $("ePromptId"), targetUrl: $("eTargetUrl"), paramField: $("eParamField"), extraParams: $("eExtraParams"), recordSource: $("eSource") };
 
         function showFieldsForType() {
             const type = $("fType").value;
@@ -326,6 +330,7 @@
 
         function clearErrors() {
             fields.forEach((f) => setFieldError(f, ""));
+            setFieldError("recordSource", "");
             formError.hidden = true;
             formError.textContent = "";
         }
@@ -369,14 +374,18 @@
                         : "A Built-in Option ships with the product, so its route is read-only. You can still switch it on or off."));
             $("fCommand").disabled = !!editing;
             $("acAdvanced").open = false;
-            const srcSel = $("fSource");
-            srcSel.textContent = "";
-            Logic.recordSourceOptions().forEach((s) => {
-                const o = document.createElement("option");
-                o.value = s.value;
-                o.textContent = s.label;
-                srcSel.appendChild(o);
-            });
+            // old code
+            // const srcSel = $("fSource");
+            // srcSel.textContent = "";
+            // Logic.recordSourceOptions().forEach((s) => {
+            //     const o = document.createElement("option");
+            //     o.value = s.value;
+            //     o.textContent = s.label;
+            //     srcSel.appendChild(o);
+            // });
+            // new code: Record source is a free text input; empty means None (Axi_Dummy)
+            const srcInput = $("fSource");
+            srcInput.value = "";
             if (editing) {
                 const typeSel2 = $("fType");
                 if (AVAILABLE_TYPES.indexOf(editing.type) === -1) {
@@ -387,14 +396,18 @@
                     typeSel2.appendChild(o);
                 }
                 typeSel2.value = editing.type;
-                const src = editing.source || Logic.NO_SOURCE;
-                if (!Array.prototype.some.call(srcSel.options, (o) => o.value === src)) {
-                    const o = document.createElement("option");
-                    o.value = src;
-                    o.textContent = src;
-                    srcSel.appendChild(o);
-                }
-                srcSel.value = src;
+                // old code
+                // const src = editing.source || Logic.NO_SOURCE;
+                // if (!Array.prototype.some.call(srcSel.options, (o) => o.value === src)) {
+                //     const o = document.createElement("option");
+                //     o.value = src;
+                //     o.textContent = src;
+                //     srcSel.appendChild(o);
+                // }
+                // srcSel.value = src;
+                // new code
+                const src = editing.source || "";
+                srcInput.value = src.toLowerCase() === Logic.NO_SOURCE.toLowerCase() ? "" : src;
                 fields.forEach((f) => { inputOf[f].value = f === "name" ? editing.name : (editing[f] || ""); });
                 // Advanced opens by itself when the option already uses one of its fields
                 $("acAdvanced").open = !!(editing.paramField || editing.extraParams || Logic.sourceName(editing.source));
