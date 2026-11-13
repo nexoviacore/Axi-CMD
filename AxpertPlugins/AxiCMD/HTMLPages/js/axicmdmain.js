@@ -5422,8 +5422,13 @@ if (typeof document !== "undefined") {
                 }
                 // new code: Trace On / Trace Off / Trace Files run in the shell, a pop-up makes no sense: Go only
                 if (isShellActionOption(tokens)) {
-                    filteredObjects = [goOption];
-                    return [goOption];
+                    // old code
+                    // filteredObjects = [goOption];
+                    // return [goOption];
+                    // new code: no Go when words follow the option, the command takes no value (#305)
+                    const shellOptions = hasShellActionExtraWords(tokens) ? [] : [goOption];
+                    filteredObjects = shellOptions;
+                    return shellOptions;
                 }
                 else {
                     filteredObjects = [goOption, popOption];
@@ -5471,8 +5476,13 @@ if (typeof document !== "undefined") {
         }
         // new code: Trace On / Trace Off / Trace Files: Go only, no Pop-Up
         if (groupKey.toLowerCase() === "configure" && tokens.length > 2 && isShellActionOption(tokens)) {
-            filteredObjects = [goOption];
-            return [goOption];
+            // old code
+            // filteredObjects = [goOption];
+            // return [goOption];
+            // new code: no Go when words follow the option, the command takes no value (#305)
+            const shellOptions = hasShellActionExtraWords(tokens) ? [] : [goOption];
+            filteredObjects = shellOptions;
+            return shellOptions;
         }
         if (groupKey.toLowerCase() === "configure" && tokens.length > 3 && tokens[1].toLowerCase() != "keyfield") {
             filteredObjects = [goOption, popOption];
@@ -10368,6 +10378,14 @@ if (typeof document !== "undefined") {
             return;
         }
 
+        // new code: Trace On / Trace Off / Trace Files take no value; anything after the option is an error, not ignored (#305)
+        if ((group || "").toLowerCase() === "configure" && hasShellActionExtraWords(tokens)) {
+            const shellName = getShellActionName(tokens);
+            showToast(`'configure ${shellName}' takes nothing after '${shellName}'. Remove the extra words and run it again.`);
+            reopenPaletteForCommandSetting();
+            return;
+        }
+
         // Dynamically resolve against backend axi_command_config without touching JS code
         const dynamicRow = (firstParamValue ? getCommandConfigRow(group, firstParamValue) : null)
             || (handlerKey !== 'default' ? getCommandConfigRow(group, handlerKey) : null)
@@ -12003,13 +12021,61 @@ if (typeof document !== "undefined") {
      * @returns {boolean}
      */
     function isShellActionOption(tokens) {
-        if (!Array.isArray(tokens) || tokens.length < 2) return false;
-        const single = cleanCommandToken(tokens[1] || "");
-        const joined = tokens.slice(1).map(t => cleanCommandToken(t || "")).filter(Boolean).join(" ");
-        return [single, joined].some(opt => {
-            const row = opt ? getCommandConfigRow("Configure", opt) : null;
-            return !!row && (row.promptOptionType || row.prompt_option_type || row.PromptOptionType || "").toLowerCase() === "shellaction";
-        });
+        // old code
+        // if (!Array.isArray(tokens) || tokens.length < 2) return false;
+        // const single = cleanCommandToken(tokens[1] || "");
+        // const joined = tokens.slice(1).map(t => cleanCommandToken(t || "")).filter(Boolean).join(" ");
+        // return [single, joined].some(opt => {
+        //     const row = opt ? getCommandConfigRow("Configure", opt) : null;
+        //     return !!row && (row.promptOptionType || row.prompt_option_type || row.PromptOptionType || "").toLowerCase() === "shellaction";
+        // });
+        // new code: also true when words follow the option (configure "Trace Files" x), so those can be refused (#305)
+        return getShellActionEnd(tokens) > 0;
+    }
+
+    /**
+     * Index of the token that completes a "shellaction" option name, or -1. The option may be one quoted token
+     * ("Trace On") or typed as separate words (Trace On), so the words after "configure" are joined one by one.
+     * @param {string[]} tokens - Command tokens (tokens[0] is "configure").
+     * @returns {number} Token index where the option name ends, or -1 when the tokens hold no shellaction option.
+     */
+    function getShellActionEnd(tokens) {
+        if (!Array.isArray(tokens) || tokens.length < 2) return -1;
+        let joined = "";
+        for (let i = 1; i < tokens.length; i++) {
+            const part = cleanCommandToken(tokens[i] || "");
+            if (!part) continue;
+            joined = joined ? `${joined} ${part}` : part;
+            const row = getCommandConfigRow("Configure", joined);
+            if (row && (row.promptOptionType || row.prompt_option_type || row.PromptOptionType || "").toLowerCase() === "shellaction") {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * True when anything other than blanks follows a "shellaction" option (Trace On, Trace Off, Trace Files).
+     * These commands take no value: only "configure" and the option are allowed (#305).
+     * @param {string[]} tokens - Command tokens.
+     * @returns {boolean}
+     */
+    function hasShellActionExtraWords(tokens) {
+        const end = getShellActionEnd(tokens);
+        return end > 0 && tokens.slice(end + 1).some(t => cleanCommandToken(t || "").trim() !== "");
+    }
+
+    /**
+     * Option name of a "shellaction" command as configured (e.g. "Trace Files"), for messages.
+     * @param {string[]} tokens - Command tokens.
+     * @returns {string}
+     */
+    function getShellActionName(tokens) {
+        const end = getShellActionEnd(tokens);
+        if (end < 1) return "";
+        const joined = tokens.slice(1, end + 1).map(t => cleanCommandToken(t || "")).filter(Boolean).join(" ");
+        const row = getCommandConfigRow("Configure", joined);
+        return (row && (row.promptOptions || row.prompt_options || row.PromptOptions)) || joined;
     }
 
     /**
