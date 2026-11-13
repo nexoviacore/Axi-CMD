@@ -4,6 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <AxExtendPath Condition="'$(AxExtendPath)' == ''">D:\Axpert11.4\ARMMICRO\AxPlugins\AxExtend</AxExtendPath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,10 +26,12 @@
 
   <ItemGroup>
 	  <Reference Include="ARMCommon">
-      <HintPath>..\..\ARMMICRO\AxPlugins\AxExtend\ARMCommon.dll</HintPath>
+      <!-- old code: <HintPath>..\..\ARMMICRO\AxPlugins\AxExtend\ARMCommon.dll</HintPath> -->
+      <HintPath>$(AxExtendPath)\ARMCommon.dll</HintPath>
     </Reference>
     <Reference Include="AxExtend">
-      <HintPath>..\..\ARMMICRO\AxPlugins\AxExtend\AxExtend.dll</HintPath>
+      <!-- old code: <HintPath>..\..\ARMMICRO\AxPlugins\AxExtend\AxExtend.dll</HintPath> -->
+      <HintPath>$(AxExtendPath)\AxExtend.dll</HintPath>
     </Reference>
     
   </ItemGroup>
