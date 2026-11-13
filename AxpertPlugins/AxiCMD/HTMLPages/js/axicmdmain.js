@@ -1724,8 +1724,14 @@ if (typeof document !== "undefined") {
                 // Id index kept per base list so every merge does not rescan the whole list.
                 // It is rebuilt only if the base array itself was replaced (e.g. after a reset).
                 let idx = axBaseIdIndex[baseKey];
-                if (!idx || idx.ref !== existing) {
-                    idx = { ref: existing, ids: new Set() };
+                // old code
+                // if (!idx || idx.ref !== existing) {
+                // new code: also rebuild when the list grew since the index was last synced. Rows are added to the
+                // same array without going through this index (next pages loaded on scroll, a picked record kept for
+                // lookups, a record found on the server), so a search hit that was already in the list was merged in a
+                // second time and showed twice in the suggestions.
+                if (!idx || idx.ref !== existing || idx.length !== existing.length) {
+                    idx = { ref: existing, ids: new Set(), length: existing.length };
                     existing.forEach(item => { const u = uidOf(item); if (u !== null) idx.ids.add(u); });
                     axBaseIdIndex[baseKey] = idx;
                 }
@@ -1743,6 +1749,8 @@ if (typeof document !== "undefined") {
                         existing.push(Object.assign({}, item, { __fromSearch: true }));
                     }
                 }
+                // new code: the index now covers every row, so the next merge does not rebuild it needlessly
+                idx.length = existing.length;
             }
             return list;
         } catch (error) {
