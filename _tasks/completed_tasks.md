@@ -99,7 +99,31 @@ Longer, or containing @@VARS@@: the value becomes h plus about 11 characters of 
 1. TSK-0926 - AxiCMDLine : Enhance Multilingual Support with User-Configurable Language Settings
 2. TKT-0945 - AXI CMD Line - Configure Keyfield auto suggestions are displaying field containing Duplicate values
 3. TKT-0782 - AXI CMD line-Edit with validation issue
+4. Able to type anything after selecting Configure "Trace Files" and user is able to execute the cmd without any error.
+Cmd used: Configure "Trace Files" GetMultiMenu.txt issue #305
  #295
+5. Issue:when user click on settings(axi command line) it is not functioning as expected(random  issue)
+6. Issue1:When Records per load is set to 1,000 or above, field names are not displayed in the selection list, and users have to search for the required fields manually.
+When Records per load is set to less than 1,000, field names are displayed in the middle of the selection area instead of being properly aligned. (fixed)
+username/password:smokeuser1/agile
+Schemaname:orclbase114
+formname:Import Encrypt
+
+7. Issue3:when user set record per load as 100 when user search the record(ex:1064) the suggetion will list the searched record  and if we click on go it is navigate to datapage
+if we set  record per load as 5000  and we search the samerecord(1064) it is throwing error Record 'ASI-0001' not found in Import Encrypt.
+Note:Search the record which is not present in the suggetions
+The issue is reproducible in both schema
+schemaname:pgbase114
+formname:import Encryption
+username/password:smokeuser1/agile
+Schemaname:orclbase114
+formname:Import Encrypt
+prajwala1/Agil@3
+
+8. Issue4:when user search by providing following word   @#$  it is showing no matching records but when user click on run it is navigate to data page
+Schemaname:orclbase114
+formname:Import Encrypt
+prajwala1/Agil@3
 
 
 
