@@ -24,3 +24,9 @@
 - **Built-in Option**: A `configure` or `sdk` prompt option shipped with AxiCMD. Its route cannot be edited by users; it can only be switched active or inactive.
 - **Custom Option**: A `configure` or `sdk` prompt option added by a user with Config Page Access. Fully editable, and removed by deactivating it rather than deleting it.
 - **Search In-Memory Cache**: The in-session JavaScript cache (`axDatasourceObj`) storing dynamic keyword results by term key (`_q_<term>`), invalidated upon explicit refresh (`#btnRefresh`) or record save/update actions.
+- **User Language**: The language the user chose at login (the shell's `gllangauge`, e.g. `ARABIC`). It is the only source of the palette's language; a change takes effect on the next load, not live.
+- **Base Caption**: The caption a form, report, page or data source has in the application's original language. It can always be typed, whatever the User Language.
+- **Translated Caption**: The caption shown for the User Language when a translation exists in `axlanguage`; without one the Base Caption is shown.
+- **Command Word**: A verb typed to start a command (`create`, `edit`, `view`, `configure`, `sdk`…). Always typed in English; in other languages the palette only shows a translated label beside it.
+- **Palette Text**: The palette's own wording (placeholder, hints, help tour, notices, errors). Translated per User Language from the application's language captions, falling back to English; distinct from captions, which belong to the application's forms and reports.
+- **Language Key**: The name under which one piece of AxiCMD's own text is translated, in the `axicmd` namespace: a stable dotted key for Palette Text (e.g. `hint.nomatch`), the original text for option names and prompt hints.
