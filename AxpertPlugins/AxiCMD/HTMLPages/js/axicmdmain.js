@@ -2682,7 +2682,7 @@ if (typeof document !== "undefined") {
             targetUrl += `&openerIV=${transId}`;
             targetUrl += `&isIV=false`;
             targetUrl += `&isDupTab=${callParentNew('isDuplicateTab')}`;
-            targetUrl += `&dummyload=false`;
+            targetUrl += `&dummyload=false?`;
         }
         else {
             if (fieldName && fieldValue) {
@@ -2691,7 +2691,7 @@ if (typeof document !== "undefined") {
             targetUrl += `&hltype=open`;
             targetUrl += `&createaxiflag=true`;
             targetUrl += `&isDupTab=${callParentNew('isDuplicateTab')}`;
-            targetUrl += `&dummyload=false`;
+            targetUrl += `&dummyload=false?`;
         }
 
         if (extraParams) {
@@ -2808,7 +2808,7 @@ if (typeof document !== "undefined") {
         targetUrl += `&openerIV=${transId}`;
         targetUrl += `&isIV=false`;
         targetUrl += `&isDupTab=${isDupTab}`;
-        targetUrl += `&dummyload=false`;
+        targetUrl += `&dummyload=false?`;
         targetUrl += `&hdnbElapsTime=0`;
 
         if (extraParams) {
@@ -5875,6 +5875,14 @@ if (typeof document !== "undefined") {
                 if (AxiCmdConfig.SDK_CREATE_NEW_TARGETS.includes(targetToken)) {
                     dataList = [{ displaydata: "Create New", name: "Create New", isCreateNew: true }, ...dataList];
                 }
+            }
+
+            // new code: configure keyfield <form>: the form has no field that can be its key field (axi_primaryfieldlist
+            // lists only first-section fields that are auto-generated, or visible with Allow Duplicate off), so explain
+            // how to add one instead of showing an empty list
+            if (apiSourceName === "axi_primaryfieldlist" && dataList.length === 0) {
+                filteredObjects = [];
+                return [getNoKeyFieldMessage(tokens[2])];
             }
 
             let filtered = dataList.filter(item => {
@@ -15834,8 +15842,43 @@ if (typeof document !== "undefined") {
             // new code (issue #295): edit command, value does not fit a number field
             text.startsWith("Please type a valid number") ||
             text === "Please type Valid date using / (ex: DD / MM / YYYY)" ||
-            text === "Please Type the date";
+            // old code: text === "Please Type the date";
+            // new code: configure keyfield <form> on a form without a unique field (see getNoKeyFieldMessage)
+            text === "Please Type the date" ||
+            text.startsWith(noKeyFieldMessageStart());
 
+    }
+
+    /**
+     * Start of the message shown when a form has no field that can be its key field; isSystemMessage matches on it.
+     * A function, not a const, so it can be used from anywhere in the script regardless of order.
+     * @returns {string}
+     */
+    function noKeyFieldMessageStart() {
+        return "No key field available";
+    }
+
+    /**
+     * Message for "configure keyfield <form>" when the form has no field that can be its key field. A key field must be
+     * unique, so the user is told how to make one: an auto-generated field, or a visible field with Allow Duplicate off,
+     * in the form's first section (the only fields axi_primaryfieldlist offers).
+     * @param {string} formToken - The typed form token (tokens[2]).
+     * @returns {string}
+     */
+    function getNoKeyFieldMessage(formToken) {
+        const formName = cleanCommandToken(formToken || "");
+        const forForm = formName ? ` for '${formName}'` : "";
+        // old code
+        // return `${noKeyFieldMessageStart()}${forForm}. A key field must have a different value in every record. ` +
+        //     `Open this form in the form designer and, in its first section, set one field to Auto Generate, or set Allow Duplicate to No on a visible field. ` +
+        //     `Save the form, press Refresh in the palette, and try again.`;
+        // old code
+        // return `${noKeyFieldMessageStart()}${forForm}. ` +
+        //     `Open this Tstruct in the Developer Studio and configure an Autogenerate field, or a field with Allow Duplicate set to false.`;
+        // new code: wording agreed with the team; names the tstruct instead of "this Tstruct"
+        const tstructRef = formName ? `'${formName}' tstruct` : "this tstruct";
+        return `${noKeyFieldMessageStart()}${forForm}. ` +
+            `Open ${tstructRef} in the Developer Studio and configure an Autogenerate field, or a field with Allow Duplicate set to false.`;
     }
 
 
