@@ -1689,9 +1689,15 @@ if (typeof document !== "undefined") {
                 }
                 list = current;
             } else {
-                // Page 1: replace the list (records first, then the untouched field rows)
+                // old code
+                // // Page 1: replace the list (records first, then the untouched field rows)
+                // const previous = axDatasourceObj[listKey];
+                // list = recordItems.concat(fieldItems);
+                // new code: field rows first, then the records, as fn_axi_getstructs_obj returns them. With records first
+                // the field rows sat after page 1, and the records of later pages (appended on scroll) went below them,
+                // so "<form> edit" / "<form> view" showed the field names in the middle of the list.
                 const previous = axDatasourceObj[listKey];
-                list = recordItems.concat(fieldItems);
+                list = fieldItems.concat(recordItems);
                 // A reload of a base list must not forget structures / records that were merged in from earlier
                 // searches (they are not on page 1 but may already be in use by a typed command).
                 if (!cleanTerm && paged && Array.isArray(previous) && previous.length > 0) {
