@@ -15,11 +15,9 @@ CREATE TABLE IF NOT EXISTS axi_command_config (
 )
 >>
 
-
-<<
-INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active, is_system) VALUES ('cfg_configure_users', 'Configure', 'user listing', 'axusers', 'iview', NULL, NULL, NULL, 'T', 'T') ON CONFLICT (config_id) DO UPDATE SET is_system = 'T'
->>
-
+-- new code: the columns are added before any INSERT. An existing table (created before Custom Options) has no is_system yet,
+-- so an INSERT naming it failed and left 'user listing' with the default is_system = 'F', shown as a Custom Option (#306).
+-- Re-running this script repairs such a row through the INSERT's ON CONFLICT ... SET is_system = 'T'.
 <<
 ALTER TABLE axi_command_config ADD COLUMN IF NOT EXISTS is_system varchar(1) DEFAULT 'F'
 >>
@@ -28,6 +26,15 @@ ALTER TABLE axi_command_config ADD COLUMN IF NOT EXISTS is_system varchar(1) DEF
 -- Record source of a Custom Option (third word of the command); NULL = None (Axi_Dummy). Built-in Options leave it NULL
 ALTER TABLE axi_command_config ADD COLUMN IF NOT EXISTS record_source varchar(100) NULL
 >>
+
+
+<<
+INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active, is_system) VALUES ('cfg_configure_users', 'Configure', 'user listing', 'axusers', 'iview', NULL, NULL, NULL, 'T', 'T') ON CONFLICT (config_id) DO UPDATE SET is_system = 'T'
+>>
+
+-- old code: these two ALTER blocks stood here, after the first INSERT (#306); block markers left out so the installer cannot pick them up
+-- ALTER TABLE axi_command_config ADD COLUMN IF NOT EXISTS is_system varchar(1) DEFAULT 'F'
+-- ALTER TABLE axi_command_config ADD COLUMN IF NOT EXISTS record_source varchar(100) NULL
 
 <<
 INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active, is_system) VALUES ('cfg_configure_user', 'Configure', 'user', 'axusr', 'tstruct', NULL, NULL, NULL, 'T', 'T') ON CONFLICT (config_id) DO UPDATE SET is_system = 'T'
