@@ -8365,6 +8365,28 @@ if (typeof document !== "undefined") {
     //     return null;
     // }
 
+
+    // Characters the AxList search does not match: a CONTAINS filter holding any of them returns no rows
+    // (checked on the server: "spchar!@#$%^&*()" -> 0 rows, "spchar" -> the form "SPChar!@#$%^&*()").
+    const SERVER_SEARCH_UNSAFE_CHARS = /[!@#$%^&*()]/;
+
+    /**
+     * Returns the part of a typed search term that is sent to the server as the CONTAINS filter. A term without
+     * the characters in SERVER_SEARCH_UNSAFE_CHARS is returned unchanged. Otherwise the longest piece between
+     * those characters is used ("spchar!@#$%^&*()" -> "spchar"): the server then returns a wider set of rows and
+     * loadList keeps only the rows that contain the whole typed term. Returns "" when no piece is long enough to
+     * search with; the caller then sends no filter.
+     * @param {string} term - Typed term (trimmed, lower case).
+     * @returns {string} Term for the server filter.
+     */
+    function serverSearchTerm(term) {
+        const t = String(term || "");
+        if (!SERVER_SEARCH_UNSAFE_CHARS.test(t)) return t;
+        const pieces = t.split(/[!@#$%^&*()]+/).map(s => s.trim()).filter(Boolean);
+        const longest = pieces.reduce((best, s) => (s.length > best.length ? s : best), "");
+        return longest.length >= 3 ? longest : "";
+    }
+
     /**
      * Fetches dataset for specified Axpert data source name and parameters.
      * Supports pagination and dynamic server-side search filtering.
@@ -8458,12 +8480,26 @@ if (typeof document !== "undefined") {
             // Search is the AxList "displaydata CONTAINS" filter, applied before paging.
             // Note: for record lists (axi_getstructsdata) it also applies to the field rows (isfield = 't'),
             // so while a term is typed only fields whose text contains it come back.
-            if (cleanTerm && cleanTerm.length >= 3) {
+            // old code
+            // if (cleanTerm && cleanTerm.length >= 3) {
+            //     requestBody.props.filters = [
+            //         {
+            //             fldname: "displaydata",
+            //             condition: "CONTAINS",
+            //             value: cleanTerm,
+            //             datatype: "TEXT"
+            //         }
+            //     ];
+            // }
+            // new code: the server is sent a term it can match (see serverSearchTerm). The rows that come back are
+            // narrowed to the full typed term by loadList, so the result is the same, only the server filter is wider.
+            const serverTerm = cleanTerm ? serverSearchTerm(cleanTerm) : "";
+            if (serverTerm && serverTerm.length >= 3) {
                 requestBody.props.filters = [
                     {
                         fldname: "displaydata",
                         condition: "CONTAINS",
-                        value: cleanTerm,
+                        value: serverTerm,
                         datatype: "TEXT"
                     }
                 ];
