@@ -1788,6 +1788,10 @@ if (typeof document !== "undefined") {
     // not in it are looked up on the server as the user types.
     let structSearchTimer = null;
     let structSearchPendingTerm = null;
+    // new code: one debounce per structure list (baseKey -> { askKey, timer }). With the single timer above, a search
+    // of the "all" list (word recognition) cancelled the pending search of a command's own list (edit / create use
+    // "...$#$run$#$t"), so a form beyond page 1 of that list was never found: "<form> edit" sent nothing.
+    const structSearchByList = {};
     // True while a debounced record search (axi_getstructsdata etc.) is waiting to be sent
     let dynamicSearchPending = false;
 
@@ -1797,7 +1801,10 @@ if (typeof document !== "undefined") {
      * @returns {boolean} True while a search is pending.
      */
     function isSearchPending() {
-        return structSearchPendingTerm !== null || dynamicSearchPending;
+        // old code
+        // return structSearchPendingTerm !== null || dynamicSearchPending;
+        // new code: a structure search is pending while any list still waits out its debounce
+        return structSearchPendingTerm !== null || Object.keys(structSearchByList).length > 0 || dynamicSearchPending;
     }
     const structSearchAsked = new Set();
     // Structure list keys that were already asked again after coming back empty (see processParamforEditndView)
@@ -1828,15 +1835,29 @@ if (typeof document !== "undefined") {
         // (LRU of MAX_CACHED_SEARCH_KEYS), otherwise the result could no longer be scrolled for more pages
         const searchKey = `${baseKey}_q_${term}`;
         if (structSearchAsked.has(askKey) && !axPageState[searchKey]) structSearchAsked.delete(askKey);
-        if (structSearchAsked.has(askKey) || structSearchPendingTerm === askKey) return;
-        structSearchPendingTerm = askKey;
-        clearTimeout(structSearchTimer);
-        structSearchTimer = setTimeout(() => {
-            structSearchPendingTerm = null;
-            structSearchAsked.add(askKey);
-            
-            loadList("axi_structmetalist", param, term, 1, getPageSize());
-        }, SEARCH_DEBOUNCE_MS);
+        // old code
+        // if (structSearchAsked.has(askKey) || structSearchPendingTerm === askKey) return;
+        // structSearchPendingTerm = askKey;
+        // clearTimeout(structSearchTimer);
+        // structSearchTimer = setTimeout(() => {
+        //     structSearchPendingTerm = null;
+        //     structSearchAsked.add(askKey);
+        //
+        //     loadList("axi_structmetalist", param, term, 1, getPageSize());
+        // }, SEARCH_DEBOUNCE_MS);
+        // new code: debounced per list, so typing still sends one search per list, but a search of one list no
+        // longer cancels the pending search of another list
+        const pending = structSearchByList[baseKey];
+        if (structSearchAsked.has(askKey) || (pending && pending.askKey === askKey)) return;
+        if (pending) clearTimeout(pending.timer);
+        structSearchByList[baseKey] = {
+            askKey: askKey,
+            timer: setTimeout(() => {
+                delete structSearchByList[baseKey];
+                structSearchAsked.add(askKey);
+                loadList("axi_structmetalist", param, term, 1, getPageSize());
+            }, SEARCH_DEBOUNCE_MS)
+        };
     }
 
     /**
@@ -9274,6 +9295,8 @@ if (typeof document !== "undefined") {
                     structSearchAsked.clear();
                     emptyStructListRetried.clear();
                     structSearchPendingTerm = null;
+                    // new code: drop searches still waiting to be sent; they belong to the discarded lists
+                    Object.keys(structSearchByList).forEach(k => { clearTimeout(structSearchByList[k].timer); delete structSearchByList[k]; });
                     resolvedParams = {};
                     resolvedParamType = {};
                     createfieldnamevaluesList = {};
