@@ -1788,6 +1788,10 @@ if (typeof document !== "undefined") {
     // not in it are looked up on the server as the user types.
     let structSearchTimer = null;
     let structSearchPendingTerm = null;
+    // new code: one debounce per structure list (baseKey -> { askKey, timer }). With the single timer above, a search
+    // of the "all" list (word recognition) cancelled the pending search of a command's own list (edit / create use
+    // "...$#$run$#$t"), so a form beyond page 1 of that list was never found: "<form> edit" sent nothing.
+    const structSearchByList = {};
     // True while a debounced record search (axi_getstructsdata etc.) is waiting to be sent
     let dynamicSearchPending = false;
 
@@ -1797,7 +1801,10 @@ if (typeof document !== "undefined") {
      * @returns {boolean} True while a search is pending.
      */
     function isSearchPending() {
-        return structSearchPendingTerm !== null || dynamicSearchPending;
+        // old code
+        // return structSearchPendingTerm !== null || dynamicSearchPending;
+        // new code: a structure search is pending while any list still waits out its debounce
+        return structSearchPendingTerm !== null || Object.keys(structSearchByList).length > 0 || dynamicSearchPending;
     }
     const structSearchAsked = new Set();
     // Structure list keys that were already asked again after coming back empty (see processParamforEditndView)
@@ -1828,15 +1835,29 @@ if (typeof document !== "undefined") {
         // (LRU of MAX_CACHED_SEARCH_KEYS), otherwise the result could no longer be scrolled for more pages
         const searchKey = `${baseKey}_q_${term}`;
         if (structSearchAsked.has(askKey) && !axPageState[searchKey]) structSearchAsked.delete(askKey);
-        if (structSearchAsked.has(askKey) || structSearchPendingTerm === askKey) return;
-        structSearchPendingTerm = askKey;
-        clearTimeout(structSearchTimer);
-        structSearchTimer = setTimeout(() => {
-            structSearchPendingTerm = null;
-            structSearchAsked.add(askKey);
-            
-            loadList("axi_structmetalist", param, term, 1, getPageSize());
-        }, SEARCH_DEBOUNCE_MS);
+        // old code
+        // if (structSearchAsked.has(askKey) || structSearchPendingTerm === askKey) return;
+        // structSearchPendingTerm = askKey;
+        // clearTimeout(structSearchTimer);
+        // structSearchTimer = setTimeout(() => {
+        //     structSearchPendingTerm = null;
+        //     structSearchAsked.add(askKey);
+        //
+        //     loadList("axi_structmetalist", param, term, 1, getPageSize());
+        // }, SEARCH_DEBOUNCE_MS);
+        // new code: debounced per list, so typing still sends one search per list, but a search of one list no
+        // longer cancels the pending search of another list
+        const pending = structSearchByList[baseKey];
+        if (structSearchAsked.has(askKey) || (pending && pending.askKey === askKey)) return;
+        if (pending) clearTimeout(pending.timer);
+        structSearchByList[baseKey] = {
+            askKey: askKey,
+            timer: setTimeout(() => {
+                delete structSearchByList[baseKey];
+                structSearchAsked.add(askKey);
+                loadList("axi_structmetalist", param, term, 1, getPageSize());
+            }, SEARCH_DEBOUNCE_MS)
+        };
     }
 
     /**
@@ -5196,7 +5217,11 @@ if (typeof document !== "undefined") {
                 });
             }
 
-            if (actions.map(act => act.toLowerCase()).includes(partial)) {
+            // old code
+            // if (actions.map(act => act.toLowerCase()).includes(partial)) {
+            // new code: "<form> edit" alone cannot run, edit needs a record (a third word), so Go / Pop-Up are not
+            // offered for it here; the "Edit" suggestion below is shown instead and picking it moves on to the records.
+            if (partial !== "edit" && actions.map(act => act.toLowerCase()).includes(partial)) {
                 if (partial === "source") {
                     filteredObjects = [goOption];
                     return [goOption];
@@ -6111,7 +6136,10 @@ if (typeof document !== "undefined") {
      * @param {string} [preferredType] - Optional stype (t / i / p / ads); used to choose between equal names.
      * @returns {object|undefined} Matching row.
      */
-    function findStructRow(list, wanted, preferredType) {
+    // old code
+    // function findStructRow(list, wanted, preferredType) {
+    // new code: typedText (optional) = the words the user typed for the structure; see pickStructRowByTypedText
+    function findStructRow(list, wanted, preferredType, typedText) {
         if (!Array.isArray(list) || !wanted) return undefined;
         const w = String(wanted).replace(/\s*\[[^\]]*\]$/, "").trim().toLowerCase();
         if (!w) return undefined;
@@ -6119,11 +6147,43 @@ if (typeof document !== "undefined") {
         const typeOk = r => !preferredType || (r.stype || "").toLowerCase() === preferredType;
         // "Caption (transid)" names one structure among several sharing a caption (#289)
         const captionAndName = r => r.caption && r.name && `${String(r.caption).trim()} (${r.name})`.toLowerCase() === w;
+        // new code: two structures can share an internal name (form "SPChar (Rel53)" and report "SM53T (Rel53)").
+        // Without a type the first row by name was taken, which was the report, so "view" sent NA for the
+        // form's keyfield / primary table and listed nothing. The typed caption picks the right one.
+        if (!preferredType && typedText) {
+            const typedPick = pickStructRowByTypedText(list, w, typedText);
+            if (typedPick) return typedPick;
+        }
         return list.find(r => r && r.name === wanted && typeOk(r))
             || list.find(r => r && r.name === wanted)
             || list.find(r => r && captionAndName(r))
             || list.find(r => r && (same(r.name) || same(r.caption) || same(r.displaydata)) && typeOk(r))
             || list.find(r => r && (same(r.name) || same(r.caption) || same(r.displaydata)));
+    }
+
+    /**
+     * When several rows share the internal name, returns the one row whose caption / "Caption (name)" /
+     * displaydata equals what the user typed. Returns undefined in every other case (only one row with that
+     * name, nothing typed, or the typed text fits none or more than one row), so findStructRow then works
+     * exactly as before.
+     * @param {Array<object>} list - Structure rows (axi_structmetalist).
+     * @param {string} wantedLower - Resolved internal name, lower case.
+     * @param {string} typedText - The word(s) the user typed for the structure.
+     * @returns {object|undefined} The single matching row, or undefined.
+     */
+    function pickStructRowByTypedText(list, wantedLower, typedText) {
+        const typedFull = String(typedText || "").trim().toLowerCase();
+        const typedNoBadge = typedFull.replace(/\s*\[[^\]]*\]$/, "").trim();
+        if (!typedNoBadge) return undefined;
+        const sameName = list.filter(r => r && r.name && String(r.name).trim().toLowerCase() === wantedLower);
+        if (sameName.length < 2) return undefined;
+        const eq = (v, t) => v !== undefined && v !== null && String(v).trim().toLowerCase() === t;
+        const hits = sameName.filter(r =>
+            eq(r.caption, typedNoBadge) ||
+            eq(r.displaydata, typedFull) ||
+            (r.caption && `${String(r.caption).trim()} (${String(r.name).trim()})`.toLowerCase() === typedNoBadge)
+        );
+        return hits.length === 1 ? hits[0] : undefined;
     }
 
     function processParamforEditndView(tokens, commandConfig, paramValue, position) {
@@ -6183,7 +6243,10 @@ if (typeof document !== "undefined") {
         }
 
         // struct_name is the internal name when it was resolved, or still the caption the user typed
-        const struct_row = findStructRow(struct_dataList, struct_name, preferredType);
+        // old code
+        // const struct_row = findStructRow(struct_dataList, struct_name, preferredType);
+        // new code: the typed word decides between structures that share an internal name
+        const struct_row = findStructRow(struct_dataList, struct_name, preferredType, cleanString(tokens[1] || ""));
 
         if (!struct_row) {
             // The structure list is loaded one page at a time, so the chosen form / report may simply not be in the
@@ -8306,6 +8369,28 @@ if (typeof document !== "undefined") {
     //     return null;
     // }
 
+
+    // Characters the AxList search does not match: a CONTAINS filter holding any of them returns no rows
+    // (checked on the server: "spchar!@#$%^&*()" -> 0 rows, "spchar" -> the form "SPChar!@#$%^&*()").
+    const SERVER_SEARCH_UNSAFE_CHARS = /[!@#$%^&*()]/;
+
+    /**
+     * Returns the part of a typed search term that is sent to the server as the CONTAINS filter. A term without
+     * the characters in SERVER_SEARCH_UNSAFE_CHARS is returned unchanged. Otherwise the longest piece between
+     * those characters is used ("spchar!@#$%^&*()" -> "spchar"): the server then returns a wider set of rows and
+     * loadList keeps only the rows that contain the whole typed term. Returns "" when no piece is long enough to
+     * search with; the caller then sends no filter.
+     * @param {string} term - Typed term (trimmed, lower case).
+     * @returns {string} Term for the server filter.
+     */
+    function serverSearchTerm(term) {
+        const t = String(term || "");
+        if (!SERVER_SEARCH_UNSAFE_CHARS.test(t)) return t;
+        const pieces = t.split(/[!@#$%^&*()]+/).map(s => s.trim()).filter(Boolean);
+        const longest = pieces.reduce((best, s) => (s.length > best.length ? s : best), "");
+        return longest.length >= 3 ? longest : "";
+    }
+
     /**
      * Fetches dataset for specified Axpert data source name and parameters.
      * Supports pagination and dynamic server-side search filtering.
@@ -8399,12 +8484,26 @@ if (typeof document !== "undefined") {
             // Search is the AxList "displaydata CONTAINS" filter, applied before paging.
             // Note: for record lists (axi_getstructsdata) it also applies to the field rows (isfield = 't'),
             // so while a term is typed only fields whose text contains it come back.
-            if (cleanTerm && cleanTerm.length >= 3) {
+            // old code
+            // if (cleanTerm && cleanTerm.length >= 3) {
+            //     requestBody.props.filters = [
+            //         {
+            //             fldname: "displaydata",
+            //             condition: "CONTAINS",
+            //             value: cleanTerm,
+            //             datatype: "TEXT"
+            //         }
+            //     ];
+            // }
+            // new code: the server is sent a term it can match (see serverSearchTerm). The rows that come back are
+            // narrowed to the full typed term by loadList, so the result is the same, only the server filter is wider.
+            const serverTerm = cleanTerm ? serverSearchTerm(cleanTerm) : "";
+            if (serverTerm && serverTerm.length >= 3) {
                 requestBody.props.filters = [
                     {
                         fldname: "displaydata",
                         condition: "CONTAINS",
-                        value: cleanTerm,
+                        value: serverTerm,
                         datatype: "TEXT"
                     }
                 ];
@@ -9236,6 +9335,8 @@ if (typeof document !== "undefined") {
                     structSearchAsked.clear();
                     emptyStructListRetried.clear();
                     structSearchPendingTerm = null;
+                    // new code: drop searches still waiting to be sent; they belong to the discarded lists
+                    Object.keys(structSearchByList).forEach(k => { clearTimeout(structSearchByList[k].timer); delete structSearchByList[k]; });
                     resolvedParams = {};
                     resolvedParamType = {};
                     createfieldnamevaluesList = {};
