@@ -5217,7 +5217,11 @@ if (typeof document !== "undefined") {
                 });
             }
 
-            if (actions.map(act => act.toLowerCase()).includes(partial)) {
+            // old code
+            // if (actions.map(act => act.toLowerCase()).includes(partial)) {
+            // new code: "<form> edit" alone cannot run, edit needs a record (a third word), so Go / Pop-Up are not
+            // offered for it here; the "Edit" suggestion below is shown instead and picking it moves on to the records.
+            if (partial !== "edit" && actions.map(act => act.toLowerCase()).includes(partial)) {
                 if (partial === "source") {
                     filteredObjects = [goOption];
                     return [goOption];
