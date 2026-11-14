@@ -6111,7 +6111,10 @@ if (typeof document !== "undefined") {
      * @param {string} [preferredType] - Optional stype (t / i / p / ads); used to choose between equal names.
      * @returns {object|undefined} Matching row.
      */
-    function findStructRow(list, wanted, preferredType) {
+    // old code
+    // function findStructRow(list, wanted, preferredType) {
+    // new code: typedText (optional) = the words the user typed for the structure; see pickStructRowByTypedText
+    function findStructRow(list, wanted, preferredType, typedText) {
         if (!Array.isArray(list) || !wanted) return undefined;
         const w = String(wanted).replace(/\s*\[[^\]]*\]$/, "").trim().toLowerCase();
         if (!w) return undefined;
@@ -6119,11 +6122,43 @@ if (typeof document !== "undefined") {
         const typeOk = r => !preferredType || (r.stype || "").toLowerCase() === preferredType;
         // "Caption (transid)" names one structure among several sharing a caption (#289)
         const captionAndName = r => r.caption && r.name && `${String(r.caption).trim()} (${r.name})`.toLowerCase() === w;
+        // new code: two structures can share an internal name (form "SPChar (Rel53)" and report "SM53T (Rel53)").
+        // Without a type the first row by name was taken, which was the report, so "view" sent NA for the
+        // form's keyfield / primary table and listed nothing. The typed caption picks the right one.
+        if (!preferredType && typedText) {
+            const typedPick = pickStructRowByTypedText(list, w, typedText);
+            if (typedPick) return typedPick;
+        }
         return list.find(r => r && r.name === wanted && typeOk(r))
             || list.find(r => r && r.name === wanted)
             || list.find(r => r && captionAndName(r))
             || list.find(r => r && (same(r.name) || same(r.caption) || same(r.displaydata)) && typeOk(r))
             || list.find(r => r && (same(r.name) || same(r.caption) || same(r.displaydata)));
+    }
+
+    /**
+     * When several rows share the internal name, returns the one row whose caption / "Caption (name)" /
+     * displaydata equals what the user typed. Returns undefined in every other case (only one row with that
+     * name, nothing typed, or the typed text fits none or more than one row), so findStructRow then works
+     * exactly as before.
+     * @param {Array<object>} list - Structure rows (axi_structmetalist).
+     * @param {string} wantedLower - Resolved internal name, lower case.
+     * @param {string} typedText - The word(s) the user typed for the structure.
+     * @returns {object|undefined} The single matching row, or undefined.
+     */
+    function pickStructRowByTypedText(list, wantedLower, typedText) {
+        const typedFull = String(typedText || "").trim().toLowerCase();
+        const typedNoBadge = typedFull.replace(/\s*\[[^\]]*\]$/, "").trim();
+        if (!typedNoBadge) return undefined;
+        const sameName = list.filter(r => r && r.name && String(r.name).trim().toLowerCase() === wantedLower);
+        if (sameName.length < 2) return undefined;
+        const eq = (v, t) => v !== undefined && v !== null && String(v).trim().toLowerCase() === t;
+        const hits = sameName.filter(r =>
+            eq(r.caption, typedNoBadge) ||
+            eq(r.displaydata, typedFull) ||
+            (r.caption && `${String(r.caption).trim()} (${String(r.name).trim()})`.toLowerCase() === typedNoBadge)
+        );
+        return hits.length === 1 ? hits[0] : undefined;
     }
 
     function processParamforEditndView(tokens, commandConfig, paramValue, position) {
@@ -6183,7 +6218,10 @@ if (typeof document !== "undefined") {
         }
 
         // struct_name is the internal name when it was resolved, or still the caption the user typed
-        const struct_row = findStructRow(struct_dataList, struct_name, preferredType);
+        // old code
+        // const struct_row = findStructRow(struct_dataList, struct_name, preferredType);
+        // new code: the typed word decides between structures that share an internal name
+        const struct_row = findStructRow(struct_dataList, struct_name, preferredType, cleanString(tokens[1] || ""));
 
         if (!struct_row) {
             // The structure list is loaded one page at a time, so the chosen form / report may simply not be in the
