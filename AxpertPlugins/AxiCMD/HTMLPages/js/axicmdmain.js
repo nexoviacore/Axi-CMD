@@ -20523,10 +20523,16 @@ if (typeof document !== "undefined") {
                 },
                 {
                     element: '#Axi-Searchinp',
+                    // old code
+                    // intro: tourStep('code', 'Open Developer Studio with source',
+                    //     '<p>Use the <code>source</code> command to open a form, report, page or data source in Developer Studio.</p>' +
+                    //     tourRow('&quot;Sales Order&quot; source', 'Open the form or report design') +
+                    //     tourRow('&quot;Monthly Sales&quot; source', 'Open a page or data source definition') +
+                    // new code (#310): source is not offered for pages, only for forms, reports and data sources
                     intro: tourStep('code', 'Open Developer Studio with source',
-                        '<p>Use the <code>source</code> command to open a form, report, page or data source in Developer Studio.</p>' +
+                        '<p>Use the <code>source</code> command to open a form, report or data source in Developer Studio.</p>' +
                         tourRow('&quot;Sales Order&quot; source', 'Open the form or report design') +
-                        tourRow('&quot;Monthly Sales&quot; source', 'Open a page or data source definition') +
+                        tourRow('&quot;Monthly Sales&quot; source', 'Open a data source definition') +
                         '<div class="axi-tour-note">Only users with developer access can use <code>source</code>. Everyone else sees a message that they have no access.</div>'),
                     position: 'bottom'
                 },
