@@ -124,6 +124,9 @@ Schemaname:orclbase114
 formname:Import Encrypt
 prajwala1/Agil@3
 
+9. "Source" command wont be available for pages.But in Help-Open Developer Studio with source tab,it is wrongly mentioned. "Use the source command to open a form, report, page or data source in Developer Studio. "Monthly Sales
+ #310
+
 
 
 
