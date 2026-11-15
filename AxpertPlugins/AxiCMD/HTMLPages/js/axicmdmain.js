@@ -2712,6 +2712,7 @@ if (typeof document !== "undefined") {
             targetUrl += `&isIV=false`;
             targetUrl += `&isDupTab=${callParentNew('isDuplicateTab')}`;
             targetUrl += `&dummyload=false?`;
+            // targetUrl += `&dummyload=false♠`;
         }
         else {
             if (fieldName && fieldValue) {
@@ -2720,6 +2721,7 @@ if (typeof document !== "undefined") {
             targetUrl += `&hltype=open`;
             targetUrl += `&createaxiflag=true`;
             targetUrl += `&isDupTab=${callParentNew('isDuplicateTab')}`;
+            // targetUrl += `&dummyload=false♠`;
             targetUrl += `&dummyload=false?`;
         }
 
@@ -2837,6 +2839,7 @@ if (typeof document !== "undefined") {
         targetUrl += `&openerIV=${transId}`;
         targetUrl += `&isIV=false`;
         targetUrl += `&isDupTab=${isDupTab}`;
+        // targetUrl += `&dummyload=false♠`;
         targetUrl += `&dummyload=false?`;
         targetUrl += `&hdnbElapsTime=0`;
 

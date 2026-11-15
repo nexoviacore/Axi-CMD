@@ -1,7 +1,5 @@
 ﻿(() => {
-    // 26-02-2026: Pre release version
-
-    // /AxPlugins/Axi/HTMLPages/js/axi-autocomplete.js
+    
 
     let apiMetadataUrl = "";
     let apiMetadataConfigPromise = null;
