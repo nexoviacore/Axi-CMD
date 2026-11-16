@@ -2711,8 +2711,8 @@ if (typeof document !== "undefined") {
             targetUrl += `&openerIV=${transId}`;
             targetUrl += `&isIV=false`;
             targetUrl += `&isDupTab=${callParentNew('isDuplicateTab')}`;
-            targetUrl += `&dummyload=false?`;
-            // targetUrl += `&dummyload=false♠`;
+            // targetUrl += `&dummyload=false?`;
+            targetUrl += `&dummyload=false♠`;
         }
         else {
             if (fieldName && fieldValue) {
@@ -2721,8 +2721,8 @@ if (typeof document !== "undefined") {
             targetUrl += `&hltype=open`;
             targetUrl += `&createaxiflag=true`;
             targetUrl += `&isDupTab=${callParentNew('isDuplicateTab')}`;
-            // targetUrl += `&dummyload=false♠`;
-            targetUrl += `&dummyload=false?`;
+            targetUrl += `&dummyload=false♠`;
+            // targetUrl += `&dummyload=false?`;
         }
 
         if (extraParams) {
@@ -2839,8 +2839,8 @@ if (typeof document !== "undefined") {
         targetUrl += `&openerIV=${transId}`;
         targetUrl += `&isIV=false`;
         targetUrl += `&isDupTab=${isDupTab}`;
-        // targetUrl += `&dummyload=false♠`;
-        targetUrl += `&dummyload=false?`;
+        targetUrl += `&dummyload=false♠`;
+        // targetUrl += `&dummyload=false?`;
         targetUrl += `&hdnbElapsTime=0`;
 
         if (extraParams) {
@@ -11417,7 +11417,8 @@ if (typeof document !== "undefined") {
         // } else {
         targetUrl += `&${fieldname}=${encodeURIComponent(paramName)}`;
         targetUrl += "&act=load";
-        targetUrl += "&dummyload=false?";
+        // targetUrl += "&dummyload=false?";
+        targetUrl += `&dummyload=false♠`;
         // setCommandRoutes(input.value.trim(), targetUrl);
 
         window.LoadIframe(targetUrl);
@@ -11480,7 +11481,9 @@ if (typeof document !== "undefined") {
                     showToast(`User '${window.mainUserName}' has no access for Page source`);
                     return;
                 }
-                top.window.LoadIframe(`../aspx/tstruct.aspx?transid=sect&pagename=${encodeURIComponent(structName.name)}&act=load&dummyload=false?`);
+                top.window.LoadIframe(`../aspx/tstruct.aspx?transid=sect&pagename=${encodeURIComponent(structName.name)}&act=load&dummyload=false♠`);
+        // targetUrl += `&dummyload=false♠`;
+
                 break;
 
             default:
@@ -11534,14 +11537,14 @@ if (typeof document !== "undefined") {
                 showToast(`User '${window.mainUserName}' has no access for ADS source`);
                 return;
             }
-            targetUrl = `../aspx/tstruct.aspx?transid=b_sql&sqlname=${encodeURIComponent(name)}&act=load&dummyload=false?`;
+            targetUrl = `../aspx/tstruct.aspx?transid=b_sql&sqlname=${encodeURIComponent(name)}&act=load&dummyload=false♠`;
             handleViewSourceAds(name);
         } else if (type === "p" || type === "page") {
             if (!isDevOptionAllowed("page")) {
                 showToast(`User '${window.mainUserName}' has no access for Page source`);
                 return;
             }
-            targetUrl = `../aspx/tstruct.aspx?transid=sect&pagename=${encodeURIComponent(name)}&act=load&dummyload=false?`;
+            targetUrl = `../aspx/tstruct.aspx?transid=sect&pagename=${encodeURIComponent(name)}&act=load&dummyload=false♠`;
             top.window.LoadIframe(targetUrl);
         } else {
             showToast("Unknown source type: " + name);
@@ -14388,13 +14391,13 @@ if (typeof document !== "undefined") {
 
         if (type.toLowerCase() === "page" || type.toLowerCase() === "p") {
             if (rawName && rawName.toLowerCase() === "create new") {
-                const targetUrl = `../aspx/tstruct.aspx?transid=sect&hltype=open&createaxiflag=true&isDupTab=false&dummyload=false?`;
+                const targetUrl = `../aspx/tstruct.aspx?transid=sect&hltype=open&createaxiflag=true&isDupTab=false&dummyload=false♠`;
                 setCommandRoutes(input.value.trim(), targetUrl);
                 top.window.LoadIframe(targetUrl);
                 return;
             }
             let { value: resolvedName } = tryResolveToken(2, rawName, commandConfig, false);
-            const targetUrl = `../aspx/tstruct.aspx?transid=sect&pagename=${encodeURIComponent(resolvedName || rawName)}&act=load&dummyload=false?`;
+            const targetUrl = `../aspx/tstruct.aspx?transid=sect&pagename=${encodeURIComponent(resolvedName || rawName)}&act=load&dummyload=false♠`;
             setCommandRoutes(input.value.trim(), targetUrl);
             top.window.LoadIframe(targetUrl);
             return;

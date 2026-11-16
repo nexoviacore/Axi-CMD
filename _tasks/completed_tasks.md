@@ -106,7 +106,7 @@ Products, plugins and change requests can be installed from the command line. Th
 ----------------------------------------------------------------------------------------------
 
 1. Issue1: Sales Order Edit NA   -- Error is coming only when we select NA	Unable to load. SQL: Select BRANCHNAME from BRANCH Where BranchId = Needs to be checked with abinash. 
-2. TKT-0945 - AXI CMD Line - Configure Keyfield auto suggestions are displaying field containing Duplicate values - Needs to be checked with abinash. 
+2. "TKT-0945 - AXI CMD Line - Configure Keyfield auto suggestions are displaying field containing Duplicate values - Needs to be checked with abinash. 
 3. TKT-0782 - AXI CMD line-Edit with validation issue
 4. Able to type anything after selecting Configure "Trace Files" and user is able to execute the cmd without any error.
 Cmd used: Configure "Trace Files" GetMultiMenu.txt issue #305
@@ -137,21 +137,31 @@ configure and sdk commands will have only active and inactive actions not delete
 
 8. Issue7:Random Issue-when clicked on settings-configure,the "Axi Commandline Configuration" page is not openeing in orclbase114. -> Not Reproducible. 
 
-9. Issue1:UserActivation is not listing for admin username---orclbase114
+9. Issue1:UserActivation is not listing for admin username---orclbase114 - this needs to be release tomorrow changes: admin should be able to see user activation option irrespective of licactivation false or true. 
 
 10. If any tstruct page(tstruct,tstructs in Configure,SDK cmds) is opened from command line and then again opened from its actual place(pop up,Configuration studio,Axpert developer studio),then observed that it is showing blank screen.This issue occurs whereever tstruct page is available. - 
  Help with Malakonda. 
 
- 11.  Configure "Publish Config Studio"  in normal mode does not list the records unless the Server param is selected,but the same Configure "Publish Config Studio" in pop up mode displays the records without the Server param selection. -> Assigned to Nalina
+ 11.  Configure "Publish Config Studio"  in normal mode does not list the records unless the Server param is selected,but the same Configure "Publish Config Studio" in pop up mode displays the records without the Server param selection. -> Assigned to Nalina - Popup parameters are not mandatory. 
  12.  Open any screens under Configure in normal mode and then open the same screen in pop up mode,observed that the page is blank in pop up.For listing screens,the issue occurs when the tstruct page is opened from listing screen in normal mode and same is done in pop up mode. -> Assigned to Nalina
 
  13. Open any tstruct using View cmd and then click on New button in normal mode.Now open the same tstruct using View cmd and then click on New button in pop up mode, observed that the page is blank in pop up. -> Assigned to Nalina
 
 
+ ../aspx/iview.aspx?ivname=ad_pbcs&hdnbElapsTime=0
+ ../AxpertPlugins/AxiCMD/HTMLPages/PopupContainer.html?contenturl=aspx/ivtoivload.aspx?ivname=ad_pbcs&tname=Publish%20Config%20Studio&AxIsPop=true&isDupTab=true
 
 
 
 
+
+
+
+
+../aspx/tstruct.aspx?transid=a__fn&hltype=open&createaxiflag=true&isDupTab=false&dummyload=false♠&tname=Form%20Notification&AxPop=true
+
+
+../aspx/tstruct.aspx?transid=a__fn&hltype=open&createaxiflag=true&isDupTab=false&dummyload=false♠&hdnbElapsTime=0
 
 
 
