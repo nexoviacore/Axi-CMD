@@ -95,37 +95,60 @@ Longer, or containing @@VARS@@: the value becomes h plus about 11 characters of 
 
 
 
+
+
+
 11/11/2026
-2. TKT-0945 - AXI CMD Line - Configure Keyfield auto suggestions are displaying field containing Duplicate values
+Enhancements
+### 1. Install command and repository configuration (TSK-0921)
+Products, plugins and change requests can be installed from the command line. The GitHub account and repository used for each type are configured first.
+
+----------------------------------------------------------------------------------------------
+
+1. Issue1: Sales Order Edit NA   -- Error is coming only when we select NA	Unable to load. SQL: Select BRANCHNAME from BRANCH Where BranchId = Needs to be checked with abinash. 
+2. TKT-0945 - AXI CMD Line - Configure Keyfield auto suggestions are displaying field containing Duplicate values - Needs to be checked with abinash. 
 3. TKT-0782 - AXI CMD line-Edit with validation issue
 4. Able to type anything after selecting Configure "Trace Files" and user is able to execute the cmd without any error.
 Cmd used: Configure "Trace Files" GetMultiMenu.txt issue #305
  #295
 5. Issue:when user click on settings(axi command line) it is not functioning as expected(random  issue)
-6. Issue1:When Records per load is set to 1,000 or above, field names are not displayed in the selection list, and users have to search for the required fields manually.
-When Records per load is set to less than 1,000, field names are displayed in the middle of the selection area instead of being properly aligned. (fixed)
+6. Issue1:field names are displayed in the middle of the selection area instead of being properly aligned. (fixed)
 username/password:smokeuser1/agile
 Schemaname:orclbase114
 formname:Import Encrypt
 
-7. Issue3:when user set record per load as 100 when user search the record(ex:1064) the suggetion will list the searched record  and if we click on go it is navigate to datapage
-if we set  record per load as 5000  and we search the samerecord(1064) it is throwing error Record 'ASI-0001' not found in Import Encrypt.
-Note:Search the record which is not present in the suggetions
-The issue is reproducible in both schema
-schemaname:pgbase114
-formname:import Encryption
-username/password:smokeuser1/agile
-Schemaname:orclbase114
-formname:Import Encrypt
-prajwala1/Agil@3
 
-8. Issue4:when user search by providing following word   @#$  it is showing no matching records but when user click on run it is navigate to data page
-Schemaname:orclbase114
-formname:Import Encrypt
-prajwala1/Agil@3
-
-9. "Source" command wont be available for pages.But in Help-Open Developer Studio with source tab,it is wrongly mentioned. "Use the source command to open a form, report, page or data source in Developer Studio. "Monthly Sales
+6. "Source" command wont be available for pages.But in Help-Open Developer Studio with source tab,it is wrongly mentioned. "Use the source command to open a form, report, page or data source in Developer Studio. "Monthly Sales
  #310
+
+ 7. Issue1: Configured tstruct frm Settings-Configure screen.Opened that tstruct from Configure cmd.Tstruct page is opened, clicked on list view,observed that it is not displaying the existing records of that tstruct.  Not Reproducible. 
+Cmd: Configure Cust_tst
+
+Issue2: Record source in Advanced Configure setting is not listing all the ADS.
+Convert the input -> Select component. 
+
+Issue3:Able to activate/inactivate the default commands under Configure and SDK . -> Feature. 
+
+
+Issue6:There is no option to delete the custom created commands. 
+configure and sdk commands will have only active and inactive actions not delete actions. 
+
+
+
+8. Issue7:Random Issue-when clicked on settings-configure,the "Axi Commandline Configuration" page is not openeing in orclbase114. -> Not Reproducible. 
+
+9. Issue1:UserActivation is not listing for admin username---orclbase114
+
+10. If any tstruct page(tstruct,tstructs in Configure,SDK cmds) is opened from command line and then again opened from its actual place(pop up,Configuration studio,Axpert developer studio),then observed that it is showing blank screen.This issue occurs whereever tstruct page is available. - 
+ Help with Malakonda. 
+
+ 11.  Configure "Publish Config Studio"  in normal mode does not list the records unless the Server param is selected,but the same Configure "Publish Config Studio" in pop up mode displays the records without the Server param selection. -> Assigned to Nalina
+ 12.  Open any screens under Configure in normal mode and then open the same screen in pop up mode,observed that the page is blank in pop up.For listing screens,the issue occurs when the tstruct page is opened from listing screen in normal mode and same is done in pop up mode. -> Assigned to Nalina
+
+ 13. Open any tstruct using View cmd and then click on New button in normal mode.Now open the same tstruct using View cmd and then click on New button in pop up mode, observed that the page is blank in pop up. -> Assigned to Nalina
+
+
+
 
 
 
