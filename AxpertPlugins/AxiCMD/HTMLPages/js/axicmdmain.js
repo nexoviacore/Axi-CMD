@@ -19538,7 +19538,7 @@ if (typeof document !== "undefined") {
      * Filters command dictionary according to user permissions.
      * @param {object} commandsFromDb - Raw commands from DB.
      * @param {object} accessPermissions - User permissions object.
-     * @param {boolean} [canActivateUsers=false] - axusers.licactivation is on for the user (User Activation is shown only then, admin included).
+     * @param {boolean} [canActivateUsers=false] - axusers.licactivation is on for the user (User Activation is shown only then; admin always sees it).
      * @returns {object} Filtered commands dictionary.
      */
     function buildCommandsByAccessPermissions(commandsFromDb, accessPermissions, canActivateUsers = false) {
@@ -19650,8 +19650,13 @@ if (typeof document !== "undefined") {
                 // if (!isAdmin && !canActivateUsers && rawType.toLowerCase() === "user activation") {
                 //     continue;
                 // }
-                // new code: User Activation only when axusers.licactivation is T / true (any case), for admin and every other user
-                if (!canActivateUsers && rawType.toLowerCase() === "user activation") {
+                // old code
+                // // new code: User Activation only when axusers.licactivation is T / true (any case), for admin and every other user
+                // if (!canActivateUsers && rawType.toLowerCase() === "user activation") {
+                //     continue;
+                // }
+                // new code: admin always gets User Activation (licactivation is not checked); anyone else only with licactivation on
+                if (!isAdmin && !canActivateUsers && rawType.toLowerCase() === "user activation") {
                     continue;
                 }
 

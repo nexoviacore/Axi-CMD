@@ -165,3 +165,27 @@ configure and sdk commands will have only active and inactive actions not delete
 
 
 
+
+
+INSERT INTO axdirectsql (axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd, pagination, applydimensions, fetchsize) VALUES(99999999990035, 'F', 0, NULL, 'admin', '2026-11-16 21:51:49.000', 'admin', '2025-12-22 16:01:14.000', NULL, 1, 1, NULL, NULL, NULL, 'axi_primaryfieldlist', NULL, 'Internal', 1, 'select
+ caption || '' ('' || fname || '')'' displaydata,
+ caption,
+ fname name
+from
+ axpflds
+where
+ tstruct = :param1
+ and dcname = ''dc1''
+ and (modeofentry = ''autogenerate''
+  or (LOWER(allowduplicate) = ''f''
+   and LOWER(hidden) = ''f'' and lower(datatype)=''c''))
+order by ordno asc', 'param1', 'param1', 'ALL', NULL, 'displaydata,caption,name', 'F', '6 Hr', NULL, NULL, NULL, NULL, NULL, NULL);
+
+
+
+INSERT INTO axdirectsql
+(axdirectsqlid, cancel, sourceid, mapname, username, modifiedon, createdby, createdon, wkid, app_level, app_desc, app_slevel, cancelremarks, wfroles, sqlname, ddldatatype, sqlsrc, sqlsrccnd, sqltext, paramcal, sqlparams, accessstring, groupname, sqlquerycols, cachedata, cacheinterval, encryptedflds, adsdesc, smartlistcnd)
+VALUES(99999999990035, 'F', 0, NULL, 'admin', '2025-12-23 13:35:16.000', 'admin', '2025-12-22 16:01:14.000', NULL, 1, 1, NULL, NULL, NULL, 'axi_primaryfieldlist', NULL, 'Metadata', 5, 'SELECT caption||'' (''||fname||'')'' displaydata, caption, fname name FROM axpflds WHERE tstruct = :param1 and dcname = ''dc1'' AND (modeofentry = ''autogenerate'' OR (LOWER(allowduplicate) = ''f'' AND LOWER(hidden) = ''f'')) order by ordno asc', 'param1', 'param1', 'ALL', NULL, NULL, 'F', '6 Hr', NULL, NULL, NULL)
+
+
+
