@@ -2253,10 +2253,15 @@ if (typeof document !== "undefined") {
         //     handleCommandSetting({ tokens, commandConfig, configRow });
         //     return true;
         // }
-        // new code (#314): the account / repo can no longer be set from AxiCMD. The rows are deleted by the SQL scripts;
-        // a database that still has one only gets a message, nothing is saved.
+        // old code (#314): the account / repo can no longer be set from AxiCMD. The rows are deleted by the SQL scripts;
+        // // a database that still has one only gets a message, nothing is saved.
+        // if (optType === "commandsetting") {
+        //     showToast("The Git account and repository can no longer be configured from AxiCMD. Ask your administrator to set them.");
+        //     return true;
+        // }
+        // new code (#320): configure <Product|Plugin|ChangeRequest> PAT asks for the GitHub token in a masked dialog and saves it
         if (optType === "commandsetting") {
-            showToast("The Git account and repository can no longer be configured from AxiCMD. Ask your administrator to set them.");
+            handleCommandSetting({ tokens, commandConfig, configRow });
             return true;
         }
 
@@ -5460,8 +5465,11 @@ if (typeof document !== "undefined") {
                 if (isCommandSettingOption(tokens[1])) {
                     // old code
                     // const csOptions = shouldOfferCommandSettingGo(tokens) ? [goOption] : [];
-                    // new code: configure product / plugin / changerequest saves a setting, so Save is offered instead of Go
-                    const csOptions = shouldOfferCommandSettingGo(tokens) ? [saveOption] : [];
+                    // old code (#320)
+                    // // new code: configure product / plugin / changerequest saves a setting, so Save is offered instead of Go
+                    // const csOptions = shouldOfferCommandSettingGo(tokens) ? [saveOption] : [];
+                    // new code (#320): configure <type> PAT opens the token dialog, so Go
+                    const csOptions = shouldOfferCommandSettingGo(tokens) ? [goOption] : [];
                     filteredObjects = csOptions;
                     return csOptions;
                 }
@@ -5518,8 +5526,11 @@ if (typeof document !== "undefined") {
         if (groupKey.toLowerCase() === "configure" && tokens.length > 3 && isCommandSettingOption(tokens[1])) {
             // old code
             // const csOptions = shouldOfferCommandSettingGo(tokens) ? [goOption] : [];
-            // new code: Save instead of Go for configure product / plugin / changerequest
-            const csOptions = shouldOfferCommandSettingGo(tokens) ? [saveOption] : [];
+            // old code (#320)
+            // // new code: Save instead of Go for configure product / plugin / changerequest
+            // const csOptions = shouldOfferCommandSettingGo(tokens) ? [saveOption] : [];
+            // new code (#320): configure <type> PAT opens the token dialog, so Go
+            const csOptions = shouldOfferCommandSettingGo(tokens) ? [goOption] : [];
             filteredObjects = csOptions;
             return csOptions;
         }
@@ -12028,6 +12039,10 @@ if (typeof document !== "undefined") {
     // Configure Product / Plugin / ChangeRequest (prompt_option_type 'commandsetting')
     // ---------------------------------------------------------------------------------------------------------
     const COMMAND_SETTING_LABELS = { product: "Product", plugin: "Plugin", changerequest: "Change Request" };
+    // new code (#320): the only sub-option of configure product / plugin / changerequest, and the property it saves
+    const COMMAND_SETTING_PAT_WORD = "PAT";
+    const COMMAND_SETTING_PAT_KEY = "pat";
+    const COMMAND_SETTING_PAT_MAX = 255;
     const commandSettingSavedCache = {};   // type -> { t, v } ; v = { accountname, reponame } or null when the GET failed
     const commandSettingPending = {};      // type -> true while a GET is running
     const COMMAND_SETTING_RETRY_MS = 30000;
@@ -12146,8 +12161,10 @@ if (typeof document !== "undefined") {
     function isCommandSettingOption(tokenName) {
         // old code
         // return !!getCommandSettingRow(tokenName);
-        // new code (#314): configure product / plugin / changerequest is removed, so no hint, Save or Ctrl + S is offered for it
-        return false;
+        // old code (#314): configure product / plugin / changerequest is removed, so no hint, Save or Ctrl + S is offered for it
+        // return false;
+        // new code (#320): the options are back, with PAT as their only sub-option
+        return !!getCommandSettingRow(tokenName);
     }
 
     /**
@@ -12222,9 +12239,22 @@ if (typeof document !== "undefined") {
     function shouldOfferCommandSettingGo(tokens) {
         // old code
         // return !!tokens && tokens.length > 3 && validateCommandSettingName(tokens[2]).ok && validateCommandSettingName(tokens[3]).ok;
-        // new code: words after the repo name mean a name with a space was typed, so no Go
-        return !!tokens && tokens.length > 3 && !hasCommandSettingExtraWords(tokens)
-            && validateCommandSettingName(tokens[2]).ok && validateCommandSettingName(tokens[3]).ok;
+        // old code (#320)
+        // // new code: words after the repo name mean a name with a space was typed, so no Go
+        // return !!tokens && tokens.length > 3 && !hasCommandSettingExtraWords(tokens)
+        //     && validateCommandSettingName(tokens[2]).ok && validateCommandSettingName(tokens[3]).ok;
+        // new code (#320): configure <type> PAT, nothing after PAT
+        return !!tokens && tokens.length > 2 && isCommandSettingPatWord(tokens[2]) && !hasCommandSettingExtraWords(tokens);
+    }
+
+    // new code (#320)
+    /**
+     * True when the word is the PAT sub-option of configure product / plugin / changerequest.
+     * @param {string} raw - Typed word.
+     * @returns {boolean}
+     */
+    function isCommandSettingPatWord(raw) {
+        return cleanCommandToken(raw == null ? "" : String(raw)).trim().toLowerCase() === COMMAND_SETTING_PAT_WORD.toLowerCase();
     }
 
     /**
@@ -12233,7 +12263,10 @@ if (typeof document !== "undefined") {
      * @returns {boolean}
      */
     function hasCommandSettingExtraWords(tokens) {
-        return !!tokens && tokens.slice(4).some(t => cleanCommandToken(t || "").trim() !== "");
+        // old code (#320)
+        // return !!tokens && tokens.slice(4).some(t => cleanCommandToken(t || "").trim() !== "");
+        // new code (#320): only PAT may follow the option (configure product PAT)
+        return !!tokens && tokens.slice(3).some(t => cleanCommandToken(t || "").trim() !== "");
     }
 
     /**
@@ -12335,52 +12368,270 @@ if (typeof document !== "undefined") {
         let list = [];
         filteredObjects = [];
 
-        if (wordNo === 3) updateDynamicHintFromPrompt({ prompt: "account name" });
-        else if (wordNo === 4) updateDynamicHintFromPrompt({ prompt: "repo name" });
+        // new code (#320): configure <type> PAT. PAT is offered at word 3, Go once it is typed; the token itself is never typed here
+        // (Go opens a masked dialog), so it cannot end up in the command line, history or favourites.
+        if (wordNo === 3 && !isCommandSettingPatWord(tokens[2])) updateDynamicHintFromPrompt({ prompt: "option" });
         else updateDynamicHintFromPrompt(null);
-
-        // old code
-        // if (wordNo === 3 || wordNo === 4) {
-        //     loadSavedCommandSetting(type);
-        //     const saved = commandSettingSavedCache[type] && commandSettingSavedCache[type].v;
-        //     const savedValue = saved ? (wordNo === 3 ? saved.accountname : saved.reponame) : "";
-        //     const partial = cleanCommandToken(tokens[wordNo - 1] || "").toLowerCase();
-        //     if (savedValue && savedValue.toLowerCase().startsWith(partial) && savedValue.toLowerCase() !== partial) {
-        //         list = [savedValue];
-        //         filteredObjects = [{ name: savedValue, displaydata: savedValue }];
-        //     }
-        // }
-        // new code: the saved account / repo from axi_command_settings is no longer offered as a suggestion;
-        // only the account name / repo name hint and Go are shown
-
+        if (hasCommandSettingExtraWords(tokens)) {
+            hintDiv.textContent = "";
+            return [`Only ${COMMAND_SETTING_PAT_WORD} can follow '${getCommandSettingLabel(type)}'. Remove the extra words.`];
+        }
         if (shouldOfferCommandSettingGo(tokens)) {
-            // old code
-            // list.unshift(goOption);
-            // filteredObjects.unshift(goOption);
-            // new code: Save instead of Go (the command saves the account / repo setting)
-            list.unshift(saveOption);
-            filteredObjects.unshift(saveOption);
+            list = [goOption];
+            filteredObjects = [goOption];
+            return list;
         }
-        // new code: nothing to pick yet, so say what to type instead of "No Data"
-        if (list.length === 0) {
-            if (wordNo === 3) list = ["Type GitHub account name"];
-            else if (wordNo === 4) list = ["Type GitHub repository name"];
+        const partialPat = cleanCommandToken(tokens[2] || "").trim().toLowerCase();
+        if (COMMAND_SETTING_PAT_WORD.toLowerCase().startsWith(partialPat)) {
+            list = [COMMAND_SETTING_PAT_WORD];
+            filteredObjects = [{ name: COMMAND_SETTING_PAT_WORD, displaydata: COMMAND_SETTING_PAT_WORD }];
+            return list;
         }
-        return list;
+        hintDiv.textContent = "";
+        return [`Only ${COMMAND_SETTING_PAT_WORD} can be configured for ${getCommandSettingLabel(type)}`];
+
+        // old code (#320): account name / repo name hints and Save
+        // if (wordNo === 3) updateDynamicHintFromPrompt({ prompt: "account name" });
+        // else if (wordNo === 4) updateDynamicHintFromPrompt({ prompt: "repo name" });
+        // else updateDynamicHintFromPrompt(null);
+
+        // // old code
+        // // if (wordNo === 3 || wordNo === 4) {
+        // //     loadSavedCommandSetting(type);
+        // //     const saved = commandSettingSavedCache[type] && commandSettingSavedCache[type].v;
+        // //     const savedValue = saved ? (wordNo === 3 ? saved.accountname : saved.reponame) : "";
+        // //     const partial = cleanCommandToken(tokens[wordNo - 1] || "").toLowerCase();
+        // //     if (savedValue && savedValue.toLowerCase().startsWith(partial) && savedValue.toLowerCase() !== partial) {
+        // //         list = [savedValue];
+        // //         filteredObjects = [{ name: savedValue, displaydata: savedValue }];
+        // //     }
+        // // }
+        // // new code: the saved account / repo from axi_command_settings is no longer offered as a suggestion;
+        // // only the account name / repo name hint and Go are shown
+
+        // if (shouldOfferCommandSettingGo(tokens)) {
+        //     // old code
+        //     // list.unshift(goOption);
+        //     // filteredObjects.unshift(goOption);
+        //     // new code: Save instead of Go (the command saves the account / repo setting)
+        //     list.unshift(saveOption);
+        //     filteredObjects.unshift(saveOption);
+        // }
+        // // new code: nothing to pick yet, so say what to type instead of "No Data"
+        // if (list.length === 0) {
+        //     if (wordNo === 3) list = ["Type GitHub account name"];
+        //     else if (wordNo === 4) list = ["Type GitHub repository name"];
+        // }
+        // return list;
+    }
+
+    // old code (#320): configure <type> <account> <repo> saved the account / repo pair
+    // /**
+    //  * Saves the account / repo pair for a commandsetting option through the CommandSettings API.
+    //  * @async
+    //  * @param {object} context - Execution context.
+    //  * @param {string[]} context.tokens - Command tokens.
+    //  * @param {object} context.configRow - Matching configure row.
+    //  * @returns {Promise<void>}
+    //  */
+    // async function handleCommandSetting({ tokens, commandConfig, configRow }) {
+    //     // new code: a save is already running (loader on screen), so ignore a second Go / Enter
+    //     if (commandSettingSaving) return;
+
+    //     const propertyType = getCommandSettingType(configRow, tokens[1]);
+    //     const label = getCommandSettingLabel(propertyType);
+
+    //     const perms = getAccessPermissions();
+    //     if (!(perms.appMgrAccess && perms.buildAccess)) {
+    //         showToast(`User '${window.mainUserName}' has no access to configure ${label}`);
+    //         return;
+    //     }
+
+    //     // old code
+    //     // const account = validateCommandSettingName(tokens[2]);
+    //     // if (!account.ok) { showToast(`Account name: ${account.message}`); return; }
+    //     // const repo = validateCommandSettingName(tokens[3]);
+    //     // if (!repo.ok) { showToast(`Repo name: ${repo.message}`); return; }
+    //     // // new code: account and repo names cannot contain spaces, so extra words are an error, not ignored
+    //     // if (hasCommandSettingExtraWords(tokens)) { showToast(`Only an account name and a repo name are expected after '${label}'`); return; }
+    //     // new code: on a refused name the palette reopens with the command, so it can be corrected
+    //     const account = validateCommandSettingName(tokens[2]);
+    //     if (!account.ok) { showToast(`Account name: ${account.message}`); reopenPaletteForCommandSetting(); return; }
+    //     const repo = validateCommandSettingName(tokens[3]);
+    //     if (!repo.ok) { showToast(`Repo name: ${repo.message}`); reopenPaletteForCommandSetting(); return; }
+    //     // account and repo names cannot contain spaces, so extra words are an error, not ignored
+    //     if (hasCommandSettingExtraWords(tokens)) { showToast(`Only an account name and a repo name are expected after '${label}'`); reopenPaletteForCommandSetting(); return; }
+
+    //     const appname = getProjectName() || "";
+    //     const username = getCommandSettingUser();
+    //     if (!appname) { showToast("Application session is not available. App name is required."); return; }
+    //     if (!username) { showToast("User session is not available. Username is required."); return; }
+
+    //     // new code: loader in the palette until the API answers; set before the first await, so the hide() the
+    //     // command runner calls after this handler returns keeps the palette open
+    //     startCommandSettingSaving(label);
+    //     let savedOk = false;
+    //     // old code
+    //     // const abortCtrl = (typeof AbortController !== "undefined") ? new AbortController() : null;
+    //     // const abortTimer = abortCtrl ? setTimeout(() => abortCtrl.abort(), COMMAND_SETTING_SAVE_TIMEOUT_MS) : null;
+    //     // new code: the save timeout starts after the repository check, which has its own timeout
+    //     const abortCtrl = (typeof AbortController !== "undefined") ? new AbortController() : null;
+    //     let abortTimer = null;
+
+    //     try {
+    //         // new code: a repository GitHub does not know is not saved; when GitHub cannot be asked, save and warn
+    //         const repoCheck = await verifyCommandSettingRepo(propertyType, account.value, repo.value);
+    //         if (repoCheck.blocked) {
+    //             showToast(`Error: ${repoCheck.message} Check the account and repo names.`);
+    //             return;
+    //         }
+    //         abortTimer = abortCtrl ? setTimeout(() => abortCtrl.abort(), COMMAND_SETTING_SAVE_TIMEOUT_MS) : null;
+
+    //         const res = await fetch(`${axiCommandSettingsUrl}?appname=${encodeURIComponent(appname)}`, {
+    //             method: "POST",
+    //             headers: { "Content-Type": "application/json" },
+    //             signal: abortCtrl ? abortCtrl.signal : undefined,
+    //             body: JSON.stringify({
+    //                 username: username,
+    //                 propertyCategory: "axicmd",
+    //                 propertyType: propertyType,
+    //                 properties: { accountname: account.value, reponame: repo.value }
+    //             })
+    //         });
+
+    //         // old code
+    //         // let dataObj = null;
+    //         // try { dataObj = await res.json(); } catch (e) { }
+    //         // new code: a 400 from the API is a plain-text message, so read text and parse JSON only when it is JSON
+    //         let dataObj = null;
+    //         let bodyText = "";
+    //         try { bodyText = await res.text(); dataObj = JSON.parse(bodyText); } catch (e) { }
+
+    //         if (!res.ok || (dataObj && dataObj.success === false)) {
+    //             const plainMessage = (typeof dataObj === "string" ? dataObj : (!dataObj ? bodyText : "")).trim();
+    //             const errorMessage = dataObj?.message || dataObj?.Message || dataObj?.error || dataObj?.title || plainMessage || "Failed to save " + label + " repository";
+    //             showToast(`Error: ${errorMessage}`);
+    //             return;
+    //         }
+
+    //         const saved = readCommandSettingProps(dataObj?.properties || dataObj?.Properties);
+    //         const prev = readCommandSettingProps(dataObj?.previous || dataObj?.Previous);
+    //         const newAccount = saved.accountname || account.value;
+    //         const newRepo = saved.reponame || repo.value;
+    //         const wasText = (prev.accountname || prev.reponame) ? `${prev.accountname}/${prev.reponame}` : "not set";
+
+    //         delete commandSettingSavedCache[propertyType];
+    //         clearInstallCaches(propertyType);
+    //         savedOk = true;
+    //         // old code
+    //         // showToast(`${label} repository set to ${newAccount}/${newRepo} (was ${wasText})`, 5000, true);
+    //         // new code: say when the repository could not be checked
+    //         if (repoCheck.warning) {
+    //             showToast(`${label} repository set to ${newAccount}/${newRepo} (was ${wasText}), but it could not be checked on GitHub: ${repoCheck.warning}`, 8000, "warning");
+    //         } else {
+    //             showToast(`${label} repository set to ${newAccount}/${newRepo} (was ${wasText})`, 5000, true);
+    //         }
+    //     } catch (err) {
+    //         // old code
+    //         // showToast(`Error: ${err.message || err}`);
+    //         // new code: say so when the save was stopped by the timeout
+    //         if (err && err.name === "AbortError") {
+    //             showToast(`Error: saving the ${label} repository took too long. Please try again.`);
+    //         } else {
+    //             showToast(`Error: ${err.message || err}`);
+    //         }
+    //     } finally {
+    //         // new code: loader off; palette closes on success, reopens with the command on failure
+    //         if (abortTimer) clearTimeout(abortTimer);
+    //         endCommandSettingSaving(savedOk);
+    //     }
+    // }
+
+
+    // new code (#320) ------------------------------------------------------------------------------------------
+    // configure <Product|Plugin|ChangeRequest> PAT: Go opens a dialog with a masked field for the GitHub personal access
+    // token, which is saved as property "pat" of the type in axi_command_settings (CommandSettings API). The token is never
+    // typed in the command line, and the API never sends it back: GET answers only patconfigured / patusername / patmodifiedon.
+    const PAT_DIALOG_CSS = `
+.axi-pat-field{display:block;margin:0 0 6px;font-weight:600;color:var(--ai-ink)}
+.axi-pat-row{display:flex;gap:8px}
+.axi-pat-input{flex:1;min-width:0;height:36px;padding:0 10px;font:13px/1.2 Consolas,"Cascadia Mono","Courier New",monospace;direction:ltr;color:var(--ai-ink);background:var(--ai-sheet);border:1px solid var(--ai-field);border-radius:6px;outline:none}
+.axi-pat-input:focus{border-color:var(--ai-signal);box-shadow:0 0 0 3px var(--ai-signal-tint)}
+.axi-pat-input[aria-invalid="true"]{border-color:var(--ai-err)}
+.axi-pat-input:disabled{background:var(--ai-paper);color:var(--ai-slate)}
+.axi-pat-help{margin:8px 0 0;font-size:12px;color:var(--ai-slate);unicode-bidi:plaintext}
+.axi-pat-status{margin:6px 0 0;font-size:12px;color:var(--ai-slate);unicode-bidi:plaintext}
+.axi-pat-status[data-state="set"]{color:var(--ai-ink)}
+.axi-install-btn:disabled{opacity:.55;cursor:default}
+`;
+
+    /**
+     * Adds the PAT dialog styles (on top of the install modal ones) once.
+     * @returns {void}
+     */
+    function ensurePatDialogStyles() {
+        ensureInstallStyles();
+        if (document.getElementById("axi-pat-styles")) return;
+        const style = document.createElement("style");
+        style.id = "axi-pat-styles";
+        style.textContent = PAT_DIALOG_CSS;
+        document.head.appendChild(style);
     }
 
     /**
-     * Saves the account / repo pair for a commandsetting option through the CommandSettings API.
-     * @async
+     * Checks a typed GitHub personal access token. Classic (ghp_...) and fine-grained (github_pat_...) tokens are letters,
+     * digits and underscores.
+     * @param {string} raw - Typed token.
+     * @returns {{ok: boolean, value: string, message: string}} Result with the trimmed value.
+     */
+    function validateCommandSettingPat(raw) {
+        const value = String(raw == null ? "" : raw).trim();
+        if (!value) return { ok: false, value, message: "Paste the personal access token." };
+        if (value.length > COMMAND_SETTING_PAT_MAX) return { ok: false, value, message: `The token must be ${COMMAND_SETTING_PAT_MAX} characters or fewer.` };
+        if (!/^[A-Za-z0-9_]+$/.test(value)) return { ok: false, value, message: "The token can contain only letters, numbers and underscores." };
+        return { ok: true, value, message: "" };
+    }
+
+    /**
+     * Reads whether a PAT is saved, and by whom and when, from a CommandSettings properties object.
+     * @param {object} props - Properties object of GET CommandSettings.
+     * @returns {{configured: boolean, username: string, modifiedOn: string}}
+     */
+    function readCommandSettingPatState(props) {
+        const p = props || {};
+        const pick = (k) => (p[k] !== undefined && p[k] !== null) ? String(p[k]) : "";
+        return {
+            configured: pick("patconfigured").toLowerCase() === "true",
+            username: pick("patusername"),
+            modifiedOn: pick("patmodifiedon")
+        };
+    }
+
+    /**
+     * Status line of the PAT dialog.
+     * @param {{configured: boolean, username: string, modifiedOn: string}|null} state - Saved state, null when unknown.
+     * @returns {string}
+     */
+    function getCommandSettingPatStatusText(state) {
+        if (!state) return "Could not check whether a token is saved.";
+        if (!state.configured) return "No token is saved yet.";
+        let when = "";
+        if (state.modifiedOn) {
+            const d = new Date(state.modifiedOn);
+            when = isNaN(d.getTime()) ? state.modifiedOn : d.toLocaleString();
+        }
+        const parts = [state.username ? `by ${state.username}` : "", when].filter(Boolean).join(", ");
+        return `A token is saved${parts ? ` (${parts})` : ""}. Saving replaces it.`;
+    }
+
+    /**
+     * configure <Product|Plugin|ChangeRequest> PAT: checks the command and access, then opens the token dialog.
      * @param {object} context - Execution context.
      * @param {string[]} context.tokens - Command tokens.
      * @param {object} context.configRow - Matching configure row.
      * @returns {Promise<void>}
      */
     async function handleCommandSetting({ tokens, commandConfig, configRow }) {
-        // new code: a save is already running (loader on screen), so ignore a second Go / Enter
-        if (commandSettingSaving) return;
-
         const propertyType = getCommandSettingType(configRow, tokens[1]);
         const label = getCommandSettingLabel(propertyType);
 
@@ -12389,105 +12640,231 @@ if (typeof document !== "undefined") {
             showToast(`User '${window.mainUserName}' has no access to configure ${label}`);
             return;
         }
-
-        // old code
-        // const account = validateCommandSettingName(tokens[2]);
-        // if (!account.ok) { showToast(`Account name: ${account.message}`); return; }
-        // const repo = validateCommandSettingName(tokens[3]);
-        // if (!repo.ok) { showToast(`Repo name: ${repo.message}`); return; }
-        // // new code: account and repo names cannot contain spaces, so extra words are an error, not ignored
-        // if (hasCommandSettingExtraWords(tokens)) { showToast(`Only an account name and a repo name are expected after '${label}'`); return; }
-        // new code: on a refused name the palette reopens with the command, so it can be corrected
-        const account = validateCommandSettingName(tokens[2]);
-        if (!account.ok) { showToast(`Account name: ${account.message}`); reopenPaletteForCommandSetting(); return; }
-        const repo = validateCommandSettingName(tokens[3]);
-        if (!repo.ok) { showToast(`Repo name: ${repo.message}`); reopenPaletteForCommandSetting(); return; }
-        // account and repo names cannot contain spaces, so extra words are an error, not ignored
-        if (hasCommandSettingExtraWords(tokens)) { showToast(`Only an account name and a repo name are expected after '${label}'`); reopenPaletteForCommandSetting(); return; }
+        if (!isCommandSettingPatWord(tokens[2])) {
+            showToast(`Only ${COMMAND_SETTING_PAT_WORD} can be configured for ${label}: configure ${cleanCommandToken(tokens[1])} ${COMMAND_SETTING_PAT_WORD}`);
+            reopenPaletteForCommandSetting();
+            return;
+        }
+        if (hasCommandSettingExtraWords(tokens)) {
+            showToast(`Only ${COMMAND_SETTING_PAT_WORD} can follow '${label}'. Remove the extra words and run it again.`);
+            reopenPaletteForCommandSetting();
+            return;
+        }
 
         const appname = getProjectName() || "";
         const username = getCommandSettingUser();
         if (!appname) { showToast("Application session is not available. App name is required."); return; }
         if (!username) { showToast("User session is not available. Username is required."); return; }
+        if (!axiCommandSettingsUrl) { showToast("The AxiCMD settings service URL is not available."); return; }
 
-        // new code: loader in the palette until the API answers; set before the first await, so the hide() the
-        // command runner calls after this handler returns keeps the palette open
-        startCommandSettingSaving(label);
-        let savedOk = false;
-        // old code
-        // const abortCtrl = (typeof AbortController !== "undefined") ? new AbortController() : null;
-        // const abortTimer = abortCtrl ? setTimeout(() => abortCtrl.abort(), COMMAND_SETTING_SAVE_TIMEOUT_MS) : null;
-        // new code: the save timeout starts after the repository check, which has its own timeout
-        const abortCtrl = (typeof AbortController !== "undefined") ? new AbortController() : null;
-        let abortTimer = null;
+        openCommandSettingPatDialog({ propertyType, label, appname, username });
+    }
 
-        try {
-            // new code: a repository GitHub does not know is not saved; when GitHub cannot be asked, save and warn
-            const repoCheck = await verifyCommandSettingRepo(propertyType, account.value, repo.value);
-            if (repoCheck.blocked) {
-                showToast(`Error: ${repoCheck.message} Check the account and repo names.`);
+    /**
+     * Opens the dialog that saves the GitHub personal access token of a type.
+     * @param {object} ctx - propertyType, label, appname, username.
+     * @returns {void}
+     */
+    function openCommandSettingPatDialog(ctx) {
+        const existing = document.getElementById("axi-pat-dialog-root");
+        if (existing) existing.remove();
+        ensurePatDialogStyles();
+
+        const prevFocus = document.activeElement;
+        const mk = (tag, cls, text) => {
+            const node = document.createElement(tag);
+            if (cls) node.className = cls;
+            if (text !== undefined) node.textContent = text;
+            return node;
+        };
+        const uid = Date.now();
+        let saving = false;
+        let closed = false;
+
+        const root = mk("div", "axi-install-root");
+        root.id = "axi-pat-dialog-root";
+        const backdrop = mk("div", "axi-install-backdrop");
+        const dialog = mk("div", "axi-install-dialog");
+        dialog.setAttribute("role", "dialog");
+        dialog.setAttribute("aria-modal", "true");
+        dialog.setAttribute("aria-labelledby", "axi-pat-title-" + uid);
+        dialog.tabIndex = -1;
+
+        const head = mk("div", "axi-install-head");
+        const titles = mk("div", "axi-install-titles");
+        const title = mk("h2", "axi-install-title", `${ctx.label} GitHub token`);
+        title.id = "axi-pat-title-" + uid;
+        const status = mk("p", "axi-pat-status", "Checking the saved token...");
+        status.setAttribute("aria-live", "polite");
+        titles.appendChild(title);
+        titles.appendChild(status);
+        const xBtn = mk("button", "axi-install-x");
+        xBtn.type = "button";
+        xBtn.setAttribute("aria-label", "Close");
+        xBtn.innerHTML = INSTALL_ICON_CLOSE;
+        head.appendChild(titles);
+        head.appendChild(xBtn);
+
+        const body = mk("div", "axi-install-body");
+        const field = mk("label", "axi-pat-field", "Personal access token");
+        field.htmlFor = "axi-pat-input-" + uid;
+        const row = mk("div", "axi-pat-row");
+        const inputEl = mk("input", "axi-pat-input");
+        inputEl.id = "axi-pat-input-" + uid;
+        inputEl.type = "password";
+        inputEl.autocomplete = "new-password";
+        inputEl.spellcheck = false;
+        inputEl.maxLength = COMMAND_SETTING_PAT_MAX;
+        inputEl.setAttribute("autocapitalize", "off");
+        inputEl.setAttribute("autocorrect", "off");
+        inputEl.setAttribute("aria-describedby", "axi-pat-help-" + uid);
+        inputEl.placeholder = "ghp_... or github_pat_...";
+        const showBtn = mk("button", "axi-install-btn", "Show");
+        showBtn.type = "button";
+        showBtn.setAttribute("aria-pressed", "false");
+        showBtn.setAttribute("aria-controls", inputEl.id);
+        row.appendChild(inputEl);
+        row.appendChild(showBtn);
+        const help = mk("p", "axi-pat-help", `Used to read the ${ctx.label} repository on GitHub. It is stored on the server and never shown again.`);
+        help.id = "axi-pat-help-" + uid;
+        const errorBox = mk("div", "axi-install-error");
+        errorBox.hidden = true;
+        errorBox.setAttribute("role", "alert");
+        body.appendChild(field);
+        body.appendChild(row);
+        body.appendChild(help);
+        body.appendChild(errorBox);
+
+        const foot = mk("div", "axi-install-foot");
+        const cancelBtn = mk("button", "axi-install-btn", "Cancel");
+        cancelBtn.type = "button";
+        const saveBtn = mk("button", "axi-install-btn axi-install-btn-primary", "Save");
+        saveBtn.type = "button";
+        foot.appendChild(cancelBtn);
+        foot.appendChild(saveBtn);
+
+        dialog.appendChild(head);
+        dialog.appendChild(body);
+        dialog.appendChild(foot);
+        root.appendChild(backdrop);
+        root.appendChild(dialog);
+        document.body.appendChild(root);
+
+        const showError = (message) => {
+            errorBox.textContent = message || "";
+            errorBox.hidden = !message;
+            inputEl.setAttribute("aria-invalid", message ? "true" : "false");
+        };
+        const setBusy = (busy) => {
+            saving = busy;
+            inputEl.disabled = busy;
+            showBtn.disabled = busy;
+            cancelBtn.disabled = busy;
+            xBtn.disabled = busy;
+            saveBtn.disabled = busy;
+            saveBtn.textContent = busy ? "Saving..." : "Save";
+        };
+        const close = () => {
+            if (closed) return;
+            closed = true;
+            inputEl.value = "";
+            document.removeEventListener("keydown", onKey, true);
+            root.remove();
+            try { if (prevFocus && typeof prevFocus.focus === "function" && document.contains(prevFocus)) prevFocus.focus(); } catch (e) { }
+        };
+        const onKey = (e) => {
+            if (closed) return;
+            if (e.key === "Escape") {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!saving) close();
                 return;
             }
-            abortTimer = abortCtrl ? setTimeout(() => abortCtrl.abort(), COMMAND_SETTING_SAVE_TIMEOUT_MS) : null;
+            if (e.key === "Tab") {
+                const items = [xBtn, inputEl, showBtn, cancelBtn, saveBtn].filter(el => !el.disabled);
+                e.preventDefault();
+                if (items.length === 0) return;
+                const idx = items.indexOf(document.activeElement);
+                const next = e.shiftKey ? (idx <= 0 ? items.length - 1 : idx - 1) : (idx === -1 || idx === items.length - 1 ? 0 : idx + 1);
+                items[next].focus();
+            }
+        };
 
-            const res = await fetch(`${axiCommandSettingsUrl}?appname=${encodeURIComponent(appname)}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                signal: abortCtrl ? abortCtrl.signal : undefined,
-                body: JSON.stringify({
-                    username: username,
-                    propertyCategory: "axicmd",
-                    propertyType: propertyType,
-                    properties: { accountname: account.value, reponame: repo.value }
-                })
+        const save = async () => {
+            if (saving) return;
+            const pat = validateCommandSettingPat(inputEl.value);
+            if (!pat.ok) { showError(pat.message); inputEl.focus(); return; }
+            showError("");
+            setBusy(true);
+            const abortCtrl = (typeof AbortController !== "undefined") ? new AbortController() : null;
+            const abortTimer = abortCtrl ? setTimeout(() => abortCtrl.abort(), COMMAND_SETTING_SAVE_TIMEOUT_MS) : null;
+            try {
+                const properties = {};
+                properties[COMMAND_SETTING_PAT_KEY] = pat.value;
+                const res = await fetch(`${axiCommandSettingsUrl}?appname=${encodeURIComponent(ctx.appname)}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    signal: abortCtrl ? abortCtrl.signal : undefined,
+                    body: JSON.stringify({
+                        username: ctx.username,
+                        propertyCategory: "axicmd",
+                        propertyType: ctx.propertyType,
+                        properties: properties
+                    })
+                });
+                // a 400 from the API is a plain-text message, so read text and parse JSON only when it is JSON
+                let dataObj = null;
+                let bodyText = "";
+                try { bodyText = await res.text(); dataObj = JSON.parse(bodyText); } catch (e) { }
+                if (!res.ok || (dataObj && dataObj.success === false)) {
+                    const plainMessage = (typeof dataObj === "string" ? dataObj : (!dataObj ? bodyText : "")).trim();
+                    showError(dataObj?.message || dataObj?.Message || dataObj?.error || dataObj?.title || plainMessage || `The ${ctx.label} token could not be saved.`);
+                    setBusy(false);
+                    inputEl.focus();
+                    return;
+                }
+                const prev = (dataObj && (dataObj.previous || dataObj.Previous)) || {};
+                const replaced = !!prev[COMMAND_SETTING_PAT_KEY];
+                delete commandSettingSavedCache[ctx.propertyType];
+                close();
+                showToast(`${ctx.label} GitHub token ${replaced ? "replaced" : "saved"}`, 5000, true);
+            } catch (err) {
+                showError(err && err.name === "AbortError"
+                    ? `Saving the ${ctx.label} token took too long. Please try again.`
+                    : `Error: ${(err && err.message) || err}`);
+                setBusy(false);
+                inputEl.focus();
+            } finally {
+                if (abortTimer) clearTimeout(abortTimer);
+            }
+        };
+
+        showBtn.addEventListener("click", () => {
+            const show = inputEl.type === "password";
+            inputEl.type = show ? "text" : "password";
+            showBtn.textContent = show ? "Hide" : "Show";
+            showBtn.setAttribute("aria-pressed", show ? "true" : "false");
+            inputEl.focus();
+        });
+        inputEl.addEventListener("input", () => { if (!errorBox.hidden) showError(""); });
+        inputEl.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); save(); } });
+        saveBtn.addEventListener("click", save);
+        cancelBtn.addEventListener("click", () => { if (!saving) close(); });
+        xBtn.addEventListener("click", () => { if (!saving) close(); });
+        backdrop.addEventListener("click", () => { if (!saving) close(); });
+        document.addEventListener("keydown", onKey, true);
+        setTimeout(() => { if (!closed) inputEl.focus(); }, 0);
+
+        // say whether a token is saved already (the token itself never comes back)
+        fetch(`${axiCommandSettingsUrl}?appname=${encodeURIComponent(ctx.appname)}&category=axicmd&type=${encodeURIComponent(ctx.propertyType)}`)
+            .then(res => res.ok ? res.json() : Promise.reject(new Error("HTTP " + res.status)))
+            .then(data => readCommandSettingPatState(data && (data.properties || data.Properties)))
+            .catch(() => null)
+            .then(state => {
+                if (closed) return;
+                status.textContent = getCommandSettingPatStatusText(state);
+                status.dataset.state = state && state.configured ? "set" : "";
             });
-
-            // old code
-            // let dataObj = null;
-            // try { dataObj = await res.json(); } catch (e) { }
-            // new code: a 400 from the API is a plain-text message, so read text and parse JSON only when it is JSON
-            let dataObj = null;
-            let bodyText = "";
-            try { bodyText = await res.text(); dataObj = JSON.parse(bodyText); } catch (e) { }
-
-            if (!res.ok || (dataObj && dataObj.success === false)) {
-                const plainMessage = (typeof dataObj === "string" ? dataObj : (!dataObj ? bodyText : "")).trim();
-                const errorMessage = dataObj?.message || dataObj?.Message || dataObj?.error || dataObj?.title || plainMessage || "Failed to save " + label + " repository";
-                showToast(`Error: ${errorMessage}`);
-                return;
-            }
-
-            const saved = readCommandSettingProps(dataObj?.properties || dataObj?.Properties);
-            const prev = readCommandSettingProps(dataObj?.previous || dataObj?.Previous);
-            const newAccount = saved.accountname || account.value;
-            const newRepo = saved.reponame || repo.value;
-            const wasText = (prev.accountname || prev.reponame) ? `${prev.accountname}/${prev.reponame}` : "not set";
-
-            delete commandSettingSavedCache[propertyType];
-            clearInstallCaches(propertyType);
-            savedOk = true;
-            // old code
-            // showToast(`${label} repository set to ${newAccount}/${newRepo} (was ${wasText})`, 5000, true);
-            // new code: say when the repository could not be checked
-            if (repoCheck.warning) {
-                showToast(`${label} repository set to ${newAccount}/${newRepo} (was ${wasText}), but it could not be checked on GitHub: ${repoCheck.warning}`, 8000, "warning");
-            } else {
-                showToast(`${label} repository set to ${newAccount}/${newRepo} (was ${wasText})`, 5000, true);
-            }
-        } catch (err) {
-            // old code
-            // showToast(`Error: ${err.message || err}`);
-            // new code: say so when the save was stopped by the timeout
-            if (err && err.name === "AbortError") {
-                showToast(`Error: saving the ${label} repository took too long. Please try again.`);
-            } else {
-                showToast(`Error: ${err.message || err}`);
-            }
-        } finally {
-            // new code: loader off; palette closes on success, reopens with the command on failure
-            if (abortTimer) clearTimeout(abortTimer);
-            endCommandSettingSaving(savedOk);
-        }
     }
 
     // ---------------------------------------------------------------------------------------------------------
@@ -15976,6 +16353,8 @@ if (typeof document !== "undefined") {
             text.startsWith("Type at least") ||
             // new code: "Type GitHub account name" / "Type GitHub repository name" (configure product / plugin / changerequest)
             text.startsWith("Type GitHub") ||
+            // new code (#320): "Only PAT can be configured for Product" / "Only PAT can follow ..."
+            text.startsWith("Only PAT ") ||
             text.startsWith("No matching") ||
             text.startsWith("Run configure ") ||
             text.startsWith("No directories") ||

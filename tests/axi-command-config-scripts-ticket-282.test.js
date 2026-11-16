@@ -40,10 +40,15 @@ for (const db of ['Postgre', 'Oracle']) {
         // old code
         // // new code: +3 rows for configure product / plugin / changerequest
         // assert.strictEqual(inserts.length, 54);
-        // new code (#314): the 3 configure product / plugin / changerequest rows are removed again
-        assert.strictEqual(inserts.length, 51);
-        assert.ok(!inserts.some((b) => /cfg_configure_(product|plugin|changerequest)/.test(b)));
-        assert.ok(blocks(cfg).some((b) => b.trim().toLowerCase() === "delete from axi_command_config where config_id in ('cfg_configure_product', 'cfg_configure_plugin', 'cfg_configure_changerequest')"));
+        // old code (#320)
+        // // new code (#314): the 3 configure product / plugin / changerequest rows are removed again
+        // assert.strictEqual(inserts.length, 51);
+        // assert.ok(!inserts.some((b) => /cfg_configure_(product|plugin|changerequest)/.test(b)));
+        // assert.ok(blocks(cfg).some((b) => b.trim().toLowerCase() === "delete from axi_command_config where config_id in ('cfg_configure_product', 'cfg_configure_plugin', 'cfg_configure_changerequest')"));
+        // new code (#320): the 3 rows are back (configure <type> PAT) and nothing deletes them
+        assert.strictEqual(inserts.length, 54);
+        assert.strictEqual(inserts.filter((b) => /cfg_configure_(product|plugin|changerequest)/.test(b)).length, 3);
+        assert.ok(!blocks(cfg).some((b) => /^\s*DELETE\b/i.test(b)));
         for (const b of inserts) {
             assert.match(b, /is_system/i);
             assert.match(b, /'T'\)\s*(ON CONFLICT \(config_id\) DO UPDATE SET is_system = 'T')?\s*$/i);

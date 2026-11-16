@@ -189,6 +189,9 @@ Axi evaluates the command using **Target-First** syntax parser rules, allowing t
 ### 4. `Configure [type] [name] [key field]`
 *   **Description:** Quick access to system configuration settings. Supported types include `Rule`, `KeyField`, `User`, `Role`, `Responsibility`, `Dimension`, `Form Notification`, and `PEG`.
 *   **Example:** `Configure User admin`
+*   **`Configure <Product|Plugin|ChangeRequest> PAT` (#320):** saves the GitHub personal access token of that type. `PAT` is the only option after the type, and nothing may follow it. Go opens a dialog with a masked field (Show / Hide toggle) that says whether a token is already saved, by whom and when; Save sends it, Cancel or Escape closes it. The token is never typed in the command line, so it is not kept in history or favourites. Needs app manager and build access. Letters, digits and `_` only, up to 255 characters. It is not checked on GitHub when saved.
+    *   Stored in `axi_command_settings` as property `pat` of category `axicmd` and the type (one token per type). The account and repository (`accountname` / `reponame`) are still set by the administrator, not from AxiCMD (#314).
+    *   API: `POST /AxiCMDApi/api/v1/CommandSettings` with `properties: { pat }` (the token is saved on its own, no other property allowed with it). `GET` never returns the token: in its place it gives `patconfigured` (`true` / `false`), `patusername` and `patmodifiedon` (ISO 8601). The POST answer shows `********` for the new and the old token.
 
 ### 5. `Upload` & `Download`
 *   **Description:** Import or export datasets.
