@@ -1142,8 +1142,8 @@ $function$
 -- fn_axi_getstructs_obj | replace for primaryfieldvalue+fieldnames and selected fieldvalue with primary fieldvalue suffix
 <<
 CREATE OR REPLACE FUNCTION fn_axi_getstructs_obj(pcmd character varying, pusername character varying, puserrole character varying, ptransid character varying, pselectedfield character varying, pdimension character varying, ppermission character varying, pkeyfield character varying, pprimarytable character varying, pglobalvars character varying)
- RETURNS TABLE(displaydata text, id text, caption text, isfield text,transrecordid numeric)
-LANGUAGE plpgsql
+ RETURNS TABLE(displaydata text, id text, caption text, isfield text)
+ LANGUAGE plpgsql
 AS $function$
 declare 
 v_sql text;
@@ -1163,26 +1163,7 @@ v_editctrl varchar;
 v_finalcomps text;
 v_fullcontrol varchar;
 v_fieldlist_sql text;
-v_globalvars_dim varchar;
-v_vars_part text;
-v_view_filter text;
-v_pair text;
-v_varname text;
-v_varvalue text;
-v_repl text;
-v_view_check text;
 begin
-------pglobalvars = <dimension part>[@@VARS@@name=value~~name=value]; the second part carries the session variables
-------used by the form's view filter (axvarcore <transid>_filter, e.g. ':branch'). The dimension part is used as before.
-if position('@@VARS@@' in coalesce(pglobalvars,'')) > 0 then
- v_globalvars_dim := split_part(pglobalvars,'@@VARS@@',1);
- v_vars_part := split_part(pglobalvars,'@@VARS@@',2);
-else
- v_globalvars_dim := pglobalvars;
- v_vars_part := '';
-end if;
-v_globalvars_dim := case when coalesce(v_globalvars_dim,'') = '' then 'NA' else v_globalvars_dim end;
-
 ------Get flds metadata for keyfield
 select srckey,lower(srctf),lower(srcfld)
 into v_keyfield_normalized,v_keyfield_srctbl,v_keyfield_srcfld
@@ -1199,84 +1180,25 @@ where tstruct = ptransid and lower(fname)= lower(pselectedfield);
 if pdimension = 'T' then
 
  SELECT filtercnd into v_dimension_filter 
- from fn_permissions_getpermission('axi', ptransid, pusername, puserrole, v_globalvars_dim);
+ from fn_permissions_getpermission('axi', ptransid, pusername, puserrole, pglobalvars);
 
  v_dimension_filter := case when length(v_dimension_filter) > 2 then concat(' and ',replace(v_dimension_filter,'{primarytable.}','p.')) end;
 
 end if;
 
-------Get the form's view filter (record lists of 'view' / 'edit' only; the field rows are not filtered).
-------axvarcore.vpname = '<transid>_filter', vpvalue = e.g. 'and Form11.branch=:branch'. No row = list as it is.
-if lower(pcmd) in ('view','edit') then
-
- select vpvalue into v_view_filter
- from axvarcore
- where lower(vpname) = lower(ptransid || '_filter') and coalesce(cancel,'F') = 'F'
- limit 1;
-
- if length(trim(coalesce(v_view_filter,''))) > 0 then
-
-  -- the primary table is aliased 'p' in the queries below
-  v_view_filter := replace(v_view_filter,'{primarytable.}','p.');
-  v_view_filter := regexp_replace(v_view_filter,'(^|[^A-Za-z0-9_])' || regexp_replace(coalesce(pprimarytable,'-'),'[^A-Za-z0-9_]','','g') || '[.]','\1p.','gi');
-
-  -- The same text with every placeholder that has a value removed: what is left in it has no value. Checked on this
-  -- copy so that a ':x' inside a substituted value (for example a user name with a colon) is not taken for one.
-  v_view_check := v_view_filter;
-  v_view_check := regexp_replace(v_view_check,'(^|[^:A-Za-z0-9_]):username(?![A-Za-z0-9_])','\1','gi');
-  v_view_check := regexp_replace(v_view_check,'(^|[^:A-Za-z0-9_]):userrole(?![A-Za-z0-9_])','\1','gi');
-
-  -- :username and :userrole
-  v_repl := replace(replace(quote_literal(coalesce(pusername,'')),'\','\\'),'&','\&');
-  v_view_filter := regexp_replace(v_view_filter,'(^|[^:A-Za-z0-9_]):username(?![A-Za-z0-9_])','\1' || v_repl,'gi');
-  v_repl := replace(replace(quote_literal(coalesce(puserrole,'')),'\','\\'),'&','\&');
-  v_view_filter := regexp_replace(v_view_filter,'(^|[^:A-Za-z0-9_]):userrole(?![A-Za-z0-9_])','\1' || v_repl,'gi');
-
-  -- session variables, e.g. ':branch' (only plain values are accepted)
-  for v_pair in select unnest(string_to_array(v_vars_part,'~~')) loop
-   v_varname := lower(regexp_replace(split_part(v_pair,'=',1),'[^A-Za-z0-9_]','','g'));
-   v_varvalue := regexp_replace(substr(v_pair,position('=' in v_pair)+1),'[^A-Za-z0-9_. -]','','g');
-   if v_varname <> '' and position('=' in v_pair) > 0 then
-    v_repl := replace(replace(quote_literal(v_varvalue),'\','\\'),'&','\&');
-    v_view_filter := regexp_replace(v_view_filter,'(^|[^:A-Za-z0-9_]):' || v_varname || '(?![A-Za-z0-9_])','\1' || v_repl,'gi');
-    v_view_check := regexp_replace(v_view_check,'(^|[^:A-Za-z0-9_]):' || v_varname || '(?![A-Za-z0-9_])','\1','gi');
-   end if;
-  end loop;
-
-  -- a placeholder without a value cannot be resolved. The filter exists to hide records, so it must not be dropped
-  -- (that would list every record): list no records at all until the variable is available.
-  if v_view_check ~ '(^|[^:]):[A-Za-z_]' then
-   raise notice 'fn_axi_getstructs_obj: view filter of % has an unresolved variable, no records listed', ptransid;
-   v_view_filter := ' and 1=0';
-  else
-   v_view_filter := concat(' and (',regexp_replace(trim(v_view_filter),'^and\s+','','i'),')');
-  end if;
-
- else
-  v_view_filter := null;
- end if;
-
- v_dimension_filter := concat(v_dimension_filter,v_view_filter);
-
-end if;
-
------Get included and excluded dcs, fields
+-----Get included and excluded dcs, fields 
 if ppermission = 'T' then 
 
- -- old code: the dc list and the field list were joined without a comma ('dc1,dc2' + 'fld1,fld2' = 'dc1,dc2fld1,fld2'),
- -- so the first included / excluded field never matched
- -- SELECT lower(concat(view_includedc,view_includeflds)),lower(concat(view_excludedc,view_excludeflds)),viewctrl,editctrl,fullcontrol
- -- new code: join with a comma (concat_ws skips a null list)
- SELECT lower(concat_ws(',',view_includedc,view_includeflds)),lower(concat_ws(',',view_excludedc,view_excludeflds)),viewctrl,editctrl,fullcontrol
+ SELECT lower(concat(view_includedc,view_includeflds)),lower(concat(view_excludedc,view_excludeflds)),viewctrl,editctrl,fullcontrol
  into v_includedcomps,v_excludedcomps,v_viewctrl,v_editctrl ,v_fullcontrol
- from fn_permissions_getpermission('axi', ptransid, pusername, puserrole, v_globalvars_dim);
+ from fn_permissions_getpermission('axi', ptransid, pusername, puserrole, pglobalvars);
 
  if v_fullcontrol = 'T' or v_viewctrl = '0' then
   v_fieldlist_sql := format($sql$
            SELECT (caption || ' (' || fname || ')' || ' [' || 'field' || ']')::text AS displaydata,
                  '0'::text AS id,
                  caption::text AS caption,
-                 't'::text AS isfield,0 transrecordid
+                 't'::text AS isfield
             FROM axpflds
             WHERE tstruct = %L
          and dcname='dc1'
@@ -1287,15 +1209,11 @@ if ppermission = 'T' then
          $sql$,
          ptransid);
  elsif coalesce(v_fullcontrol,'F') = 'F' and v_viewctrl = '1' then
-  -- old code: the field list had an extra column "2::numeric ord" (6 columns against 5 in the record list),
-  -- so the union failed and no rows came back for users with an "include fields" permission
-  --                't'::text AS isfield,2::numeric ord ,0 transrecordid
-  -- new code: same 5 columns as the record list
   v_fieldlist_sql := format($sql$
            SELECT (caption || ' (' || fname || ')' || ' [' || 'field' || ']')::text AS displaydata,
                  '0'::text AS id,
                  caption::text AS caption,
-                 't'::text AS isfield,0 transrecordid
+                 't'::text AS isfield,2::numeric ord 
             FROM axpflds
             WHERE tstruct = %L
          and dcname='dc1'
@@ -1312,7 +1230,7 @@ if ppermission = 'T' then
             SELECT (caption || ' (' || fname || ')' || ' [' || 'field' || ']')::text AS displaydata,
                   '0'::text AS id,
                   caption::text AS caption,
-                  't'::text AS isfield,0 transrecordid
+                  't'::text AS isfield
              FROM axpflds
              WHERE tstruct = %L
           and dcname='dc1'
@@ -1331,7 +1249,7 @@ else
       SELECT (caption || ' (' || fname || ')' || ' [' || 'field' || ']')::text AS displaydata,
       '0'::text AS id,
       caption::text AS caption,
-      't'::text AS isfield,0 transrecordid 
+      't'::text AS isfield 
       FROM axpflds
       WHERE tstruct = %L
       and dcname='dc1'
@@ -1349,9 +1267,9 @@ if v_keyfield_normalized = 'T' then
 v_keyfield_sql := format(
     $sql$
     SELECT   (s.%I)::text AS displaydata,
-           s.%I::text AS id,
+           '0'::text AS id,
            (s.%I)::text AS caption,
-           'f'::text AS isfield,%I transrecordid
+           'f'::text AS isfield
     FROM %I p 
     JOIN %I s ON p.%I = s.%I
     WHERE p.%I IS NOT NULL
@@ -1359,10 +1277,8 @@ v_keyfield_sql := format(
  order by p.modifiedon desc
     $sql$,
  v_keyfield_srcfld,
-  v_keyfield_srctbl||'id',
     v_keyfield_srcfld,          
- lower(pprimarytable)||'id', 
-    lower(pprimarytable),
+    lower(pprimarytable), 
     v_keyfield_srctbl, 
     lower(pkeyfield),   
     v_keyfield_srctbl||'id',   
@@ -1375,7 +1291,7 @@ v_keyfield_sql := format(
     SELECT (p.%I)::text AS displaydata,
            '0'::text AS id,
            p.%I::text AS caption,
-           'f'::text AS isfield,%I transrecordid
+           'f'::text AS isfield
     FROM %I p
     WHERE p.%I IS NOT NULL
  %s
@@ -1383,7 +1299,6 @@ v_keyfield_sql := format(
 $sql$,
     lower(pkeyfield),
     lower(pkeyfield),
- lower(pprimarytable)||'id',
     lower(pprimarytable),
     lower(pkeyfield),
  v_dimension_filter
@@ -1397,10 +1312,10 @@ if pselectedfield!='0' then
          format(
             $sql$
             SELECT --distinct on (p.%I,s.%I) 
-           (s.%I || '[' || p.%I || ']')::text AS displaydata,
+           (s.%I || ' [' || p.%I || ']')::text AS displaydata,
                    '0'::text AS id,
                    (s.%I)::text AS caption,
-                   'f'::text AS isfield,%I transrecordid
+                   'f'::text AS isfield
             FROM %I p 
             JOIN %I s ON p.%I = s.%I
             WHERE p.%I IS NOT NULL
@@ -1409,10 +1324,9 @@ if pselectedfield!='0' then
             $sql$, 
          lower(pkeyfield),
          v_selectedfld_srcfld,
-         v_selectedfld_srcfld,            
+         v_selectedfld_srcfld,     
          lower(pkeyfield),
-            v_selectedfld_srcfld,
-         lower(pprimarytable)||'id',       
+            v_selectedfld_srcfld,     
             lower(pprimarytable), 
             v_selectedfld_srctbl, 
             lower(pselectedfield),   
@@ -1424,10 +1338,10 @@ if pselectedfield!='0' then
         format(
             $sql$
             SELECT --distinct on (s.%I,k.%I) 
-           (s.%I || '[' || k.%I || ']')::text AS displaydata,
-                   k.%I::text AS id,
+           (s.%I || ' [' || k.%I || ']')::text AS displaydata,
+                   '0'::text AS id,
                    (s.%I)::text AS caption,
-                   'f'::text AS isfield,%I transrecordid
+                   'f'::text AS isfield
             FROM %I p 
             JOIN %I s ON p.%I = s.%I
          join %I k on p.%I = k.%I
@@ -1437,11 +1351,9 @@ if pselectedfield!='0' then
             $sql$,
          v_selectedfld_srcfld,
          v_keyfield_srcfld,
-         v_keyfield_srctbl||'id',
          v_selectedfld_srcfld,     
          v_keyfield_srcfld,
-            v_selectedfld_srcfld,  
-         lower(pprimarytable)||'id',   
+            v_selectedfld_srcfld,     
             lower(pprimarytable), 
             v_selectedfld_srctbl, 
             lower(pselectedfield),   
@@ -1457,10 +1369,10 @@ end;
   v_selectedfld_sql := case when v_keyfield_normalized='F' then 
         format(
            $sql$
-           SELECT  (p.%I || '[' || p.%I || ']')::text AS displaydata,
+           SELECT  (p.%I || ' [' || p.%I || ']')::text AS displaydata,
                   '0'::text AS id,
                   p.%I::text AS caption,
-                  'f'::text AS isfield,%I transrecordid
+                  'f'::text AS isfield
            FROM %I p
            WHERE p.%I IS NOT NULL
         %s
@@ -1469,7 +1381,6 @@ end;
            lower(pselectedfield),
         lower(pkeyfield),
            lower(pselectedfield),
-           lower(pprimarytable)||'id',
            lower(pprimarytable),
            lower(pselectedfield),
         v_dimension_filter,
@@ -1478,10 +1389,10 @@ end;
        when v_keyfield_normalized='T' then 
         format(
            $sql$
-           SELECT (p.%I || '[' || s.%I || ']')::text AS displaydata,
-                  s.%I::text AS id,
+           SELECT (p.%I || ' [' || s.%I || ']')::text AS displaydata,
+                  '0'::text AS id,
                   p.%I::text AS caption,
-                  'f'::text AS isfield,%I transrecordid
+                  'f'::text AS isfield
            FROM %I p
         join %I s on p.%I = s.%I
            WHERE p.%I IS NOT NULL
@@ -1490,9 +1401,7 @@ end;
         $sql$,
            lower(pselectedfield),
         v_keyfield_srcfld,
-        v_keyfield_srctbl||'id',
         lower(pselectedfield),
-           lower(pprimarytable)||'id',
         lower(pprimarytable),
         v_keyfield_srctbl,
            lower(pkeyfield),
@@ -1505,22 +1414,8 @@ end;
 end if;
 
 
--- new code: no field list means the permission gives this user no view access (e.g. viewctrl '4', or no permission
--- row): list nothing. Before, the SQL built below had an empty part and failed with a syntax error.
-if pselectedfield='0' and v_fieldlist_sql is null then
- return;
-end if;
-
 if pselectedfield='0' then
--- old code: records first, field rows last. AxList pages the whole result, so a form with more records than one
--- page never had its field rows on page 1 (view / edit showed no fields)
--- v_sql := concat(' select * from(',v_keyfield_sql,')a',' union all',v_fieldlist_sql);
--- new code: field rows first, then the records (newest first, as before)
-v_sql := concat('select displaydata,id,caption,isfield,transrecordid from (',
-                ' select f.*,1 axi_grp,row_number() over () axi_rn from (',v_fieldlist_sql,') f',
-                ' union all',
-                ' select a.*,2 axi_grp,row_number() over () axi_rn from (',v_keyfield_sql,') a',
-                ') x order by axi_grp,axi_rn');
+v_sql := concat(' select * from(',v_keyfield_sql,')a',' union all',v_fieldlist_sql);
 else
 v_sql := v_selectedfld_sql;
 end if;

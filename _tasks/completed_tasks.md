@@ -111,7 +111,7 @@ Products, plugins and change requests can be installed from the command line. Th
 4. Able to type anything after selecting Configure "Trace Files" and user is able to execute the cmd without any error.
 Cmd used: Configure "Trace Files" GetMultiMenu.txt issue #305
  #295
-5. Issue:when user click on settings(axi command line) it is not functioning as expected(random  issue)
+5. Issue:when user click on settings(axi command line) it is not functioning as expected(random  issue) -> Get details from QA. 
 6. Issue1:field names are displayed in the middle of the selection area instead of being properly aligned. (fixed)
 username/password:smokeuser1/agile
 Schemaname:orclbase114
