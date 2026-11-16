@@ -96,7 +96,7 @@ Longer, or containing @@VARS@@: the value becomes h plus about 11 characters of 
 
 
 11/11/2026
-1. Issue1: Sales Order Edit NA   -- Error is coming only when we select NA	Unable to load. SQL: Select BRANCHNAME from BRANCH Where BranchId =
+1. Issue1: Sales Order Edit NA   -- Error is coming only when we select NA	Unable to load. SQL: Select BRANCHNAME from BRANCH Where BranchId = Needs to be checked 
 2. TKT-0945 - AXI CMD Line - Configure Keyfield auto suggestions are displaying field containing Duplicate values ->  Review with Abinash sir. 
 3. TKT-0782 - AXI CMD line-Edit with validation issue
 4. Able to type anything after selecting Configure "Trace Files" and user is able to execute the cmd without any error.
