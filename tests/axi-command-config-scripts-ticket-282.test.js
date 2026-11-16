@@ -37,8 +37,13 @@ for (const db of ['Postgre', 'Oracle']) {
     test(`${db}: every shipped row sets is_system T and inserts only when missing`, () => {
         // old code
         // assert.strictEqual(inserts.length, 51);
-        // new code: +3 rows for configure product / plugin / changerequest
-        assert.strictEqual(inserts.length, 54);
+        // old code
+        // // new code: +3 rows for configure product / plugin / changerequest
+        // assert.strictEqual(inserts.length, 54);
+        // new code (#314): the 3 configure product / plugin / changerequest rows are removed again
+        assert.strictEqual(inserts.length, 51);
+        assert.ok(!inserts.some((b) => /cfg_configure_(product|plugin|changerequest)/.test(b)));
+        assert.ok(blocks(cfg).some((b) => b.trim().toLowerCase() === "delete from axi_command_config where config_id in ('cfg_configure_product', 'cfg_configure_plugin', 'cfg_configure_changerequest')"));
         for (const b of inserts) {
             assert.match(b, /is_system/i);
             assert.match(b, /'T'\)\s*(ON CONFLICT \(config_id\) DO UPDATE SET is_system = 'T')?\s*$/i);

@@ -201,12 +201,55 @@ UPDATE AXI_COMMAND_PROMPTS SET promptvalues = RTRIM(promptvalues, ',') || ',Trac
 
 -- new code: the names are added first (guarded on ChangeRequest, so a re-run changes nothing). The next statement then pads the source list
 -- with Axi_Dummy (10 characters each, RPAD repeats it) until it has as many entries as the names, which also repairs a database whose sources are already short.
-<<
-UPDATE AXI_COMMAND_PROMPTS SET promptvalues = RTRIM(promptvalues, ',') || ',Product,Plugin,ChangeRequest' WHERE cmdtoken = 4 AND wordpos = 2 AND promptvalues NOT LIKE '%ChangeRequest%'
->>
+-- old code (#314): Product, Plugin and ChangeRequest are no longer configure options; block markers left out so the installer cannot pick it up
+-- UPDATE AXI_COMMAND_PROMPTS SET promptvalues = RTRIM(promptvalues, ',') || ',Product,Plugin,ChangeRequest' WHERE cmdtoken = 4 AND wordpos = 2 AND promptvalues NOT LIKE '%ChangeRequest%'
 
 <<
 UPDATE AXI_COMMAND_PROMPTS s SET promptsource = RTRIM(s.promptsource, ', ') || RPAD(',Axi_Dummy', 10 * ((SELECT REGEXP_COUNT(RTRIM(p2.promptvalues, ', '), ',') + 1 FROM AXI_COMMAND_PROMPTS p2 WHERE p2.cmdtoken = 4 AND p2.wordpos = 2) - (REGEXP_COUNT(RTRIM(s.promptsource, ', '), ',') + 1)), ',Axi_Dummy') WHERE s.cmdtoken = 4 AND s.wordpos = 3 AND (SELECT REGEXP_COUNT(RTRIM(p2.promptvalues, ', '), ',') + 1 FROM AXI_COMMAND_PROMPTS p2 WHERE p2.cmdtoken = 4 AND p2.wordpos = 2) > REGEXP_COUNT(RTRIM(s.promptsource, ', '), ',') + 1
+>>
+
+-- new code (#314): remove Product, Plugin and ChangeRequest from the configure option list a database already has. The source
+-- at the same position goes with each name, so both lists stay index-aligned (Custom Options after them keep their source).
+-- Sources first, because they are matched against the names the second statement changes. Guarded on ChangeRequest, so a re-run changes nothing.
+<<
+DECLARE
+    v_names VARCHAR2(4000);
+    v_srcs VARCHAR2(4000);
+    v_new_names VARCHAR2(4000);
+    v_new_srcs VARCHAR2(4000);
+    v_name VARCHAR2(4000);
+    v_n NUMBER;
+    v_s NUMBER;
+BEGIN
+    SELECT promptvalues INTO v_names FROM AXI_COMMAND_PROMPTS WHERE cmdtoken = 4 AND wordpos = 2;
+    SELECT promptsource INTO v_srcs FROM AXI_COMMAND_PROMPTS WHERE cmdtoken = 4 AND wordpos = 3;
+    IF (',' || v_names || ',') NOT LIKE '%,ChangeRequest,%' THEN
+        RETURN;
+    END IF;
+    v_names := RTRIM(v_names, ', ');
+    v_srcs := RTRIM(v_srcs, ', ');
+    v_n := REGEXP_COUNT(v_names, ',') + 1;
+    v_s := REGEXP_COUNT(v_srcs, ',') + 1;
+    FOR i IN 1 .. GREATEST(v_n, v_s) LOOP
+        v_name := NULL;
+        IF i <= v_n THEN
+            v_name := REGEXP_SUBSTR(v_names, '([^,]*)(,|$)', 1, i, NULL, 1);
+        END IF;
+        IF i > v_n OR NVL(TRIM(v_name), '#') NOT IN ('Product', 'Plugin', 'ChangeRequest') THEN
+            IF i <= v_n THEN
+                v_new_names := v_new_names || ',' || v_name;
+            END IF;
+            IF i <= v_s THEN
+                v_new_srcs := v_new_srcs || ',' || REGEXP_SUBSTR(v_srcs, '([^,]*)(,|$)', 1, i, NULL, 1);
+            END IF;
+        END IF;
+    END LOOP;
+    UPDATE AXI_COMMAND_PROMPTS SET promptvalues = SUBSTR(v_new_names, 2) WHERE cmdtoken = 4 AND wordpos = 2;
+    UPDATE AXI_COMMAND_PROMPTS SET promptsource = SUBSTR(v_new_srcs, 2) WHERE cmdtoken = 4 AND wordpos = 3;
+EXCEPTION
+    WHEN NO_DATA_FOUND OR TOO_MANY_ROWS THEN
+        NULL;
+END;
 >>
 
 -- Install: `install <product|plugin|changerequest> <directory> [version]` (build access only). Rows are added only when absent, so a re-run changes nothing.

@@ -241,12 +241,22 @@ UPDATE axi_command_prompts SET promptvalues = RTRIM(promptvalues, ',') || ',Trac
 
 -- new code: the names are added first (guarded on ChangeRequest, so a re-run changes nothing). The next statement then pads the source list
 -- with Axi_Dummy until it has as many entries as the names, which also repairs a database whose sources are already short.
-<<
-UPDATE axi_command_prompts SET promptvalues = RTRIM(promptvalues, ',') || ',Product,Plugin,ChangeRequest' WHERE cmdtoken = 4 AND wordpos = 2 AND promptvalues NOT LIKE '%ChangeRequest%'
->>
+-- old code (#314): Product, Plugin and ChangeRequest are no longer configure options; block markers left out so the installer cannot pick it up
+-- UPDATE axi_command_prompts SET promptvalues = RTRIM(promptvalues, ',') || ',Product,Plugin,ChangeRequest' WHERE cmdtoken = 4 AND wordpos = 2 AND promptvalues NOT LIKE '%ChangeRequest%'
 
 <<
 UPDATE axi_command_prompts s SET promptsource = RTRIM(s.promptsource, ', ') || repeat(',Axi_Dummy', n.cnt - array_length(string_to_array(RTRIM(s.promptsource, ', '), ','), 1)) FROM (SELECT array_length(string_to_array(RTRIM(promptvalues, ', '), ','), 1) AS cnt FROM axi_command_prompts WHERE cmdtoken = 4 AND wordpos = 2) n WHERE s.cmdtoken = 4 AND s.wordpos = 3 AND n.cnt > array_length(string_to_array(RTRIM(s.promptsource, ', '), ','), 1)
+>>
+
+-- new code (#314): remove Product, Plugin and ChangeRequest from the configure option list a database already has. The source
+-- at the same position goes with each name, so both lists stay index-aligned (Custom Options after them keep their source).
+-- Sources first, because they are matched against the names the second statement changes. Guarded on ChangeRequest, so a re-run changes nothing.
+<<
+UPDATE axi_command_prompts s SET promptsource = (SELECT string_agg(src.v, ',' ORDER BY src.i) FROM unnest(string_to_array(RTRIM(s.promptsource, ', '), ',')) WITH ORDINALITY AS src(v, i) LEFT JOIN unnest(string_to_array(RTRIM(n.promptvalues, ', '), ',')) WITH ORDINALITY AS nm(v, i) ON nm.i = src.i WHERE trim(coalesce(nm.v, '')) NOT IN ('Product', 'Plugin', 'ChangeRequest')) FROM axi_command_prompts n WHERE s.cmdtoken = 4 AND s.wordpos = 3 AND n.cmdtoken = 4 AND n.wordpos = 2 AND (',' || n.promptvalues || ',') LIKE '%,ChangeRequest,%'
+>>
+
+<<
+UPDATE axi_command_prompts SET promptvalues = (SELECT string_agg(t.v, ',' ORDER BY t.i) FROM unnest(string_to_array(RTRIM(promptvalues, ', '), ',')) WITH ORDINALITY AS t(v, i) WHERE trim(t.v) NOT IN ('Product', 'Plugin', 'ChangeRequest')) WHERE cmdtoken = 4 AND wordpos = 2 AND (',' || promptvalues || ',') LIKE '%,ChangeRequest,%'
 >>
 
 -- Install: `install <product|plugin|changerequest> <directory> [version]` (build access only). Rows are added only when absent, so a re-run changes nothing.

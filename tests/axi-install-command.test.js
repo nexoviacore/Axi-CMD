@@ -90,7 +90,11 @@ function generateInstallRequestId() {
 
 function getInstallDirsErrorText(type, message, status) {
     const text = String(message || "Could not load the directories").trim();
-    return status === 404 ? `${text} Run configure ${type} <account> <repo> to change it.` : text;
+    // old code
+    // return status === 404 ? `${text} Run configure ${type} <account> <repo> to change it.` : text;
+    // new code (#314)
+    const label = { product: "Product", plugin: "Plugin", changerequest: "Change Request" }[type] || type;
+    return status === 404 ? `${text} Ask your administrator to check the ${label} repository.` : text;
 }
 
 // verifyCommandSettingRepo's decision, with the listdirectories call replaced by a status
@@ -277,9 +281,9 @@ test('queue answer: plain text, JSON-wrapped, and failures', () => {
     assert.strictEqual(parseInstallQueueResult(false, 400, JSON.stringify({ result: { message: 'x', success: true } })).success, false);
 });
 
-test('install error text adds the configure hint only for a 404', () => {
+test('install error text adds the administrator hint only for a 404', () => {
     const notFound = "Repository 'a/r' or its main branch was not found, or the configured GitHub token cannot access it.";
-    assert.strictEqual(getInstallDirsErrorText('plugin', notFound, 404), notFound + ' Run configure plugin <account> <repo> to change it.');
+    assert.strictEqual(getInstallDirsErrorText('plugin', notFound, 404), notFound + ' Ask your administrator to check the Plugin repository.');
     assert.strictEqual(getInstallDirsErrorText('product', 'GitHub could not be reached.', 502), 'GitHub could not be reached.');
     assert.strictEqual(getInstallDirsErrorText('product', '', 0), 'Could not load the directories');
 });

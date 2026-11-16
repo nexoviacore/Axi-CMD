@@ -156,16 +156,17 @@ INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, p
 INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active, is_system) VALUES ('cfg_configure_trace_files', 'Configure', 'trace files', 'trace_files', 'shellaction', NULL, NULL, NULL, 'T', 'T') ON CONFLICT (config_id) DO UPDATE SET is_system = 'T'
 >>
 
-<<
-INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active, is_system) VALUES ('cfg_configure_product', 'Configure', 'product', 'product', 'commandsetting', NULL, NULL, NULL, 'T', 'T') ON CONFLICT (config_id) DO UPDATE SET is_system = 'T'
->>
+-- old code (#314): Configure Product / Plugin / ChangeRequest (Git account / repo) rows; block markers left out so the installer cannot pick them up
+-- INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active, is_system) VALUES ('cfg_configure_product', 'Configure', 'product', 'product', 'commandsetting', NULL, NULL, NULL, 'T', 'T') ON CONFLICT (config_id) DO UPDATE SET is_system = 'T'
 
-<<
-INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active, is_system) VALUES ('cfg_configure_plugin', 'Configure', 'plugin', 'plugin', 'commandsetting', NULL, NULL, NULL, 'T', 'T') ON CONFLICT (config_id) DO UPDATE SET is_system = 'T'
->>
+-- INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active, is_system) VALUES ('cfg_configure_plugin', 'Configure', 'plugin', 'plugin', 'commandsetting', NULL, NULL, NULL, 'T', 'T') ON CONFLICT (config_id) DO UPDATE SET is_system = 'T'
 
+-- INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active, is_system) VALUES ('cfg_configure_changerequest', 'Configure', 'changerequest', 'changerequest', 'commandsetting', NULL, NULL, NULL, 'T', 'T') ON CONFLICT (config_id) DO UPDATE SET is_system = 'T'
+
+-- new code (#314): the Git account / repo can no longer be configured from AxiCMD; remove the rows a database already has.
+-- The saved values in axi_command_settings are kept, install still reads them.
 <<
-INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active, is_system) VALUES ('cfg_configure_changerequest', 'Configure', 'changerequest', 'changerequest', 'commandsetting', NULL, NULL, NULL, 'T', 'T') ON CONFLICT (config_id) DO UPDATE SET is_system = 'T'
+DELETE FROM axi_command_config WHERE config_id IN ('cfg_configure_product', 'cfg_configure_plugin', 'cfg_configure_changerequest')
 >>
 
 <<

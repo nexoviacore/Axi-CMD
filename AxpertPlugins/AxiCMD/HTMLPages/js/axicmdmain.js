@@ -2247,9 +2247,16 @@ if (typeof document !== "undefined") {
             return true;
         }
 
-        // Configure Product / Plugin / ChangeRequest: saves "<account> <repo>" through the CommandSettings API
+        // old code
+        // // Configure Product / Plugin / ChangeRequest: saves "<account> <repo>" through the CommandSettings API
+        // if (optType === "commandsetting") {
+        //     handleCommandSetting({ tokens, commandConfig, configRow });
+        //     return true;
+        // }
+        // new code (#314): the account / repo can no longer be set from AxiCMD. The rows are deleted by the SQL scripts;
+        // a database that still has one only gets a message, nothing is saved.
         if (optType === "commandsetting") {
-            handleCommandSetting({ tokens, commandConfig, configRow });
+            showToast("The Git account and repository can no longer be configured from AxiCMD. Ask your administrator to set them.");
             return true;
         }
 
@@ -12137,7 +12144,10 @@ if (typeof document !== "undefined") {
      * @returns {boolean}
      */
     function isCommandSettingOption(tokenName) {
-        return !!getCommandSettingRow(tokenName);
+        // old code
+        // return !!getCommandSettingRow(tokenName);
+        // new code (#314): configure product / plugin / changerequest is removed, so no hint, Save or Ctrl + S is offered for it
+        return false;
     }
 
     /**
@@ -12244,6 +12254,16 @@ if (typeof document !== "undefined") {
      */
     function getCommandSettingLabel(type) {
         return COMMAND_SETTING_LABELS[(type || "").toLowerCase()] || type;
+    }
+
+    // new code (#314)
+    /**
+     * Message install shows when no repository is saved for a type. The repository is no longer set from AxiCMD.
+     * @param {string} type - product / plugin / changerequest.
+     * @returns {string} Message.
+     */
+    function getInstallRepoMissingText(type) {
+        return `The ${getCommandSettingLabel(type)} repository is not configured. Ask your administrator to set it.`;
     }
 
     /**
@@ -12472,7 +12492,8 @@ if (typeof document !== "undefined") {
 
     // ---------------------------------------------------------------------------------------------------------
     // Install Product / Plugin / ChangeRequest:  install <product|plugin|changerequest> <directory> [version]
-    // Account / repo come from the CommandSettings API (set with "configure <type> <account> <repo>"), the
+    // old code: // Account / repo come from the CommandSettings API (set with "configure <type> <account> <repo>"), the
+    // new code (#314): Account / repo come from the CommandSettings API (axi_command_settings, set by the administrator), the
     // directories and versions from the AxiGit listdirectories API, and Go pushes the request to the ARM queue.
     // axi_git_directories / axi_git_versions in the prompt rows are markers resolved here, never sent to the ADS.
     // The pure helpers (tokenizer, validation, cache, payload) are mirrored in tests/axi-install-command.test.js.
@@ -12625,7 +12646,10 @@ if (typeof document !== "undefined") {
      */
     function getInstallDirsErrorText(type, message, status) {
         const text = String(message || "Could not load the directories").trim();
-        return status === 404 ? `${text} Run configure ${type} <account> <repo> to change it.` : text;
+        // old code
+        // return status === 404 ? `${text} Run configure ${type} <account> <repo> to change it.` : text;
+        // new code (#314): the repository is no longer changed from AxiCMD
+        return status === 404 ? `${text} Ask your administrator to check the ${getCommandSettingLabel(type)} repository.` : text;
     }
 
     /**
@@ -12958,7 +12982,10 @@ if (typeof document !== "undefined") {
         // not say "Ready to Run" (the null prompt above sets it): show "Loading..." while fetching, nothing otherwise
         const repoState = getInstallRepoState(type);
         if (repoState.loading) { setInstallLoadingHint(); return ["Fetching repository settings..."]; }
-        if (!repoState.value) { hintDiv.textContent = ""; return [`Run configure ${type} <account> <repo> first`]; }
+        // old code
+        // if (!repoState.value) { hintDiv.textContent = ""; return [`Run configure ${type} <account> <repo> first`]; }
+        // new code (#314)
+        if (!repoState.value) { hintDiv.textContent = ""; return [getInstallRepoMissingText(type)]; }
         const { account, repo } = repoState.value;
 
         const dirsState = getInstallDirsState(type, account, repo);
@@ -13044,7 +13071,10 @@ if (typeof document !== "undefined") {
         if (!username) { showToast("User session is not available. Username is required."); return; }
 
         const repoInfo = await loadInstallRepo(type);
-        if (!repoInfo) { showToast(`Run configure ${type} <account> <repo> first`); reopenPaletteForCommandSetting(); return; }
+        // old code
+        // if (!repoInfo) { showToast(`Run configure ${type} <account> <repo> first`); reopenPaletteForCommandSetting(); return; }
+        // new code (#314)
+        if (!repoInfo) { showToast(getInstallRepoMissingText(type)); reopenPaletteForCommandSetting(); return; }
 
         let data;
         try {

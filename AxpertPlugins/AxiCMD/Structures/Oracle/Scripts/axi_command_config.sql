@@ -181,16 +181,17 @@ MERGE INTO AXI_COMMAND_CONFIG t USING (SELECT 'cfg_configure_trace_off' AS CONFI
 MERGE INTO AXI_COMMAND_CONFIG t USING (SELECT 'cfg_configure_trace_files' AS CONFIG_ID FROM dual) s ON (t.CONFIG_ID = s.CONFIG_ID) WHEN MATCHED THEN UPDATE SET t.IS_SYSTEM = 'T' WHEN NOT MATCHED THEN INSERT (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE, IS_SYSTEM) VALUES ('cfg_configure_trace_files', 'Configure', 'trace files', 'trace_files', 'shellaction', NULL, NULL, NULL, 'T', 'T')
 >>
 
-<<
-MERGE INTO AXI_COMMAND_CONFIG t USING (SELECT 'cfg_configure_product' AS CONFIG_ID FROM dual) s ON (t.CONFIG_ID = s.CONFIG_ID) WHEN MATCHED THEN UPDATE SET t.IS_SYSTEM = 'T' WHEN NOT MATCHED THEN INSERT (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE, IS_SYSTEM) VALUES ('cfg_configure_product', 'Configure', 'product', 'product', 'commandsetting', NULL, NULL, NULL, 'T', 'T')
->>
+-- old code (#314): Configure Product / Plugin / ChangeRequest (Git account / repo) rows; block markers left out so the installer cannot pick them up
+-- MERGE INTO AXI_COMMAND_CONFIG t USING (SELECT 'cfg_configure_product' AS CONFIG_ID FROM dual) s ON (t.CONFIG_ID = s.CONFIG_ID) WHEN MATCHED THEN UPDATE SET t.IS_SYSTEM = 'T' WHEN NOT MATCHED THEN INSERT (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE, IS_SYSTEM) VALUES ('cfg_configure_product', 'Configure', 'product', 'product', 'commandsetting', NULL, NULL, NULL, 'T', 'T')
 
-<<
-MERGE INTO AXI_COMMAND_CONFIG t USING (SELECT 'cfg_configure_plugin' AS CONFIG_ID FROM dual) s ON (t.CONFIG_ID = s.CONFIG_ID) WHEN MATCHED THEN UPDATE SET t.IS_SYSTEM = 'T' WHEN NOT MATCHED THEN INSERT (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE, IS_SYSTEM) VALUES ('cfg_configure_plugin', 'Configure', 'plugin', 'plugin', 'commandsetting', NULL, NULL, NULL, 'T', 'T')
->>
+-- MERGE INTO AXI_COMMAND_CONFIG t USING (SELECT 'cfg_configure_plugin' AS CONFIG_ID FROM dual) s ON (t.CONFIG_ID = s.CONFIG_ID) WHEN MATCHED THEN UPDATE SET t.IS_SYSTEM = 'T' WHEN NOT MATCHED THEN INSERT (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE, IS_SYSTEM) VALUES ('cfg_configure_plugin', 'Configure', 'plugin', 'plugin', 'commandsetting', NULL, NULL, NULL, 'T', 'T')
 
+-- MERGE INTO AXI_COMMAND_CONFIG t USING (SELECT 'cfg_configure_changerequest' AS CONFIG_ID FROM dual) s ON (t.CONFIG_ID = s.CONFIG_ID) WHEN MATCHED THEN UPDATE SET t.IS_SYSTEM = 'T' WHEN NOT MATCHED THEN INSERT (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE, IS_SYSTEM) VALUES ('cfg_configure_changerequest', 'Configure', 'changerequest', 'changerequest', 'commandsetting', NULL, NULL, NULL, 'T', 'T')
+
+-- new code (#314): the Git account / repo can no longer be configured from AxiCMD; remove the rows a database already has.
+-- The saved values in axi_command_settings are kept, install still reads them.
 <<
-MERGE INTO AXI_COMMAND_CONFIG t USING (SELECT 'cfg_configure_changerequest' AS CONFIG_ID FROM dual) s ON (t.CONFIG_ID = s.CONFIG_ID) WHEN MATCHED THEN UPDATE SET t.IS_SYSTEM = 'T' WHEN NOT MATCHED THEN INSERT (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE, IS_SYSTEM) VALUES ('cfg_configure_changerequest', 'Configure', 'changerequest', 'changerequest', 'commandsetting', NULL, NULL, NULL, 'T', 'T')
+DELETE FROM AXI_COMMAND_CONFIG WHERE CONFIG_ID IN ('cfg_configure_product', 'cfg_configure_plugin', 'cfg_configure_changerequest')
 >>
 
 <<
