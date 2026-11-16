@@ -13458,6 +13458,10 @@ function tstDummyLoad(_openingTrId) {
                 let _thsiifId = window.frameElement.id;
                 if (_thsiifId == "middle1")
                     callParentNew("LoadIframe(" + _thisURl + ")", "function");
+                else if (_thsiifId == 'axpiframeac' && window.location.href.indexOf('&dummyload=true') > -1)
+                    window.location.href = window.location.href.replace(/&dummyload=true[^&]*/g, '');
+                else if (_thsiifId.startsWith("axMultiiframe_") && window.location.href.indexOf('&dummyload=true') > -1)
+                    window.location.href = window.location.href.replace(/&dummyload=true[^&]*/g, '');
             }
             return;
         }
@@ -13588,6 +13592,10 @@ function tstHtmlDummyLoad(_transid) {
     let _thsiifId = window.frameElement.id;
     if (_thsiifId == "middle1")
         callParentNew("LoadIframe(" + _thisURl + ")", "function");
+    else if (_thsiifId.startsWith("axMultiiframe_") && window.location.href.indexOf('&dummyload=false') > -1)
+        window.location.href = window.location.href.replace(/&dummyload=false[^&]*/g, '');
+    else if (_thsiifId == 'axpiframeac' && window.location.href.indexOf('&dummyload=false') > -1)
+        window.location.href = window.location.href.replace(/&dummyload=false[^&]*/g, '');
     return;
 }
 

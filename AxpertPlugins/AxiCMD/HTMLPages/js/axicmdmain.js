@@ -2712,7 +2712,10 @@ if (typeof document !== "undefined") {
             targetUrl += `&isIV=false`;
             targetUrl += `&isDupTab=${callParentNew('isDuplicateTab')}`;
             // targetUrl += `&dummyload=false?`;
-            targetUrl += `&dummyload=false♠`;
+             if (!popUpOption) 
+                 targetUrl += `&dummyload=false♠`;
+
+            // targetUrl += `&dummyload=false♠`;
         }
         else {
             if (fieldName && fieldValue) {
@@ -2721,7 +2724,11 @@ if (typeof document !== "undefined") {
             targetUrl += `&hltype=open`;
             targetUrl += `&createaxiflag=true`;
             targetUrl += `&isDupTab=${callParentNew('isDuplicateTab')}`;
-            targetUrl += `&dummyload=false♠`;
+
+             if (!popUpOption) 
+              targetUrl += `&dummyload=false♠`;
+
+            // targetUrl += `&dummyload=false♠`;
             // targetUrl += `&dummyload=false?`;
         }
 
@@ -2839,7 +2846,10 @@ if (typeof document !== "undefined") {
         targetUrl += `&openerIV=${transId}`;
         targetUrl += `&isIV=false`;
         targetUrl += `&isDupTab=${isDupTab}`;
-        targetUrl += `&dummyload=false♠`;
+        
+        if (!popUpOption) 
+            targetUrl += `&dummyload=false♠`;
+        
         // targetUrl += `&dummyload=false?`;
         targetUrl += `&hdnbElapsTime=0`;
 
@@ -11418,6 +11428,7 @@ if (typeof document !== "undefined") {
         targetUrl += `&${fieldname}=${encodeURIComponent(paramName)}`;
         targetUrl += "&act=load";
         // targetUrl += "&dummyload=false?";
+        
         targetUrl += `&dummyload=false♠`;
         // setCommandRoutes(input.value.trim(), targetUrl);
 
