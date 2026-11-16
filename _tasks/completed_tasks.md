@@ -96,6 +96,15 @@ Longer, or containing @@VARS@@: the value becomes h plus about 11 characters of 
 
 
 11/11/2026
+
+
+INstall command: 
+
+Enhancements
+### 1. Install command and repository configuration (TSK-0921)
+Products, plugins and change requests can be installed from the command line. The GitHub account and repository used for each type are configured first.
+
+
 1. Issue1: Sales Order Edit NA   -- Error is coming only when we select NA	Unable to load. SQL: Select BRANCHNAME from BRANCH Where BranchId = Needs to be checked 
 2. TKT-0945 - AXI CMD Line - Configure Keyfield auto suggestions are displaying field containing Duplicate values ->  Review with Abinash sir. 
 3. TKT-0782 - AXI CMD line-Edit with validation issue
@@ -128,7 +137,8 @@ prajwala1/Agil@3
 9. "Source" command wont be available for pages.But in Help-Open Developer Studio with source tab,it is wrongly mentioned. "Use the source command to open a form, report, page or data source in Developer Studio. "Monthly Sales
  #310
 
- 10. If any tstruct page(tstruct,tstructs in Configure,SDK cmds) is opened from command line and then again opened from its actual place(pop up,Configuration studio,Axpert developer studio),then observed that it is showing blank screen.This issue occurs whereever tstruct page is available.
+ 10. If any tstruct page(tstruct,tstructs in Configure,SDK cmds) is opened from command line and then again opened from its actual place(pop up,Configuration studio,Axpert developer studio),then observed that it is showing blank screen.This issue occurs whereever tstruct page is available. - 
+ Malakonda. 
 
  11. Configure "Publish Config Studio"  in normal mode does not list the records unless the Server param is selected,but the same Configure "Publish Config Studio" in pop up mode displays the records without the Server param selection.
  12. Open any screens under Configure in normal mode and then open the same screen in pop up mode,observed that the page is blank in pop up.For listing screens,the issue occurs when the tstruct page is opened from listing screen in normal mode and same is done in pop up mode.
