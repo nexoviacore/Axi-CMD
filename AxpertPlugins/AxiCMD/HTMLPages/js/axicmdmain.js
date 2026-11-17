@@ -864,6 +864,8 @@ if (typeof document !== "undefined") {
     let footerPagedContext = null;
     // The paged list currently shown in the dropdown: { source, param, term, listKey } or null
     let activePagedContext = null;
+    // True when suggestLocal swapped "Form edit ..." to "edit Form ..." for the current pass (see writeCommandTokensToInput)
+    let commandTokensSwapped = false;
 
     /**
      * Registers a search key as most recently used and drops the oldest ones beyond the limit.
@@ -1687,9 +1689,15 @@ if (typeof document !== "undefined") {
                 }
                 list = current;
             } else {
-                // Page 1: replace the list (records first, then the untouched field rows)
+                // old code
+                // // Page 1: replace the list (records first, then the untouched field rows)
+                // const previous = axDatasourceObj[listKey];
+                // list = recordItems.concat(fieldItems);
+                // new code: field rows first, then the records, as fn_axi_getstructs_obj returns them. With records first
+                // the field rows sat after page 1, and the records of later pages (appended on scroll) went below them,
+                // so "<form> edit" / "<form> view" showed the field names in the middle of the list.
                 const previous = axDatasourceObj[listKey];
-                list = recordItems.concat(fieldItems);
+                list = fieldItems.concat(recordItems);
                 // A reload of a base list must not forget structures / records that were merged in from earlier
                 // searches (they are not on page 1 but may already be in use by a typed command).
                 if (!cleanTerm && paged && Array.isArray(previous) && previous.length > 0) {
@@ -1716,8 +1724,14 @@ if (typeof document !== "undefined") {
                 // Id index kept per base list so every merge does not rescan the whole list.
                 // It is rebuilt only if the base array itself was replaced (e.g. after a reset).
                 let idx = axBaseIdIndex[baseKey];
-                if (!idx || idx.ref !== existing) {
-                    idx = { ref: existing, ids: new Set() };
+                // old code
+                // if (!idx || idx.ref !== existing) {
+                // new code: also rebuild when the list grew since the index was last synced. Rows are added to the
+                // same array without going through this index (next pages loaded on scroll, a picked record kept for
+                // lookups, a record found on the server), so a search hit that was already in the list was merged in a
+                // second time and showed twice in the suggestions.
+                if (!idx || idx.ref !== existing || idx.length !== existing.length) {
+                    idx = { ref: existing, ids: new Set(), length: existing.length };
                     existing.forEach(item => { const u = uidOf(item); if (u !== null) idx.ids.add(u); });
                     axBaseIdIndex[baseKey] = idx;
                 }
@@ -1735,6 +1749,8 @@ if (typeof document !== "undefined") {
                         existing.push(Object.assign({}, item, { __fromSearch: true }));
                     }
                 }
+                // new code: the index now covers every row, so the next merge does not rebuild it needlessly
+                idx.length = existing.length;
             }
             return list;
         } catch (error) {
@@ -1772,6 +1788,10 @@ if (typeof document !== "undefined") {
     // not in it are looked up on the server as the user types.
     let structSearchTimer = null;
     let structSearchPendingTerm = null;
+    // new code: one debounce per structure list (baseKey -> { askKey, timer }). With the single timer above, a search
+    // of the "all" list (word recognition) cancelled the pending search of a command's own list (edit / create use
+    // "...$#$run$#$t"), so a form beyond page 1 of that list was never found: "<form> edit" sent nothing.
+    const structSearchByList = {};
     // True while a debounced record search (axi_getstructsdata etc.) is waiting to be sent
     let dynamicSearchPending = false;
 
@@ -1781,7 +1801,10 @@ if (typeof document !== "undefined") {
      * @returns {boolean} True while a search is pending.
      */
     function isSearchPending() {
-        return structSearchPendingTerm !== null || dynamicSearchPending;
+        // old code
+        // return structSearchPendingTerm !== null || dynamicSearchPending;
+        // new code: a structure search is pending while any list still waits out its debounce
+        return structSearchPendingTerm !== null || Object.keys(structSearchByList).length > 0 || dynamicSearchPending;
     }
     const structSearchAsked = new Set();
     // Structure list keys that were already asked again after coming back empty (see processParamforEditndView)
@@ -1812,15 +1835,29 @@ if (typeof document !== "undefined") {
         // (LRU of MAX_CACHED_SEARCH_KEYS), otherwise the result could no longer be scrolled for more pages
         const searchKey = `${baseKey}_q_${term}`;
         if (structSearchAsked.has(askKey) && !axPageState[searchKey]) structSearchAsked.delete(askKey);
-        if (structSearchAsked.has(askKey) || structSearchPendingTerm === askKey) return;
-        structSearchPendingTerm = askKey;
-        clearTimeout(structSearchTimer);
-        structSearchTimer = setTimeout(() => {
-            structSearchPendingTerm = null;
-            structSearchAsked.add(askKey);
-            
-            loadList("axi_structmetalist", param, term, 1, getPageSize());
-        }, SEARCH_DEBOUNCE_MS);
+        // old code
+        // if (structSearchAsked.has(askKey) || structSearchPendingTerm === askKey) return;
+        // structSearchPendingTerm = askKey;
+        // clearTimeout(structSearchTimer);
+        // structSearchTimer = setTimeout(() => {
+        //     structSearchPendingTerm = null;
+        //     structSearchAsked.add(askKey);
+        //
+        //     loadList("axi_structmetalist", param, term, 1, getPageSize());
+        // }, SEARCH_DEBOUNCE_MS);
+        // new code: debounced per list, so typing still sends one search per list, but a search of one list no
+        // longer cancels the pending search of another list
+        const pending = structSearchByList[baseKey];
+        if (structSearchAsked.has(askKey) || (pending && pending.askKey === askKey)) return;
+        if (pending) clearTimeout(pending.timer);
+        structSearchByList[baseKey] = {
+            askKey: askKey,
+            timer: setTimeout(() => {
+                delete structSearchByList[baseKey];
+                structSearchAsked.add(askKey);
+                loadList("axi_structmetalist", param, term, 1, getPageSize());
+            }, SEARCH_DEBOUNCE_MS)
+        };
     }
 
     /**
@@ -2674,7 +2711,11 @@ if (typeof document !== "undefined") {
             targetUrl += `&openerIV=${transId}`;
             targetUrl += `&isIV=false`;
             targetUrl += `&isDupTab=${callParentNew('isDuplicateTab')}`;
-            targetUrl += `&dummyload=false`;
+            // targetUrl += `&dummyload=false?`;
+             if (!popUpOption) 
+                 targetUrl += `&dummyload=false♠`;
+
+            // targetUrl += `&dummyload=false♠`;
         }
         else {
             if (fieldName && fieldValue) {
@@ -2683,7 +2724,12 @@ if (typeof document !== "undefined") {
             targetUrl += `&hltype=open`;
             targetUrl += `&createaxiflag=true`;
             targetUrl += `&isDupTab=${callParentNew('isDuplicateTab')}`;
-            targetUrl += `&dummyload=false`;
+
+             if (!popUpOption) 
+              targetUrl += `&dummyload=false♠`;
+
+            // targetUrl += `&dummyload=false♠`;
+            // targetUrl += `&dummyload=false?`;
         }
 
         if (extraParams) {
@@ -2800,7 +2846,11 @@ if (typeof document !== "undefined") {
         targetUrl += `&openerIV=${transId}`;
         targetUrl += `&isIV=false`;
         targetUrl += `&isDupTab=${isDupTab}`;
-        targetUrl += `&dummyload=false`;
+        
+        if (!popUpOption) 
+            targetUrl += `&dummyload=false♠`;
+        
+        // targetUrl += `&dummyload=false?`;
         targetUrl += `&hdnbElapsTime=0`;
 
         if (extraParams) {
@@ -3302,6 +3352,24 @@ if (typeof document !== "undefined") {
      */
     function cleanString(val) {
         return (val || "").replace(/["]/g, "").trim();
+    }
+
+    /**
+     * Writes a command's words back into the input box. suggestLocal works on the words in verb-first order
+     * ("edit Form ...") although the user typed them target-first ("Form edit ..."); when it swapped them
+     * (commandTokensSwapped), the first two words are swapped back here so the box keeps the order the user typed.
+     * Used by the create / edit / ADS-view handlers when they clear a wrong value or fill in a date.
+     * @param {string[]} tokens - Command words in verb-first order (the array itself is not changed).
+     * @returns {void}
+     */
+    function writeCommandTokensToInput(tokens) {
+        const words = [...tokens];
+        if (commandTokensSwapped && words.length >= 2) {
+            const temp = words[0];
+            words[0] = words[1];
+            words[1] = temp;
+        }
+        input.value = words.join(" ");
     }
 
     /**
@@ -3873,7 +3941,9 @@ if (typeof document !== "undefined") {
 
                         settokens[lastIndex] = date;
 
-                        input.value = settokens.join(" ");
+                        // old code: input.value = settokens.join(" ");
+                        // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                        writeCommandTokensToInput(settokens);
 
                         SET_COMMAND_STATE.currentFieldValue = date;
                         dateControlBoolean = false;
@@ -3891,7 +3961,9 @@ if (typeof document !== "undefined") {
 
                         settokens[lastIndex] = "";
 
-                        input.value = settokens.join(" ");
+                        // old code: input.value = settokens.join(" ");
+                        // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                        writeCommandTokensToInput(settokens);
 
                         showToast("Please Type the date", 5000, true);
                         updateDynamicHintFromPrompt({ prompt: "fieldValue" })
@@ -3975,7 +4047,9 @@ if (typeof document !== "undefined") {
                     let lastToken = tokens[lastIndex];
                     tokens[lastIndex] = "";
 
-                    input.value = tokens.join(" ");
+                    // old code: input.value = tokens.join(" ");
+                    // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                    writeCommandTokensToInput(tokens);
 
                     filtered = list;
                 }
@@ -4174,7 +4248,9 @@ if (typeof document !== "undefined") {
 
                     targetIndex = targetIndex - 1;
 
-                    input.value = settokens.join(" ");
+                    // old code: input.value = settokens.join(" ");
+                    // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                    writeCommandTokensToInput(settokens);
                     updateDynamicHintFromPrompt({ prompt: "fieldname" })
 
 
@@ -4330,7 +4406,9 @@ if (typeof document !== "undefined") {
                             let lastToken = tokens[lastIndex];
                             tokens[lastIndex] = "";
 
-                            input.value = tokens.join(" ");
+                            // old code: input.value = tokens.join(" ");
+                            // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                            writeCommandTokensToInput(tokens);
 
                             filtered = list;
                         }
@@ -5152,7 +5230,11 @@ if (typeof document !== "undefined") {
                 });
             }
 
-            if (actions.map(act => act.toLowerCase()).includes(partial)) {
+            // old code
+            // if (actions.map(act => act.toLowerCase()).includes(partial)) {
+            // new code: "<form> edit" alone cannot run, edit needs a record (a third word), so Go / Pop-Up are not
+            // offered for it here; the "Edit" suggestion below is shown instead and picking it moves on to the records.
+            if (partial !== "edit" && actions.map(act => act.toLowerCase()).includes(partial)) {
                 if (partial === "source") {
                     filteredObjects = [goOption];
                     return [goOption];
@@ -5167,6 +5249,8 @@ if (typeof document !== "undefined") {
         }
 
         let tokens = [...rawTokens];
+        // new code: remember whether the words were swapped, so handlers that rewrite the input put them back in order
+        commandTokensSwapped = false;
         if (tokens.length >= 2) {
             const first = cleanString(tokens[0]).toLowerCase();
             const second = cleanString(tokens[1]).toLowerCase();
@@ -5174,6 +5258,7 @@ if (typeof document !== "undefined") {
                 const temp = tokens[0];
                 tokens[0] = tokens[1];
                 tokens[1] = temp;
+                commandTokensSwapped = true;
             }
         }
 
@@ -5389,8 +5474,13 @@ if (typeof document !== "undefined") {
                 }
                 // new code: Trace On / Trace Off / Trace Files run in the shell, a pop-up makes no sense: Go only
                 if (isShellActionOption(tokens)) {
-                    filteredObjects = [goOption];
-                    return [goOption];
+                    // old code
+                    // filteredObjects = [goOption];
+                    // return [goOption];
+                    // new code: no Go when words follow the option, the command takes no value (#305)
+                    const shellOptions = hasShellActionExtraWords(tokens) ? [] : [goOption];
+                    filteredObjects = shellOptions;
+                    return shellOptions;
                 }
                 else {
                     filteredObjects = [goOption, popOption];
@@ -5438,8 +5528,13 @@ if (typeof document !== "undefined") {
         }
         // new code: Trace On / Trace Off / Trace Files: Go only, no Pop-Up
         if (groupKey.toLowerCase() === "configure" && tokens.length > 2 && isShellActionOption(tokens)) {
-            filteredObjects = [goOption];
-            return [goOption];
+            // old code
+            // filteredObjects = [goOption];
+            // return [goOption];
+            // new code: no Go when words follow the option, the command takes no value (#305)
+            const shellOptions = hasShellActionExtraWords(tokens) ? [] : [goOption];
+            filteredObjects = shellOptions;
+            return shellOptions;
         }
         if (groupKey.toLowerCase() === "configure" && tokens.length > 3 && tokens[1].toLowerCase() != "keyfield") {
             filteredObjects = [goOption, popOption];
@@ -5828,6 +5923,14 @@ if (typeof document !== "undefined") {
                 }
             }
 
+            // new code: configure keyfield <form>: the form has no field that can be its key field (axi_primaryfieldlist
+            // lists only first-section fields that are auto-generated, or visible with Allow Duplicate off), so explain
+            // how to add one instead of showing an empty list
+            if (apiSourceName === "axi_primaryfieldlist" && dataList.length === 0) {
+                filteredObjects = [];
+                return [getNoKeyFieldMessage(tokens[2])];
+            }
+
             let filtered = dataList.filter(item => {
                 const display = item.displaydata || item.caption || item.name || "";
                 return display.toLowerCase().includes(partialTyped.toLowerCase());
@@ -6046,7 +6149,10 @@ if (typeof document !== "undefined") {
      * @param {string} [preferredType] - Optional stype (t / i / p / ads); used to choose between equal names.
      * @returns {object|undefined} Matching row.
      */
-    function findStructRow(list, wanted, preferredType) {
+    // old code
+    // function findStructRow(list, wanted, preferredType) {
+    // new code: typedText (optional) = the words the user typed for the structure; see pickStructRowByTypedText
+    function findStructRow(list, wanted, preferredType, typedText) {
         if (!Array.isArray(list) || !wanted) return undefined;
         const w = String(wanted).replace(/\s*\[[^\]]*\]$/, "").trim().toLowerCase();
         if (!w) return undefined;
@@ -6054,11 +6160,43 @@ if (typeof document !== "undefined") {
         const typeOk = r => !preferredType || (r.stype || "").toLowerCase() === preferredType;
         // "Caption (transid)" names one structure among several sharing a caption (#289)
         const captionAndName = r => r.caption && r.name && `${String(r.caption).trim()} (${r.name})`.toLowerCase() === w;
+        // new code: two structures can share an internal name (form "SPChar (Rel53)" and report "SM53T (Rel53)").
+        // Without a type the first row by name was taken, which was the report, so "view" sent NA for the
+        // form's keyfield / primary table and listed nothing. The typed caption picks the right one.
+        if (!preferredType && typedText) {
+            const typedPick = pickStructRowByTypedText(list, w, typedText);
+            if (typedPick) return typedPick;
+        }
         return list.find(r => r && r.name === wanted && typeOk(r))
             || list.find(r => r && r.name === wanted)
             || list.find(r => r && captionAndName(r))
             || list.find(r => r && (same(r.name) || same(r.caption) || same(r.displaydata)) && typeOk(r))
             || list.find(r => r && (same(r.name) || same(r.caption) || same(r.displaydata)));
+    }
+
+    /**
+     * When several rows share the internal name, returns the one row whose caption / "Caption (name)" /
+     * displaydata equals what the user typed. Returns undefined in every other case (only one row with that
+     * name, nothing typed, or the typed text fits none or more than one row), so findStructRow then works
+     * exactly as before.
+     * @param {Array<object>} list - Structure rows (axi_structmetalist).
+     * @param {string} wantedLower - Resolved internal name, lower case.
+     * @param {string} typedText - The word(s) the user typed for the structure.
+     * @returns {object|undefined} The single matching row, or undefined.
+     */
+    function pickStructRowByTypedText(list, wantedLower, typedText) {
+        const typedFull = String(typedText || "").trim().toLowerCase();
+        const typedNoBadge = typedFull.replace(/\s*\[[^\]]*\]$/, "").trim();
+        if (!typedNoBadge) return undefined;
+        const sameName = list.filter(r => r && r.name && String(r.name).trim().toLowerCase() === wantedLower);
+        if (sameName.length < 2) return undefined;
+        const eq = (v, t) => v !== undefined && v !== null && String(v).trim().toLowerCase() === t;
+        const hits = sameName.filter(r =>
+            eq(r.caption, typedNoBadge) ||
+            eq(r.displaydata, typedFull) ||
+            (r.caption && `${String(r.caption).trim()} (${String(r.name).trim()})`.toLowerCase() === typedNoBadge)
+        );
+        return hits.length === 1 ? hits[0] : undefined;
     }
 
     function processParamforEditndView(tokens, commandConfig, paramValue, position) {
@@ -6118,7 +6256,10 @@ if (typeof document !== "undefined") {
         }
 
         // struct_name is the internal name when it was resolved, or still the caption the user typed
-        const struct_row = findStructRow(struct_dataList, struct_name, preferredType);
+        // old code
+        // const struct_row = findStructRow(struct_dataList, struct_name, preferredType);
+        // new code: the typed word decides between structures that share an internal name
+        const struct_row = findStructRow(struct_dataList, struct_name, preferredType, cleanString(tokens[1] || ""));
 
         if (!struct_row) {
             // The structure list is loaded one page at a time, so the chosen form / report may simply not be in the
@@ -7372,6 +7513,12 @@ if (typeof document !== "undefined") {
             return;
         }
         else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Save_ACTION" && saveGroupKeyCheck.toLowerCase() === "edit") {
+            // new code (issue #295): nothing is saved while a typed value does not fit its field's data type
+            const invalidEditValue = findInvalidEditFieldValue(checkTokens, setCommandTransid);
+            if (invalidEditValue) {
+                showToast(invalidEditValue, 5000);
+                return;
+            }
             // console.log("Save Option Selected...Submitting Data...");
             hide();
             AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", false, checkTokens, saveCommandConfig);
@@ -8235,6 +8382,28 @@ if (typeof document !== "undefined") {
     //     return null;
     // }
 
+
+    // Characters the AxList search does not match: a CONTAINS filter holding any of them returns no rows
+    // (checked on the server: "spchar!@#$%^&*()" -> 0 rows, "spchar" -> the form "SPChar!@#$%^&*()").
+    const SERVER_SEARCH_UNSAFE_CHARS = /[!@#$%^&*()]/;
+
+    /**
+     * Returns the part of a typed search term that is sent to the server as the CONTAINS filter. A term without
+     * the characters in SERVER_SEARCH_UNSAFE_CHARS is returned unchanged. Otherwise the longest piece between
+     * those characters is used ("spchar!@#$%^&*()" -> "spchar"): the server then returns a wider set of rows and
+     * loadList keeps only the rows that contain the whole typed term. Returns "" when no piece is long enough to
+     * search with; the caller then sends no filter.
+     * @param {string} term - Typed term (trimmed, lower case).
+     * @returns {string} Term for the server filter.
+     */
+    function serverSearchTerm(term) {
+        const t = String(term || "");
+        if (!SERVER_SEARCH_UNSAFE_CHARS.test(t)) return t;
+        const pieces = t.split(/[!@#$%^&*()]+/).map(s => s.trim()).filter(Boolean);
+        const longest = pieces.reduce((best, s) => (s.length > best.length ? s : best), "");
+        return longest.length >= 3 ? longest : "";
+    }
+
     /**
      * Fetches dataset for specified Axpert data source name and parameters.
      * Supports pagination and dynamic server-side search filtering.
@@ -8328,12 +8497,26 @@ if (typeof document !== "undefined") {
             // Search is the AxList "displaydata CONTAINS" filter, applied before paging.
             // Note: for record lists (axi_getstructsdata) it also applies to the field rows (isfield = 't'),
             // so while a term is typed only fields whose text contains it come back.
-            if (cleanTerm && cleanTerm.length >= 3) {
+            // old code
+            // if (cleanTerm && cleanTerm.length >= 3) {
+            //     requestBody.props.filters = [
+            //         {
+            //             fldname: "displaydata",
+            //             condition: "CONTAINS",
+            //             value: cleanTerm,
+            //             datatype: "TEXT"
+            //         }
+            //     ];
+            // }
+            // new code: the server is sent a term it can match (see serverSearchTerm). The rows that come back are
+            // narrowed to the full typed term by loadList, so the result is the same, only the server filter is wider.
+            const serverTerm = cleanTerm ? serverSearchTerm(cleanTerm) : "";
+            if (serverTerm && serverTerm.length >= 3) {
                 requestBody.props.filters = [
                     {
                         fldname: "displaydata",
                         condition: "CONTAINS",
-                        value: cleanTerm,
+                        value: serverTerm,
                         datatype: "TEXT"
                     }
                 ];
@@ -9165,6 +9348,8 @@ if (typeof document !== "undefined") {
                     structSearchAsked.clear();
                     emptyStructListRetried.clear();
                     structSearchPendingTerm = null;
+                    // new code: drop searches still waiting to be sent; they belong to the discarded lists
+                    Object.keys(structSearchByList).forEach(k => { clearTimeout(structSearchByList[k].timer); delete structSearchByList[k]; });
                     resolvedParams = {};
                     resolvedParamType = {};
                     createfieldnamevaluesList = {};
@@ -9890,6 +10075,14 @@ if (typeof document !== "undefined") {
                     }
                     return;
                 }
+                // new code (issue #295): Ctrl + S on edit saves nothing while a typed value does not fit its field's data type
+                if (grpKey && grpKey.toLowerCase() === "edit") {
+                    const invalidEditValue = findInvalidEditFieldValue(tokens, setCommandTransid);
+                    if (invalidEditValue) {
+                        showToast(invalidEditValue, 5000);
+                        return;
+                    }
+                }
                 // console.log("Save Option Selected...Submitting Data...");
                 hide();
                 if (grpKey.toLowerCase() === "create")
@@ -10318,6 +10511,14 @@ if (typeof document !== "undefined") {
         if (disabledRow) {
             const optName = disabledRow.promptOptions || disabledRow.prompt_options || disabledRow.PromptOptions || firstParamValue;
             showToast(`The command '${group} ${optName}' is disabled or invalid.`);
+            return;
+        }
+
+        // new code: Trace On / Trace Off / Trace Files take no value; anything after the option is an error, not ignored (#305)
+        if ((group || "").toLowerCase() === "configure" && hasShellActionExtraWords(tokens)) {
+            const shellName = getShellActionName(tokens);
+            showToast(`'configure ${shellName}' takes nothing after '${shellName}'. Remove the extra words and run it again.`);
+            reopenPaletteForCommandSetting();
             return;
         }
 
@@ -11226,7 +11427,9 @@ if (typeof document !== "undefined") {
         // } else {
         targetUrl += `&${fieldname}=${encodeURIComponent(paramName)}`;
         targetUrl += "&act=load";
-        targetUrl += "&dummyload=false?";
+        // targetUrl += "&dummyload=false?";
+        
+        targetUrl += `&dummyload=false♠`;
         // setCommandRoutes(input.value.trim(), targetUrl);
 
         window.LoadIframe(targetUrl);
@@ -11289,7 +11492,9 @@ if (typeof document !== "undefined") {
                     showToast(`User '${window.mainUserName}' has no access for Page source`);
                     return;
                 }
-                top.window.LoadIframe(`../aspx/tstruct.aspx?transid=sect&pagename=${encodeURIComponent(structName.name)}&act=load&dummyload=false?`);
+                top.window.LoadIframe(`../aspx/tstruct.aspx?transid=sect&pagename=${encodeURIComponent(structName.name)}&act=load&dummyload=false♠`);
+        // targetUrl += `&dummyload=false♠`;
+
                 break;
 
             default:
@@ -11343,14 +11548,14 @@ if (typeof document !== "undefined") {
                 showToast(`User '${window.mainUserName}' has no access for ADS source`);
                 return;
             }
-            targetUrl = `../aspx/tstruct.aspx?transid=b_sql&sqlname=${encodeURIComponent(name)}&act=load&dummyload=false?`;
+            targetUrl = `../aspx/tstruct.aspx?transid=b_sql&sqlname=${encodeURIComponent(name)}&act=load&dummyload=false♠`;
             handleViewSourceAds(name);
         } else if (type === "p" || type === "page") {
             if (!isDevOptionAllowed("page")) {
                 showToast(`User '${window.mainUserName}' has no access for Page source`);
                 return;
             }
-            targetUrl = `../aspx/tstruct.aspx?transid=sect&pagename=${encodeURIComponent(name)}&act=load&dummyload=false?`;
+            targetUrl = `../aspx/tstruct.aspx?transid=sect&pagename=${encodeURIComponent(name)}&act=load&dummyload=false♠`;
             top.window.LoadIframe(targetUrl);
         } else {
             showToast("Unknown source type: " + name);
@@ -11956,13 +12161,61 @@ if (typeof document !== "undefined") {
      * @returns {boolean}
      */
     function isShellActionOption(tokens) {
-        if (!Array.isArray(tokens) || tokens.length < 2) return false;
-        const single = cleanCommandToken(tokens[1] || "");
-        const joined = tokens.slice(1).map(t => cleanCommandToken(t || "")).filter(Boolean).join(" ");
-        return [single, joined].some(opt => {
-            const row = opt ? getCommandConfigRow("Configure", opt) : null;
-            return !!row && (row.promptOptionType || row.prompt_option_type || row.PromptOptionType || "").toLowerCase() === "shellaction";
-        });
+        // old code
+        // if (!Array.isArray(tokens) || tokens.length < 2) return false;
+        // const single = cleanCommandToken(tokens[1] || "");
+        // const joined = tokens.slice(1).map(t => cleanCommandToken(t || "")).filter(Boolean).join(" ");
+        // return [single, joined].some(opt => {
+        //     const row = opt ? getCommandConfigRow("Configure", opt) : null;
+        //     return !!row && (row.promptOptionType || row.prompt_option_type || row.PromptOptionType || "").toLowerCase() === "shellaction";
+        // });
+        // new code: also true when words follow the option (configure "Trace Files" x), so those can be refused (#305)
+        return getShellActionEnd(tokens) > 0;
+    }
+
+    /**
+     * Index of the token that completes a "shellaction" option name, or -1. The option may be one quoted token
+     * ("Trace On") or typed as separate words (Trace On), so the words after "configure" are joined one by one.
+     * @param {string[]} tokens - Command tokens (tokens[0] is "configure").
+     * @returns {number} Token index where the option name ends, or -1 when the tokens hold no shellaction option.
+     */
+    function getShellActionEnd(tokens) {
+        if (!Array.isArray(tokens) || tokens.length < 2) return -1;
+        let joined = "";
+        for (let i = 1; i < tokens.length; i++) {
+            const part = cleanCommandToken(tokens[i] || "");
+            if (!part) continue;
+            joined = joined ? `${joined} ${part}` : part;
+            const row = getCommandConfigRow("Configure", joined);
+            if (row && (row.promptOptionType || row.prompt_option_type || row.PromptOptionType || "").toLowerCase() === "shellaction") {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * True when anything other than blanks follows a "shellaction" option (Trace On, Trace Off, Trace Files).
+     * These commands take no value: only "configure" and the option are allowed (#305).
+     * @param {string[]} tokens - Command tokens.
+     * @returns {boolean}
+     */
+    function hasShellActionExtraWords(tokens) {
+        const end = getShellActionEnd(tokens);
+        return end > 0 && tokens.slice(end + 1).some(t => cleanCommandToken(t || "").trim() !== "");
+    }
+
+    /**
+     * Option name of a "shellaction" command as configured (e.g. "Trace Files"), for messages.
+     * @param {string[]} tokens - Command tokens.
+     * @returns {string}
+     */
+    function getShellActionName(tokens) {
+        const end = getShellActionEnd(tokens);
+        if (end < 1) return "";
+        const joined = tokens.slice(1, end + 1).map(t => cleanCommandToken(t || "")).filter(Boolean).join(" ");
+        const row = getCommandConfigRow("Configure", joined);
+        return (row && (row.promptOptions || row.prompt_options || row.PromptOptions)) || joined;
     }
 
     /**
@@ -14149,13 +14402,13 @@ if (typeof document !== "undefined") {
 
         if (type.toLowerCase() === "page" || type.toLowerCase() === "p") {
             if (rawName && rawName.toLowerCase() === "create new") {
-                const targetUrl = `../aspx/tstruct.aspx?transid=sect&hltype=open&createaxiflag=true&isDupTab=false&dummyload=false?`;
+                const targetUrl = `../aspx/tstruct.aspx?transid=sect&hltype=open&createaxiflag=true&isDupTab=false&dummyload=false♠`;
                 setCommandRoutes(input.value.trim(), targetUrl);
                 top.window.LoadIframe(targetUrl);
                 return;
             }
             let { value: resolvedName } = tryResolveToken(2, rawName, commandConfig, false);
-            const targetUrl = `../aspx/tstruct.aspx?transid=sect&pagename=${encodeURIComponent(resolvedName || rawName)}&act=load&dummyload=false?`;
+            const targetUrl = `../aspx/tstruct.aspx?transid=sect&pagename=${encodeURIComponent(resolvedName || rawName)}&act=load&dummyload=false♠`;
             setCommandRoutes(input.value.trim(), targetUrl);
             top.window.LoadIframe(targetUrl);
             return;
@@ -15712,9 +15965,46 @@ if (typeof document !== "undefined") {
             text.startsWith("No directories") ||
             text === "No Data" ||
             text === "Please type the value..." ||
+            // new code (issue #295): edit command, value does not fit a number field
+            text.startsWith("Please type a valid number") ||
             text === "Please type Valid date using / (ex: DD / MM / YYYY)" ||
-            text === "Please Type the date";
+            // old code: text === "Please Type the date";
+            // new code: configure keyfield <form> on a form without a unique field (see getNoKeyFieldMessage)
+            text === "Please Type the date" ||
+            text.startsWith(noKeyFieldMessageStart());
 
+    }
+
+    /**
+     * Start of the message shown when a form has no field that can be its key field; isSystemMessage matches on it.
+     * A function, not a const, so it can be used from anywhere in the script regardless of order.
+     * @returns {string}
+     */
+    function noKeyFieldMessageStart() {
+        return "No key field available";
+    }
+
+    /**
+     * Message for "configure keyfield <form>" when the form has no field that can be its key field. A key field must be
+     * unique, so the user is told how to make one: an auto-generated field, or a visible field with Allow Duplicate off,
+     * in the form's first section (the only fields axi_primaryfieldlist offers).
+     * @param {string} formToken - The typed form token (tokens[2]).
+     * @returns {string}
+     */
+    function getNoKeyFieldMessage(formToken) {
+        const formName = cleanCommandToken(formToken || "");
+        const forForm = formName ? ` for '${formName}'` : "";
+        // old code
+        // return `${noKeyFieldMessageStart()}${forForm}. A key field must have a different value in every record. ` +
+        //     `Open this form in the form designer and, in its first section, set one field to Auto Generate, or set Allow Duplicate to No on a visible field. ` +
+        //     `Save the form, press Refresh in the palette, and try again.`;
+        // old code
+        // return `${noKeyFieldMessageStart()}${forForm}. ` +
+        //     `Open this Tstruct in the Developer Studio and configure an Autogenerate field, or a field with Allow Duplicate set to false.`;
+        // new code: wording agreed with the team; names the tstruct instead of "this Tstruct"
+        const tstructRef = formName ? `'${formName}' tstruct` : "this tstruct";
+        return `${noKeyFieldMessageStart()}${forForm}. ` +
+            `Open ${tstructRef} in the Developer Studio and configure an Autogenerate field, or a field with Allow Duplicate set to false.`;
     }
 
 
@@ -15855,7 +16145,9 @@ if (typeof document !== "undefined") {
 
                         settokens[lastIndex] = date;
 
-                        input.value = settokens.join(" ");
+                        // old code: input.value = settokens.join(" ");
+                        // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                        writeCommandTokensToInput(settokens);
 
                         SET_COMMAND_STATE.currentFieldValue = date;
                         dateControlBoolean = false;
@@ -15873,7 +16165,9 @@ if (typeof document !== "undefined") {
 
                         settokens[lastIndex] = "";
 
-                        input.value = settokens.join(" ");
+                        // old code: input.value = settokens.join(" ");
+                        // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                        writeCommandTokensToInput(settokens);
 
                         showToast("Please Type the date", 5000, true);
                         updateDynamicHintFromPrompt({ prompt: "fieldValue" })
@@ -15943,7 +16237,9 @@ if (typeof document !== "undefined") {
                     let lastToken = tokens[lastIndex];
                     tokens[lastIndex] = "";
 
-                    input.value = tokens.join(" ");
+                    // old code: input.value = tokens.join(" ");
+                    // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                    writeCommandTokensToInput(tokens);
 
                     filtered = list;
                 }
@@ -16109,7 +16405,9 @@ if (typeof document !== "undefined") {
 
                     targetIndex = targetIndex - 1;
 
-                    input.value = settokens.join(" ");
+                    // old code: input.value = settokens.join(" ");
+                    // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                    writeCommandTokensToInput(settokens);
                     updateDynamicHintFromPrompt({ prompt: "fieldName" })
                     //return [];
 
@@ -16247,7 +16545,9 @@ if (typeof document !== "undefined") {
                             let lastToken = tokens[lastIndex];
                             tokens[lastIndex] = "";
 
-                            input.value = tokens.join(" ");
+                            // old code: input.value = tokens.join(" ");
+                            // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                            writeCommandTokensToInput(tokens);
 
                             filtered = list;
                         }
@@ -16363,7 +16663,9 @@ if (typeof document !== "undefined") {
 
                         settokens[lastIndex] = date;
 
-                        input.value = settokens.join(" ");
+                        // old code: input.value = settokens.join(" ");
+                        // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                        writeCommandTokensToInput(settokens);
 
                         SET_COMMAND_STATE.currentFieldValue = date;
                         dateControlBoolean = false;
@@ -16381,7 +16683,9 @@ if (typeof document !== "undefined") {
 
                         settokens[lastIndex] = "";
 
-                        input.value = settokens.join(" ");
+                        // old code: input.value = settokens.join(" ");
+                        // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                        writeCommandTokensToInput(settokens);
 
                         showToast("Please Type the date", 5000, true);
                         updateDynamicHintFromPrompt({ prompt: "fieldValue" })
@@ -16451,7 +16755,9 @@ if (typeof document !== "undefined") {
                     let lastToken = tokens[lastIndex];
                     tokens[lastIndex] = "";
 
-                    input.value = tokens.join(" ");
+                    // old code: input.value = tokens.join(" ");
+                    // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                    writeCommandTokensToInput(tokens);
 
                     filtered = list;
                 }
@@ -16502,6 +16808,16 @@ if (typeof document !== "undefined") {
             const sourceKey = `${sourceName}_${setCommandTransid}`.toLowerCase();
 
             if (SET_COMMAND_STATE.currentField) {
+                // new code (issue #295): a typed value that does not fit the field's data type is not added to the
+                // save list; the user is asked to correct it before choosing the next field (state is kept as is)
+                const previousFieldMeta = findEditFieldMetadata(SET_COMMAND_STATE.currentField, setCommandTransid, sourceName);
+                const previousValueError = getEditFieldValueError(previousFieldMeta, SET_COMMAND_STATE.currentFieldValue, false);
+                if (previousValueError) {
+                    filteredObjects = [];
+                    updateDynamicHintFromPrompt({ prompt: "fieldValue" });
+                    return [previousValueError];
+                }
+
                 let previousColumnName = SET_COMMAND_STATE.currentField;
                 // previousColumnName = tryResolveToken(targetIndex - 2, previousColumnName, commandConfig, false);
                 const { value, type } = tryResolveToken(targetIndex - 2, previousColumnName, commandConfig, false);
@@ -16640,7 +16956,9 @@ if (typeof document !== "undefined") {
 
                     targetIndex = targetIndex - 1;
 
-                    input.value = settokens.join(" ");
+                    // old code: input.value = settokens.join(" ");
+                    // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                    writeCommandTokensToInput(settokens);
                     updateDynamicHintFromPrompt({ prompt: "fieldName" })
 
                     //return [];
@@ -16718,6 +17036,11 @@ if (typeof document !== "undefined") {
                         let acceptedValue = cleanString(tokens[tokens.length - 1]);
                         if (acceptedValue) {
                             SET_COMMAND_STATE.currentFieldValue = acceptedValue;
+                            // old code: return [];
+                            // new code (issue #295): while the value is typed, say so as soon as it cannot fit the
+                            // field's data type (a partly typed number such as "-" or "12." is still allowed here)
+                            const typingError = getEditFieldValueError(columnMetadata, acceptedValue, true);
+                            if (typingError) return [typingError];
                             return [];
                         }
                         else {
@@ -16775,7 +17098,9 @@ if (typeof document !== "undefined") {
                             let lastToken = tokens[lastIndex];
                             tokens[lastIndex] = "";
 
-                            input.value = tokens.join(" ");
+                            // old code: input.value = tokens.join(" ");
+                            // new code: write the words back in the order the user typed ("Form" edit ...), not the internal verb-first order
+                            writeCommandTokensToInput(tokens);
 
                             filtered = list;
                         }
@@ -16839,6 +17164,65 @@ if (typeof document !== "undefined") {
             else return [];
         }
     }
+    /**
+     * Finds a field of the edit command's field list (axi_nongridfieldlist) from the word the user typed for it:
+     * its name, or its caption (the display text without the "(name)" part). Same match as processEditCommand.
+     * @param {string} fieldToken - Field name or caption as typed.
+     * @param {string} transid - Form transid.
+     * @param {string} [sourceName="axi_nongridfieldlist"] - Field list data source.
+     * @returns {object|null} Field row (name, caption, datatype, moe ...) or null when not loaded / not found.
+     */
+    function findEditFieldMetadata(fieldToken, transid, sourceName = "axi_nongridfieldlist") {
+        if (!fieldToken || !transid) return null;
+        const colList = axDatasourceObj[`${sourceName}_${transid}`.toLowerCase()];
+        if (!Array.isArray(colList)) return null;
+        const wanted = cleanString(fieldToken).toLowerCase();
+        if (!wanted) return null;
+        return colList.find(
+            c =>
+                c?.name?.toLowerCase() === wanted ||
+                c?.displaydata?.toLowerCase().replace(/\s*\(.*?\)/g, '').trim() === wanted
+        ) || null;
+    }
+
+    /**
+     * Checks a value typed for a field of the edit command against the field's data type (issue #295).
+     * Only typed values (mode of entry "accept") are checked; values picked from a dropdown or the date list are
+     * already valid. Number fields (datatype "n") take digits with an optional leading minus and decimal point.
+     * Character ("c") and text ("t") fields take any text; date ("d") fields have their own handling.
+     * @param {object|null} fieldMeta - Field row from findEditFieldMetadata.
+     * @param {string} value - Value as typed (quotes are ignored).
+     * @param {boolean} isTyping - True while the value is still being typed: "-", "12." and ".5" are allowed then.
+     * @returns {string} Message to show, or "" when the value is fine (or the field is not checked).
+     */
+    function getEditFieldValueError(fieldMeta, value, isTyping) {
+        if (!fieldMeta || String(fieldMeta.moe || "").toLowerCase() !== "a") return "";
+        const text = cleanString(String(value ?? ""));
+        if (!text) return "";
+        if (String(fieldMeta.datatype || "").toLowerCase() === "n") {
+            const ok = isTyping ? /^-?\d*\.?\d*$/.test(text) : /^-?(\d+(\.\d+)?|\.\d+)$/.test(text);
+            if (!ok) return `Please type a valid number for ${fieldMeta.caption || fieldMeta.name} (e.g. 125 or -12.50)`;
+        }
+        return "";
+    }
+
+    /**
+     * Finds the first field value in an edit command ("<form> edit <key> with <field> <value> ...") that does not
+     * fit its field's data type, so Save can stop before anything is sent (issue #295). Works on the tokens in
+     * either order (target-first or edit-first): only the positions from "with" onwards are read.
+     * @param {string[]} tokens - Command tokens.
+     * @param {string} transid - Form transid.
+     * @returns {string} Message for the first invalid value, or "" when all values are fine.
+     */
+    function findInvalidEditFieldValue(tokens, transid) {
+        if (!Array.isArray(tokens) || cleanString(tokens[3]).toLowerCase() !== "with") return "";
+        for (let i = 4; i + 1 < tokens.length; i += 2) {
+            const error = getEditFieldValueError(findEditFieldMetadata(tokens[i], transid), tokens[i + 1], false);
+            if (error) return error;
+        }
+        return "";
+    }
+
     /**
      * Adds a field-value entry to save payload list.
      * @param {string} fieldName - Field name.
@@ -19154,7 +19538,7 @@ if (typeof document !== "undefined") {
      * Filters command dictionary according to user permissions.
      * @param {object} commandsFromDb - Raw commands from DB.
      * @param {object} accessPermissions - User permissions object.
-     * @param {boolean} [canActivateUsers=false] - axusers.licactivation is on for the user (User Activation is shown only then, admin included).
+     * @param {boolean} [canActivateUsers=false] - axusers.licactivation is on for the user (User Activation is shown only then; admin always sees it).
      * @returns {object} Filtered commands dictionary.
      */
     function buildCommandsByAccessPermissions(commandsFromDb, accessPermissions, canActivateUsers = false) {
@@ -19266,8 +19650,13 @@ if (typeof document !== "undefined") {
                 // if (!isAdmin && !canActivateUsers && rawType.toLowerCase() === "user activation") {
                 //     continue;
                 // }
-                // new code: User Activation only when axusers.licactivation is T / true (any case), for admin and every other user
-                if (!canActivateUsers && rawType.toLowerCase() === "user activation") {
+                // old code
+                // // new code: User Activation only when axusers.licactivation is T / true (any case), for admin and every other user
+                // if (!canActivateUsers && rawType.toLowerCase() === "user activation") {
+                //     continue;
+                // }
+                // new code: admin always gets User Activation (licactivation is not checked); anyone else only with licactivation on
+                if (!isAdmin && !canActivateUsers && rawType.toLowerCase() === "user activation") {
                     continue;
                 }
 
@@ -20156,10 +20545,16 @@ if (typeof document !== "undefined") {
                 },
                 {
                     element: '#Axi-Searchinp',
+                    // old code
+                    // intro: tourStep('code', 'Open Developer Studio with source',
+                    //     '<p>Use the <code>source</code> command to open a form, report, page or data source in Developer Studio.</p>' +
+                    //     tourRow('&quot;Sales Order&quot; source', 'Open the form or report design') +
+                    //     tourRow('&quot;Monthly Sales&quot; source', 'Open a page or data source definition') +
+                    // new code (#310): source is not offered for pages, only for forms, reports and data sources
                     intro: tourStep('code', 'Open Developer Studio with source',
-                        '<p>Use the <code>source</code> command to open a form, report, page or data source in Developer Studio.</p>' +
+                        '<p>Use the <code>source</code> command to open a form, report or data source in Developer Studio.</p>' +
                         tourRow('&quot;Sales Order&quot; source', 'Open the form or report design') +
-                        tourRow('&quot;Monthly Sales&quot; source', 'Open a page or data source definition') +
+                        tourRow('&quot;Monthly Sales&quot; source', 'Open a data source definition') +
                         '<div class="axi-tour-note">Only users with developer access can use <code>source</code>. Everyone else sees a message that they have no access.</div>'),
                     position: 'bottom'
                 },

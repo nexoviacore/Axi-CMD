@@ -72,6 +72,18 @@ for (const db of ['Postgre', 'Oracle']) {
         }
     });
 
+    // #306: on a table created before Custom Options, an INSERT naming is_system before the column exists fails and leaves
+    // that Built-in Option with the default is_system = 'F', so every column must be added before the first row is written
+    test(`${db}: is_system and record_source are added before the first shipped row (#306)`, () => {
+        const all = blocks(cfg);
+        const firstRow = all.findIndex((b) => /^\s*(INSERT|MERGE)/i.test(b));
+        const addIsSystem = all.findIndex((b) => /ALTER TABLE axi_command_config ADD[\s\S]*is_system/i.test(b));
+        const addRecordSource = all.findIndex((b) => /ALTER TABLE axi_command_config ADD[\s\S]*record_source/i.test(b));
+        assert.ok(firstRow > 0, 'shipped rows found');
+        assert.ok(addIsSystem >= 0 && addIsSystem < firstRow, 'is_system is added before the first row');
+        assert.ok(addRecordSource >= 0 && addRecordSource < firstRow, 'record_source is added before the first row');
+    });
+
     test(`${db}: files keep CRLF only`, () => {
         for (const s of [cfg, cmd]) assert.ok(!/(^|[^\r])\n/.test(s));
     });

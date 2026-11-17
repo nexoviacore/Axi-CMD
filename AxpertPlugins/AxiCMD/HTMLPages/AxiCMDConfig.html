@@ -143,12 +143,22 @@
                             <span id="eExtraParams" class="ac-err" role="alert"></span>
                         </div>
 
+                        <!-- old code
                         <div class="ac-field">
                             <label for="fSource">Record source</label>
                             <select id="fSource" aria-describedby="hSource">
                                 <option value="Axi_Dummy">None</option>
                             </select>
                             <span id="hSource" class="ac-help">The list of records offered as the third word after the option name.</span>
+                        </div>
+                        -->
+                        <!-- new code: any data source name can be typed, not only the hardcoded list -->
+                        <!-- no data-field here: showFieldsForType() hides every [data-field] not used by the chosen type -->
+                        <div class="ac-field">
+                            <label for="fSource">Record source</label>
+                            <input id="fSource" type="text" dir="ltr" autocomplete="off" placeholder="e.g. axi_userlist" aria-describedby="hSource eSource">
+                            <span id="hSource" class="ac-help">Axpert Data Source name whose records are offered as the third word after the option name. Leave empty for none.</span>
+                            <span id="eSource" class="ac-err" role="alert"></span>
                         </div>
                     </div>
                 </details>
@@ -164,7 +174,8 @@
     </aside>
 
     <script src="js/axiconfiglogic.js?v=6"></script>
-    <script src="js/axiconfigpage.js?v=16"></script>
+    <!-- old code: <script src="js/axiconfigpage.js?v=16"></script> -->
+    <script src="js/axiconfigpage.js?v=17"></script>
 </body>
 
 </html>
