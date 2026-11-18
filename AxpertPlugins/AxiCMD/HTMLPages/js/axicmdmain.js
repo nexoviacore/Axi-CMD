@@ -2552,7 +2552,7 @@ if (typeof document !== "undefined") {
                 // console.group("AXI SmartView Redirect Debug");
                 // console.log("Final URL:", targetUrl);
                 // console.log("Encoded q:", encodedFilterQuery);
-                // console.log("Decoded payload:", JSON.stringify(decodedForDebug));
+                console.log("Decoded payload:", JSON.stringify(decodedForDebug));
                 // console.groupEnd();
             } catch (e) {
                 // console.error("AXI SmartView payload decode failed", e);
@@ -11660,6 +11660,8 @@ if (typeof document !== "undefined") {
                         if (!rawField) continue;
 
                         const fieldNames = rawField.split(",").map(s => s.trim().toLowerCase());
+                        // new code (#322): the column name of each typed column (the palette puts the caption in the command)
+                        const resolvedNames = [];
                         for (let colName of fieldNames) {
                             if (!colName) continue;
                             const matched = colList.find(c => {
@@ -11673,7 +11675,11 @@ if (typeof document !== "undefined") {
                                 showToast(`Column '${colName}' is invalid or hidden.`, 4000, "info");
                                 return;
                             }
+                            // new code (#322)
+                            resolvedNames.push((matched.name || colName).trim());
                         }
+                        // new code (#322): Smart View filters and groups by the column name, not the caption
+                        if (resolvedNames.length > 0) f.field = resolvedNames.join(",");
                     }
                 }
             }
