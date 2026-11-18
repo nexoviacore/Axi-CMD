@@ -2259,9 +2259,16 @@ if (typeof document !== "undefined") {
             return true;
         }
 
-        // Configure Product / Plugin / ChangeRequest: saves "<account> <repo>" through the CommandSettings API
+        // old code
+        // // Configure Product / Plugin / ChangeRequest: saves "<account> <repo>" through the CommandSettings API
+        // if (optType === "commandsetting") {
+        //     handleCommandSetting({ tokens, commandConfig, configRow });
+        //     return true;
+        // }
+        // new code: the Git account / repository of Product / Plugin / ChangeRequest can no longer be set from the palette;
+        // a database that still has the configure rows gets a message instead of a save
         if (optType === "commandsetting") {
-            handleCommandSetting({ tokens, commandConfig, configRow });
+            showToast("The Git account and repository can no longer be configured from AxiCMD.");
             return true;
         }
 
@@ -12239,12 +12246,16 @@ if (typeof document !== "undefined") {
      * @returns {object|null} Configure row or null.
      */
     function getCommandSettingRow(tokenName) {
-        const opt = cleanCommandToken(tokenName || "");
-        if (!opt) return null;
-        const row = getCommandConfigRow("Configure", opt);
-        if (!row) return null;
-        const optType = (row.promptOptionType || row.prompt_option_type || row.PromptOptionType || "").toLowerCase();
-        return optType === "commandsetting" ? row : null;
+        // old code
+        // const opt = cleanCommandToken(tokenName || "");
+        // if (!opt) return null;
+        // const row = getCommandConfigRow("Configure", opt);
+        // if (!row) return null;
+        // const optType = (row.promptOptionType || row.prompt_option_type || row.PromptOptionType || "").toLowerCase();
+        // return optType === "commandsetting" ? row : null;
+        // new code: configure Product / Plugin / ChangeRequest was removed, so no typed option is a commandsetting one
+        // any more (the account / repo hints, Save and Ctrl + S of that flow never show)
+        return null;
     }
 
     /**
@@ -12741,7 +12752,21 @@ if (typeof document !== "undefined") {
      */
     function getInstallDirsErrorText(type, message, status) {
         const text = String(message || "Could not load the directories").trim();
-        return status === 404 ? `${text} Run configure ${type} <account> <repo> to change it.` : text;
+        // old code
+        // return status === 404 ? `${text} Run configure ${type} <account> <repo> to change it.` : text;
+        // new code: the repository is no longer set from the palette (configure product / plugin / changerequest was removed)
+        return status === 404 ? `${text} Ask your administrator to check the ${getCommandSettingLabel(type)} repository.` : text;
+    }
+
+    /**
+     * Message shown by install when no Git account / repository is saved for the type. It replaces
+     * "Run configure <type> <account> <repo> first" now that configure product / plugin / changerequest is removed.
+     * Starts with "Repository not set" so isSystemMessage treats it as an information row.
+     * @param {string} type - product / plugin / changerequest.
+     * @returns {string} Message.
+     */
+    function getInstallRepoNotSetText(type) {
+        return `Repository not set for ${getCommandSettingLabel(type)}. Ask your administrator to set it.`;
     }
 
     /**
@@ -13074,7 +13099,10 @@ if (typeof document !== "undefined") {
         // not say "Ready to Run" (the null prompt above sets it): show "Loading..." while fetching, nothing otherwise
         const repoState = getInstallRepoState(type);
         if (repoState.loading) { setInstallLoadingHint(); return ["Fetching repository settings..."]; }
-        if (!repoState.value) { hintDiv.textContent = ""; return [`Run configure ${type} <account> <repo> first`]; }
+        // old code
+        // if (!repoState.value) { hintDiv.textContent = ""; return [`Run configure ${type} <account> <repo> first`]; }
+        // new code: configure product / plugin / changerequest was removed, the repository is set outside the palette
+        if (!repoState.value) { hintDiv.textContent = ""; return [getInstallRepoNotSetText(type)]; }
         const { account, repo } = repoState.value;
 
         const dirsState = getInstallDirsState(type, account, repo);
@@ -13160,7 +13188,10 @@ if (typeof document !== "undefined") {
         if (!username) { showToast("User session is not available. Username is required."); return; }
 
         const repoInfo = await loadInstallRepo(type);
-        if (!repoInfo) { showToast(`Run configure ${type} <account> <repo> first`); reopenPaletteForCommandSetting(); return; }
+        // old code
+        // if (!repoInfo) { showToast(`Run configure ${type} <account> <repo> first`); reopenPaletteForCommandSetting(); return; }
+        // new code
+        if (!repoInfo) { showToast(getInstallRepoNotSetText(type)); reopenPaletteForCommandSetting(); return; }
 
         let data;
         try {
@@ -16064,6 +16095,8 @@ if (typeof document !== "undefined") {
             text.startsWith("Type GitHub") ||
             text.startsWith("No matching") ||
             text.startsWith("Run configure ") ||
+            // new code: install message when no repository is saved (replaces "Run configure ...")
+            text.startsWith("Repository not set") ||
             text.startsWith("No directories") ||
             text === "No Data" ||
             text === "Please type the value..." ||
@@ -19768,9 +19801,15 @@ if (typeof document !== "undefined") {
                     continue;
                 }
 
-                // Product / Plugin / ChangeRequest need both configure and build access
-                if (typeRow && (typeRow.promptOptionType || typeRow.prompt_option_type || typeRow.PromptOptionType || "").toLowerCase() === "commandsetting"
-                    && !(accessPermissions.appMgrAccess && accessPermissions.buildAccess)) {
+                // old code
+                // // Product / Plugin / ChangeRequest need both configure and build access
+                // if (typeRow && (typeRow.promptOptionType || typeRow.prompt_option_type || typeRow.PromptOptionType || "").toLowerCase() === "commandsetting"
+                //     && !(accessPermissions.appMgrAccess && accessPermissions.buildAccess)) {
+                //     continue;
+                // }
+                // new code: Product / Plugin / ChangeRequest (Git account / repository) are no longer configure options,
+                // hidden for everyone even when the database still lists them
+                if (typeRow && (typeRow.promptOptionType || typeRow.prompt_option_type || typeRow.PromptOptionType || "").toLowerCase() === "commandsetting") {
                     continue;
                 }
 
