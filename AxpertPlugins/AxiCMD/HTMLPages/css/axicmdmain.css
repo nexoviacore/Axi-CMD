@@ -1400,9 +1400,9 @@ body.axi-cmd-disabled #axiFavDeleteModalOverlay {
 }
 
 
-.menu-card-icon .img-fluid.w-60px.cardsIcons {
+/* .menu-card-icon .img-fluid.w-60px.cardsIcons {
 	display: none;
-}
+} */
 .avatar {
 	width: 32px;
 	height: 32px;

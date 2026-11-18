@@ -195,7 +195,37 @@ VALUES(99999999990035, 'F', 0, NULL, 'admin', '2025-12-23 13:35:16.000', 'admin'
 Issues:
 1. Smart View grouping is using the column caption instead of the column name.
 ADS View – Please verify the functionality.
-Reported by Abinash
+Reported by Abinash - Completed
+
+2. Issue: Some card icons on the homepage are not displaying correctly -> Completed
+
+Pending
+
+2. Reuse the active ARM session and token in AxInstallerRest instead of signing in through AxAuth using the active session user. 
+During Export Install product , we need to send the ARMSessionId from the client page through queue
+
+3. Include the Git Account, Repository, and PAT configurations for Products, Change Requests, and Plugins as part of the Golden Dump.
+axi_command_settings table should be updated properly along with necessry fields and data
+
+4. Remove the option to configure Git Account, Repository, and PAT separately through the Axi Command Line.
+
+5. Change the terminology from Product to ProductVersion in the Install command.
+
+6. 	Add the Git token to the Install request and ensure that both the Consumer and AxInstaller handle it accordingly. Also, when pushing the message to the queue, include the Git token along with the Git repository and Git account details in the queue message.
+
+7. Issue 2:First open Configure User screen in normal mode and then in pop up mode.Then open User listing screen in normal mode,and then opened the same screen in pop up mode.Now in normal mode clicked on New button of User listing  page ,observed that the screen keeps on loading.
+Note:Same issue is there for 
+--Actor and Actor Listing screens
+--Smart View Attributes and Smart View Listing screens
+
+8. Issue 4:First open Configure Dimension screen in normal mode and then in pop up mode.Then open Dimension Listing screen in normal mode,and then opened the same screen in pop up mode.Now in normal mode clicked on existing record of Dimension Listing page ,observed that the screen keeps on loading.
+Note:Same issue is there for 
+--Smart View Attributes and Smart View Listing screens
+
+9. Issue 5:First open Configure Role screen in normal mode and then in pop up mode.Then open Role Listing screen in normal mode,and then opened the same screen in pop up mode.Now in normal mode clicked on existing record of Role Listing page ,open any existing record of Role Listing in pop up mode also.Observed that the user is logged out of the application.
+Note:Same issue is there for 
+--User and User Listing screens
+--Actor and Actor Listing screens
 
 
 

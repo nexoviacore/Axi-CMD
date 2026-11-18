@@ -56,3 +56,7 @@
 ### 12. Data source View: Smart View filters and groups by the column caption (#322)
 - **Issue:** In `View <data source> <column> [value]`, the column caption was sent to Smart View instead of the column name, so grouping (and filtering) used the caption.
 - **Status:** Fixed. The typed column is matched against the data source's column list (`axi_adscolumnlist`) and its column name is sent to Smart View for both filtering and grouping. Operators (`>=`, `<=`, `>`, `<`, `=`) and values are unchanged.
+
+
+
+
