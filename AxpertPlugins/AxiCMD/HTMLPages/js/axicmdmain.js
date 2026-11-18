@@ -2441,6 +2441,45 @@ if (typeof document !== "undefined") {
     }
 
     /**
+     * new code: gives the pop-up container the shell hooks that forms call on their parent.
+     * Developer Studio forms (Publish Config Studio, Custom Types, Jobs, ...) add a "List" button that calls
+     * parent.LoadIframeac(src) (Js/tstruct.js axDeveloperStudioTstToolbar). In a pop-up the parent is PopupContainer.html,
+     * which has no LoadIframeac, so the click threw and the list never opened (QA issue 3). Like Config Studio's own
+     * LoadIframeac, this loads the list in place: into the pop-up tab the button was clicked in.
+     * @param {Window} popWin - The PopupContainer window.
+     * @returns {void}
+     */
+    function installPopupShellHooks(popWin) {
+        try {
+            if (!popWin || typeof popWin.LoadIframeac === "function") return;
+            popWin.LoadIframeac = function (src) {
+                try {
+                    const manager = popWin.PopupManager;
+                    const activeTab = manager && manager.activeTab && manager.tabs ? manager.tabs[manager.activeTab] : null;
+                    if (!src || !activeTab || !activeTab.ifr) return;
+                    const frame = activeTab.ifr;
+
+                    // keep the tab's own duplicate-tab id so its iview/tstruct session objects stay in one key list (issue 5)
+                    let dupTab = "";
+                    try { dupTab = new URLSearchParams(frame.contentWindow.location.search).get("isDupTab") || ""; } catch (e) { }
+                    if (!/^true-/i.test(dupTab)) dupTab = `true-${Date.now()}`;
+
+                    const appBase = top.window.location.href.substring(0, top.window.location.href.toLowerCase().indexOf("/aspx/"));
+                    let url = String(src).trim().replace(/^(\.{1,2}\/)+/, "").replace(/^aspx\//i, "");
+                    url = `${appBase}/aspx/${url}${url.includes("?") ? "&" : "?"}AxIsPop=true&isDupTab=${dupTab}`;
+
+                    const onListLoad = () => {
+                        frame.removeEventListener("load", onListLoad);
+                        try { if (typeof popWin.ShowDimmer === "function") popWin.ShowDimmer(false); } catch (e) { }
+                    };
+                    frame.addEventListener("load", onListLoad);
+                    frame.src = url;
+                } catch (e) { }
+            };
+        } catch (e) { }
+    }
+
+    /**
      * Opens a target URL inside the modal popup container.
      * @param {string} targetURL - URL to display in popup frame.
      * @returns {void}
@@ -2465,6 +2504,16 @@ if (typeof document !== "undefined") {
                 targetURL = targetURL.replace("../", "");
             }
 
+            // new code: give every Pop-Up its own duplicate-tab id. With isDupTab=false/true the server files the pop-up's
+            // iview session object in the same key list as the normal screen, so opening that form in normal mode
+            // (DeleteTstIvObject) removes it and the pop-up's next record click fails in ivtstload.aspx (QA issue 5).
+            const popDupTab = `isDupTab=true-${Date.now()}`;
+            if (/([?&])isDupTab=[^&]*/i.test(targetURL)) {
+                targetURL = targetURL.replace(/([?&])isDupTab=[^&]*/i, `$1${popDupTab}`);
+            } else {
+                targetURL += (targetURL.includes("?") ? "&" : "?") + popDupTab;
+            }
+
             let hiddenVar = document.getElementById("hiddenLoader");
             if (!hiddenVar) {
                 hiddenVar = document.createElement("iframe");
@@ -2472,6 +2521,13 @@ if (typeof document !== "undefined") {
                 hiddenVar.style.display = "none";
                 document.body.appendChild(hiddenVar);
             }
+
+            // new code: every (re)load of the pop-up container gets the shell hooks its forms call on parent (QA issue 3)
+            if (!hiddenVar.dataset.axiShellHooks) {
+                hiddenVar.dataset.axiShellHooks = "true";
+                hiddenVar.addEventListener("load", () => installPopupShellHooks(hiddenVar.contentWindow));
+            }
+            installPopupShellHooks(hiddenVar.contentWindow);
 
             // Check if the PopupManager already exists in the iframe
             try {
@@ -11286,6 +11342,10 @@ if (typeof document !== "undefined") {
      */
     function setEditSessionState(transId) {
         if (!transId) return;
+        // new code: a Pop-Up open never re-adds the transid to originaltrIds (it loads in an axMultiiframe_), so removing it
+        // here leaves the cached tstHtml without its entry and the next normal-mode open (e.g. New on the listing) reloads
+        // forever in tstHtmlDummyLoad. Pop-Up never loads into middle1, so there is nothing to reset for it.
+        if (popUpOption) return;
 
         const href = top.window.location.href.toLowerCase();
         const aspxIndex = href.indexOf("/aspx/");
