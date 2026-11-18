@@ -211,7 +211,12 @@ axi_command_settings table should be updated properly along with necessry fields
 
 5. Change the terminology from Product to ProductVersion in the Install command.
 
+
+
 6. 	Add the Git token to the Install request and ensure that both the Consumer and AxInstaller handle it accordingly. Also, when pushing the message to the queue, include the Git token along with the Git repository and Git account details in the queue message.
+
+
+## Completed: 
 
 7. Issue 2:First open Configure User screen in normal mode and then in pop up mode.Then open User listing screen in normal mode,and then opened the same screen in pop up mode.Now in normal mode clicked on New button of User listing  page ,observed that the screen keeps on loading.
 Note:Same issue is there for 
@@ -226,6 +231,8 @@ Note:Same issue is there for
 Note:Same issue is there for 
 --User and User Listing screens
 --Actor and Actor Listing screens
+
+10. Issue 3:Open  Configure "Publish Config Studio" agilespaceqanew  in pop up mode,click on list view button.Observed that it is not navigating to list view page.
 
 
 
