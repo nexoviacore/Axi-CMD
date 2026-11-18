@@ -193,7 +193,7 @@ VALUES(99999999990035, 'F', 0, NULL, 'admin', '2025-12-23 13:35:16.000', 'admin'
 18/11/2026
 
 Issues:
-Smart View grouping is using the column caption instead of the column name.
+1. Smart View grouping is using the column caption instead of the column name.
 ADS View – Please verify the functionality.
 Reported by Abinash
 

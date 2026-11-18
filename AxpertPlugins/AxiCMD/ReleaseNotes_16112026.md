@@ -52,3 +52,7 @@
 ### 11. View → New is blank in pop-up mode
 - **Issue:** Open any tstruct with the View command and click **New** in normal mode. Then open the same tstruct with the View command and click **New** in pop-up mode. The pop-up page is blank.
 - **Status:** Malakonda Sir will release a patch containing `main-tstruct.js` and `main-tstruct.min.js`.
+
+### 12. Data source View: Smart View filters and groups by the column caption (#322)
+- **Issue:** In `View <data source> <column> [value]`, the column caption was sent to Smart View instead of the column name, so grouping (and filtering) used the caption.
+- **Status:** Fixed. The typed column is matched against the data source's column list (`axi_adscolumnlist`) and its column name is sent to Smart View for both filtering and grouping. Operators (`>=`, `<=`, `>`, `<`, `=`) and values are unchanged.
