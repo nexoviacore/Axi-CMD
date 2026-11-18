@@ -2452,12 +2452,31 @@ if (typeof document !== "undefined") {
     function installPopupShellHooks(popWin) {
         try {
             if (!popWin || typeof popWin.LoadIframeac === "function") return;
+
+            // With LoadIframeac present, iview.js callOpenAction (Role listing "New", iName ad___url) treats the parent as
+            // Config Studio and calls parent.callParentNew('loadFrame();') first. PopupContainer has no callParentNew, so
+            // that threw and New never opened. Forward it to the shell's own callParentNew.
+            if (typeof popWin.callParentNew !== "function") {
+                popWin.callParentNew = function (name, type) {
+                    try {
+                        if (typeof top.window.callParentNew === "function") return top.window.callParentNew(name, type);
+                    } catch (e) { }
+                };
+            }
+
             popWin.LoadIframeac = function (src) {
                 try {
                     const manager = popWin.PopupManager;
                     const activeTab = manager && manager.activeTab && manager.tabs ? manager.tabs[manager.activeTab] : null;
                     if (!src || !activeTab || !activeTab.ifr) return;
                     const frame = activeTab.ifr;
+
+                    // A form (Role listing "New") opens the way iview.js's own pop-up branch does: as a pop-up tab
+                    const formSrc = String(src).trim().replace(/^(\.{1,2}\/)+/, "").replace(/^aspx\//i, "");
+                    if (/^tstruct\.aspx/i.test(formSrc)) {
+                        manager.openForm("", `../aspx/${formSrc}${formSrc.includes("?") ? "&" : "?"}dummyload=false`);
+                        return;
+                    }
 
                     // keep the tab's own duplicate-tab id so its iview/tstruct session objects stay in one key list (issue 5)
                     let dupTab = "";
