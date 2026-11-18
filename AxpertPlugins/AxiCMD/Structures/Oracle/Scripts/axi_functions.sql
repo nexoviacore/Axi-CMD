@@ -441,7 +441,7 @@ BEGIN
             || 'ON p.' || LOWER(pkeyfield)
             || ' = s.' || v_keyfield_srctbl || 'id '
             || 'WHERE p.' || LOWER(pkeyfield)
-            || ' IS NOT NULL '
+            || ' IS NOT NULL and p.cancel is not null '
             || NVL(v_dimension_filter,'')
             || ' ORDER BY p.modifiedon DESC';
 
@@ -455,7 +455,7 @@ BEGIN
             || '''f'' isfield ,'||LOWER(pprimarytable)||'id transrecordid '
             || 'FROM ' || LOWER(pprimarytable) || ' p '
             || 'WHERE p.' || LOWER(pkeyfield)
-            || ' IS NOT NULL '
+            || ' IS NOT NULL  and p.cancel is not null '
             || NVL(v_dimension_filter,'')
             || ' ORDER BY p.modifiedon DESC';
 

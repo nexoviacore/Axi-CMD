@@ -1901,20 +1901,32 @@ if (typeof document !== "undefined") {
      */
     function buildLoadMoreFooter(renderedTotal) {
         const ctx = activePagedContext;
-        if (!ctx) return null;
-        // old code: const state = axPageState[ctx.listKey];
-        // new code: a search shown from cached rows has no state of its own yet (see getSearchPageState)
-        const state = getSearchPageState(ctx);
-        if (!state || !state.hasMore) return null;
+        // old code: the footer was only built while the server had more pages, so a list that came back whole
+        // in one page (records per load 5000) or a list that is not paged (sdk tstruct) was cut at
+        // MAX_RENDERED_ITEMS without the "Showing first ..." note
+        // if (!ctx) return null;
+        // // old code: const state = axPageState[ctx.listKey];
+        // // new code: a search shown from cached rows has no state of its own yet (see getSearchPageState)
+        // const state = getSearchPageState(ctx);
+        // if (!state || !state.hasMore) return null;
+        // new code: also show the note when more rows were loaded than are rendered
+        const state = ctx ? getSearchPageState(ctx) : null;
+        const hasMore = !!(state && state.hasMore);
+        const capped = renderedTotal > MAX_RENDERED_ITEMS || (hasMore && renderedTotal >= MAX_RENDERED_ITEMS);
+        if (!hasMore && !capped) return null;
 
         // Remember which list this footer belongs to; loadNextPage loads the next page of exactly that list
-        footerPagedContext = ctx;
+        // old code: footerPagedContext = ctx;
+        // new code: a capped list with nothing more on the server has no next page to load
+        footerPagedContext = hasMore ? ctx : null;
         const li = document.createElement("li");
         li.className = "axi-load-more";
         li.style.cssText = "list-style:none;text-align:center;padding:8px;font-size:12px;color:#6b7280;cursor:default;";
-        if (activeFetches.has(`${ctx.listKey}_p${state.page + 1}`)) {
+        // old code: if (activeFetches.has(`${ctx.listKey}_p${state.page + 1}`)) {
+        if (hasMore && activeFetches.has(`${ctx.listKey}_p${state.page + 1}`)) {
             setStatusText(li, "Loading more...");
-        } else if (renderedTotal >= MAX_RENDERED_ITEMS) {
+        // old code: } else if (renderedTotal >= MAX_RENDERED_ITEMS) {
+        } else if (capped) {
             setStatusText(li, `Showing first ${MAX_RENDERED_ITEMS} - type more to narrow the results`);
         } else {
             setStatusText(li, list.classList.contains("My-Command-Wrapper") ? "Scroll for more..." : "Scroll down for more...");
@@ -2441,6 +2453,69 @@ if (typeof document !== "undefined") {
     }
 
     /**
+     * new code: gives the pop-up container the shell hooks that forms call on their parent.
+     * Developer Studio forms (Publish Config Studio, Custom Types, Jobs, ...) add a "List" button that calls
+     * parent.LoadIframeac(src) (Js/tstruct.js axDeveloperStudioTstToolbar). In a pop-up the parent is PopupContainer.html,
+     * which has no LoadIframeac, so the click threw and the list never opened (QA issue 3). Like Config Studio's own
+     * LoadIframeac, this loads the list in place: into the pop-up tab the button was clicked in. Role listing "New"
+     * (iview.js callOpenAction) comes through here too and loads the form in that same tab.
+     * @param {Window} popWin - The PopupContainer window.
+     * @returns {void}
+     */
+    function installPopupShellHooks(popWin) {
+        try {
+            if (!popWin || typeof popWin.LoadIframeac === "function") return;
+
+            // With LoadIframeac present, iview.js callOpenAction (Role listing "New", iName ad___url) treats the parent as
+            // Config Studio and calls parent.callParentNew('loadFrame();') first. PopupContainer has no callParentNew, so
+            // that threw and New never opened. Forward it to the shell's own callParentNew.
+            if (typeof popWin.callParentNew !== "function") {
+                popWin.callParentNew = function (name, type) {
+                    try {
+                        if (typeof top.window.callParentNew === "function") return top.window.callParentNew(name, type);
+                    } catch (e) { }
+                };
+            }
+
+            popWin.LoadIframeac = function (src) {
+                try {
+                    const manager = popWin.PopupManager;
+                    const activeTab = manager && manager.activeTab && manager.tabs ? manager.tabs[manager.activeTab] : null;
+                    if (!src || !activeTab || !activeTab.ifr) return;
+                    const frame = activeTab.ifr;
+
+                    // old code: a form (Role listing "New") opened as a new pop-up tab, and the listing's loader stayed on
+                    // const formSrc = String(src).trim().replace(/^(\.{1,2}\/)+/, "").replace(/^aspx\//i, "");
+                    // if (/^tstruct\.aspx/i.test(formSrc)) {
+                    //     manager.openForm("", `../aspx/${formSrc}${formSrc.includes("?") ? "&" : "?"}dummyload=false`);
+                    //     return;
+                    // }
+                    // new code: a form (Role listing "New") loads in the same pop-up tab, like the List button.
+                    // dummyload=false so the form is built fresh instead of from the shell's tstruct HTML cache (issue 2)
+                    const isForm = /^tstruct\.aspx/i.test(String(src).trim().replace(/^(\.{1,2}\/)+/, "").replace(/^aspx\//i, ""));
+
+                    // keep the tab's own duplicate-tab id so its iview/tstruct session objects stay in one key list (issue 5)
+                    let dupTab = "";
+                    try { dupTab = new URLSearchParams(frame.contentWindow.location.search).get("isDupTab") || ""; } catch (e) { }
+                    if (!/^true-/i.test(dupTab)) dupTab = `true-${Date.now()}`;
+
+                    const appBase = top.window.location.href.substring(0, top.window.location.href.toLowerCase().indexOf("/aspx/"));
+                    let url = String(src).trim().replace(/^(\.{1,2}\/)+/, "").replace(/^aspx\//i, "");
+                    url = `${appBase}/aspx/${url}${url.includes("?") ? "&" : "?"}AxIsPop=true&isDupTab=${dupTab}`;
+                    if (isForm) url += "&dummyload=false";
+
+                    const onListLoad = () => {
+                        frame.removeEventListener("load", onListLoad);
+                        try { if (typeof popWin.ShowDimmer === "function") popWin.ShowDimmer(false); } catch (e) { }
+                    };
+                    frame.addEventListener("load", onListLoad);
+                    frame.src = url;
+                } catch (e) { }
+            };
+        } catch (e) { }
+    }
+
+    /**
      * Opens a target URL inside the modal popup container.
      * @param {string} targetURL - URL to display in popup frame.
      * @returns {void}
@@ -2465,6 +2540,16 @@ if (typeof document !== "undefined") {
                 targetURL = targetURL.replace("../", "");
             }
 
+            // new code: give every Pop-Up its own duplicate-tab id. With isDupTab=false/true the server files the pop-up's
+            // iview session object in the same key list as the normal screen, so opening that form in normal mode
+            // (DeleteTstIvObject) removes it and the pop-up's next record click fails in ivtstload.aspx (QA issue 5).
+            const popDupTab = `isDupTab=true-${Date.now()}`;
+            if (/([?&])isDupTab=[^&]*/i.test(targetURL)) {
+                targetURL = targetURL.replace(/([?&])isDupTab=[^&]*/i, `$1${popDupTab}`);
+            } else {
+                targetURL += (targetURL.includes("?") ? "&" : "?") + popDupTab;
+            }
+
             let hiddenVar = document.getElementById("hiddenLoader");
             if (!hiddenVar) {
                 hiddenVar = document.createElement("iframe");
@@ -2472,6 +2557,13 @@ if (typeof document !== "undefined") {
                 hiddenVar.style.display = "none";
                 document.body.appendChild(hiddenVar);
             }
+
+            // new code: every (re)load of the pop-up container gets the shell hooks its forms call on parent (QA issue 3)
+            if (!hiddenVar.dataset.axiShellHooks) {
+                hiddenVar.dataset.axiShellHooks = "true";
+                hiddenVar.addEventListener("load", () => installPopupShellHooks(hiddenVar.contentWindow));
+            }
+            installPopupShellHooks(hiddenVar.contentWindow);
 
             // Check if the PopupManager already exists in the iframe
             try {
@@ -2552,7 +2644,7 @@ if (typeof document !== "undefined") {
                 // console.group("AXI SmartView Redirect Debug");
                 // console.log("Final URL:", targetUrl);
                 // console.log("Encoded q:", encodedFilterQuery);
-                // console.log("Decoded payload:", JSON.stringify(decodedForDebug));
+                console.log("Decoded payload:", JSON.stringify(decodedForDebug));
                 // console.groupEnd();
             } catch (e) {
                 // console.error("AXI SmartView payload decode failed", e);
@@ -11286,6 +11378,10 @@ if (typeof document !== "undefined") {
      */
     function setEditSessionState(transId) {
         if (!transId) return;
+        // new code: a Pop-Up open never re-adds the transid to originaltrIds (it loads in an axMultiiframe_), so removing it
+        // here leaves the cached tstHtml without its entry and the next normal-mode open (e.g. New on the listing) reloads
+        // forever in tstHtmlDummyLoad. Pop-Up never loads into middle1, so there is nothing to reset for it.
+        if (popUpOption) return;
 
         const href = top.window.location.href.toLowerCase();
         const aspxIndex = href.indexOf("/aspx/");
@@ -11660,6 +11756,8 @@ if (typeof document !== "undefined") {
                         if (!rawField) continue;
 
                         const fieldNames = rawField.split(",").map(s => s.trim().toLowerCase());
+                        // new code (#322): the column name of each typed column (the palette puts the caption in the command)
+                        const resolvedNames = [];
                         for (let colName of fieldNames) {
                             if (!colName) continue;
                             const matched = colList.find(c => {
@@ -11673,7 +11771,11 @@ if (typeof document !== "undefined") {
                                 showToast(`Column '${colName}' is invalid or hidden.`, 4000, "info");
                                 return;
                             }
+                            // new code (#322)
+                            resolvedNames.push((matched.name || colName).trim());
                         }
+                        // new code (#322): Smart View filters and groups by the column name, not the caption
+                        if (resolvedNames.length > 0) f.field = resolvedNames.join(",");
                     }
                 }
             }
