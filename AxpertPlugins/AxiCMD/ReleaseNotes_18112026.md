@@ -1,4 +1,4 @@
-# AxiCMD – Release Notes (18 Nov 2026)
+# AxiCMD v1.1.2 – Release Notes (18 Nov 2026)
 
 ## Bug Fixes
 
