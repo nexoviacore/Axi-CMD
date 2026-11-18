@@ -1142,8 +1142,8 @@ $function$
 -- fn_axi_getstructs_obj | replace for primaryfieldvalue+fieldnames and selected fieldvalue with primary fieldvalue suffix
 <<
 CREATE OR REPLACE FUNCTION fn_axi_getstructs_obj(pcmd character varying, pusername character varying, puserrole character varying, ptransid character varying, pselectedfield character varying, pdimension character varying, ppermission character varying, pkeyfield character varying, pprimarytable character varying, pglobalvars character varying)
- RETURNS TABLE(displaydata text, id text, caption text, isfield text,transrecordid numeric)
-LANGUAGE plpgsql
+ RETURNS TABLE(displaydata text, id text, caption text, isfield text, transrecordid numeric)
+ LANGUAGE plpgsql
 AS $function$
 declare 
 v_sql text;
@@ -1355,6 +1355,7 @@ v_keyfield_sql := format(
     FROM %I p 
     JOIN %I s ON p.%I = s.%I
     WHERE p.%I IS NOT NULL
+and p.cancel is not null
  %s
  order by p.modifiedon desc
     $sql$,
@@ -1378,6 +1379,7 @@ v_keyfield_sql := format(
            'f'::text AS isfield,%I transrecordid
     FROM %I p
     WHERE p.%I IS NOT NULL
+and p.cancel is not null
  %s
  order by p.modifiedon desc
 $sql$,
