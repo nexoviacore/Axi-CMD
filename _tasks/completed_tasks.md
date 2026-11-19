@@ -259,5 +259,11 @@ Note:Same issue is there for
 
 10. Issue 3:Open  Configure "Publish Config Studio" agilespaceqanew  in pop up mode,click on list view button.Observed that it is not navigating to list view page.
 
+19/11/2026 - issue 
+
+1. When datasource is opened in normal mode and then tried to open in pop up mode. Observed blank screen is displayed in pop up mode.
+
+2. 
+
 
 

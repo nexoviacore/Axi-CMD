@@ -2595,6 +2595,116 @@ if (typeof document !== "undefined") {
         }
     }
 
+    // ---------------------------------------------------------------------------------------------------------
+    // Smart view Pop-Up waits for a smart view that is still loading (QA: "normal mode, then Pop-Up = blank").
+    // On servers that serve .html through AxpertHtmlAuthModule (QA, alpha), Smartview.html requested while another
+    // smart view of the same session is still loading comes back 503 with no page, so the Pop-Up stays white.
+    // Opening the Pop-Up once the other smart view has settled avoids that. Workaround only: the 503 is server side.
+    // ---------------------------------------------------------------------------------------------------------
+    const SMARTVIEW_POPUP_WAIT_MAX_MS = 20000;   // open the Pop-Up anyway after this long
+    const SMARTVIEW_POPUP_QUIET_MS = 1500;       // no data call finished for this long = the smart view has settled
+    const SMARTVIEW_POPUP_POLL_MS = 250;
+    const SMARTVIEW_POPUP_DEAD_MS = 15000;      // a page still loading after this long (e.g. an earlier 503) is not waited for
+    let smartViewPopupWaitTimer = null;          // pending Pop-Up wait, replaced when another Pop-Up is asked for
+
+    /**
+     * Frames that can hold a smart view: the main content frame and the tabs of the Pop-Up container.
+     * @returns {HTMLIFrameElement[]} Frames (may be empty).
+     */
+    function getSmartViewHostFrames() {
+        const frames = [];
+        const docs = [];
+        try { docs.push(top.document); } catch (e) { }
+        try { if (document !== docs[0]) docs.push(document); } catch (e) { }
+        docs.forEach(doc => {
+            try {
+                const main = doc.getElementById("middle1");
+                if (main && frames.indexOf(main) === -1) frames.push(main);
+                const loader = doc.getElementById("hiddenLoader");
+                // a closed Pop-Up container (display none) holds nothing that is still on screen
+                const loaderDoc = loader && loader.style.display !== "none" && loader.contentDocument;
+                if (loaderDoc) loaderDoc.querySelectorAll("iframe").forEach(f => { if (frames.indexOf(f) === -1) frames.push(f); });
+            } catch (e) { /* cross-origin frame: skip */ }
+        });
+        return frames;
+    }
+
+    /**
+     * True while a frame shows a smart view that is still loading: the page itself has not finished, it still shows
+     * "Loading data", or one of its data calls finished less than SMARTVIEW_POPUP_QUIET_MS ago.
+     * @param {HTMLIFrameElement} frame - Frame to check.
+     * @returns {boolean}
+     */
+    function isSmartViewFrameBusy(frame) {
+        try {
+            const win = frame && frame.contentWindow;
+            if (!win || !/smartview\.html$/i.test(win.location.pathname || "")) return false;
+            const doc = win.document;
+            const perf = win.performance;
+            // perf.now() counts from this frame's navigation: a page that never finished (a blank Pop-Up after a 503)
+            // is dead, not busy, so it must not hold every later Pop-Up back
+            const ageMs = perf && typeof perf.now === "function" ? perf.now() : 0;
+            if (!doc || doc.readyState !== "complete" || !doc.body) return ageMs < SMARTVIEW_POPUP_DEAD_MS;
+            // old code
+            // if (/Loading data/i.test(doc.body.innerText || "")) return ageMs < SMARTVIEW_POPUP_WAIT_MAX_MS;
+            // if (!perf || typeof perf.getEntriesByType !== "function") return false;
+            // let lastEnd = 0;
+            // perf.getEntriesByType("resource").forEach(e => {
+            //     if (/AxPEG|AxList|\.asmx/i.test(e.name) && e.responseEnd > lastEnd) lastEnd = e.responseEnd;
+            // });
+            // const nav = perf.getEntriesByType("navigation")[0];
+            // if (nav && nav.loadEventEnd > lastEnd) lastEnd = nav.loadEventEnd;
+            // return (perf.now() - lastEnd) < SMARTVIEW_POPUP_QUIET_MS;
+            // new code: the smart view shows "Loading KPI data.." / "Loading charts..", and its data calls are
+            // logged on the top window, so look there too (absolute times, only calls made after this frame started)
+            if (/Loading\s+(\w+\s+)?(data|charts)/i.test(doc.body.innerText || "")) return ageMs < SMARTVIEW_POPUP_WAIT_MAX_MS;
+            if (!perf || typeof perf.getEntriesByType !== "function") return false;
+            const frameStart = perf.timeOrigin;
+            let lastEnd = 0;   // absolute ms (timeOrigin + responseEnd)
+            const collect = (p) => {
+                if (!p || typeof p.getEntriesByType !== "function") return;
+                p.getEntriesByType("resource").forEach(e => {
+                    if (!/AxPEG|AxList|\.asmx/i.test(e.name)) return;
+                    if (p.timeOrigin + e.startTime < frameStart) return;
+                    const end = e.responseEnd > 0 ? p.timeOrigin + e.responseEnd : Date.now();   // still in flight
+                    if (end > lastEnd) lastEnd = end;
+                });
+            };
+            collect(perf);
+            try { if (window.top && window.top.performance !== perf) collect(window.top.performance); } catch (e) { }
+            try { if (window.performance !== perf) collect(window.performance); } catch (e) { }
+            const nav = perf.getEntriesByType("navigation")[0];
+            if (nav && frameStart + nav.loadEventEnd > lastEnd) lastEnd = frameStart + nav.loadEventEnd;
+            return (perf.timeOrigin + perf.now() - lastEnd) < SMARTVIEW_POPUP_QUIET_MS;
+        } catch (e) {
+            return false;   // cannot look inside: do not hold the Pop-Up back
+        }
+    }
+
+    /**
+     * Opens a smart view Pop-Up, first waiting (loader on, at most SMARTVIEW_POPUP_WAIT_MAX_MS) while another smart
+     * view is still loading.
+     * @param {string} targetUrl - Smart view URL with the Pop-Up parameters.
+     * @returns {void}
+     */
+    function openSmartViewPopupWhenIdle(targetUrl) {
+        if (smartViewPopupWaitTimer) { clearInterval(smartViewPopupWaitTimer); smartViewPopupWaitTimer = null; }
+        const anyBusy = () => getSmartViewHostFrames().some(isSmartViewFrameBusy);
+        if (!anyBusy()) { openPopOption(targetUrl); return; }
+
+        hide();
+        popUpOption = false;   // the next command must not inherit Pop-Up mode while this one waits
+        try { toggleShowDimmer(true); } catch (e) { }
+        const started = Date.now();
+        smartViewPopupWaitTimer = setInterval(() => {
+            if (anyBusy() && (Date.now() - started) < SMARTVIEW_POPUP_WAIT_MAX_MS) return;
+            clearInterval(smartViewPopupWaitTimer);
+            smartViewPopupWaitTimer = null;
+            try { toggleShowDimmer(false); } catch (e) { }
+            openPopOption(targetUrl);
+        }, SMARTVIEW_POPUP_POLL_MS);
+    }
+
     /**
      * Navigates to SmartView / ADS view with specified filters.
      * @param {object} params - Parameter object.
@@ -2667,7 +2777,10 @@ if (typeof document !== "undefined") {
             targetUrl += "&AxIsPop=true";
 
             targetUrl += `&tname=${encodeURIComponent(adsName)}`;
-            openPopOption(targetUrl)
+            // old code
+            // openPopOption(targetUrl)
+            // new code: wait while another smart view is still loading (blank Pop-Up on QA / alpha, see above)
+            openSmartViewPopupWhenIdle(targetUrl);
         }
         else {
             top.window.LoadIframe(targetUrl);
