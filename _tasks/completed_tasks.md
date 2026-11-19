@@ -207,7 +207,7 @@ During Export Install product , we need to send the ARMSessionId from the client
 3. Include the Git Account, Repository, and PAT configurations for Products, Change Requests, and Plugins as part of the Golden Dump.
 axi_command_settings table should be updated properly along with necessry fields and data
 
-4. Remove the option to configure Git Account, Repository, and PAT separately through the Axi Command Line.
+4. Remove the option to configure Git Account, Repository, and PAT separately through the Axi Command Line. -> Completed
 
 5. Use the configured PAT for authentication during installation.
     "ARMSessionId": "ARM-xxxxxxx",
@@ -234,7 +234,7 @@ Sample Install Payload in Queue Message:
  "requestedOn": "2026-11-16T13:05:16.715Z"
 }
 
-5. Change the terminology from Product to ProductVersion in the Install command.
+5. Change the terminology from Product to ProductVersion in the Install command. -> completed
 
 
 
