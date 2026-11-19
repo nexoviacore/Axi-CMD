@@ -3323,16 +3323,17 @@ if (typeof document !== "undefined") {
         }
         const grpKey = tokens[0]?.toLowerCase();
 
-        if (grpKey === "edit" && (text.toLowerCase().includes(" with") || tokens.some(t => cleanString(t).toLowerCase() === "with"))) {
-            const entityObj = getTargetEntityObj(tokens[1], "edit");
-            if (entityObj && (entityObj.keyfieldforedit === "F" || entityObj.keyfieldforedit === false)) {
-                showToast("Key field is not configured for this form. Please configure the key field using the Configure Key Field command.", 3000, false);
-                items = [];
-                render();
-                hide();
-                return;
-            }
-        }
+        // old code: "edit with" is removed, so there is no "with" to check the key field for
+        // if (grpKey === "edit" && (text.toLowerCase().includes(" with") || tokens.some(t => cleanString(t).toLowerCase() === "with"))) {
+        //     const entityObj = getTargetEntityObj(tokens[1], "edit");
+        //     if (entityObj && (entityObj.keyfieldforedit === "F" || entityObj.keyfieldforedit === false)) {
+        //         showToast("Key field is not configured for this form. Please configure the key field using the Configure Key Field command.", 3000, false);
+        //         items = [];
+        //         render();
+        //         hide();
+        //         return;
+        //     }
+        // }
 
         if (
             grpKey === "view" &&
@@ -5495,37 +5496,39 @@ if (typeof document !== "undefined") {
 
         ///KeyValue based edit handling.
 
-        if ((!promptInfo || tokens[3] === "with") && groupKey.toLowerCase() === "edit" && tokens.length >= 4) {
-
-            let viewSource;
-            if (tokens.length == 4) {
-                viewSource = commandConfig?.prompts?.[3]?.promptValues?.toLowerCase().split(',').map(v => v.trim());
-                //const partialTyped = cleanString(tokens[targetIndex]);
-                const result = viewSource.filter(val => val.toLowerCase());
-                filteredObjects = result.map(val => ({ name: val, displaydata: val }));
-
-                result.unshift(popOption);
-                result.unshift(goOption);
-                filteredObjects.unshift(popOption);
-                filteredObjects.unshift(goOption);
-
-                updateDynamicHintFromPrompt({ prompt: commandConfig?.prompts?.[3]?.prompt })
-                return result;
-
-
-            }
-            else if (tokens.length >= 5) {
-                viewSource = commandConfig?.prompts?.[4]?.promptSource?.toLowerCase()
-
-                let tokenCopy = [...tokens];
-
-                updateDynamicHintFromPrompt({ prompt: (targetIndex % 2 === 0) ? "fieldname" : "fieldValue" })
-                return editCommandHandling(tokenCopy, commandConfig, viewSource);
-
-
-            }
-
-        }
+        // old code: "edit <form> <record> with <field> <value> ..." offered "With" after the record and then field / value
+        // pairs with Save. The "edit with" option has been removed: edit only opens the record (Go / Pop-Up).
+        // if ((!promptInfo || tokens[3] === "with") && groupKey.toLowerCase() === "edit" && tokens.length >= 4) {
+        //
+        //     let viewSource;
+        //     if (tokens.length == 4) {
+        //         viewSource = commandConfig?.prompts?.[3]?.promptValues?.toLowerCase().split(',').map(v => v.trim());
+        //         //const partialTyped = cleanString(tokens[targetIndex]);
+        //         const result = viewSource.filter(val => val.toLowerCase());
+        //         filteredObjects = result.map(val => ({ name: val, displaydata: val }));
+        //
+        //         result.unshift(popOption);
+        //         result.unshift(goOption);
+        //         filteredObjects.unshift(popOption);
+        //         filteredObjects.unshift(goOption);
+        //
+        //         updateDynamicHintFromPrompt({ prompt: commandConfig?.prompts?.[3]?.prompt })
+        //         return result;
+        //
+        //
+        //     }
+        //     else if (tokens.length >= 5) {
+        //         viewSource = commandConfig?.prompts?.[4]?.promptSource?.toLowerCase()
+        //
+        //         let tokenCopy = [...tokens];
+        //
+        //         updateDynamicHintFromPrompt({ prompt: (targetIndex % 2 === 0) ? "fieldname" : "fieldValue" })
+        //         return editCommandHandling(tokenCopy, commandConfig, viewSource);
+        //
+        //
+        //     }
+        //
+        // }
 
         // if (promptInfo?.error) {
         //     showToast(promptInfo.error);
@@ -5549,6 +5552,14 @@ if (typeof document !== "undefined") {
                     filteredObjects = [goOption];
                     return [goOption];
                 }
+                filteredObjects = [goOption, popOption];
+                return [goOption, popOption];
+            }
+
+            // new code: "edit with" is removed. "edit <form> <record>" (and "edit <form> <field> <value>" once the
+            // field / value prompts are gone) only opens the record, so Go / Pop-Up is all that is offered.
+            else if (groupKey.toLowerCase() === "edit" && tokens.length >= 4) {
+                updateDynamicHintFromPrompt({ prompt: "Ready to Run" });
                 filteredObjects = [goOption, popOption];
                 return [goOption, popOption];
             }
@@ -7643,19 +7654,20 @@ if (typeof document !== "undefined") {
             resetSetCommandState();
             return;
         }
-        else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Save_ACTION" && saveGroupKeyCheck.toLowerCase() === "edit") {
-            // new code (issue #295): nothing is saved while a typed value does not fit its field's data type
-            const invalidEditValue = findInvalidEditFieldValue(checkTokens, setCommandTransid);
-            if (invalidEditValue) {
-                showToast(invalidEditValue, 5000);
-                return;
-            }
-            // console.log("Save Option Selected...Submitting Data...");
-            hide();
-            AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", false, checkTokens, saveCommandConfig);
-            resetSetCommandState();
-            return;
-        }
+        // old code: Save for "edit <form> <record> with <field> <value>"; "edit with" is removed, edit offers no Save
+        // else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Save_ACTION" && saveGroupKeyCheck.toLowerCase() === "edit") {
+        //     // new code (issue #295): nothing is saved while a typed value does not fit its field's data type
+        //     const invalidEditValue = findInvalidEditFieldValue(checkTokens, setCommandTransid);
+        //     if (invalidEditValue) {
+        //         showToast(invalidEditValue, 5000);
+        //         return;
+        //     }
+        //     // console.log("Save Option Selected...Submitting Data...");
+        //     hide();
+        //     AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", false, checkTokens, saveCommandConfig);
+        //     resetSetCommandState();
+        //     return;
+        // }
         else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Pop_ACTION") {
             // console.log("Pop Option Selected......");
             try {
@@ -7779,13 +7791,15 @@ if (typeof document !== "undefined") {
         if (commandGroup === "edit") {
             if (targetIndex === 3) {
                 isValueToken = true;
-            } else {
-                const withIndex = checkTokens.findIndex(t => cleanString(t).toLowerCase() === "with");
-
-                if (withIndex !== -1 && targetIndex > withIndex && (targetIndex - withIndex) % 2 === 0) {
-                    isValueToken = true;
-                }
             }
+            // old code: field values after "with"; "edit with" is removed
+            // else {
+            //     const withIndex = checkTokens.findIndex(t => cleanString(t).toLowerCase() === "with");
+            //
+            //     if (withIndex !== -1 && targetIndex > withIndex && (targetIndex - withIndex) % 2 === 0) {
+            //         isValueToken = true;
+            //     }
+            // }
         } else if (commandGroup === "view") {
             if (targetIndex === 3) isValueToken = true;
         }
@@ -7808,9 +7822,12 @@ if (typeof document !== "undefined") {
 
         const checkEditObj = (checkTokens[0]?.toLowerCase() === "edit" && checkTokens[1]) ? getTargetEntityObj(checkTokens[1], "edit") : null;
         if (checkEditObj && (checkEditObj.keyfieldforedit === "F" || checkEditObj.keyfieldforedit === false)) {
-            const suggText = (typeof selectedItem === "string" ? selectedItem : (selectedItem?.displaydata || selectedItem?.name || "")).toLowerCase().trim();
-            const hasWithInTokens = checkTokens.some(t => cleanString(t).toLowerCase() === "with") || currentInput.toLowerCase().includes(" with");
-            if (targetIndex === 1 || suggText === "with" || hasWithInTokens) {
+            // old code: also stopped on "with"; "edit with" is removed
+            // const suggText = (typeof selectedItem === "string" ? selectedItem : (selectedItem?.displaydata || selectedItem?.name || "")).toLowerCase().trim();
+            // const hasWithInTokens = checkTokens.some(t => cleanString(t).toLowerCase() === "with") || currentInput.toLowerCase().includes(" with");
+            // if (targetIndex === 1 || suggText === "with" || hasWithInTokens) {
+            // new code
+            if (targetIndex === 1) {
                 showToast("Key field is not configured for this form. Please configure the key field using the Configure Key Field command.", 3000, false);
                 hide();
                 return;
@@ -10206,20 +10223,28 @@ if (typeof document !== "undefined") {
                     }
                     return;
                 }
-                // new code (issue #295): Ctrl + S on edit saves nothing while a typed value does not fit its field's data type
-                if (grpKey && grpKey.toLowerCase() === "edit") {
-                    const invalidEditValue = findInvalidEditFieldValue(tokens, setCommandTransid);
-                    if (invalidEditValue) {
-                        showToast(invalidEditValue, 5000);
-                        return;
-                    }
-                }
-                // console.log("Save Option Selected...Submitting Data...");
+                // old code (issue #295): Ctrl + S on edit saved nothing while a typed value did not fit its field's data type.
+                // "edit with" is removed, edit has no field values to save.
+                // if (grpKey && grpKey.toLowerCase() === "edit") {
+                //     const invalidEditValue = findInvalidEditFieldValue(tokens, setCommandTransid);
+                //     if (invalidEditValue) {
+                //         showToast(invalidEditValue, 5000);
+                //         return;
+                //     }
+                // }
+                // old code: Ctrl + S also saved "edit <form> <record> with <field> <value>"; "edit with" is removed
+                // // console.log("Save Option Selected...Submitting Data...");
+                // hide();
+                // if (grpKey.toLowerCase() === "create")
+                //     AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", true, tokens, saveCommandConfig);
+                // else if (grpKey.toLowerCase() === "edit")
+                //     AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", false, tokens, saveCommandConfig);
+                // resetSetCommandState();
+                // return;
+                // new code: Ctrl + S saves create only
                 hide();
-                if (grpKey.toLowerCase() === "create")
+                if (grpKey && grpKey.toLowerCase() === "create")
                     AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", true, tokens, saveCommandConfig);
-                else if (grpKey.toLowerCase() === "edit")
-                    AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", false, tokens, saveCommandConfig);
                 resetSetCommandState();
                 return;
             }
@@ -10476,10 +10501,11 @@ if (typeof document !== "undefined") {
             }
         }
 
-        if (tokens[3]?.toLowerCase() === "with") {
-            showToast("Execution is Not Allowed while editing");
-            return;
-        }
+        // old code: "edit with" is removed, there is no "with" to refuse Go for
+        // if (tokens[3]?.toLowerCase() === "with") {
+        //     showToast("Execution is Not Allowed while editing");
+        //     return;
+        // }
 
         if (tokens.length === 0) return;
 
@@ -16914,6 +16940,8 @@ if (typeof document !== "undefined") {
         }
     }
 
+    // Note: "edit with" is removed. editCommandHandling, processEditCommand, findEditFieldMetadata,
+    // getEditFieldValueError and findInvalidEditFieldValue below are no longer called; they are kept for reference.
     /**
      * Prepares suggestions for 'Edit' command field updates.
      * @param {string[]} tokens - Command tokens.
