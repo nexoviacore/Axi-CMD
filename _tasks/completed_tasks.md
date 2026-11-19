@@ -205,7 +205,7 @@ Pending
 During Export Install product , we need to send the ARMSessionId from the client page through queue
 
 3. Include the Git Account, Repository, and PAT configurations for Products, Change Requests, and Plugins as part of the Golden Dump.
-axi_command_settings table should be updated properly along with necessry fields and data
+axi_command_settings table should be updated properly along with necessry fields and data -> completed 
 
 4. Remove the option to configure Git Account, Repository, and PAT separately through the Axi Command Line. -> Completed
 
