@@ -238,7 +238,7 @@ Sample Install Payload in Queue Message:
 
 
 
-6. 	Add the Git token to the Install request and ensure that both the Consumer and AxInstaller handle it accordingly. Also, when pushing the message to the queue, include the Git token along with the Git repository and Git account details in the queue message.
+6. 	Add the Git token to the Install request and ensure that both the Consumer and AxInstaller handle it accordingly. Also, when pushing the message to the queue, include the Git token along with the Git repository and Git account details in the queue message. -> Completed
 
 
 ## Completed: 

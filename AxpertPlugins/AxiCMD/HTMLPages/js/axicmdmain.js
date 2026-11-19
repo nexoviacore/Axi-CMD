@@ -12858,12 +12858,30 @@ if (typeof document !== "undefined") {
         //     requestedOn: p.requestedOn || (p.now instanceof Date ? p.now : new Date()).toISOString()
         // };
         // new code: field names the install consumer reads (appName, packageName, packageVersion, requestedBy, requestId)
+        // return {
+        //     action: "install",
+        //     requestId: p.requestId || "",
+        //     type: p.type,
+        //     account: p.account,
+        //     repo: p.repo,
+        //     managerType: p.type,
+        //     packageName: p.directory,
+        //     packageVersion: p.version || "",
+        //     commitSha: p.commitSha || "",
+        //     appName: p.appname,
+        //     requestedBy: p.username,
+        //     requestedOn: p.requestedOn || (p.now instanceof Date ? p.now : new Date()).toISOString()
+        // };
+        // new code: the consumer reuses the caller's ARM session (ARMSessionId) and clones with the configured PAT,
+        // so account / repo are sent as gitaccountname / gitrepository together with gittoken
         return {
             action: "install",
             requestId: p.requestId || "",
+            ARMSessionId: p.armSessionId || "",
             type: p.type,
-            account: p.account,
-            repo: p.repo,
+            gitaccountname: p.account,
+            gitrepository: p.repo,
+            gittoken: p.token || "",
             managerType: p.type,
             packageName: p.directory,
             packageVersion: p.version || "",
@@ -13876,8 +13894,23 @@ if (typeof document !== "undefined") {
             setStep(2, "pending");
             m.inflight = true;
             xBtn.disabled = true;
+            // new code: the ARM session (read fresh, it can be renewed) and the PAT saved for the type travel in the payload
+            const armAuth = await getArmAuth(true);
+            const repoInfo = await loadInstallRepo(ctx.type);
+            const armSessionId = (armAuth && armAuth.sessionId) || "";
+            const gitToken = (repoInfo && repoInfo.token) || "";
+            if (!armSessionId || !gitToken) {
+                m.inflight = false;
+                xBtn.disabled = false;
+                if (m.closed) return;
+                failStep(1, !armSessionId ? "The ARM session is not available. Sign in again and retry." : getInstallTokenNotSetText(ctx.type), 1);
+                return;
+            }
             const result = await waitAtLeast(pushInstallToQueue(buildInstallPayload({
                 requestId: m.requestId,
+                // new code
+                armSessionId: armSessionId,
+                token: gitToken,
                 type: ctx.type,
                 account: ctx.account,
                 repo: ctx.repo,

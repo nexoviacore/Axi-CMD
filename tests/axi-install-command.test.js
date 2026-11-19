@@ -127,9 +127,11 @@ function buildInstallPayload(p) {
     return {
         action: "install",
         requestId: p.requestId || "",
+        ARMSessionId: p.armSessionId || "",
         type: p.type,
-        account: p.account,
-        repo: p.repo,
+        gitaccountname: p.account,
+        gitrepository: p.repo,
+        gittoken: p.token || "",
         managerType: p.type,
         packageName: p.directory,
         packageVersion: p.version || "",
@@ -256,11 +258,15 @@ test('request id: uuid shaped, unique, and a fallback when crypto.randomUUID is 
 });
 
 test('queue payload and body', () => {
-    const payload = buildInstallPayload({ requestId: 'req-1', type: 'plugin', account: 'acc', repo: 'rep', directory: 'My Dir', version: undefined, commitSha: 'abcdef1234', appname: 'app', username: 'admin', requestedOn: '2026-01-02T03:04:05.000Z' });
+    const payload = buildInstallPayload({ requestId: 'req-1', armSessionId: 'ARM-1', token: 'tok', type: 'plugin', account: 'acc', repo: 'rep', directory: 'My Dir', version: undefined, commitSha: 'abcdef1234', appname: 'app', username: 'admin', requestedOn: '2026-01-02T03:04:05.000Z' });
     assert.deepStrictEqual(payload, {
-        action: 'install', requestId: 'req-1', type: 'plugin', account: 'acc', repo: 'rep', managerType: 'plugin', packageName: 'My Dir', packageVersion: '',
+        action: 'install', requestId: 'req-1', ARMSessionId: 'ARM-1', type: 'plugin', gitaccountname: 'acc', gitrepository: 'rep', gittoken: 'tok',
+        managerType: 'plugin', packageName: 'My Dir', packageVersion: '',
         commitSha: 'abcdef1234', appName: 'app', requestedBy: 'admin', requestedOn: '2026-01-02T03:04:05.000Z'
     });
+    // the old account / repo keys are gone
+    assert.strictEqual('account' in payload, false);
+    assert.strictEqual('repo' in payload, false);
     const body = buildInstallQueueBody(payload);
     assert.strictEqual(body.queuename, 'axiinstallpackagesqueue');
     assert.strictEqual(body.trace, false);
