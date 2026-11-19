@@ -209,6 +209,31 @@ axi_command_settings table should be updated properly along with necessry fields
 
 4. Remove the option to configure Git Account, Repository, and PAT separately through the Axi Command Line.
 
+5. Use the configured PAT for authentication during installation.
+    "ARMSessionId": "ARM-xxxxxxx",
+    "gitaccountname": "",
+    "gitrepository": "AxiProductVersions",
+    "gittoken": "",
+    "type": "product",
+Handle these keys in  Install Axi CMD Line when pushing to Queue,
+Sample Install Payload in Queue Message: 
+{
+ "action": "install",
+ "requestId": "06e2742d-2b78-40d9-bf90-72bcac7c4288",
+ "ARMSessionId": "ARM-xxxxxxx",
+ "type": "product",
+ "gitaccountname": "Agileaxpert",
+ "gitrepository": "AxiProductVersions",
+ "gittoken" : "axcsdfsfsgsgr",
+ "managerType": "product",
+ "packageName": "Axi Masters 01",
+ "packageVersion": "Latest",
+ "commitSha": "e64bea48664bd0ed4654c8bf686befcd0bcbdb64",
+ "appName": "ORGNEWXXM",
+ "requestedBy": "admin",
+ "requestedOn": "2026-11-16T13:05:16.715Z"
+}
+
 5. Change the terminology from Product to ProductVersion in the Install command.
 
 
