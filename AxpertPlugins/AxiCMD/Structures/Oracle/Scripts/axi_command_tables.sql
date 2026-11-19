@@ -221,7 +221,7 @@ UPDATE AXI_COMMAND_PROMPTS s SET promptsource = (SELECT LISTAGG(x.src, ',') WITH
 UPDATE AXI_COMMAND_PROMPTS SET promptvalues = (SELECT LISTAGG(x.val, ',') WITHIN GROUP (ORDER BY x.lvl) FROM (SELECT LEVEL AS lvl, REGEXP_SUBSTR(pv.promptvalues, '[^,]+', 1, LEVEL) AS val FROM (SELECT promptvalues FROM AXI_COMMAND_PROMPTS WHERE cmdtoken = 4 AND wordpos = 2) pv CONNECT BY LEVEL <= REGEXP_COUNT(RTRIM(pv.promptvalues, ', '), ',') + 1) x WHERE LOWER(TRIM(x.val)) NOT IN ('product', 'plugin', 'changerequest')) WHERE cmdtoken = 4 AND wordpos = 2 AND LOWER(promptvalues) LIKE '%changerequest%'
 >>
 
--- Install: `install <product|plugin|changerequest> <directory> [version]` (build access only). Rows are added only when absent, so a re-run changes nothing.
+-- Install: `install <productversion|plugin|changerequest> <directory> [version]` (build access only). Rows are added only when absent, so a re-run changes nothing.
 -- axi_git_directories and axi_git_versions are NOT axdirectsql rows: the palette resolves them from the AxiGit listdirectories API.
 <<
 INSERT INTO axi_commands
@@ -229,8 +229,17 @@ INSERT INTO axi_commands
 SELECT 10, 'Install', ' ', 'T' FROM dual WHERE NOT EXISTS (SELECT 1 FROM axi_commands WHERE cmdtoken = 10)
 >>
 
+-- old code: block markers left out so the installer cannot pick it up
+-- INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) SELECT HEXTORAW('6474EF0115544DD7BE1BC41C8CDEE0F4'), 10, 2, 'object type', NULL, NULL, 'Product,Plugin,ChangeRequest', NULL, NULL, NULL FROM dual WHERE NOT EXISTS (SELECT 1 FROM AXI_COMMAND_PROMPTS WHERE cmdtoken = 10 AND wordpos = 2)
+
+-- new code: the product option is named ProductVersion (the type sent to the APIs and the queue stays "product")
 <<
-INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) SELECT HEXTORAW('6474EF0115544DD7BE1BC41C8CDEE0F4'), 10, 2, 'object type', NULL, NULL, 'Product,Plugin,ChangeRequest', NULL, NULL, NULL FROM dual WHERE NOT EXISTS (SELECT 1 FROM AXI_COMMAND_PROMPTS WHERE cmdtoken = 10 AND wordpos = 2)
+INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) SELECT HEXTORAW('6474EF0115544DD7BE1BC41C8CDEE0F4'), 10, 2, 'object type', NULL, NULL, 'ProductVersion,Plugin,ChangeRequest', NULL, NULL, NULL FROM dual WHERE NOT EXISTS (SELECT 1 FROM AXI_COMMAND_PROMPTS WHERE cmdtoken = 10 AND wordpos = 2)
+>>
+
+-- Install: renames the Product option to ProductVersion on databases that already have the install row. A re-run changes nothing.
+<<
+UPDATE AXI_COMMAND_PROMPTS SET promptvalues = REGEXP_REPLACE(promptvalues, '(^|,) *Product *(,|$)', '\1ProductVersion\2', 1, 0, 'i') WHERE cmdtoken = 10 AND wordpos = 2 AND ',' || LOWER(REPLACE(promptvalues, ' ', '')) || ',' LIKE '%,product,%'
 >>
 
 <<
