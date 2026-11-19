@@ -156,16 +156,24 @@ INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, p
 INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active, is_system) VALUES ('cfg_configure_trace_files', 'Configure', 'trace files', 'trace_files', 'shellaction', NULL, NULL, NULL, 'T', 'T') ON CONFLICT (config_id) DO UPDATE SET is_system = 'T'
 >>
 
-<<
-INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active, is_system) VALUES ('cfg_configure_product', 'Configure', 'product', 'product', 'commandsetting', NULL, NULL, NULL, 'T', 'T') ON CONFLICT (config_id) DO UPDATE SET is_system = 'T'
->>
+-- old code: configure Product / Plugin / ChangeRequest (Git account / repository) was removed from AxiCMD
+-- <<
+-- INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active, is_system) VALUES ('cfg_configure_product', 'Configure', 'product', 'product', 'commandsetting', NULL, NULL, NULL, 'T', 'T') ON CONFLICT (config_id) DO UPDATE SET is_system = 'T'
+-- >>
 
-<<
-INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active, is_system) VALUES ('cfg_configure_plugin', 'Configure', 'plugin', 'plugin', 'commandsetting', NULL, NULL, NULL, 'T', 'T') ON CONFLICT (config_id) DO UPDATE SET is_system = 'T'
->>
+-- old code
+-- <<
+-- INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active, is_system) VALUES ('cfg_configure_plugin', 'Configure', 'plugin', 'plugin', 'commandsetting', NULL, NULL, NULL, 'T', 'T') ON CONFLICT (config_id) DO UPDATE SET is_system = 'T'
+-- >>
 
+-- old code
+-- <<
+-- INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active, is_system) VALUES ('cfg_configure_changerequest', 'Configure', 'changerequest', 'changerequest', 'commandsetting', NULL, NULL, NULL, 'T', 'T') ON CONFLICT (config_id) DO UPDATE SET is_system = 'T'
+-- >>
+
+-- new code: removes the configure Product / Plugin / ChangeRequest rows from a database that already has them
 <<
-INSERT INTO axi_command_config (config_id, command, prompt_options, prompt_id, prompt_option_type, param_field, target_url, extra_params, active, is_system) VALUES ('cfg_configure_changerequest', 'Configure', 'changerequest', 'changerequest', 'commandsetting', NULL, NULL, NULL, 'T', 'T') ON CONFLICT (config_id) DO UPDATE SET is_system = 'T'
+DELETE FROM axi_command_config WHERE config_id IN ('cfg_configure_product', 'cfg_configure_plugin', 'cfg_configure_changerequest')
 >>
 
 <<
