@@ -12377,9 +12377,9 @@ if (typeof document !== "undefined") {
     }
 
     /**
-     * Reads accountname / reponame from a response properties object, tolerating casing.
+     * Reads accountname / reponame / gittoken from a response properties object, tolerating casing.
      * @param {object} props - Properties object.
-     * @returns {{accountname: string, reponame: string}} Values ("" when missing).
+     * @returns {{accountname: string, reponame: string, gittoken: string}} Values ("" when missing).
      */
     function readCommandSettingProps(props) {
         const p = props || {};
@@ -12387,7 +12387,14 @@ if (typeof document !== "undefined") {
             for (const k of keys) { if (p[k] !== undefined && p[k] !== null) return String(p[k]); }
             return "";
         };
-        return { accountname: pick("accountname", "accountName", "AccountName", "Accountname"), reponame: pick("reponame", "repoName", "RepoName", "Reponame") };
+        // old code
+        // return { accountname: pick("accountname", "accountName", "AccountName", "Accountname"), reponame: pick("reponame", "repoName", "RepoName", "Reponame") };
+        // new code: gittoken is the PAT the AxiGit listdirectories call needs
+        return {
+            accountname: pick("accountname", "accountName", "AccountName", "Accountname"),
+            reponame: pick("reponame", "repoName", "RepoName", "Reponame"),
+            gittoken: pick("gittoken", "gitToken", "GitToken", "Gittoken").trim()
+        };
     }
 
     /**
@@ -12767,7 +12774,19 @@ if (typeof document !== "undefined") {
         // old code
         // return status === 404 ? `${text} Run configure ${type} <account> <repo> to change it.` : text;
         // new code: the repository is no longer set from the palette (configure product / plugin / changerequest was removed)
+        // return status === 404 ? `${text} Ask your administrator to check the ${getCommandSettingLabel(type)} repository.` : text;
+        // new code: 401 = GitHub rejected the PAT (gittoken) sent with the call
+        if (status === 401) return `GitHub rejected the Git token (PAT) for ${getCommandSettingLabel(type)}. Ask your administrator to update it.`;
         return status === 404 ? `${text} Ask your administrator to check the ${getCommandSettingLabel(type)} repository.` : text;
+    }
+
+    /**
+     * Message shown by install when no Git token (PAT) is saved for the type; AxiGit listdirectories is not called without one.
+     * @param {string} type - product / plugin / changerequest.
+     * @returns {string} Message.
+     */
+    function getInstallTokenNotSetText(type) {
+        return `Git token (PAT) not set for ${getCommandSettingLabel(type)}. Ask your administrator to set it.`;
     }
 
     /**
@@ -12959,7 +12978,10 @@ if (typeof document !== "undefined") {
                 if (res.ok) {
                     const data = await res.json();
                     const props = readCommandSettingProps(data && (data.properties || data.Properties));
-                    if (props.accountname && props.reponame) value = { account: props.accountname, repo: props.reponame };
+                    // old code
+                    // if (props.accountname && props.reponame) value = { account: props.accountname, repo: props.reponame };
+                    // new code: the PAT is kept with the repo, in memory only (never in localStorage)
+                    if (props.accountname && props.reponame) value = { account: props.accountname, repo: props.reponame, token: props.gittoken };
                 }
             } catch (e) { value = null; }
             delete installRepoPending[type];
@@ -12994,6 +13016,10 @@ if (typeof document !== "undefined") {
             const abortCtrl = (typeof AbortController !== "undefined") ? new AbortController() : null;
             const abortTimer = abortCtrl ? setTimeout(() => abortCtrl.abort(), INSTALL_REQUEST_TIMEOUT_MS) : null;
             try {
+                // new code: AxiGit needs the PAT (gittoken) saved for the type; without one the call is not made
+                const repoInfo = await loadInstallRepo(type);
+                const token = (repoInfo && repoInfo.token) || "";
+                if (!token) throw new Error(getInstallTokenNotSetText(type));
                 // old code
                 // const res = await fetch(`${AxiArmUrl}/AxiGit/api/git/listdirectories`, {
                 // new code
@@ -13001,7 +13027,10 @@ if (typeof document !== "undefined") {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     signal: abortCtrl ? abortCtrl.signal : undefined,
-                    body: JSON.stringify({ account: account, repo: repo, managerType: type })
+                    // old code
+                    // body: JSON.stringify({ account: account, repo: repo, managerType: type })
+                    // new code
+                    body: JSON.stringify({ account: account, repo: repo, managerType: type, token: token })
                 });
                 const text = await res.text();
                 // old code

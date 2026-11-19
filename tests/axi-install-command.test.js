@@ -89,9 +89,31 @@ function generateInstallRequestId() {
     });
 }
 
+function getCommandSettingLabel(type) {
+    return ({ product: "Product Version", plugin: "Plugin", changerequest: "Change Request" })[(type || "").toLowerCase()] || type;
+}
+
 function getInstallDirsErrorText(type, message, status) {
     const text = String(message || "Could not load the directories").trim();
-    return status === 404 ? `${text} Run configure ${type} <account> <repo> to change it.` : text;
+    if (status === 401) return `GitHub rejected the Git token (PAT) for ${getCommandSettingLabel(type)}. Ask your administrator to update it.`;
+    return status === 404 ? `${text} Ask your administrator to check the ${getCommandSettingLabel(type)} repository.` : text;
+}
+
+function getInstallTokenNotSetText(type) {
+    return `Git token (PAT) not set for ${getCommandSettingLabel(type)}. Ask your administrator to set it.`;
+}
+
+function readCommandSettingProps(props) {
+    const p = props || {};
+    const pick = (...keys) => {
+        for (const k of keys) { if (p[k] !== undefined && p[k] !== null) return String(p[k]); }
+        return "";
+    };
+    return {
+        accountname: pick("accountname", "accountName", "AccountName", "Accountname"),
+        reponame: pick("reponame", "repoName", "RepoName", "Reponame"),
+        gittoken: pick("gittoken", "gitToken", "GitToken", "Gittoken").trim()
+    };
 }
 
 // verifyCommandSettingRepo's decision, with the listdirectories call replaced by a status
@@ -282,9 +304,18 @@ test('queue answer: plain text, JSON-wrapped, and failures', () => {
 
 test('install error text adds the configure hint only for a 404', () => {
     const notFound = "Repository 'a/r' or its main branch was not found, or the configured GitHub token cannot access it.";
-    assert.strictEqual(getInstallDirsErrorText('plugin', notFound, 404), notFound + ' Run configure plugin <account> <repo> to change it.');
+    assert.strictEqual(getInstallDirsErrorText('plugin', notFound, 404), notFound + ' Ask your administrator to check the Plugin repository.');
     assert.strictEqual(getInstallDirsErrorText('product', 'GitHub could not be reached.', 502), 'GitHub could not be reached.');
     assert.strictEqual(getInstallDirsErrorText('product', '', 0), 'Could not load the directories');
+    assert.strictEqual(getInstallDirsErrorText('product', 'GitHub rejected the PAT.', 401), 'GitHub rejected the Git token (PAT) for Product Version. Ask your administrator to update it.');
+});
+
+test('gittoken is read from the CommandSettings properties and a blank one is reported', () => {
+    assert.strictEqual(readCommandSettingProps({ accountname: 'a', reponame: 'r', gittoken: '  tok  ' }).gittoken, 'tok');
+    assert.strictEqual(readCommandSettingProps({ AccountName: 'a', RepoName: 'r', GitToken: 'tok' }).gittoken, 'tok');
+    assert.strictEqual(readCommandSettingProps({ accountname: 'a', reponame: 'r' }).gittoken, '');
+    assert.strictEqual(readCommandSettingProps({ accountname: 'a', reponame: 'r', gittoken: null }).gittoken, '');
+    assert.strictEqual(getInstallTokenNotSetText('changerequest'), 'Git token (PAT) not set for Change Request. Ask your administrator to set it.');
 });
 
 test('configure repository check: 404 and 400 block, outages only warn', () => {
