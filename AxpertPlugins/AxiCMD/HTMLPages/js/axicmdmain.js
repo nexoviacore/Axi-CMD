@@ -3171,7 +3171,8 @@ if (typeof document !== "undefined") {
             const isInitialCommandStage = initialTokens.length === 0 || (initialTokens.length === 1 && !input.value.endsWith(" "));
 
             if (isCommandsLoading && !isInitialCommandStage) {
-                items = ["Loading Commands...."];
+                // old code: items = ["Loading Commands...."];
+                items = [axiStatusMsg("Loading Commands....", "loading")];
                 setStatusText(hintDiv, "Please wait...");
                 render();
                 return;
@@ -4071,7 +4072,8 @@ if (typeof document !== "undefined") {
                         return [
                             goOption,
                             popOption,
-                            "Please Type the date"
+                            // old code: "Please Type the date"
+                            axiStatusMsg("Please Type the date")
                         ];
                         //return ["Please Type the date"];
                     }
@@ -4098,7 +4100,8 @@ if (typeof document !== "undefined") {
                             return [
                                 goOption,
                                 popOption,
-                                "Please type Valid date using / (ex: DD / MM / YYYY)"
+                                // old code: "Please type Valid date using / (ex: DD / MM / YYYY)"
+                                axiStatusMsg("Please type Valid date using / (ex: DD / MM / YYYY)")
                             ];
                             //return ["Please type Valid date using / (ex: DD / MM / YYYY)"];
                         }
@@ -4222,7 +4225,8 @@ if (typeof document !== "undefined") {
 
             if (!axDatasourceObj[sourceKey]) {
                 loadList(sourceName, adsName);
-                return ["Loading columns..."];
+                // old code: return ["Loading columns..."];
+                return [axiStatusMsg("Loading columns...", "loading")];
             }
 
             const list = axDatasourceObj[sourceKey];
@@ -4442,7 +4446,8 @@ if (typeof document !== "undefined") {
                             return [
                                 goOption,
                                 popOption,
-                                "Please type the value..."
+                                // old code: "Please type the value..."
+                                axiStatusMsg("Please type the value...")
                             ];
                             //return ["Please type the value..."];
                         }
@@ -4480,7 +4485,8 @@ if (typeof document !== "undefined") {
 
                         if (!axDatasourceObj[sourceKey]) {
                             loadList(sourceName, paramValue);
-                            return ["Loading values..."];
+                            // old code: return ["Loading values..."];
+                            return [axiStatusMsg("Loading values...", "loading")];
                         }
 
                         const list = axDatasourceObj[sourceKey];
@@ -5922,13 +5928,16 @@ if (typeof document !== "undefined") {
                     //     }
                     //     return [];
                     // }
-                    return [`Fetching Data...`];
+                    // old code: return [`Fetching Data...`];
+                    return [axiStatusMsg(`Fetching Data...`, "loading")];
                 }
                 // edit <form>: the form/field names are still being resolved against the structure list (or the
                 // list itself is loading), so paramStr is empty for a moment. Say "Fetching Data..." like view
                 // does instead of flashing "Waiting for input..."
-                if (isGetStructsData && tokens.length >= 2) return [`Fetching Data...`];
-                return ["Waiting for input..."];
+                // old code: if (isGetStructsData && tokens.length >= 2) return [`Fetching Data...`];
+                if (isGetStructsData && tokens.length >= 2) return [axiStatusMsg(`Fetching Data...`, "loading")];
+                // old code: return ["Waiting for input..."];
+                return [axiStatusMsg("Waiting for input...")];
             }
 
             // Filter Cache
@@ -6005,7 +6014,8 @@ if (typeof document !== "undefined") {
                                 loadList(apiSourceName, paramValue, cleanSearch, 1, getPageSize());
                             }, SEARCH_DEBOUNCE_MS);
                             filteredObjects = [];
-                            return ["Searching..."];
+                            // old code: return ["Searching..."];
+                            return [axiStatusMsg("Searching...", "loading")];
                         }
                     }
                 } else {
@@ -6043,9 +6053,11 @@ if (typeof document !== "undefined") {
                 if (isDynamicSource) {
                     filteredObjects = [];
                     if (cleanSearch.length < 3) {
-                        return ["Type at least 3 characters to search records..."];
+                        // old code: return ["Type at least 3 characters to search records..."];
+                        return [axiStatusMsg("Type at least 3 characters to search records...")];
                     } else {
-                        return ["No matching records found"];
+                        // old code: return ["No matching records found"];
+                        return [axiStatusMsg("No matching records found")];
                     }
                 }
 
@@ -6063,7 +6075,8 @@ if (typeof document !== "undefined") {
                 filtered = [...dataList];
             } else if (isDynamicSource && filtered.length === 0 && cleanSearch.length >= 3) {
                 filteredObjects = [];
-                return ["No matching records found"];
+                // old code: return ["No matching records found"];
+                return [axiStatusMsg("No matching records found")];
             }
 
 
@@ -7165,7 +7178,10 @@ if (typeof document !== "undefined") {
         const validItems = items.filter(item => {
             if (!item) return false;
             if (typeof item === "string") {
-                return (item !== "Loading options..." && !item.startsWith("Fetching") && !item.startsWith("Searching") && item.trim() !== "");
+                // old code
+                // return (item !== "Loading options..." && !item.startsWith("Fetching") && !item.startsWith("Searching") && item.trim() !== "");
+                // new code: only the palette's own loading rows are dropped, not data rows that start with these words
+                return (item !== "Loading options..." && !isPaletteMessage(item, { startsWith: ["Fetching", "Searching"] }) && item.trim() !== "");
             }
             if (typeof item === "object") {
                 return (typeof item.displaydata === "string" && item.displaydata.trim() !== "");
@@ -7220,10 +7236,13 @@ if (typeof document !== "undefined") {
         const isCmdsLoading = isCommandsLoading || !commands;
         const isStructsLoading = activeFetches.has(structKey) || !axDatasourceObj[structKey];
 
-        const isAnyLoadingItem = items.some(item => {
-            const text = typeof item === "string" ? item : (item?.displaydata || "");
-            return typeof text === "string" && (text.startsWith("Loading") || text.startsWith("Searching") || text.startsWith("Fetching"));
-        });
+        // old code
+        // const isAnyLoadingItem = items.some(item => {
+        //     const text = typeof item === "string" ? item : (item?.displaydata || "");
+        //     return typeof text === "string" && (text.startsWith("Loading") || text.startsWith("Searching") || text.startsWith("Fetching"));
+        // });
+        // new code: a structure named "Loading ..." no longer counts as a loading row
+        const isAnyLoadingItem = items.some(item => isPaletteMessage(item, { kind: "loading" }));
         const isAnyFetchActive = activeFetches.size > 0 || isCmdsLoading || isStructsLoading || isAnyLoadingItem || isSearchPending();
 
         const showInitialWrapper = isInitialCommandStage && (validItems.length > 0 || isCmdsLoading || isStructsLoading) && !isSystemMessage(validItems[0]);
@@ -7253,7 +7272,9 @@ if (typeof document !== "undefined") {
                 // `;
                 // list.appendChild(li);
                 // new code: same row, built by the shared helper (also used by the configure product / plugin / changerequest save)
-                const loadingText = items.find(it => typeof it === "string" && (it.startsWith("Searching") || it.startsWith("Fetching"))) || (isSearchPending() ? "Searching..." : "Loading options...");
+                // const loadingText = items.find(it => typeof it === "string" && (it.startsWith("Searching") || it.startsWith("Fetching"))) || (isSearchPending() ? "Searching..." : "Loading options...");
+                // new code: only the palette's own loading rows
+                const loadingText = items.find(it => isPaletteMessage(it, { startsWith: ["Searching", "Fetching"] })) || (isSearchPending() ? "Searching..." : "Loading options...");
                 list.appendChild(createSuggestionLoadingRow(loadingText));
                 list.style.display = "block";
                 return;
@@ -7531,12 +7552,23 @@ if (typeof document !== "undefined") {
 
         const validItems = items.filter(item => {
             if (!item) return false;
+            // old code
+            // if (typeof item === "string") {
+            //     return (!item.startsWith("Loading") && !item.startsWith("Searching") && !item.startsWith("Fetching") && !item.startsWith("Type at least") && !item.startsWith("No matching") && item !== "No Data" && item.trim() !== "");
+            // }
+            // if (typeof item === "object") {
+            //     const text = item.displaydata || item.name || "";
+            //     return (typeof text === "string" && !text.startsWith("Loading") && !text.startsWith("Searching") && !text.startsWith("Fetching") && !text.startsWith("Type at least") && !text.startsWith("No matching") && text !== "No Data" && text.trim() !== "");
+            // }
+            // new code: the same message rows are skipped, but only when the palette made them (axiStatusMsg); a structure,
+            // field or record whose name starts with these words stays selectable
+            const skipWords = ["Loading", "Searching", "Fetching", "Type at least", "No matching"];
             if (typeof item === "string") {
-                return (!item.startsWith("Loading") && !item.startsWith("Searching") && !item.startsWith("Fetching") && !item.startsWith("Type at least") && !item.startsWith("No matching") && item !== "No Data" && item.trim() !== "");
+                return (!isPaletteMessage(item, { startsWith: skipWords }) && item !== "No Data" && item.trim() !== "");
             }
             if (typeof item === "object") {
                 const text = item.displaydata || item.name || "";
-                return (typeof text === "string" && !text.startsWith("Loading") && !text.startsWith("Searching") && !text.startsWith("Fetching") && !text.startsWith("Type at least") && !text.startsWith("No matching") && text !== "No Data" && text.trim() !== "");
+                return (typeof text === "string" && !isPaletteMessage(item) && text !== "No Data" && text.trim() !== "");
             }
             return false;
         });
@@ -11086,7 +11118,8 @@ if (typeof document !== "undefined") {
 
             if (struct_hasParams) {
                 loadList(struct_source, struct_paramValue);
-                return [`Loading ${struct_source}...`];
+                // old code: return [`Loading ${struct_source}...`];
+                return [axiStatusMsg(`Loading ${struct_source}...`, "loading")];
             }
         }
 
@@ -12480,8 +12513,10 @@ if (typeof document !== "undefined") {
         }
         // new code: nothing to pick yet, so say what to type instead of "No Data"
         if (list.length === 0) {
-            if (wordNo === 3) list = ["Type GitHub account name"];
-            else if (wordNo === 4) list = ["Type GitHub repository name"];
+            // old code: if (wordNo === 3) list = ["Type GitHub account name"];
+            if (wordNo === 3) list = [axiStatusMsg("Type GitHub account name")];
+            // old code: else if (wordNo === 4) list = ["Type GitHub repository name"];
+            else if (wordNo === 4) list = [axiStatusMsg("Type GitHub repository name")];
         }
         return list;
     }
@@ -12792,12 +12827,15 @@ if (typeof document !== "undefined") {
     /**
      * Message shown by install when no Git account / repository is saved for the type. It replaces
      * "Run configure <type> <account> <repo> first" now that configure product / plugin / changerequest is removed.
-     * Starts with "Repository not set" so isSystemMessage treats it as an information row.
+     * Marked with axiStatusMsg, so isSystemMessage treats it as an information row.
      * @param {string} type - product / plugin / changerequest.
      * @returns {string} Message.
      */
     function getInstallRepoNotSetText(type) {
-        return `Repository not set for ${getCommandSettingLabel(type)}. Ask your administrator to set it.`;
+        // old code
+        // return `Repository not set for ${getCommandSettingLabel(type)}. Ask your administrator to set it.`;
+        // new code: marked as a palette message (see isSystemMessage)
+        return axiStatusMsg(`Repository not set for ${getCommandSettingLabel(type)}. Ask your administrator to set it.`);
     }
 
     /**
@@ -13157,7 +13195,8 @@ if (typeof document !== "undefined") {
         // new code: while the settings / AxiGit directories load, or when they could not be loaded, the hint must
         // not say "Ready to Run" (the null prompt above sets it): show "Loading..." while fetching, nothing otherwise
         const repoState = getInstallRepoState(type);
-        if (repoState.loading) { setInstallLoadingHint(); return ["Fetching repository settings..."]; }
+        // old code: if (repoState.loading) { setInstallLoadingHint(); return ["Fetching repository settings..."]; }
+        if (repoState.loading) { setInstallLoadingHint(); return [axiStatusMsg("Fetching repository settings...", "loading")]; }
         // old code
         // if (!repoState.value) { hintDiv.textContent = ""; return [`Run configure ${type} <account> <repo> first`]; }
         // new code: configure product / plugin / changerequest was removed, the repository is set outside the palette
@@ -13165,10 +13204,13 @@ if (typeof document !== "undefined") {
         const { account, repo } = repoState.value;
 
         const dirsState = getInstallDirsState(type, account, repo);
-        if (dirsState.loading) { setInstallLoadingHint(); return ["Fetching directories..."]; }
-        if (dirsState.error) { hintDiv.textContent = ""; return [`Error: ${dirsState.error}`]; }
+        // old code: if (dirsState.loading) { setInstallLoadingHint(); return ["Fetching directories..."]; }
+        if (dirsState.loading) { setInstallLoadingHint(); return [axiStatusMsg("Fetching directories...", "loading")]; }
+        // old code: if (dirsState.error) { hintDiv.textContent = ""; return [`Error: ${dirsState.error}`]; }
+        if (dirsState.error) { hintDiv.textContent = ""; return [axiStatusMsg(`Error: ${dirsState.error}`)]; }
         const dirs = (dirsState.data && dirsState.data.directories) || [];
-        if (dirs.length === 0) { hintDiv.textContent = ""; return [`No directories found in ${account}/${repo}`]; }
+        // old code: if (dirs.length === 0) { hintDiv.textContent = ""; return [`No directories found in ${account}/${repo}`]; }
+        if (dirs.length === 0) { hintDiv.textContent = ""; return [axiStatusMsg(`No directories found in ${account}/${repo}`)]; }
 
         const asObjects = (names) => names.map(n => ({ name: n, displaydata: n }));
 
@@ -16157,33 +16199,80 @@ if (typeof document !== "undefined") {
      * @param {object} item - Message item to check.
      * @returns {boolean} True if system message.
      */
+    /**
+     * Marks a text as one of the palette's own status / information rows ("Searching...", "No matching records found",
+     * "Error: ..." ...) and returns it unchanged. isSystemMessage recognises a row by this mark, so a structure, field or
+     * record whose name merely starts like a message ("Error Form Test", "Loading Sheet", "Error: Test") is still a
+     * normal, clickable row. Declared as a function (hoisted) and keeps its store on itself, so it works from any line.
+     * @param {string} text - Message text.
+     * @param {string} [kind="info"] - "loading" for rows shown while something loads (spinner rows), else "info".
+     * @returns {string} The same text.
+     */
+    function axiStatusMsg(text, kind) {
+        const store = axiStatusMsg.texts || (axiStatusMsg.texts = new Map());
+        const value = String(text ?? "");
+        // the store only grows with distinct message texts; cap it so long sessions with many error texts stay small
+        if (!store.has(value) && store.size >= 500) store.clear();
+        store.set(value, kind === "loading" ? "loading" : "info");
+        return value;
+    }
+
+    /**
+     * True when a row is one of the palette's own messages (made by axiStatusMsg), optionally of one kind or starting
+     * with one of the given words. Data rows are never matched, whatever their text.
+     * @param {string|object} item - Suggestion row.
+     * @param {{kind?: string, startsWith?: string[]}} [opts] - Optional narrowing.
+     * @returns {boolean}
+     */
+    function isPaletteMessage(item, opts) {
+        if (!item) return false;
+        // a data row (object) is a message only when it says so itself
+        if (typeof item === "object") return item.isSystemMessage === true;
+        if (typeof item !== "string") return false;
+        const store = axiStatusMsg.texts;
+        if (!store || !store.has(item)) return false;
+        if (opts && opts.kind && store.get(item) !== opts.kind) return false;
+        if (opts && Array.isArray(opts.startsWith) && !opts.startsWith.some(w => item.startsWith(w))) return false;
+        return true;
+    }
+
     function isSystemMessage(item) {
         if (!item) return false;
 
-        const text = typeof item === 'string' ? item : (item.displaydata || "");
+        // new code: a row is a message only when the palette made it one (axiStatusMsg). The old prefix test below
+        // also caught structures, fields and records whose name starts like a message ("Error Form Test (erfrm) [form]",
+        // a caption "Error: ..." or "Loading ..."), which then could not be clicked.
+        return isPaletteMessage(item);
 
-        return text.startsWith("Loading") ||
-            text.startsWith("Waiting") ||
-            text.startsWith("Error") ||
-            text.startsWith("Fetching") ||
-            text.startsWith("Searching") ||
-            text.startsWith("Type at least") ||
-            // new code: "Type GitHub account name" / "Type GitHub repository name" (configure product / plugin / changerequest)
-            text.startsWith("Type GitHub") ||
-            text.startsWith("No matching") ||
-            text.startsWith("Run configure ") ||
-            // new code: install message when no repository is saved (replaces "Run configure ...")
-            text.startsWith("Repository not set") ||
-            text.startsWith("No directories") ||
-            text === "No Data" ||
-            text === "Please type the value..." ||
-            // new code (issue #295): edit command, value does not fit a number field
-            text.startsWith("Please type a valid number") ||
-            text === "Please type Valid date using / (ex: DD / MM / YYYY)" ||
-            // old code: text === "Please Type the date";
-            // new code: configure keyfield <form> on a form without a unique field (see getNoKeyFieldMessage)
-            text === "Please Type the date" ||
-            text.startsWith(noKeyFieldMessageStart());
+        // old code
+        // const text = typeof item === 'string' ? item : (item.displaydata || "");
+
+        // return text.startsWith("Loading") ||
+            // text.startsWith("Waiting") ||
+            // // old code: any row starting with "Error" was an information row, so a structure such as
+            // // "Error Form Test (erfrm) [form]" was greyed out and could not be clicked
+            // // text.startsWith("Error") ||
+            // // new code: only the palette's own error rows, which read "Error: <message>"
+            // text.startsWith("Error:") ||
+            // text.startsWith("Fetching") ||
+            // text.startsWith("Searching") ||
+            // text.startsWith("Type at least") ||
+            // // new code: "Type GitHub account name" / "Type GitHub repository name" (configure product / plugin / changerequest)
+            // text.startsWith("Type GitHub") ||
+            // text.startsWith("No matching") ||
+            // text.startsWith("Run configure ") ||
+            // // new code: install message when no repository is saved (replaces "Run configure ...")
+            // text.startsWith("Repository not set") ||
+            // text.startsWith("No directories") ||
+            // text === "No Data" ||
+            // text === "Please type the value..." ||
+            // // new code (issue #295): edit command, value does not fit a number field
+            // text.startsWith("Please type a valid number") ||
+            // text === "Please type Valid date using / (ex: DD / MM / YYYY)" ||
+            // // old code: text === "Please Type the date";
+            // // new code: configure keyfield <form> on a form without a unique field (see getNoKeyFieldMessage)
+            // text === "Please Type the date" ||
+            // text.startsWith(noKeyFieldMessageStart());
 
     }
 
@@ -16215,8 +16304,12 @@ if (typeof document !== "undefined") {
         //     `Open this Tstruct in the Developer Studio and configure an Autogenerate field, or a field with Allow Duplicate set to false.`;
         // new code: wording agreed with the team; names the tstruct instead of "this Tstruct"
         const tstructRef = formName ? `'${formName}' tstruct` : "this tstruct";
-        return `${noKeyFieldMessageStart()}${forForm}. ` +
-            `Open ${tstructRef} in the Developer Studio and configure an Autogenerate field, or a field with Allow Duplicate set to false.`;
+        // old code
+        // return `${noKeyFieldMessageStart()}${forForm}. ` +
+        //     `Open ${tstructRef} in the Developer Studio and configure an Autogenerate field, or a field with Allow Duplicate set to false.`;
+        // new code: marked as a palette message (see isSystemMessage)
+        return axiStatusMsg(`${noKeyFieldMessageStart()}${forForm}. ` +
+            `Open ${tstructRef} in the Developer Studio and configure an Autogenerate field, or a field with Allow Duplicate set to false.`);
     }
 
 
@@ -16383,7 +16476,8 @@ if (typeof document !== "undefined") {
 
                         showToast("Please Type the date", 5000, true);
                         updateDynamicHintFromPrompt({ prompt: "fieldValue" })
-                        return ["Please Type the date"];
+                        // old code: return ["Please Type the date"];
+                        return [axiStatusMsg("Please Type the date")];
                     }
                     else {
                         //const partialDate = tokens[tokens.length - 1]
@@ -16404,7 +16498,8 @@ if (typeof document !== "undefined") {
 
                         }
                         else
-                            return ["Please type Valid date using / (ex: DD / MM / YYYY)"];
+                            // old code: return ["Please type Valid date using / (ex: DD / MM / YYYY)"];
+                            return [axiStatusMsg("Please type Valid date using / (ex: DD / MM / YYYY)")];
                     }
                 }
             }
@@ -16514,7 +16609,8 @@ if (typeof document !== "undefined") {
 
             if (!axDatasourceObj[sourceKey]) {
                 loadList(sourceName, setCommandTransid);
-                return ["Loading Field list..."];
+                // old code: return ["Loading Field list..."];
+                return [axiStatusMsg("Loading Field list...", "loading")];
             }
 
             const list = axDatasourceObj[sourceKey];
@@ -16704,7 +16800,8 @@ if (typeof document !== "undefined") {
                             return [];
                         }
                         else {
-                            return ["Please type the value..."];
+                            // old code: return ["Please type the value..."];
+                            return [axiStatusMsg("Please type the value...")];
                         }
                         return [];
 
@@ -16733,7 +16830,8 @@ if (typeof document !== "undefined") {
 
                         if (!axDatasourceObj[sourceKey]) {
                             loadList(sourceName, paramValue);
-                            return ["Loading values..."];
+                            // old code: return ["Loading values..."];
+                            return [axiStatusMsg("Loading values...", "loading")];
                         }
 
                         const list = axDatasourceObj[sourceKey];
@@ -16901,7 +16999,8 @@ if (typeof document !== "undefined") {
 
                         showToast("Please Type the date", 5000, true);
                         updateDynamicHintFromPrompt({ prompt: "fieldValue" })
-                        return ["Please Type the date"];
+                        // old code: return ["Please Type the date"];
+                        return [axiStatusMsg("Please Type the date")];
                     }
                     else {
                         //const partialDate = tokens[tokens.length - 1]
@@ -16922,7 +17021,8 @@ if (typeof document !== "undefined") {
 
                         }
                         else
-                            return ["Please type Valid date using / (ex: DD / MM / YYYY)"];
+                            // old code: return ["Please type Valid date using / (ex: DD / MM / YYYY)"];
+                            return [axiStatusMsg("Please type Valid date using / (ex: DD / MM / YYYY)")];
                     }
                 }
             }
@@ -17041,7 +17141,8 @@ if (typeof document !== "undefined") {
 
             if (!axDatasourceObj[sourceKey]) {
                 loadList(sourceName, setCommandTransid);
-                return ["Loading Field list..."];
+                // old code: return ["Loading Field list..."];
+                return [axiStatusMsg("Loading Field list...", "loading")];
             }
 
             const list = axDatasourceObj[sourceKey];
@@ -17256,7 +17357,8 @@ if (typeof document !== "undefined") {
                             return [];
                         }
                         else {
-                            return ["Please type the value..."];
+                            // old code: return ["Please type the value..."];
+                            return [axiStatusMsg("Please type the value...")];
                         }
 
                     }
@@ -17286,7 +17388,8 @@ if (typeof document !== "undefined") {
 
                         if (!axDatasourceObj[sourceKey]) {
                             loadList(sourceName, paramValue);
-                            return ["Loading values..."];
+                            // old code: return ["Loading values..."];
+                            return [axiStatusMsg("Loading values...", "loading")];
                         }
 
                         const list = axDatasourceObj[sourceKey];
@@ -17413,7 +17516,10 @@ if (typeof document !== "undefined") {
         if (!text) return "";
         if (String(fieldMeta.datatype || "").toLowerCase() === "n") {
             const ok = isTyping ? /^-?\d*\.?\d*$/.test(text) : /^-?(\d+(\.\d+)?|\.\d+)$/.test(text);
-            if (!ok) return `Please type a valid number for ${fieldMeta.caption || fieldMeta.name} (e.g. 125 or -12.50)`;
+            // old code
+            // if (!ok) return `Please type a valid number for ${fieldMeta.caption || fieldMeta.name} (e.g. 125 or -12.50)`;
+            // new code: marked as a palette message (see isSystemMessage)
+            if (!ok) return axiStatusMsg(`Please type a valid number for ${fieldMeta.caption || fieldMeta.name} (e.g. 125 or -12.50)`);
         }
         return "";
     }
@@ -18542,7 +18648,8 @@ if (typeof document !== "undefined") {
 
                 if (struct_hasParams) {
                     loadList(struct_source, struct_paramValue);
-                    return [`Loading ${struct_source}...`];
+                    // old code: return [`Loading ${struct_source}...`];
+                    return [axiStatusMsg(`Loading ${struct_source}...`, "loading")];
                 }
             }
 
