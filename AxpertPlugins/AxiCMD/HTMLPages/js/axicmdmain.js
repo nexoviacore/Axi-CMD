@@ -12143,7 +12143,10 @@ if (typeof document !== "undefined") {
     // ---------------------------------------------------------------------------------------------------------
     // Configure Product / Plugin / ChangeRequest (prompt_option_type 'commandsetting')
     // ---------------------------------------------------------------------------------------------------------
-    const COMMAND_SETTING_LABELS = { product: "Product", plugin: "Plugin", changerequest: "Change Request" };
+    // old code
+    // const COMMAND_SETTING_LABELS = { product: "Product", plugin: "Plugin", changerequest: "Change Request" };
+    // new code: the product type is named "Product Version" in the palette (install); the stored type stays "product"
+    const COMMAND_SETTING_LABELS = { product: "Product Version", plugin: "Plugin", changerequest: "Change Request" };
     const commandSettingSavedCache = {};   // type -> { t, v } ; v = { accountname, reponame } or null when the GET failed
     const commandSettingPending = {};      // type -> true while a GET is running
     const COMMAND_SETTING_RETRY_MS = 30000;
@@ -12598,7 +12601,8 @@ if (typeof document !== "undefined") {
     }
 
     // ---------------------------------------------------------------------------------------------------------
-    // Install Product / Plugin / ChangeRequest:  install <product|plugin|changerequest> <directory> [version]
+    // Install ProductVersion / Plugin / ChangeRequest:  install <productversion|plugin|changerequest> <directory> [version]
+    // The typed word is ProductVersion; the managerType / type sent to the APIs and the queue stays "product".
     // Account / repo come from the CommandSettings API (set with "configure <type> <account> <repo>"), the
     // directories and versions from the AxiGit listdirectories API, and Go pushes the request to the ARM queue.
     // axi_git_directories / axi_git_versions in the prompt rows are markers resolved here, never sent to the ADS.
@@ -12610,7 +12614,12 @@ if (typeof document !== "undefined") {
     const AXI_INSTALL_QUEUE_NAME = "axiinstallpackagesqueue";
     const AXI_INSTALL_QUEUE_OK = "QUEUEDATAINSERTEDSUCESSFULLY";
     const INSTALL_DEFAULT_VERSION = "Latest";   // sent when the command has no version
-    const INSTALL_TYPES = { product: "product", plugin: "plugin", changerequest: "changerequest" };
+    // old code
+    // const INSTALL_TYPES = { product: "product", plugin: "plugin", changerequest: "changerequest" };
+    // new code: "productversion" is the typed word; "product" is kept so saved favourites / history and the
+    // modal's re-check (which rebuilds the words from ctx.type) still resolve. Both map to managerType "product".
+    const INSTALL_TYPES = { productversion: "product", product: "product", plugin: "plugin", changerequest: "changerequest" };
+    const INSTALL_TYPES_TEXT = "productversion, plugin or changerequest";
     const INSTALL_CACHE_TTL_MS = 30 * 60 * 1000;
     const INSTALL_REQUEST_TIMEOUT_MS = 30000;
     const INSTALL_RETRY_MS = 30000;
@@ -12625,7 +12634,7 @@ if (typeof document !== "undefined") {
 
     /**
      * Splits an install command into words. A double-quoted text is one word and the quotes are removed,
-     * so  install product "My Dir" Latest  gives [install, product, My Dir, Latest]. Only the install command uses it.
+     * so  install productversion "My Dir" Latest  gives [install, productversion, My Dir, Latest]. Only the install command uses it.
      * @param {string} str - Raw command text.
      * @returns {string[]} Words without quotes.
      */
@@ -12656,7 +12665,7 @@ if (typeof document !== "undefined") {
 
     /**
      * Maps the typed type word to the managerType the AxiGit API expects.
-     * @param {string} typeWord - Typed word (Product, ChangeRequest, "change request" ...).
+     * @param {string} typeWord - Typed word (ProductVersion, "product version", ChangeRequest, "change request" ...).
      * @returns {string} product / plugin / changerequest, or "" when it is not a type.
      */
     function getInstallManagerType(typeWord) {
@@ -12674,7 +12683,10 @@ if (typeof document !== "undefined") {
     function validateInstallArgs(words, directories) {
         const fail = (message) => ({ ok: false, message, directory: "", version: "" });
         const list = Array.isArray(directories) ? directories : [];
-        if (!words || words.length < 2 || !getInstallManagerType(words[1])) return fail("Install expects product, plugin or changerequest");
+        // old code
+        // if (!words || words.length < 2 || !getInstallManagerType(words[1])) return fail("Install expects product, plugin or changerequest");
+        // new code
+        if (!words || words.length < 2 || !getInstallManagerType(words[1])) return fail(`Install expects ${INSTALL_TYPES_TEXT}`);
         const dirWord = words[2] === undefined || words[2] === null ? "" : String(words[2]).trim();
         if (!dirWord) return fail("Directory is required");
         const dir = list.find(d => String(d.name).toLowerCase() === dirWord.toLowerCase());
@@ -13180,7 +13192,10 @@ if (typeof document !== "undefined") {
             showToast(`User '${window.mainUserName}' has no access for command: ${text}`);
             return;
         }
-        if (!type) { showToast("Install expects product, plugin or changerequest"); reopenPaletteForCommandSetting(); return; }
+        // old code
+        // if (!type) { showToast("Install expects product, plugin or changerequest"); reopenPaletteForCommandSetting(); return; }
+        // new code
+        if (!type) { showToast(`Install expects ${INSTALL_TYPES_TEXT}`); reopenPaletteForCommandSetting(); return; }
 
         const appname = getProjectName() || "";
         const username = getCommandSettingUser();
@@ -13612,7 +13627,7 @@ if (typeof document !== "undefined") {
         // addRow("Request", String(m.requestId).slice(0, 8), "axi-install-code");
         // new code: no Commit and Request rows (both are still sent in the payload)
         // addRow("Directory", ctx.directory);
-        // the row is named after the manager type (Product / Plugin / Change Request) instead of "Directory"
+        // the row is named after the manager type (Product Version / Plugin / Change Request) instead of "Directory"
         addRow(label, ctx.directory);
         addRow("Version", ctx.version || INSTALL_DEFAULT_VERSION, "axi-install-num");
         addRow("Repository", `${ctx.account}/${ctx.repo}`);

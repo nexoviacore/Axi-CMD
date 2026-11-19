@@ -1,4 +1,4 @@
-// Install Product / Plugin / ChangeRequest: install <type> <directory> [version].
+// Install ProductVersion / Plugin / ChangeRequest: install <type> <directory> [version].
 // Like the other palette tests, this re-implements the pure helpers from axicmdmain.js with mock data,
 // so keep the copies below identical to the helpers in the script.
 const test = require('node:test');
@@ -8,7 +8,8 @@ const assert = require('node:assert');
 const AXI_INSTALL_QUEUE_NAME = "axiinstallpackagesqueue";
 const INSTALL_DEFAULT_VERSION = "Latest";
 const AXI_INSTALL_QUEUE_OK = "QUEUEDATAINSERTEDSUCESSFULLY";
-const INSTALL_TYPES = { product: "product", plugin: "plugin", changerequest: "changerequest" };
+const INSTALL_TYPES = { productversion: "product", product: "product", plugin: "plugin", changerequest: "changerequest" };
+const INSTALL_TYPES_TEXT = "productversion, plugin or changerequest";
 const INSTALL_CACHE_TTL_MS = 30 * 60 * 1000;
 
 function tokenizeInstallCommand(str) {
@@ -38,7 +39,7 @@ function getInstallManagerType(typeWord) {
 function validateInstallArgs(words, directories) {
     const fail = (message) => ({ ok: false, message, directory: "", version: "" });
     const list = Array.isArray(directories) ? directories : [];
-    if (!words || words.length < 2 || !getInstallManagerType(words[1])) return fail("Install expects product, plugin or changerequest");
+    if (!words || words.length < 2 || !getInstallManagerType(words[1])) return fail(`Install expects ${INSTALL_TYPES_TEXT}`);
     const dirWord = words[2] === undefined || words[2] === null ? "" : String(words[2]).trim();
     if (!dirWord) return fail("Directory is required");
     const dir = list.find(d => String(d.name).toLowerCase() === dirWord.toLowerCase());
@@ -161,6 +162,8 @@ test('getInstallWords: a trailing space opens a new empty word, except inside an
 });
 
 test('managerType mapping is lower case and tolerant of quotes and case', () => {
+    assert.strictEqual(getInstallManagerType('ProductVersion'), 'product');
+    assert.strictEqual(getInstallManagerType('"Product Version"'), 'product');
     assert.strictEqual(getInstallManagerType('Product'), 'product');
     assert.strictEqual(getInstallManagerType('PLUGIN'), 'plugin');
     assert.strictEqual(getInstallManagerType('ChangeRequest'), 'changerequest');

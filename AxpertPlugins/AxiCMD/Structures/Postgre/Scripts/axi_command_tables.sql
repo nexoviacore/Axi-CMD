@@ -261,7 +261,7 @@ UPDATE axi_command_prompts s SET promptsource = (SELECT string_agg(src.v, ',' OR
 UPDATE axi_command_prompts SET promptvalues = (SELECT string_agg(t.v, ',' ORDER BY t.i) FROM unnest(string_to_array(RTRIM(promptvalues, ', '), ',')) WITH ORDINALITY AS t(v, i) WHERE lower(trim(t.v)) NOT IN ('product', 'plugin', 'changerequest')) WHERE cmdtoken = 4 AND wordpos = 2 AND lower(promptvalues) LIKE '%changerequest%'
 >>
 
--- Install: `install <product|plugin|changerequest> <directory> [version]` (build access only). Rows are added only when absent, so a re-run changes nothing.
+-- Install: `install <productversion|plugin|changerequest> <directory> [version]` (build access only). Rows are added only when absent, so a re-run changes nothing.
 -- axi_git_directories and axi_git_versions are NOT axdirectsql rows: the palette resolves them from the AxiGit listdirectories API.
 <<
 INSERT INTO axi_commands
@@ -269,10 +269,21 @@ INSERT INTO axi_commands
 SELECT 10, 'Install', '', 'T' WHERE NOT EXISTS (SELECT 1 FROM axi_commands WHERE cmdtoken = 10)
 >>
 
+-- old code: block markers left out so the installer cannot pick it up
+-- INSERT INTO axi_command_prompts
+-- (id, cmdtoken, wordpos, prompt, promptsource, promptparams, promptvalues, props, extraparams, requesturl)
+-- SELECT '6474ef01-1554-4dd7-be1b-c41c8cdee0f4'::uuid, 10, 2, 'object type', NULL, NULL, 'Product,Plugin,ChangeRequest', NULL, NULL, NULL WHERE NOT EXISTS (SELECT 1 FROM axi_command_prompts WHERE cmdtoken = 10 AND wordpos = 2)
+
+-- new code: the product option is named ProductVersion (the type sent to the APIs and the queue stays "product")
 <<
 INSERT INTO axi_command_prompts
 (id, cmdtoken, wordpos, prompt, promptsource, promptparams, promptvalues, props, extraparams, requesturl)
-SELECT '6474ef01-1554-4dd7-be1b-c41c8cdee0f4'::uuid, 10, 2, 'object type', NULL, NULL, 'Product,Plugin,ChangeRequest', NULL, NULL, NULL WHERE NOT EXISTS (SELECT 1 FROM axi_command_prompts WHERE cmdtoken = 10 AND wordpos = 2)
+SELECT '6474ef01-1554-4dd7-be1b-c41c8cdee0f4'::uuid, 10, 2, 'object type', NULL, NULL, 'ProductVersion,Plugin,ChangeRequest', NULL, NULL, NULL WHERE NOT EXISTS (SELECT 1 FROM axi_command_prompts WHERE cmdtoken = 10 AND wordpos = 2)
+>>
+
+-- Install: renames the Product option to ProductVersion on databases that already have the install row. A re-run changes nothing.
+<<
+UPDATE axi_command_prompts SET promptvalues = regexp_replace(promptvalues, '(^|,) *Product *(,|$)', '\1ProductVersion\2', 'i') WHERE cmdtoken = 10 AND wordpos = 2 AND ',' || lower(replace(promptvalues, ' ', '')) || ',' LIKE '%,product,%'
 >>
 
 <<
