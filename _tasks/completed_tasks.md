@@ -199,7 +199,6 @@ Reported by Abinash - Completed
 
 2. Issue: Some card icons on the homepage are not displaying correctly -> Completed
 
-Pending
 
 2. Reuse the active ARM session and token in AxInstallerRest instead of signing in through AxAuth using the active session user. 
 During Export Install product , we need to send the ARMSessionId from the client page through queue
@@ -263,7 +262,9 @@ Note:Same issue is there for
 
 1. When datasource is opened in normal mode and then tried to open in pop up mode. Observed blank screen is displayed in pop up mode.
 
-2. 
+2. Datasources are not opening, it is showing as blank screen.
+
+3. Remove With option from Edit command
 
 
 
