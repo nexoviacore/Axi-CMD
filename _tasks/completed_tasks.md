@@ -260,11 +260,42 @@ Note:Same issue is there for
 
 19/11/2026 - issue 
 
-1. When datasource is opened in normal mode and then tried to open in pop up mode. Observed blank screen is displayed in pop up mode.
+1. When datasource is opened in normal mode and then tried to open in pop up mode. Observed blank screen is displayed in pop up mode. -> Need Discussion
 
-2. Datasources are not opening, it is showing as blank screen.
+2. Datasources are not opening, it is showing as blank screen. -> Need Discussion. 
 
 3. Remove With option from Edit command
+
+4. Use the configured PAT for authentication during installation.
+    "ARMSessionId": "ARM-xxxxxxx",
+    "gitaccountname": "",
+    "gitrepository": "AxiProductVersions",
+    "gittoken": "",
+    "type": "product",
+Handle these keys in  Install Axi CMD Line when pushing to Queue,
+Sample Install Payload in Queue Message: 
+{
+ "action": "install",
+ "requestId": "06e2742d-2b78-40d9-bf90-72bcac7c4288",
+ "ARMSessionId": "ARM-xxxxxxx",
+ "type": "product",
+ "gitaccountname": "Agileaxpert",
+ "gitrepository": "AxiProductVersions",
+ "gittoken" : "axcsdfsfsgsgr",
+ "managerType": "product",
+ "packageName": "Axi Masters 01",
+ "packageVersion": "Latest",
+ "commitSha": "e64bea48664bd0ed4654c8bf686befcd0bcbdb64",
+ "appName": "ORGNEWXXM",
+ "requestedBy": "admin",
+ "requestedOn": "2026-11-16T13:05:16.715Z"
+}
+
+6. Change the terminology from Product to ProductVersion in the Install command.
+
+7. Commands that starts as "Error" is not working in AxiCMD. 
+
+8. Remove the option to configure Git Account, Repository, and PAT separately through the Axi Command Line.
 
 
 
