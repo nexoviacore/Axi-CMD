@@ -587,6 +587,9 @@ if (typeof document !== "undefined") {
     let commands = null;
     let items = [];
     let activeIndex = -1;
+    // new code: what the last render showed, so a re-render of the same input keeps the row picked with the arrow keys
+    let lastRenderInputValue = null;
+    let lastRenderValidItems = [];
     let resolvedParams = {};
     let resolvedParamType = {};
     let lastTypedTokens = [];
@@ -7155,6 +7158,15 @@ if (typeof document !== "undefined") {
         // page ...) finish while the user is scrolling and trigger a re-render, which threw the user back to
         // the top. Remember the position so a re-render of the SAME list can put it back (see below).
         const scrollBeforeRender = { top: list.scrollTop, left: list.scrollLeft };
+        // new code: the row the user is on before this render. A background search or page finishing re-renders the
+        // list while the input is unchanged; without this the highlight went back to the first row (and the list
+        // scrolled up) right after the user had moved down with the arrow keys.
+        const suggestionKeyOf = (item) => typeof item === "string"
+            ? "s:" + item
+            : "o:" + (item?.name ?? "") + "|" + (item?.displaydata ?? "") + "|" + (item?.stype ?? "");
+        const keptActiveKey = (input.value === lastRenderInputValue && activeIndex >= 0 && lastRenderValidItems[activeIndex])
+            ? suggestionKeyOf(lastRenderValidItems[activeIndex])
+            : null;
         list.innerHTML = "";
         // No footer on screen until buildLoadMoreFooter draws one again in this render
         footerPagedContext = null;
@@ -7240,7 +7252,15 @@ if (typeof document !== "undefined") {
                 activeIndex = 0;
             }
 
+            // new code: same input as the last render (only background data changed): stay on the row the user moved to
+            if (keptActiveKey !== null) {
+                const keptIndex = validItems.findIndex(item => suggestionKeyOf(item) === keptActiveKey);
+                if (keptIndex !== -1) activeIndex = keptIndex;
+            }
+
         }
+        lastRenderInputValue = input.value;
+        lastRenderValidItems = validItems;
 
         const metadataParams = getStructParam();
         const structKey = "axi_structmetalist_" + metadataParams.toLowerCase();
