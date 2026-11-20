@@ -37,8 +37,11 @@ for (const db of ['Postgre', 'Oracle']) {
     test(`${db}: every shipped row sets is_system T and inserts only when missing`, () => {
         // old code
         // assert.strictEqual(inserts.length, 51);
-        // new code: +3 rows for configure product / plugin / changerequest
-        assert.strictEqual(inserts.length, 54);
+        // old code
+        // // new code: +3 rows for configure product / plugin / changerequest
+        // assert.strictEqual(inserts.length, 54);
+        // new code: configure product / plugin / changerequest rows were removed (commented out, deleted by the script)
+        assert.strictEqual(inserts.length, 51);
         for (const b of inserts) {
             assert.match(b, /is_system/i);
             assert.match(b, /'T'\)\s*(ON CONFLICT \(config_id\) DO UPDATE SET is_system = 'T')?\s*$/i);

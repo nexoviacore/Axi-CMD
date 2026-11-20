@@ -199,21 +199,45 @@ Reported by Abinash - Completed
 
 2. Issue: Some card icons on the homepage are not displaying correctly -> Completed
 
-Pending
 
 2. Reuse the active ARM session and token in AxInstallerRest instead of signing in through AxAuth using the active session user. 
 During Export Install product , we need to send the ARMSessionId from the client page through queue
 
 3. Include the Git Account, Repository, and PAT configurations for Products, Change Requests, and Plugins as part of the Golden Dump.
-axi_command_settings table should be updated properly along with necessry fields and data
+axi_command_settings table should be updated properly along with necessry fields and data -> completed 
 
-4. Remove the option to configure Git Account, Repository, and PAT separately through the Axi Command Line.
+4. Remove the option to configure Git Account, Repository, and PAT separately through the Axi Command Line. -> Completed
 
-5. Change the terminology from Product to ProductVersion in the Install command.
+5. Use the configured PAT for authentication during installation.
+    "ARMSessionId": "ARM-xxxxxxx",
+    "gitaccountname": "",
+    "gitrepository": "AxiProductVersions",
+    "gittoken": "",
+    "type": "product",
+Handle these keys in  Install Axi CMD Line when pushing to Queue,
+Sample Install Payload in Queue Message: 
+{
+ "action": "install",
+ "requestId": "06e2742d-2b78-40d9-bf90-72bcac7c4288",
+ "ARMSessionId": "ARM-xxxxxxx",
+ "type": "product",
+ "gitaccountname": "Agileaxpert",
+ "gitrepository": "AxiProductVersions",
+ "gittoken" : "axcsdfsfsgsgr",
+ "managerType": "product",
+ "packageName": "Axi Masters 01",
+ "packageVersion": "Latest",
+ "commitSha": "e64bea48664bd0ed4654c8bf686befcd0bcbdb64",
+ "appName": "ORGNEWXXM",
+ "requestedBy": "admin",
+ "requestedOn": "2026-11-16T13:05:16.715Z"
+}
+
+5. Change the terminology from Product to ProductVersion in the Install command. -> completed
 
 
 
-6. 	Add the Git token to the Install request and ensure that both the Consumer and AxInstaller handle it accordingly. Also, when pushing the message to the queue, include the Git token along with the Git repository and Git account details in the queue message.
+6. 	Add the Git token to the Install request and ensure that both the Consumer and AxInstaller handle it accordingly. Also, when pushing the message to the queue, include the Git token along with the Git repository and Git account details in the queue message. -> Completed
 
 
 ## Completed: 
@@ -233,6 +257,45 @@ Note:Same issue is there for
 --Actor and Actor Listing screens
 
 10. Issue 3:Open  Configure "Publish Config Studio" agilespaceqanew  in pop up mode,click on list view button.Observed that it is not navigating to list view page.
+
+19/11/2026 - issue 
+
+1. When datasource is opened in normal mode and then tried to open in pop up mode. Observed blank screen is displayed in pop up mode. -> Need Discussion
+
+2. Datasources are not opening, it is showing as blank screen. -> Need Discussion. 
+
+3. Remove With option from Edit command
+
+4. Use the configured PAT for authentication during installation.
+    "ARMSessionId": "ARM-xxxxxxx",
+    "gitaccountname": "",
+    "gitrepository": "AxiProductVersions",
+    "gittoken": "",
+    "type": "product",
+Handle these keys in  Install Axi CMD Line when pushing to Queue,
+Sample Install Payload in Queue Message: 
+{
+ "action": "install",
+ "requestId": "06e2742d-2b78-40d9-bf90-72bcac7c4288",
+ "ARMSessionId": "ARM-xxxxxxx",
+ "type": "product",
+ "gitaccountname": "Agileaxpert",
+ "gitrepository": "AxiProductVersions",
+ "gittoken" : "axcsdfsfsgsgr",
+ "managerType": "product",
+ "packageName": "Axi Masters 01",
+ "packageVersion": "Latest",
+ "commitSha": "e64bea48664bd0ed4654c8bf686befcd0bcbdb64",
+ "appName": "ORGNEWXXM",
+ "requestedBy": "admin",
+ "requestedOn": "2026-11-16T13:05:16.715Z"
+}
+
+6. Change the terminology from Product to ProductVersion in the Install command.
+
+7. Commands that starts as "Error" is not working in AxiCMD. 
+
+8. Remove the option to configure Git Account, Repository, and PAT separately through the Axi Command Line.
 
 
 

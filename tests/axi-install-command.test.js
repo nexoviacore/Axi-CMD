@@ -1,4 +1,4 @@
-// Install Product / Plugin / ChangeRequest: install <type> <directory> [version].
+// Install ProductVersion / Plugin / ChangeRequest: install <type> <directory> [version].
 // Like the other palette tests, this re-implements the pure helpers from axicmdmain.js with mock data,
 // so keep the copies below identical to the helpers in the script.
 const test = require('node:test');
@@ -8,7 +8,8 @@ const assert = require('node:assert');
 const AXI_INSTALL_QUEUE_NAME = "axiinstallpackagesqueue";
 const INSTALL_DEFAULT_VERSION = "Latest";
 const AXI_INSTALL_QUEUE_OK = "QUEUEDATAINSERTEDSUCESSFULLY";
-const INSTALL_TYPES = { product: "product", plugin: "plugin", changerequest: "changerequest" };
+const INSTALL_TYPES = { productversion: "product", product: "product", plugin: "plugin", changerequest: "changerequest" };
+const INSTALL_TYPES_TEXT = "productversion, plugin or changerequest";
 const INSTALL_CACHE_TTL_MS = 30 * 60 * 1000;
 
 function tokenizeInstallCommand(str) {
@@ -38,7 +39,7 @@ function getInstallManagerType(typeWord) {
 function validateInstallArgs(words, directories) {
     const fail = (message) => ({ ok: false, message, directory: "", version: "" });
     const list = Array.isArray(directories) ? directories : [];
-    if (!words || words.length < 2 || !getInstallManagerType(words[1])) return fail("Install expects product, plugin or changerequest");
+    if (!words || words.length < 2 || !getInstallManagerType(words[1])) return fail(`Install expects ${INSTALL_TYPES_TEXT}`);
     const dirWord = words[2] === undefined || words[2] === null ? "" : String(words[2]).trim();
     if (!dirWord) return fail("Directory is required");
     const dir = list.find(d => String(d.name).toLowerCase() === dirWord.toLowerCase());
@@ -88,9 +89,31 @@ function generateInstallRequestId() {
     });
 }
 
+function getCommandSettingLabel(type) {
+    return ({ product: "Product Version", plugin: "Plugin", changerequest: "Change Request" })[(type || "").toLowerCase()] || type;
+}
+
 function getInstallDirsErrorText(type, message, status) {
     const text = String(message || "Could not load the directories").trim();
-    return status === 404 ? `${text} Run configure ${type} <account> <repo> to change it.` : text;
+    if (status === 401) return `GitHub rejected the Git token (PAT) for ${getCommandSettingLabel(type)}. Ask your administrator to update it.`;
+    return status === 404 ? `${text} Ask your administrator to check the ${getCommandSettingLabel(type)} repository.` : text;
+}
+
+function getInstallTokenNotSetText(type) {
+    return `Git token (PAT) not set for ${getCommandSettingLabel(type)}. Ask your administrator to set it.`;
+}
+
+function readCommandSettingProps(props) {
+    const p = props || {};
+    const pick = (...keys) => {
+        for (const k of keys) { if (p[k] !== undefined && p[k] !== null) return String(p[k]); }
+        return "";
+    };
+    return {
+        accountname: pick("accountname", "accountName", "AccountName", "Accountname"),
+        reponame: pick("reponame", "repoName", "RepoName", "Reponame"),
+        gittoken: pick("gittoken", "gitToken", "GitToken", "Gittoken").trim()
+    };
 }
 
 // verifyCommandSettingRepo's decision, with the listdirectories call replaced by a status
@@ -101,13 +124,17 @@ function classifyRepoCheck(status, message) {
 }
 
 function buildInstallPayload(p) {
+    // The queue gets "productversion" for the stored type "product" (ProductVersion); other types are unchanged.
+    const queueType = String(p.type || "").toLowerCase() === "product" ? "productversion" : p.type;
     return {
         action: "install",
         requestId: p.requestId || "",
-        type: p.type,
-        account: p.account,
-        repo: p.repo,
-        managerType: p.type,
+        ARMSessionId: p.armSessionId || "",
+        type: queueType,
+        gitaccountname: p.account,
+        gitrepository: p.repo,
+        gittoken: p.token || "",
+        managerType: queueType,
         packageName: p.directory,
         packageVersion: p.version || "",
         commitSha: p.commitSha || "",
@@ -161,6 +188,8 @@ test('getInstallWords: a trailing space opens a new empty word, except inside an
 });
 
 test('managerType mapping is lower case and tolerant of quotes and case', () => {
+    assert.strictEqual(getInstallManagerType('ProductVersion'), 'product');
+    assert.strictEqual(getInstallManagerType('"Product Version"'), 'product');
     assert.strictEqual(getInstallManagerType('Product'), 'product');
     assert.strictEqual(getInstallManagerType('PLUGIN'), 'plugin');
     assert.strictEqual(getInstallManagerType('ChangeRequest'), 'changerequest');
@@ -231,16 +260,29 @@ test('request id: uuid shaped, unique, and a fallback when crypto.randomUUID is 
 });
 
 test('queue payload and body', () => {
-    const payload = buildInstallPayload({ requestId: 'req-1', type: 'plugin', account: 'acc', repo: 'rep', directory: 'My Dir', version: undefined, commitSha: 'abcdef1234', appname: 'app', username: 'admin', requestedOn: '2026-01-02T03:04:05.000Z' });
+    const payload = buildInstallPayload({ requestId: 'req-1', armSessionId: 'ARM-1', token: 'tok', type: 'plugin', account: 'acc', repo: 'rep', directory: 'My Dir', version: undefined, commitSha: 'abcdef1234', appname: 'app', username: 'admin', requestedOn: '2026-01-02T03:04:05.000Z' });
     assert.deepStrictEqual(payload, {
-        action: 'install', requestId: 'req-1', type: 'plugin', account: 'acc', repo: 'rep', managerType: 'plugin', packageName: 'My Dir', packageVersion: '',
+        action: 'install', requestId: 'req-1', ARMSessionId: 'ARM-1', type: 'plugin', gitaccountname: 'acc', gitrepository: 'rep', gittoken: 'tok',
+        managerType: 'plugin', packageName: 'My Dir', packageVersion: '',
         commitSha: 'abcdef1234', appName: 'app', requestedBy: 'admin', requestedOn: '2026-01-02T03:04:05.000Z'
     });
+    // the old account / repo keys are gone
+    assert.strictEqual('account' in payload, false);
+    assert.strictEqual('repo' in payload, false);
     const body = buildInstallQueueBody(payload);
     assert.strictEqual(body.queuename, 'axiinstallpackagesqueue');
     assert.strictEqual(body.trace, false);
     assert.strictEqual(body.queuejson, payload);
     assert.deepStrictEqual(JSON.parse(body.queuedata), payload);
+});
+
+test('queue payload sends productversion as type and managerType for ProductVersion', () => {
+    const p = buildInstallPayload({ type: 'product', account: 'a', repo: 'r', directory: 'd', version: 'Latest', requestedOn: '2026-01-02T03:04:05.000Z' });
+    assert.strictEqual(p.type, 'productversion');
+    assert.strictEqual(p.managerType, 'productversion');
+    // plugin and changerequest are sent as they are
+    assert.strictEqual(buildInstallPayload({ type: 'plugin' }).managerType, 'plugin');
+    assert.strictEqual(buildInstallPayload({ type: 'changerequest' }).type, 'changerequest');
 });
 
 test('retry payload keeps the same requestId and requestedOn', () => {
@@ -279,9 +321,18 @@ test('queue answer: plain text, JSON-wrapped, and failures', () => {
 
 test('install error text adds the configure hint only for a 404', () => {
     const notFound = "Repository 'a/r' or its main branch was not found, or the configured GitHub token cannot access it.";
-    assert.strictEqual(getInstallDirsErrorText('plugin', notFound, 404), notFound + ' Run configure plugin <account> <repo> to change it.');
+    assert.strictEqual(getInstallDirsErrorText('plugin', notFound, 404), notFound + ' Ask your administrator to check the Plugin repository.');
     assert.strictEqual(getInstallDirsErrorText('product', 'GitHub could not be reached.', 502), 'GitHub could not be reached.');
     assert.strictEqual(getInstallDirsErrorText('product', '', 0), 'Could not load the directories');
+    assert.strictEqual(getInstallDirsErrorText('product', 'GitHub rejected the PAT.', 401), 'GitHub rejected the Git token (PAT) for Product Version. Ask your administrator to update it.');
+});
+
+test('gittoken is read from the CommandSettings properties and a blank one is reported', () => {
+    assert.strictEqual(readCommandSettingProps({ accountname: 'a', reponame: 'r', gittoken: '  tok  ' }).gittoken, 'tok');
+    assert.strictEqual(readCommandSettingProps({ AccountName: 'a', RepoName: 'r', GitToken: 'tok' }).gittoken, 'tok');
+    assert.strictEqual(readCommandSettingProps({ accountname: 'a', reponame: 'r' }).gittoken, '');
+    assert.strictEqual(readCommandSettingProps({ accountname: 'a', reponame: 'r', gittoken: null }).gittoken, '');
+    assert.strictEqual(getInstallTokenNotSetText('changerequest'), 'Git token (PAT) not set for Change Request. Ask your administrator to set it.');
 });
 
 test('configure repository check: 404 and 400 block, outages only warn', () => {
