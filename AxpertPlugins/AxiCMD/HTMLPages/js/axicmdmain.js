@@ -12958,15 +12958,35 @@ if (typeof document !== "undefined") {
         // };
         // new code: the consumer reuses the caller's ARM session (ARMSessionId) and clones with the configured PAT,
         // so account / repo are sent as gitaccountname / gitrepository together with gittoken
+        // old code: type / managerType went to the queue as the stored type ("product" for ProductVersion)
+        // return {
+        //     action: "install",
+        //     requestId: p.requestId || "",
+        //     ARMSessionId: p.armSessionId || "",
+        //     type: p.type,
+        //     gitaccountname: p.account,
+        //     gitrepository: p.repo,
+        //     gittoken: p.token || "",
+        //     managerType: p.type,
+        //     packageName: p.directory,
+        //     packageVersion: p.version || "",
+        //     commitSha: p.commitSha || "",
+        //     appName: p.appname,
+        //     requestedBy: p.username,
+        //     requestedOn: p.requestedOn || (p.now instanceof Date ? p.now : new Date()).toISOString()
+        // };
+        // new code: the queue gets the ProductVersion name, "productversion", in type and managerType. Only the queue
+        // payload is renamed: the settings lookup and AxiGit listdirectories still use the stored type "product".
+        const queueType = String(p.type || "").toLowerCase() === "product" ? "productversion" : p.type;
         return {
             action: "install",
             requestId: p.requestId || "",
             ARMSessionId: p.armSessionId || "",
-            type: p.type,
+            type: queueType,
             gitaccountname: p.account,
             gitrepository: p.repo,
             gittoken: p.token || "",
-            managerType: p.type,
+            managerType: queueType,
             packageName: p.directory,
             packageVersion: p.version || "",
             commitSha: p.commitSha || "",

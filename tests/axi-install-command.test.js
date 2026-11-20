@@ -124,15 +124,17 @@ function classifyRepoCheck(status, message) {
 }
 
 function buildInstallPayload(p) {
+    // The queue gets "productversion" for the stored type "product" (ProductVersion); other types are unchanged.
+    const queueType = String(p.type || "").toLowerCase() === "product" ? "productversion" : p.type;
     return {
         action: "install",
         requestId: p.requestId || "",
         ARMSessionId: p.armSessionId || "",
-        type: p.type,
+        type: queueType,
         gitaccountname: p.account,
         gitrepository: p.repo,
         gittoken: p.token || "",
-        managerType: p.type,
+        managerType: queueType,
         packageName: p.directory,
         packageVersion: p.version || "",
         commitSha: p.commitSha || "",
@@ -272,6 +274,15 @@ test('queue payload and body', () => {
     assert.strictEqual(body.trace, false);
     assert.strictEqual(body.queuejson, payload);
     assert.deepStrictEqual(JSON.parse(body.queuedata), payload);
+});
+
+test('queue payload sends productversion as type and managerType for ProductVersion', () => {
+    const p = buildInstallPayload({ type: 'product', account: 'a', repo: 'r', directory: 'd', version: 'Latest', requestedOn: '2026-01-02T03:04:05.000Z' });
+    assert.strictEqual(p.type, 'productversion');
+    assert.strictEqual(p.managerType, 'productversion');
+    // plugin and changerequest are sent as they are
+    assert.strictEqual(buildInstallPayload({ type: 'plugin' }).managerType, 'plugin');
+    assert.strictEqual(buildInstallPayload({ type: 'changerequest' }).type, 'changerequest');
 });
 
 test('retry payload keeps the same requestId and requestedOn', () => {
