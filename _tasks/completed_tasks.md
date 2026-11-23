@@ -302,7 +302,7 @@ Sample Install Payload in Queue Message:
 
 
 1. The Git account and Git Repository should be configurable through tstruct. 
-2. Edit commmand. search with fields Button
+2. Edit commmand Enhancement. search with fields Button
 
 
 
