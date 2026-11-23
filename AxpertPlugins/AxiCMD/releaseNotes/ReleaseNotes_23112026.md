@@ -12,7 +12,7 @@ Data sources showed a blank screen.
 
 #### Instructions to QA
 
-- Fixes 1 and 2 need the file `AxpertHtmlAuthModule.cs`, which will be released by Malakonda.
+- Fixes 1 and 2 need the file `AxpertHtmlAuthModule.cs`, which will be released by Malakonda Sir in Product Patch Release.
 
 ### 3. Commands that start with "Error" did not work in AxiCMD
 
