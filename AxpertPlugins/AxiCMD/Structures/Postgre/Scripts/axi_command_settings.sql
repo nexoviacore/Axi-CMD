@@ -21,14 +21,14 @@ CREATE TABLE IF NOT EXISTS axi_command_settings (
 INSERT INTO axi_command_settings (propertycategory, propertytype, propertyname, propertyvalue, username)
 SELECT v.propertycategory, v.propertytype, v.propertyname, v.propertyvalue, 'admin'
 FROM (VALUES
-    ('axicmd', 'product', 'accountname', 'salmanagilelabs'),
-    ('axicmd', 'product', 'reponame', 'AxiProduct'),
+    ('axicmd', 'product', 'accountname', 'Agileaxpert'),
+    ('axicmd', 'product', 'reponame', 'AxiProductVersions'),
     ('axicmd', 'product', 'gittoken', ''),
-    ('axicmd', 'plugin', 'accountname', 'salmanagilelabs'),
-    ('axicmd', 'plugin', 'reponame', 'AxiPlugin'),
+    ('axicmd', 'plugin', 'accountname', 'Agileaxpert'),
+    ('axicmd', 'plugin', 'reponame', 'AxpertPlugins'),
     ('axicmd', 'plugin', 'gittoken', ''),
-    ('axicmd', 'changerequest', 'accountname', 'salmanagilelabs'),
-    ('axicmd', 'changerequest', 'reponame', 'AxiChangeRequest'),
+    ('axicmd', 'changerequest', 'accountname', 'Agileaxpert'),
+    ('axicmd', 'changerequest', 'reponame', 'AxpertChangeRequest'),
     ('axicmd', 'changerequest', 'gittoken', '')
 ) AS v(propertycategory, propertytype, propertyname, propertyvalue)
 WHERE NOT EXISTS (SELECT 1 FROM axi_command_settings s WHERE s.propertycategory = v.propertycategory AND s.propertytype = v.propertytype AND s.propertyname = v.propertyname)
