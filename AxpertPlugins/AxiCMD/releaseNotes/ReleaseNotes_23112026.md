@@ -69,6 +69,17 @@ Sample install payload in the queue message:
 }
 ```
 
+#### Instructions to QA
+
+- The Git token (PAT) is shipped empty, so it must be set on each server before testing Install. Until it is set, Install shows "Git token (PAT) not set for <type>. Ask your administrator to set it." and no directories are listed.
+- The PAT is stored in `axi_command_settings` (`propertycategory` = `axicmd`, `propertyname` = `gittoken`), one row per type: `product` (ProductVersion), `plugin` and `changerequest`. It can no longer be set from AxiCMD. It will be configurable through a tstruct in the next release; until then, set it in the database:
+
+```sql
+UPDATE axi_command_settings SET propertyvalue = '<PAT>' WHERE propertycategory = 'axicmd' AND propertytype = 'product' AND propertyname = 'gittoken' AND username = '<username>';
+```
+
+- If GitHub rejects the PAT, Install shows "GitHub rejected the Git token (PAT) for <type>. Ask your administrator to update it."
+
 ### 7. Change the terminology from Product to ProductVersion in the Install command
 
 **Status:** Done
@@ -88,3 +99,5 @@ Git Account, Repository and PAT can no longer be configured separately through t
 - `Configure Product`
 - `Configure Plugin`
 - `Configure "Change Request"`
+
+Git Account, Repository and PAT will be configurable through a tstruct in the next release.
