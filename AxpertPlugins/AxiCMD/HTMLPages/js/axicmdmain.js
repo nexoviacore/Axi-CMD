@@ -20941,7 +20941,10 @@ if (typeof document !== "undefined") {
                         '<p>Type what you want to do, pick a suggestion, then press <kbd>Enter</kbd>.</p>' +
                         tourRow('&quot;Customer Form&quot; create', 'Open a form to add a new record') +
                         tourRow('&quot;Sales Order&quot; view &quot;SO-101&quot;', 'Open a record to read it') +
-                        tourRow('&quot;Items&quot; edit quantity 50', 'Change a field on a record') +
+                        // old code: showed the removed "edit with" syntax (edit <form> <record> <field> <value>)
+                        // tourRow('&quot;Items&quot; edit quantity 50', 'Change a field on a record') +
+                        // new code: edit opens a record so it can be changed in the form
+                        tourRow('&quot;Sales Order&quot; edit &quot;SO-101&quot;', 'Open a record to change it') +
                         tourRow('configure peg &lt;pegname&gt;', 'Open an administration setting') +
                         tourRow('sdk &quot;db console&quot;','Open a developer tool')),
                     position: 'bottom'
