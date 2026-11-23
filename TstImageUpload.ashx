@@ -67,6 +67,23 @@ public class TstImageUpload : IHttpHandler, IRequiresSessionState
                     Byte[] fileData = new Byte[fileLength];
                     filMyFile.InputStream.Read(fileData, 0, fileLength);
                     imageFileName = Path.GetFileName(filMyFile.FileName);
+                    if (string.IsNullOrWhiteSpace(imageFileName))
+                    {
+                        context.Response.Write("error:Invalid file name");
+                        return;
+                    }
+                    string extension = Path.GetExtension(imageFileName);
+                    if (string.IsNullOrWhiteSpace(extension))
+                    {
+                        context.Response.Write("error:Invalid file extension");
+                        return;
+                    }
+                    string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(imageFileName);
+                    if (fileNameWithoutExtension.Contains("."))
+                    {
+                        context.Response.Write("error:Invalid file name. Multiple extensions are not allowed");
+                        return;
+                    }
                     int fIdx = fieldName.LastIndexOf("F");
                     string tmpFldName = "";
                     if (fIdx != -1)

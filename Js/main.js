@@ -755,7 +755,7 @@ function SuccessPrintCount(result, eventArgs) {
     if (result != "") {
         SetPrintStatus(result);
         if (prInterval != "-1")
-            timer = self.setInterval("UpdatePrintDocStatus()", parseInt(prInterval, 10));
+            timer = self.setInterval(UpdatePrintDocStatus, parseInt(prInterval, 10));
     }
     DisplayPrintDocs();
 }
@@ -2437,7 +2437,9 @@ function loadConfigPage(src) {
 
 
 var cm = null;
-document.onclick = new Function("show(null)")
+document.onclick = function () {
+    show(null);
+};
 
 function getPos(el, sProp) {
     var iPos = 0
@@ -4414,11 +4416,15 @@ function getAppSessionKey() {
     var appSess = "";
     $.ajax({
         type: "POST",
-        url: "../WebService.asmx/GetSession",
+        url: "../WebService.asmx/GetSessionNew",
         cache: false,
         async: false,
         contentType: "application/json;charset=utf-8",
-        data: JSON.stringify({ key: 'appsessionkey' }),
+        data: JSON.stringify({
+            jsonData: JSON.stringify({
+                key: 'appsessionkey'
+            })
+        }),
         dataType: "json",
         success: function (data) {
             if (data.d != 'Session does not exist')
@@ -4471,10 +4477,18 @@ function updateSessionVar(key, val) {
         url: "../WebService.asmx/AddSessionPair",
         cache: false,
         async: false,
-        contentType: "application/json;charset=utf-8",
-        data: JSON.stringify({ key: key, val: val }),
+        contentType: "application/json; charset=utf-8",
+        data: JSON.stringify({
+            jsonData: JSON.stringify({
+                key: key,
+                val: val
+            })
+        }),
         dataType: "json",
-        success: function (data) { },
+        success: function (data) {
+        },
+        error: function (xhr) {
+        }
     });
 }
 
@@ -4694,30 +4708,83 @@ function openUserPage({ id, template, title = "" }) {
     title = title.replace(/\+/g, '&#43').replace(/ /g, "+");
     LoadIframe(`page.aspx?axpage_id=${id}&axpage_t_id=${template}&axpage_title=${title}`);
 }
-
+let myImportModal = null;
+let switchingToAdvanced = false;
+function openAdvancedDataIngestion() {
+    const modal = new BSModal(
+        "AdvancedDataIngestion",
+        "Advanced Data Ingestion",
+        "<iframe src='../aspx/htmlPages.aspx?load=1794547992681&hdnbElapsTime=0' class='vw-100 vh-100' scrolling='no'></iframe>",
+        () => {
+            document.getElementById("closeAdvancedIngestion")?.focus();
+        },
+        () => { }
+    );
+    modal.changeSize("fullscreen");
+    modal.hideFooter();
+    modal.modalHeader.style.display = "none";
+    modal.modalBody.classList.add("p-0", "overflow-hidden", "position-relative");
+    const closeButton = document.createElement("button");
+    closeButton.id = "closeAdvancedIngestion";
+    closeButton.type = "button";
+    closeButton.className = "btn-close position-absolute top-0 end-0 m-3 bg-white rounded";
+    closeButton.style.zIndex = "10";
+    closeButton.setAttribute("aria-label", "Close");
+    closeButton.addEventListener("click", () => modal.close());
+    modal.modalBody.prepend(closeButton);
+    const modalElement = modal.modalBody.closest(".modal");
+    if (modalElement) {
+        modalElement.removeAttribute("aria-labelledby");
+        modalElement.setAttribute("aria-label", "Advanced Data Ingestion");
+    }
+}
 function DoUtilitiesEvent(type) {
     switch (type) {
         case "Responsibilities":
             splitfull();
             LoadIframe('Responsibilities.aspx')
             break;
-        case "ImportData":
-            let myImportModal = new BSModal("ImportData", "Import Data", "<iframe src='../aspx/ImportAll.aspx'  class='vw-100 vh-100' scrolling='no'></iframe>", () => {
-                //shown callback
-                $(".btn-close").focus();
-                // $("#btnClose").hide()
-            }, () => {
-                //hide callback
-            });
+        //case "ImportData":
+        //    let myImportModal = new BSModal("ImportData", "Import Data", "<iframe src='../aspx/ImportAll.aspx'  class='vw-100 vh-100' scrolling='no'></iframe>", () => {
+        //        //shown callback
+        //        $(".btn-close").focus();
+        //        // $("#btnClose").hide()
+        //    }, () => {
+        //        //hide callback
+        //    });
 
-            myImportModal.changeSize("fullscreen");
-            myImportModal.hideFooter();
-            myImportModal.modalBody.classList.add(..."p-0 overflow-hidden".split(" "));
+        //    myImportModal.changeSize("fullscreen");
+        //    myImportModal.hideFooter();
+        //    myImportModal.modalBody.classList.add(..."p-0 overflow-hidden".split(" "));
 
-            let _thismTitle = myImportModal.modalHeader.querySelector('h5.modal-title');
-            _thismTitle.classList.add('w-100', 'text-center', 'fs-2');
+        //    let _thismTitle = myImportModal.modalHeader.querySelector('h5.modal-title');
+        //    _thismTitle.classList.add('w-100', 'text-center', 'fs-2');
 
+        //    break;
+        case "ImportData": {
+            const modal = new BSModal("ImportData", "Import Data", "<iframe src='../aspx/ImportAll.aspx' class='vw-100 vh-100' scrolling='no'></iframe>",
+                () => {
+                    $(".btn-close").focus();
+                },
+                () => { }
+            );
+            myImportModal = modal;
+            const modalElement = modal.modalBody.closest(".modal");
+            if (!modalElement) {
+                throw new Error("Import Data modal element was not found.");
+            }
+            modalElement.addEventListener("hidden.bs.modal", () => {
+                if (myImportModal === modal) {
+                    myImportModal = null;
+                }
+            }, { once: true });
+            modal.changeSize("fullscreen");
+            modal.hideFooter();
+            modal.modalBody.classList.add("p-0", "overflow-hidden");
+            modal.modalHeader.querySelector("h5.modal-title")
+                .classList.add("w-100", "text-center", "fs-2");
             break;
+        }
         case "ExportData":
             //displayBootstrapModalDialog('Export Data', 'lg', '410px', true, '../aspx/ExportNew.aspx?action=export', true);
             let myModal = new BSModal("ExportData", "Export Data", "<iframe src='../aspx/ExportNew.aspx?action=export'   class='vw-100 vh-100'></iframe>", () => {
@@ -4755,6 +4822,25 @@ function DoUtilitiesEvent(type) {
             break;
         case "Complaint":
             displayBootstrapModalDialog('Complaint', 'lg', '430px', true, '../aspx/Complaint.aspx', true);
+            break;
+        case "AdvancedDataIngestion": 
+            if (switchingToAdvanced) {
+                break;
+            }
+            if (!myImportModal) {
+                openAdvancedDataIngestion();
+                break;
+            }
+            const modalElement = myImportModal.modalBody.closest(".modal");
+            if (!modalElement) {
+                throw new Error("Import Data modal element was not found.");
+            }
+            switchingToAdvanced = true;
+            modalElement.addEventListener("hidden.bs.modal", () => {
+                switchingToAdvanced = false;
+                openAdvancedDataIngestion();
+            }, { once: true });
+            myImportModal.close();
             break;
     }
 }
@@ -6189,10 +6275,12 @@ function ExecutionTraceInterval(isSignOut = false) {
                 cache: false,
                 async: true,
                 data: JSON.stringify({
-                    ExecutionLongText: ExecutionLongText,
-                    isSingout: isSignOut,
-                    keepAlivems: keepAliveMS,
-                    currPageUrl: currPageUrl
+                    jsonData: JSON.stringify({
+                        ExecutionLongText: ExecutionLongText,
+                        isSingout: isSignOut,
+                        keepAlivems: keepAliveMS,
+                        currPageUrl: currPageUrl
+                    })
                 }),
                 dataType: 'json',
                 contentType: "application/json",
@@ -6256,7 +6344,12 @@ function ExecutionTraceExceededQuota(strMsg) {
                 cache: false,
                 async: true,
                 data: JSON.stringify({
-                    ExecutionLongText: ExecutionLongText, isSingout: false
+                    jsonData: JSON.stringify({
+                        ExecutionLongText: ExecutionLongText,
+                        isSingout: false,
+                        keepAlivems: "",
+                        currPageUrl: ""
+                    })
                 }),
                 dataType: 'json',
                 contentType: "application/json",
@@ -6431,3 +6524,170 @@ function axpertDevOptAccess() {
         }
     } catch (ex) { }
 }
+
+/* Mainnew.aspx CSP-safe event wiring. Keep application behavior in main.js. */
+(function () {
+    "use strict";
+
+    function getArgs(element) {
+        var value = element.getAttribute("data-ax-args") || "";
+        if (!value) return [];
+        return value.split("|");
+    }
+
+    function findClosest(element, selector) {
+        while (element && element !== document) {
+            if (element.matches ? element.matches(selector) :
+                (element.msMatchesSelector ? element.msMatchesSelector(selector) :
+                (element.webkitMatchesSelector ? element.webkitMatchesSelector(selector) : false))) {
+                return element;
+            }
+            element = element.parentElement;
+        }
+        return null;
+    }
+
+    function invokeAction(element) {
+        var action = element.getAttribute("data-ax-click");
+        if (!action) return;
+
+        var args = getArgs(element);
+        var fn = window[action];
+        if (typeof fn !== "function") return;
+
+        try {
+            fn.apply(window, args);
+        } catch (ex) {
+            if (window.console && console.error) console.error("Mainnew action failed:", action, ex);
+        }
+    }
+
+    document.addEventListener("click", function (event) {
+        var target = findClosest(event.target, "[data-ax-click]");
+        if (!target) return;
+
+        if (target.tagName === "A" && target.getAttribute("href") === "#") {
+            event.preventDefault();
+        }
+
+        invokeAction(target);
+    });
+
+    document.addEventListener("keydown", function (event) {
+        var target = findClosest(event.target, "[data-ax-keydown]");
+        if (!target) return;
+
+        if (target.getAttribute("data-ax-keydown") === "showAboutOnEnter" &&
+            (event.key === "Enter" || event.key === " ")) {
+            event.preventDefault();
+            if (typeof window.showAbout === "function") window.showAbout();
+        }
+    });
+
+    document.addEventListener("click", function (event) {
+        var target = findClosest(event.target, "[data-ax-submit-unload]");
+        if (target && typeof window.SetUnload === "function") {
+            window.SetUnload(target.getAttribute("data-ax-submit-unload"));
+        }
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        if (typeof window.ChangeDir === "function") {
+            var body = document.getElementById("mainNewPageBody");
+            if (body) window.ChangeDir(body.getAttribute("dir") || "ltr");
+        }
+    });
+
+    window.addEventListener("pagehide", function (event) {
+        if (!event.persisted && typeof window.ClosePopUps === "function") window.ClosePopUps();
+    });
+
+    // Existing Mainnew inline initialization moved here.
+    try {
+        if (typeof window.history !== "undefined" && typeof window.history.go === "function") {
+            window.history.go(1);
+        }
+    } catch (ex) { }
+
+    // Existing custom global-theme loader moved from Mainnew.aspx to main.js.
+    try {
+        if (typeof window.localStorage !== "undefined") {
+            var href = window.top.location.href.toLowerCase();
+            var marker = href.indexOf("/aspx/");
+            var projUrl = marker >= 0 ? href.substring(0, marker) : href;
+            var themeTimeStamp = String(window.localStorage["axGlobalThemeStyle-" + projUrl] || "").replace(/[^a-zA-Z0-9_\-\/]/g, "");
+            var axThemeFldr = String(window.localStorage["axThemeFldr-" + projUrl] || "").replace(/[^a-zA-Z0-9_\-\/]/g, "");
+            if (themeTimeStamp && themeTimeStamp !== "false" && axThemeFldr) {
+                var themeLink = document.createElement("link");
+                themeLink.id = "axGlobalThemeStyle";
+                themeLink.setAttribute("data-themfld", axThemeFldr);
+                themeLink.rel = "stylesheet";
+                themeLink.href = encodeURI("../" + axThemeFldr + "/axGlobalThemeStyle.css?v=" + themeTimeStamp);
+                document.head.appendChild(themeLink);
+            }
+        }
+    } catch (ex) { }
+
+    function runSplit(vertical) {
+        if (typeof window.assocateIframe === "function") window.assocateIframe();
+        if (vertical && typeof window.splitvertical === "function") window.splitvertical();
+        if (!vertical && typeof window.splithorizantal === "function") window.splithorizantal();
+    }
+
+    window.assocateIframeSplitVertical = function () { runSplit(true); };
+    window.assocateIframeSplitHorizontal = function () { runSplit(false); };
+})();
+
+$(document).off("click").on("click", ".appBackBtn", function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    try {
+        if (typeof prevbtn_click === "function") {
+            prevbtn_click($(this));
+        }
+    }
+    catch (ex) {
+        console.error("prevbtn_click error:", ex);
+    }
+});
+document.addEventListener("click", function (e) {
+    var link = e.target.closest('a[onclick*="LoadIframe"]');
+    if (!link) {
+        return;
+    }
+    var onclickText = link.getAttribute("onclick") || "";
+    var match = onclickText.match(/LoadIframe\s*\(\s*['"]([^'"]+)['"]\s*\)/);
+    if (!match || !match[1]) {
+        return;
+    }
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    try {
+        if ($.axpertUI && $.axpertUI.search && typeof $.axpertUI.search.hideKTSearch === "function") {
+            $.axpertUI.search.hideKTSearch();
+        }
+    }
+    catch (ex) { }
+    try {
+        if (typeof window.LoadIframe !== "function") {
+            return;
+        }
+
+        window.LoadIframe(match[1]);
+    }
+    catch (ex) { }
+}, true);
+
+$(document).on("click", "#notificationtrigger", function () {
+    try {
+        if (signalrServiceinit && typeof signalrServiceinit.init === "function") {
+
+            signalrServiceinit.init();
+        }
+    }
+    catch (ex) {
+        //console.error("Notification initialization error:", ex);
+    }
+});

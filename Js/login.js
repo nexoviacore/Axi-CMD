@@ -70,7 +70,6 @@ function chkLoginForm() {
     if ($j('#axLanguage').val() != null || $j('#axLanguage').val() != undefined)
         language = $j('#axLanguage').val().toLowerCase();
     $("#hdnProjName").val(proj);
-    $("#hdnUserName").val($j('#axUserName').val());
     $("#hdnProjLang").val(language);
     if ($j('#axSelectProj').is(':visible') && !ValidateProject()) { return false; }
     if ($j('#axLanguage').is(':visible') && !ValidateLanguage()) { return false; }
@@ -1620,7 +1619,20 @@ function KeepSigninWebDetails() {
                         KeepMeSigninConfirm(jVal.userlist);
                     }
                 }
-            }, error: function (error) {
+            }, error: function (xhr) {
+            if (xhr.status === 400) {
+                console.log("Invalid request.");
+                return;
+            }
+            if (xhr.status === 403) {
+                console.log("CSRF validation failed.");
+                location.reload();
+                return;
+            }
+            if (xhr.status === 500) {
+                console.log("Internal Server Error.");
+                return;
+            }
             }
         });
     }
@@ -1700,7 +1712,6 @@ function chkLoginFormHiden() {
         }
         _btnSubmitNew.style.pointerEvents = "none";
     }
-    $("#hdnUserName").val($j('#axUserName').val());
     if ($("#hdnWSSoBtn").val() != "" && $("#hdnWSSoBtn").val() == "true") {
         $("#hdnWSSoBtn").val('');
         $("#WindowCloneBtn").click();
@@ -1731,7 +1742,6 @@ function chkLoginFormNew(e) {
     //if ($j('#axLanguage').val() != null || $j('#axLanguage').val() != undefined)
     //    language = $j('#axLanguage').val().toLowerCase();
     //$("#hdnProjLang").val(language);
-    $("#hdnUserName").val($j('#axUserName').val());
     try {
         if (typeof (Storage) !== "undefined" && language != "") {
             localStorage["langInfo-" + appUrl] = language;
@@ -1804,7 +1814,6 @@ function chkNextForm() {
     GetCurrentTime('Login');
     let proj = $j('#axSelectProj').val();
     $("#hdnProjName").val(proj);
-    $("#hdnUserName").val($j('#axUserName').val());
     if ($j('#axSelectProj').is(':visible') && !ValidateProject()) {
         if (typeof _btn != "undefined")
             _btn.style.pointerEvents = "auto";
@@ -1943,10 +1952,11 @@ function OpenForgotPwdNew() {
         }
     }
     var hdnproj = $j('#hdnProjName').val();
-    var hdnUserName = $j('#hdnUserName').val();
-
-    if (hdnproj != "")
-        window.document.location.href = "ForgotPassword.aspx?proj=" + hdnproj + "&uname=" + hdnUserName + "";
+    if (hdnproj != "") {
+        var loginAttempt = $("#hdnLoginAttempt").val();
+        window.document.location.href = "ForgotPassword.aspx?proj=" + encodeURIComponent(hdnproj) +
+            (loginAttempt ? "&attempt=" + encodeURIComponent(loginAttempt) : "");
+    }
 }
 
 function backToMainDiv() {
@@ -2010,16 +2020,21 @@ function chkoptauth() {
         $("#hdnOtpauth").val($j("#axOTPpwd").val());
         $.ajax({
             type: "POST",
-            url: "signin.aspx/chkOtp",
-            data: '{stsotpauth: "' + $("#hdnOtpauth").val() + '",proj:"' + $("#hdnProjName").val() + '",username:"' + $("#hdnUserName").val() + '",csrfToken:"' + $("#_antiforgery").val() + '" }',
+            url: "signin.aspx/chkPendingOtp",
+            data: JSON.stringify({
+                stsotpauth: $("#hdnOtpauth").val(),
+                loginAttempt: $("#hdnLoginAttempt").val(),
+                project: $("#hdnProjName").val(),
+                csrfToken: $("#_antiforgery").val()
+            }),
             contentType: "application/json; charset=utf-8",
             dataType: "json",
             success: function (response) {
                 if (response.d == "success") {
-                    const _thisEncVal = encryptLoginDetails($("#hdnUserName").val());
-                    $("#hdnUserName").val(_thisEncVal);
-                    const _thisEncpVal = encryptLoginDetails($("#hdnPuser").val());
-                    $("#hdnPuser").val(_thisEncpVal);
+                    if ($("#hdnPuser").val() != "") {
+                        const _thisEncpVal = encryptLoginDetails($("#hdnPuser").val());
+                        $("#hdnPuser").val(_thisEncpVal);
+                    }
                     $("#btnOTPLogin").click();
                 }
                 else if (response.d == "InvalidOTP")
@@ -2028,9 +2043,13 @@ function chkoptauth() {
                     showAlertDialog("error", "OTP expired");
                 else if (response.d == "PleaseenterOTP")
                     showAlertDialog("error", "Please enter OTP");
+                else if (response.d == "LoginExpired")
+                    showAlertDialog("error", "Login attempt expired. Please start again.");
+                else
+                    showAlertDialog("error", "Unable to verify OTP. Please try again.");
             },
-            failure: function (response) {
-                showAlertDialog("error", response.d);
+            error: function () {
+                showAlertDialog("error", "Unable to verify OTP. Please try again.");
             }
         });
     }
@@ -2098,8 +2117,6 @@ function btnResendOTP() {
         }
         $("#axOTPpwd").attr("required", false);
 
-        const _thisEncVal = encryptLoginDetails($("#hdnUserName").val());
-        $("#hdnUserName").val(_thisEncVal);
         if ($("#hdnPuser").val() != "") {
             const _thisEncpVal = encryptLoginDetails($("#hdnPuser").val());
             $("#hdnPuser").val(_thisEncpVal);
@@ -2250,7 +2267,8 @@ function encryptLoginDetails(thisVal) {
         });
         return payload;
     } else {
-        return thisVal;
+        showAlertDialog("error", "Unable to encrypt login details. Please try again.");
+        throw new Error("Unable to encrypt login details.");
     }
 }
 function getBrowserInfo() {

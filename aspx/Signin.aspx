@@ -50,11 +50,11 @@
     <script src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js?v=2" type="text/javascript"></script>
     <script src="../Js/noConflict.min.js?v=1" type="text/javascript"></script>
     <script src="../Js/alerts.min.js?v=33" type="text/javascript"></script>
-    <script type="text/javascript" src="../Js/login.min.js?v=120"></script>
+    <script type="text/javascript" src="../Js/login.min.js?v=121"></script>
     <script type="text/javascript" src="../Js/lang/content-<%=langType%>.js?v=64"></script>
     <script src="../Js/jsencrypt.js?v=1" type="text/javascript"></script>
     <script src="../Js/crypto-js.js?v=1" type="text/javascript"></script>
-    <script src="../Js/common.min.js?v=166" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=167" type="text/javascript"></script>
     <script type="text/javascript">
         history.go(1);
         var cdt = new Date();
@@ -169,7 +169,7 @@
                                                 <asp:Label ID="lblusername" class="form-label fs-6 fw-boldest text-dark" runat="server" meta:resourcekey="lblusername">
                             User Name</asp:Label>
                                             </div>
-                                            <input class="m-wrap placeholder-no-fix form-control form-control-solid" id="axUserName" tabindex="0" runat="server" type="text"
+                                            <input class="m-wrap placeholder-no-fix form-control form-control-solid" id="axUserName" tabindex="0" runat="server" enableviewstate="false" type="text"
                                                 autocomplete="off" placeholder="" name="axUserName" title="Username" required>
                                         </div>
                                     </div>
@@ -355,6 +355,7 @@ c-45 8 -53 30 -33 91 22 70 14 75 -11 7z"
                         <input type="hidden" runat="server" name="hdnTimeZone" id="hdnTimeZone" />
                         <input type="hidden" runat="server" name="hdnProjName" id="hdnProjName" />
                         <input type="hidden" runat="server" name="hdnUserName" id="hdnUserName" />
+                        <input type="hidden" runat="server" name="hdnLoginAttempt" id="hdnLoginAttempt" />
                         <input type="hidden" runat="server" name="hdnProjLang" id="hdnProjLang" />
                         <input type="hidden" runat="server" name="hdnPuser" id="hdnPuser" />
                         <input type="hidden" runat="server" name="hdnOtpauth" id="hdnOtpauth" />
@@ -406,4 +407,3 @@ c-45 8 -53 30 -33 91 22 70 14 75 -11 7z"
     </script>
 </body>
 </html>
-

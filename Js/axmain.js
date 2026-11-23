@@ -1679,11 +1679,15 @@ function getAppSessionKey() {
     var appSess = "";
     $.ajax({
         type: "POST",
-        url: "../WebService.asmx/GetSession",
+        url: "../WebService.asmx/GetSessionNew",
         cache: false,
         async: false,
         contentType: "application/json;charset=utf-8",
-        data: JSON.stringify({ key: 'appsessionkey' }),
+        data: JSON.stringify({
+            jsonData: JSON.stringify({
+                key: 'appsessionkey'
+            })
+        }),
         dataType: "json",
         success: function (data) {
             if (data.d != 'Session does not exist')
@@ -1699,10 +1703,18 @@ function updateSessionVar(key, val) {
         url: "../WebService.asmx/AddSessionPair",
         cache: false,
         async: false,
-        contentType: "application/json;charset=utf-8",
-        data: JSON.stringify({ key: key, val: val }),
+        contentType: "application/json; charset=utf-8",
+        data: JSON.stringify({
+            jsonData: JSON.stringify({
+                key: key,
+                val: val
+            })
+        }),
         dataType: "json",
-        success: function (data) { },
+        success: function (data) {
+        },
+        error: function (xhr) {
+        }
     });
 }
 
@@ -2818,7 +2830,10 @@ function ExecutionTraceInterval(isSignOut = false) {
                 cache: false,
                 async: true,
                 data: JSON.stringify({
-                    ExecutionLongText: ExecutionLongText, isSingout: isSignOut
+                    jsonData: JSON.stringify({
+                        ExecutionLongText: ExecutionLongText,
+                        isSingout: isSignOut
+                    })
                 }),
                 dataType: 'json',
                 contentType: "application/json",
@@ -2859,7 +2874,10 @@ function ExecutionTraceExceededQuota(strMsg) {
                 cache: false,
                 async: true,
                 data: JSON.stringify({
-                    ExecutionLongText: ExecutionLongText, isSingout: false
+                    jsonData: JSON.stringify({
+                        ExecutionLongText: ExecutionLongText,
+                        isSingout: false
+                    })
                 }),
                 dataType: 'json',
                 contentType: "application/json",

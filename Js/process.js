@@ -1364,7 +1364,34 @@ function CallActionExt(actionName, fileup, remarks, dsignaction, isScript, ruleS
         if (typeof isLoadFromDraft != "undefined")
             _isLoadFromDraft = isLoadFromDraft;
         GetProcessTime();
-        ASB.WebService.CallActionWS(ChangedFields, ChangedFieldDbRowNo, ChangedFieldValues, DeletedDCRows, DeletedFieldValue, ArrActionLog, visDcname, txt, fup, source, delRows, chngRows, tstDataId, files, isScript, axrulesFlds, ruleScriptCall, resTstHtmlLS, _isLoadFromDraft, SuccessCallbackAction, OnException);
+        //ASB.WebService.CallActionWS(ChangedFields, ChangedFieldDbRowNo, ChangedFieldValues, DeletedDCRows, DeletedFieldValue, ArrActionLog, visDcname, txt, fup, source, delRows, chngRows, tstDataId, files, isScript, axrulesFlds, ruleScriptCall, resTstHtmlLS, _isLoadFromDraft, SuccessCallbackAction, OnException);
+        const callActionRequest = {
+            fldArray: ChangedFields,
+            fldDbRowNo: ChangedFieldDbRowNo,
+            fldValueArray: ChangedFieldValues,
+            fldDeletedArray: DeletedDCRows,
+            deletedFldArrayValues: DeletedFieldValue,
+
+            ArrActionLog: ArrActionLog,
+            visibleDcs: visDcname,
+            s: txt,
+            f: fup,
+            source: source,
+            delRows: delRows,
+            changedRows: chngRows,
+            key: tstDataId,
+
+            files: files,
+            isScript: isScript,
+
+            axRulesFlds: axrulesFlds,
+            axRulesScript: ruleScriptCall,
+
+            resTstHtmlLS: resTstHtmlLS,
+            isLoadFromDraft: _isLoadFromDraft
+        };
+        const encryptedRequest = encryptTstDetails(JSON.stringify(callActionRequest));
+        ASB.WebService.CallActionWS(encryptedRequest, SuccessCallbackAction, OnException);
     }
     catch (exp) {
         actionCallbackFlag = actionCallFlag;

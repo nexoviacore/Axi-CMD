@@ -51,7 +51,7 @@ Home Cunfiguration Page Templete
                     <div class="collapse navbar-collapse" id="navbar-collapse">
                         <ul class="nav navbar-nav navbar-right">
                             <li class="pull-right" id="optionsPanel">
-                                <a href="javascript:void(0);" class="js-right-sidebar" data-close="true">
+                                <a href="#" class="js-right-sidebar" data-close="true">
                                     <i class="material-icons" title="Options">more_vert</i>
                                 </a>
                             </li>
@@ -60,8 +60,8 @@ Home Cunfiguration Page Templete
                 </div>
                 <div class="navbar-left-panel">
                     <div class="navbar-header">
-                        <a href="javascript:void(0);" class="bars"></a>
-                        <a class="navbar-brand" href="javascript:void(0)">
+                        <a href="#" class="bars"></a>
+                        <a class="navbar-brand" href="#">
                         </a>
                     </div>
                 </div>
@@ -91,7 +91,7 @@ Home Cunfiguration Page Templete
                                 <ul class="setting-list">
 
                                     <li id="History" class="clickAutoClose">
-                                        <a href="javascript:void(0);">
+                                        <a href="#">
                                             <i class="material-icons setting-icon">history</i>
                                             <span class="setting-caption">History</span>
                                             <div class="clearfix"></div>
@@ -108,7 +108,7 @@ Home Cunfiguration Page Templete
                                         <div class="switch">
                                             <span id="enableMobileNotifi">
                                                 <label>
-                                                    <input type="checkbox" checked="checked" onclick="ToggleMobileNotification(true)"><span id="spanMobileNotifi" class="lever" title="Mobile Notification off"></span>
+                                                    <input type="checkbox" checked="checked" data-ax-action="toggle-mobile-notification"><span id="spanMobileNotifi" class="lever" title="Mobile Notification off"></span>
                                                 </label>
                                             </span>
                                         </div>
@@ -141,7 +141,7 @@ Home Cunfiguration Page Templete
                 <!--begin::Brand-->
                 <div class="aside-logo flex-column-auto pt-9 pb-5 d-none" id="webAxAppLogo" title="AxpertWeb">
                     <!--begin::Logo-->
-                    <a href="javascript:void(0);">
+                    <a href="#">
                         <div class="logo-default mh-50px">
                             <div class="d-flex">
                                 <img alt="Logo" src="../images/loginlogo.png" class="mh-50px ">
@@ -212,7 +212,7 @@ Home Cunfiguration Page Templete
                             </div>
                             <!--end::Aside toggler-->
                             <!--begin::Logo-->
-                            <a href="javascript:void(0);" id="mobileAxAppLogo" class="d-lg-none---">
+                            <a href="#" id="mobileAxAppLogo" class="d-lg-none---">
                                 <div class="d-flex">
                                     <img alt="Logo" src="../images/loginlogo.png" class="mh-50px ">
                                     <h3 class="d-flex mh-50px m-2 text-dark fw-boldest fs-1 align-items-center text-break overflow-hidden divTitle">
@@ -361,7 +361,7 @@ Home Cunfiguration Page Templete
                                             <div class="pb-4 border-bottom">
                                                 <label class="form-check form-switch form-switch-sm form-check-custom form-check-solid flex-stack">
                                                     <span class="divStartsWith" class="form-check-label text-gray-700 fs-6 fw-bold ms-0 me-2">Starts with...</span>
-                                                    <input class="form-check-input" type="checkbox" value="1" onchange="$.axpertUI.search.searchModeContains(!$(this).prop('checked'))">
+                                                    <input class="form-check-input" type="checkbox" value="1" data-ax-action="search-mode-contains">
                                                 </label>
                                             </div>
                                             <!--end::Input group-->
@@ -433,7 +433,7 @@ Home Cunfiguration Page Templete
                                     <div class="btn btn-icon btn-active-light-primary w-30px h-30px w-md-40px h-md-40px notificationtrigger" id="notificationtrigger"
                                          data-kt-menu-trigger="click" data-kt-menu-overflow="true"
                                          data-kt-menu-placement="bottom-end" data-kt-menu-backdrop="true" title="Notifications"
-                                         onclick="signalrServiceinit.init()">
+                                         data-ax-action="signalr-notification-init">
                                         <span class="material-icons material-icons-style material-icons-1x" title="Notifications">
                                             notifications
                                         </span>
@@ -445,7 +445,7 @@ Home Cunfiguration Page Templete
                                         <div class="d-flex justify-content-between MessageTItleStyle px-6 py-4">
                                             <span class="h3 my-auto">Notifications</span>
                                             <button type="button" class="btn btn-white btn-icon btn-sm closeAll" id="closeAll" data-toggle="tooltip"
-                                                    data-placement="bottom" title="Clear all" onclick="clearAll()">
+                                                    data-placement="bottom" title="Clear all" data-ax-action="clear-all-notifications">
                                                 <span class="material-icons material-icons-style material-icons-1">close</span>
                                             </button>
                                         </div>
@@ -473,7 +473,7 @@ Home Cunfiguration Page Templete
                                         <div class="row g-0">
                                             <!--begin:Item-->
                                             <div id="developerworkbench" class="col-md-4 col-sm-6 col-6">
-                                                <a href="javascript:void(0);" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                <a href="#" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
                                                     <span class="material-icons material-icons-style material-icons-3x material-icons-primary mb-2">
                                                         developer_mode
                                                     </span>
@@ -483,7 +483,7 @@ Home Cunfiguration Page Templete
                                             </div>
 
                                             <div id="configurationStudio" class="col-md-4 col-sm-6 col-6">
-                                                <a href="javascript:void(0);" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                <a href="#" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
                                                     <span class="material-icons material-icons-style material-icons-3x material-icons-primary mb-2">
                                                         toggle_on
                                                     </span>
@@ -495,7 +495,7 @@ Home Cunfiguration Page Templete
                                             <!--end:Item-->
                                             <!--begin:Item-->
                                             <div id="ImportData" class="col-md-4 col-sm-6 col-6">
-                                                <a href="javascript:void(0);" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-end border-0">
+                                                <a href="#" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-end border-0">
                                                     <span class="material-icons material-icons-style material-icons-3x material-icons-primary mb-2">
                                                         file_download
                                                     </span>
@@ -506,7 +506,7 @@ Home Cunfiguration Page Templete
                                             <!--end:Item-->
                                             <!--begin:Item-->
                                             <div id="ExportData" class="col-md-4 col-sm-6 col-6">
-                                                <a href="javascript:void(0);" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-0">
+                                                <a href="#" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-0">
                                                     <span class="material-icons material-icons-style material-icons-3x material-icons-primary mb-2">
                                                         file_upload
                                                     </span>
@@ -517,8 +517,8 @@ Home Cunfiguration Page Templete
                                             <!--end:Item-->
                                             <!--begin:Item-->
                                             <!--$.axpertUI.cardsPage.editSaveCardDesignToggle();-->
-                                            <div id="arrangeCards" class="col-md-4 col-sm-6 col-6" onclick="LoadIframe('processflow.aspx?dashboard=t&edit=t');" data-kt-menu-dismiss="true">
-                                                <a href="javascript:void(0);" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-0">
+                                            <div id="arrangeCards" class="col-md-4 col-sm-6 col-6" data-ax-action="load-iframe" data-ax-url="processflow.aspx?dashboard=t&amp;edit=t" data-kt-menu-dismiss="true">
+                                                <a href="#" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-0">
                                                     <span class="material-icons material-icons-style material-icons-3x material-icons-primary mb-2">
                                                         grid_view
                                                     </span>
@@ -529,7 +529,7 @@ Home Cunfiguration Page Templete
                                             <!--end:Item-->
                                             <!--begin:Item-->
                                             <div id="refreshMenu" class="col-md-4 col-sm-6 col-6" data-kt-menu-dismiss="true">
-                                                <a href="javascript:void(0);" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-0">
+                                                <a href="#" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-0">
                                                     <span class="material-icons material-icons-style material-icons-3x material-icons-primary mb-2">
                                                         refresh
                                                     </span>
@@ -540,7 +540,7 @@ Home Cunfiguration Page Templete
                                             <!--end:Item-->
                                             <!--begin:Item-->
                                             <div id="refreshVarParam" class="col-md-4 col-sm-6 col-6" data-kt-menu-dismiss="true">
-                                                <a href="javascript:void(0);" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-0">
+                                                <a href="#" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-0">
                                                     <span class="material-icons material-icons-style material-icons-3x material-icons-primary mb-2">
                                                         published_with_changes
                                                     </span>
@@ -551,7 +551,7 @@ Home Cunfiguration Page Templete
                                             <!--end:Item-->
                                             <!--begin:Item-->
                                             <div id="qrCodeBtnWrapper" class="col-md-4 col-sm-6 col-6" data-kt-menu-dismiss="true" data-kt-menu-trigger="hover" data-kt-menu-placement="left-start">
-                                                <a href="javascript:void(0);" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-0">
+                                                <a href="#" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-0">
                                                     <span class="material-icons material-icons-style material-icons-3x material-icons-primary mb-2">
                                                         qr_code_2
                                                     </span>
@@ -571,7 +571,7 @@ Home Cunfiguration Page Templete
                                             <!--begin:Item-->
                                             <div id="executionLog" class="col-md-4 col-sm-6 col-6" data-kt-menu-dismiss="true">
                                                 <div class="bg-hover-light">
-                                                    <a href="javascript:void(0);" class="d-flex flex-column flex-center h-10 0p-0 pt-6 border-0">
+                                                    <a href="#" class="d-flex flex-column flex-center h-10 0p-0 pt-6 border-0">
                                                         <span class="material-icons material-icons-style material-icons-3x material-icons-primary mb-2">
                                                             troubleshoot
                                                         </span>
@@ -591,7 +591,7 @@ Home Cunfiguration Page Templete
                                             <!--begin:Item-->
                                             <div id="showLog" class="col-md-4 col-sm-6 col-6" data-kt-menu-dismiss="true">
                                                 <div class="bg-hover-light">
-                                                    <a href="javascript:void(0);" class="d-flex flex-column flex-center h-10 0p-0 pt-6 border-0">
+                                                    <a href="#" class="d-flex flex-column flex-center h-10 0p-0 pt-6 border-0">
                                                         <span class="material-icons material-icons-style material-icons-3x material-icons-primary mb-2">
                                                             data_exploration
                                                         </span>
@@ -631,7 +631,7 @@ Home Cunfiguration Page Templete
                                                 <!--begin:Item-->
 
                                                 <div id="Tstruct" class="col-md-3 col-sm-6 col-6">
-                                                    <a href="javascript:void(0);" onclick='openDeveloperStudio("tstreact");' title="Tstruct" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                    <a href="#" data-ax-click='openDeveloperStudio("tstreact")' title="Tstruct" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
                                                         <img loading="lazy" width="64" height="64" src="../images/devops/tstruct.png">
                                                         <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">Tstruct</span>
                                                         <span class="divSubTitle fs-7 text-gray-400">Forms</span>
@@ -639,7 +639,7 @@ Home Cunfiguration Page Templete
                                                 </div>
 
                                                 <div id="Iview" class="col-md-3 col-sm-6 col-6">
-                                                    <a href="javascript:void(0);" onclick='openDeveloperStudio("ivreact");' title="Iview" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                    <a href="#" data-ax-click='openDeveloperStudio("ivreact")' title="Iview" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
                                                         <img src="../images/devops/iview.png">
                                                         <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">Iview</span>
                                                         <span class="divSubTitle fs-7 text-gray-400">Reports</span>
@@ -647,7 +647,7 @@ Home Cunfiguration Page Templete
                                                 </div>
 
                                                 <!--<div id="Cards" class="col-md-3 col-sm-6 col-6">
-        <a href="javascript:void(0);" onclick='openDeveloperStudio("iaxpcards");' class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+        <a href="#" data-ax-click='openDeveloperStudio("iaxpcards")' class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
             <img src="../images/devops/cards.png">
             <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">Cards</span>
             <span class="divSubTitle fs-7 text-gray-400">Cards</span>
@@ -655,7 +655,7 @@ Home Cunfiguration Page Templete
     </div>-->
 
                                                 <div id="pluginCustomCode" class="col-md-3 col-sm-6 col-6">
-                                                    <a href="javascript:void(0);" onclick="openPluginEditor();" title="Custom Plugins" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                    <a href="#" data-ax-click='openPluginEditor()'  title="Custom Plugins" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
                                                         <img src="../images/icons/plugin.png">
                                                         <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">Custom Plugins</span>
                                                         <span class="divSubTitle fs-7 text-gray-400">Plugin</span>
@@ -663,7 +663,7 @@ Home Cunfiguration Page Templete
                                                 </div>
 
                                                 <!--<div id="CustomPages" class="col-md-3 col-sm-6 col-6">
-                                                    <a href="javascript:void(0);" onclick='openDeveloperStudio("ihplist");' title="Custom Pages" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                    <a href="#" data-ax-click='openDeveloperStudio("ihplist")' title="Custom Pages" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
                                                         <img src="../images/devops/custom-pages.png">
                                                         <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">Custom Pages</span>
                                                         <span class="divSubTitle fs-7 text-gray-400">HTML</span>
@@ -671,7 +671,7 @@ Home Cunfiguration Page Templete
                                                 </div>-->
 
                                                 <div id="ADS" class="col-md-3 col-sm-6 col-6">
-                                                    <a href="javascript:void(0);" onclick='openDeveloperStudio("icsqlist");' title="Axpert Data Sources" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                    <a href="#" data-ax-click='openDeveloperStudio("icsqlist")' title="Axpert Data Sources" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
                                                         <img src="../images/devops/custom-data-sourse.png">
                                                         <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">Axpert Data Sources</span>
                                                         <span class="divSubTitle fs-7 text-gray-400">ADS</span>
@@ -679,7 +679,7 @@ Home Cunfiguration Page Templete
                                                 </div>
 
                                                 <div id="APIPlugins" class="col-md-3 col-sm-6 col-6">
-                                                    <a href="javascript:void(0);" onclick='openDeveloperStudio("iexapidef");' title="API Plugins" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                    <a href="#" data-ax-click='openDeveloperStudio("iexapidef")' title="API Plugins" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
                                                         <img src="../images/devops/Api-plugin.png">
                                                         <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">API Plugins</span>
                                                         <span class="divSubTitle fs-7 text-gray-400">External APIs</span>
@@ -687,7 +687,7 @@ Home Cunfiguration Page Templete
                                                 </div>
 
                                                 <div id="DevOptions" class="col-md-3 col-sm-6 col-6">
-                                                    <a href="javascript:void(0);" onclick='openDeveloperStudio("idop_list");' title="Developer Options" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                    <a href="#" data-ax-click='openDeveloperStudio("idop_list")' title="Developer Options" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
                                                         <img src="../images/devops/dev-options.png">
                                                         <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">Dev Options</span>
                                                         <span class="divSubTitle fs-7 text-gray-400">Dev Options</span>
@@ -695,7 +695,7 @@ Home Cunfiguration Page Templete
                                                 </div>
 
                                                 <div id="AxpertJobs" class="col-md-3 col-sm-6 col-6">
-                                                    <a href="javascript:void(0);" onclick='openDeveloperStudio("ijobtsk");' title="Axpert Jobs" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                    <a href="#" data-ax-click='openDeveloperStudio("ijobtsk")' title="Axpert Jobs" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
                                                         <img src="../images/devops/axpert-jobs.png">
                                                         <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">Axpert Jobs</span>
                                                         <span class="divSubTitle fs-7 text-gray-400">Axpert Jobs</span>
@@ -703,7 +703,7 @@ Home Cunfiguration Page Templete
                                                 </div>
 
                                                 <div id="DevLanguages" class="col-md-3 col-sm-6 col-6">
-                                                    <a href="javascript:void(0);" onclick='openDeveloperStudio("iaxlangs");' title="Axpert Languages" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                    <a href="#" data-ax-click='openDeveloperStudio("iaxlangs")' title="Axpert Languages" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
                                                         <img src="../images/devops/languages.png">
                                                         <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">Languages</span>
                                                         <span class="divSubTitle fs-7 text-gray-400">Languages</span>
@@ -712,7 +712,7 @@ Home Cunfiguration Page Templete
                                                 </div>
 
                                                 <div id="DevPublish" class="col-md-3 col-sm-6 col-6">
-                                                    <a href="javascript:void(0);" onclick='openDeveloperStudio("ipublist");' title="Publish" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                    <a href="#" data-ax-click='openDeveloperStudio("ipublist")' title="Publish" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
                                                         <img src="../images/devops/publish.png">
                                                         <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">Publish</span>
                                                         <span class="divSubTitle fs-7 text-gray-400">Publish</span>
@@ -721,7 +721,7 @@ Home Cunfiguration Page Templete
                                                 </div>
 
                                                 <div id="CustomDataType" class="col-md-3 col-sm-6 col-6">
-                                                    <a href="javascript:void(0);" onclick='openDeveloperStudio("icdlist");' title="Custom Data Type" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                    <a href="#" data-ax-click='openDeveloperStudio("icdlist")' title="Custom Data Type" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
                                                         <img src="../images/devops/custom-data-type.png">
                                                         <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">Custom Data Type</span>
                                                         <span class="divSubTitle fs-7 text-gray-400">Data Type</span>
@@ -729,7 +729,7 @@ Home Cunfiguration Page Templete
                                                 </div>
 
                                                 <div id="Appvariables" class="col-md-3 col-sm-6 col-6">
-                                                    <a href="javascript:void(0);" onclick='openDeveloperStudio("iaxvars");' title="Application Variables" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                    <a href="#" data-ax-click='openDeveloperStudio("iaxvars")' title="Application Variables" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
                                                         <img src="../images/devops/app-variables.png">
                                                         <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">App Variables</span>
                                                         <span class="divSubTitle fs-7 text-gray-400">App Variables</span>
@@ -737,7 +737,7 @@ Home Cunfiguration Page Templete
                                                 </div>
 
                                                 <div id="DevExplorer" class="col-md-3 col-sm-6 col-6">
-                                                    <a href="javascript:void(0);" onclick='openDeveloperStudio("AxDBScript.aspx");' title="Data Base Explorer" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                    <a href="#" data-ax-click='openDeveloperStudio("AxDBScript.aspx")' title="Data Base Explorer" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
                                                         <img src="../images/devops/DB-Explorer.png">
                                                         <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">DB Explorer</span>
                                                         <span class="divSubTitle fs-7 text-gray-400">DB Explorer</span>
@@ -745,7 +745,7 @@ Home Cunfiguration Page Templete
                                                 </div>
 
                                                 <div id="ArrangeMenu" class="col-md-3 col-sm-6 col-6">
-                                                    <a href="javascript:void(0);" onclick='openDeveloperStudio("ArrangeMenu.aspx");' title="Arrange Menu" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                    <a href="#" data-ax-click='openDeveloperStudio("ArrangeMenu.aspx")' title="Arrange Menu" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
                                                         <img src="../images/devops/ArrangeMenu.png">
                                                         <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">Arrange Menu</span>
                                                         <span class="divSubTitle fs-7 text-gray-400">Arrange Menu</span>
@@ -753,14 +753,14 @@ Home Cunfiguration Page Templete
                                                 </div>
 
                                                 <div id="EmailDefinitions" class="col-md-3 col-sm-6 col-6">
-                                                    <a href="javascript:void(0);" onclick='openDeveloperStudio("iemaildef");' title="Email Definitions" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                    <a href="#" data-ax-click='openDeveloperStudio("iemaildef")' title="Email Definitions" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
                                                         <img src="../images/devops/email-definition.png">
                                                         <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">Email Definitions</span>
                                                         <span class="divSubTitle fs-7 text-gray-400">Definitions</span>
                                                     </a>
                                                 </div>
                                                 <div id="TableDescriptor" class="col-md-3 col-sm-6 col-6">
-                                                    <a href="javascript:void(0);" onclick='openDeveloperStudio("iad___tbd");' title="Table Type Field Descriptor" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                    <a href="#" data-ax-click='openDeveloperStudio("iad___tbd")' title="Table Type Field Descriptor" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
                                                         <img src="../images/devops/table-filed-descriptor.png">
                                                         <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">Table Field Descriptor</span>
                                                         <span class="divSubTitle fs-7 text-gray-400">Descriptor</span>
@@ -768,14 +768,14 @@ Home Cunfiguration Page Templete
                                                 </div>
 
                                                 <div id="QueueListing" class="col-md-3 col-sm-6 col-6">
-                                                    <a href="javascript:void(0);" onclick='openDeveloperStudio("iad__qls");' title="Queue Listing" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                    <a href="#" data-ax-click='openDeveloperStudio("iad__qls")' title="Queue Listing" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
                                                         <img src="../images/devops/queue-Listing.png">
                                                         <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">Queue Listing</span>
                                                         <span class="divSubTitle fs-7 text-gray-400">Queue</span>
                                                     </a>
                                                 </div>
                                                 <div id="MemDBConsole" class="col-md-3 col-sm-6 col-6">
-                                                    <a href="javascript:void(0);" onclick='openDeveloperStudio("iinmemdb");' title="Mem DB Console" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                    <a href="#" data-ax-click='openDeveloperStudio("iinmemdb")' title="Mem DB Console" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
                                                         <img src="../images/devops/Mem-DB-Console.png">
                                                         <span class="divTitle fs-5 fw-bold text-gray-800 mb-0">Mem DB Console</span>
                                                         <span class="divSubTitle fs-7 text-gray-400">Mem DB</span>
@@ -793,7 +793,7 @@ Home Cunfiguration Page Templete
                                 <!--begin::User-->
                                 <div class="d-flex align-items-center ms-2 ms-lg-3">
                                     <!--begin::Menu wrapper-->
-                                    <div id="mainProfileIcon" class="btn btn-icon profile-menu btn-dark w-30px h-30px w-md-40px h-md-40px position-relative" data-kt-menu-trigger="click" data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end" data-kt-menu-backdrop="true">
+                                    <div id="mainProfileIcon" class="btn btn-icon profile-menu btn-dark w-30px h-30px w-md-40px h-md-40px position-relative" data-kt-menu-trigger="click" data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end" data-kt-menu-backdrop="true" aria-label="User profile" aria-haspopup="menu" aria-expanded="false" role="button" tabindex="0">
                                         <span id="userNameIconMain" class="material-icons material-icons-style material-icons-1" title="User Details">
                                             person
                                         </span>
@@ -814,7 +814,7 @@ Home Cunfiguration Page Templete
                                                 <div id="userName" class="ppn d-flex flex-column">
                                                     <div id="AxNickName" class="fw-bolder d-flex align-items-center fs-5 text-break">
                                                     </div>
-                                                    <a id="AxUserEmail" href="javascript:void(0);" class="fw-bold text-muted text-hover-primary fs-7 text-break"></a>
+                                                    <a id="AxUserEmail" href="#" class="fw-bold text-muted text-hover-primary fs-7 text-break"></a>
                                                 </div>
                                                 <!--end::Username-->
                                             </div>
@@ -841,7 +841,7 @@ Home Cunfiguration Page Templete
                                         <!--end::Menu separator-->
                                         <!--begin::Menu item-->
                                         <div id="GlobalParams" class="menu-item px-5" data-kt-menu-trigger="hover" data-kt-menu-placement="left-start">
-                                            <a href="javascript:void(0);" class="menu-link d-flex flex-stack p-5">
+                                            <a href="#" class="menu-link d-flex flex-stack p-5">
                                                 Application Parameters
                                             </a>
                                             <div class="menu-sub menu-sub-dropdown w-auto mw-300px py-4">
@@ -852,7 +852,7 @@ Home Cunfiguration Page Templete
                                         <!--end::Menu item-->
                                         <!--begin::Menu item-->
                                         <!--<div class="menu-item px-5" data-kt-menu-trigger="hover" data-kt-menu-placement="left-start">
-                                        <a href="javascript:void(0);" class="menu-link p-5">
+                                        <a href="#" class="menu-link p-5">
                                             <span class="menu-title">Application Options</span>
                                             <span class="menu-arrow"></span>
                                         </a>-->
@@ -860,17 +860,17 @@ Home Cunfiguration Page Templete
                                         <!--<div class="menu-sub menu-sub-dropdown w-200px py-4">-->
                                         <!--begin::Menu item-->
                                         <!--<div id="refreshMenu" class="menu-item px-3">
-                                            <a href="javascript:void(0);" class="menu-link p-5">Refresh Menu</a>
+                                            <a href="#" class="menu-link p-5">Refresh Menu</a>
                                         </div>-->
                                         <!--end::Menu item-->
                                         <!--begin::Menu item-->
                                         <!--<div id="refreshVarParam" class="menu-item px-3">
-                                            <a href="javascript:void(0);" class="menu-link p-5">Refresh App Variables</a>
+                                            <a href="#" class="menu-link p-5">Refresh App Variables</a>
                                         </div>-->
                                         <!--end::Menu item-->
                                         <!--begin::Menu item-->
                                         <!--<div id="executionLog" class="menu-item px-3">
-                                            <a href="javascript:void(0);" class="menu-link p-5">Show Execution Trace</a>
+                                            <a href="#" class="menu-link p-5">Show Execution Trace</a>
                                         </div>-->
                                         <!--end::Menu item-->
                                         <!--begin::Menu separator-->
@@ -884,7 +884,7 @@ Home Cunfiguration Page Templete
                                                     <span id="imgTogTrace" class="form-check-label text-muted fs-7" title="Trace On">Show Logs</span>
                                                 </label>
                                             </div>
-                                            <a href="javascript:void(0);" class="menu-link fs-3 px-3 py-2 me-5 position-absolute translate-middle-y top-50 end-0 cursor-pointer text-gray-700 material-icons material-icons-style">
+                                            <a href="#" class="menu-link fs-3 px-3 py-2 me-5 position-absolute translate-middle-y top-50 end-0 cursor-pointer text-gray-700 material-icons material-icons-style">
                                                 launch
                                             </a>
                                         </div>-->
@@ -895,7 +895,7 @@ Home Cunfiguration Page Templete
                                         <!--end::Menu item-->
                                         <!--begin::Menu item-->
                                         <!--<div id="qrCodeBtnWrapper" class="menu-item px-5" data-kt-menu-trigger="hover" data-kt-menu-placement="left-start">
-                                        <a href="javascript:void(0);" class="menu-link p-5">
+                                        <a href="#" class="menu-link p-5">
                                             <span class="menu-title">QR Code</span>
                                         </a>-->
                                         <!--begin::Menu sub-->
@@ -909,7 +909,7 @@ Home Cunfiguration Page Templete
                                         <!--</div>-->
                                         <!--end::Menu item-->
                                         <div id="About" class="ppn menu-item px-5 my-1">
-                                            <a href="javascript:void(0);" class="menu-link p-5">About</a>
+                                            <a href="#" class="menu-link p-5">About</a>
                                         </div>
                                         <!--end::Menu item-->
                                         <!--begin::Menu separator-->
@@ -917,7 +917,7 @@ Home Cunfiguration Page Templete
                                         <!--end::Menu separator-->
                                         <!--begin::Menu item-->
                                         <div id="Language" class="menu-item px-5" data-kt-menu-trigger="hover" data-kt-menu-placement="left-start">
-                                            <a href="javascript:void(0);" class="menu-link p-5">
+                                            <a href="#" class="menu-link p-5">
                                                 <span class="menu-title position-relative">
                                                     <span class="setting-caption">
                                                         Language
@@ -935,12 +935,12 @@ Home Cunfiguration Page Templete
                                         <!--end::Menu item-->
                                         <!--begin::Menu item-->
                                         <div id="ChangePassword" class="menu-item px-5 my-1">
-                                            <a href="javascript:void(0);" class="menu-link p-5">Reset Password</a>
+                                            <a href="#" class="menu-link p-5">Reset Password</a>
                                         </div>
                                         <!--end::Menu item-->
                                         <!--begin::Menu item-->
                                         <div id="Logout" class="menu-item px-5">
-                                            <a href="javascript:void(0);" class="menu-link p-5">Sign Out</a>
+                                            <a href="#" class="menu-link p-5">Sign Out</a>
                                         </div>
                                         <!--end::Menu item-->
                                         <!--begin::Menu separator-->
@@ -971,12 +971,12 @@ Home Cunfiguration Page Templete
                 <!--end::Header-->
                 <!--begin::Content-->
                 <div class="content fs-6 d-flex flex-column flex-column-fluid px-3 pt-5 pb-2">
-                    <!-- <div class="btn btn-icon btn-sm position-absolute ms-n20 mt-2 fw-bolder z-index-2 transform-270 appBackBtn" onclick="prevbtn_click($(this))">
+                    <!-- <div class="btn btn-icon btn-sm position-absolute ms-n20 mt-2 fw-bolder z-index-2 transform-270 appBackBtn" data-ax-action="prev-button-click">
                         <span class="btn btn-flex btn-white btn-active-light-primary h-30px shadow-sm fs-6 mt-7 pt-4 pb-3 px-4 rounded-top-0" title="" data-bs-toggle="tooltip-disable" data-bs-placement="left" data-bs-dismiss="click" data-bs-trigger="hover" data-bs-html="true" data-bs-sanitize="false" data-bs-original-title='<button type="button" class="btn btn-icon btn-sm btn-outline btn-outline-dashed btn-outline-primary btn-bg-white btn-active-primary"><i class="material-icons material-icons-style material-icons-2">arrow_back</i></button>'>
                             <span>back</span>
                         </span>
                     </div> -->
-                    <div class="btn btn-icon btn-sm position-absolute fw-bolder ms-4--- ms-n3 mt-n7 z-index-2 appBackBtn" onclick="prevbtn_click($(this))">
+                    <div class="btn btn-icon btn-sm position-absolute fw-bolder ms-4--- ms-n3 mt-n7 z-index-2 appBackBtn">
                         <button type="button" class="btn btn-icon btn-sm ">
                             <span class="material-icons material-icons-style material-icons-2">arrow_back</span>
                         </button>
@@ -1021,7 +1021,7 @@ Home Cunfiguration Page Templete
                                 <!--end::Info-->
                                 <!--begin::Actions-->
                                 <div class="d-flex align-items-center flex-nowrap text-nowrap py-1">
-                                    <a href="javascript:void(0);" class="editSaveCardDesign btn btn-icon btn-white btn-active-primary me-4" onclick="$.axpertUI.cardsPage.editSaveCardDesignToggle();">
+                                    <a href="#" class="editSaveCardDesign btn btn-icon btn-white btn-active-primary me-4" data-ax-action="edit-save-card-design-toggle">
                                         <span class="material-icons material-icons-style">
                                             edit
                                         </span>
@@ -1068,7 +1068,7 @@ Home Cunfiguration Page Templete
                                 <!--end::Info-->
                                 <!--begin::Actions-->
                                 <div class="d-flex align-items-center flex-nowrap text-nowrap py-1">
-                                    <a href="javascript:void(0);" class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary me-4" data-bs-toggle="modal" data-bs-target="#kt_modal_invite_friends">
+                                    <a href="#" class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary me-4" data-bs-toggle="modal" data-bs-target="#kt_modal_invite_friends">
                                         <span class="material-icons material-icons-style">
                                             edit
                                         </span>
@@ -1122,10 +1122,10 @@ Home Cunfiguration Page Templete
         files.js.push("/ThirdParty/lodash.min.js?v=1");
         files.js.push("/ThirdParty/deepdash.min.js");
 
-        files.js.push("/Js/handlebars.min.js?v=2");
+        files.js.push("/Js/handlebars.min.js?v=3");
         files.js.push("/Js/handleBarsHelpers.min.js");
 
-        files.js.push("/Js/AxInterface.min.js?v=23");//min
+        files.js.push("/Js/AxInterface.min.js?v=24");//min
         files.js.push("/ThirdParty/Highcharts/highcharts.js");
         files.js.push("/ThirdParty/Highcharts/highcharts-3d.js");
         files.js.push("/ThirdParty/Highcharts/highcharts-more.js");
@@ -1158,9 +1158,9 @@ Home Cunfiguration Page Templete
     files.css.push("/Css/AxNotifications.min.css?v=2");
     files.css.push("/Css/HomeConfigPageCards_old.min.css?v=2");
     files.js.push("/Js/signalr.min.js");
-    files.js.push("/Js/axpertUI_homecards_old.min.js?v=14");
-    files.js.push("/Js/AxNotifications.min.js?v=17");
-    files.js.push("/Js/HomeConfigPageCards.min.js?v=15");
+    files.js.push("/Js/axpertUI_homecards_old.min.js?v=15");
+    files.js.push("/Js/AxNotifications.min.js?v=19");
+    files.js.push("/Js/HomeConfigPageCards.min.js?v=16");
     files.js.push("/Js/AxHtml.min.js?v=2");
     var dirLeft = true;
 
@@ -1173,6 +1173,14 @@ Home Cunfiguration Page Templete
         callBack: function () {
             $("body").addClass("mixed-theme");
             renderTemplete('template.templateContent');
+            var userOptionsMenu = document.querySelector("#AllUserOptions + [data-kt-menu='true']");
+            if (userOptionsMenu) {
+                userOptionsMenu.addEventListener("click", function (event) {
+                    var link = event.target.closest("a[href='#']");
+                    if (link && userOptionsMenu.contains(link))
+                        event.preventDefault();
+                }, true);
+            }
 
             $(function () {
                 objHomePageCards.init();
@@ -1900,7 +1908,7 @@ Home Cunfiguration Page Templete
             //getCompanyLogoDetails();
 
             setTimeout(function () {
-                $("[onclick=LoadIframe\\(\\'loadhomepage\\'\\)]").parents(".menu-item").addClass("hover");
+                $("[data-ax-click]").filter(function () { return $(this).attr("data-ax-click") === "LoadIframe('loadhomepage')"; }).parents(".menu-item").addClass("hover");
                 $('.aside .aside-menu .menu-item:not(.menu-accordion)').on("click", function () {
                     $(".menu-item.hover").removeClass("hover");
                     $(this).addClass("hover")
@@ -1951,4 +1959,48 @@ Home Cunfiguration Page Templete
         }
     });
     //End HomePage Code
+            // CSP-safe event delegation for static template controls.
+            if (!window.axCspTemplateHandlersRegistered) {
+                document.addEventListener("click", function (e) {
+                    var el = e.target.closest("[data-ax-action]");
+                    if (!el) return;
+
+                    switch (el.getAttribute("data-ax-action")) {
+                        case "toggle-mobile-notification":
+                            ToggleMobileNotification(true);
+                            e.preventDefault();
+                            break;
+                        case "signalr-notification-init":
+                            signalrServiceinit.init();
+                            e.preventDefault();
+                            break;
+                        case "clear-all-notifications":
+                            clearAll();
+                            e.preventDefault();
+                            break;
+                        case "load-iframe":
+                            LoadIframe(el.getAttribute("data-ax-url"));
+                            e.preventDefault();
+                            break;
+                        case "prev-button-click":
+                            prevbtn_click(el);
+                            e.preventDefault();
+                            break;
+                        case "edit-save-card-design-toggle":
+                            $.axpertUI.cardsPage.editSaveCardDesignToggle();
+                            e.preventDefault();
+                            break;
+                    }
+                });
+
+                document.addEventListener("change", function (e) {
+                    var el = e.target.closest("[data-ax-action='search-mode-contains']");
+                    if (!el) return;
+                    $.axpertUI.search.searchModeContains(!$(el).prop("checked"));
+                });
+
+                window.axCspTemplateHandlersRegistered = true;
+            }
+
+
 </script>

@@ -131,7 +131,7 @@
     </div>
     <script type="text/javascript" src="../Js/thirdparty/jquery/3.1.1/jquery.min.js"></script>
     <script src="../Js/noConflict.min.js?v=1"></script>
-    <script type="text/javascript" src="../Js/common.min.js?v=166"></script>
+    <script type="text/javascript" src="../Js/common.min.js?v=167"></script>
     <script src="../ThirdParty/jquery-mousewheel/jquery-mousewheel.min.js"></script>
     <script src="../ThirdParty/scrollbar-plugin-master/jquery.mCustomScrollbar.js"></script>
     <script src="../ThirdParty/materialize/js/materialize.min.js?v=11"></script>
@@ -149,6 +149,6 @@
     <script src="../Js/templateParser.min.js?v=12"></script>
     <script src="../Js/commonBuilder.min.js?v=48"></script>
     <script src="../Js/commonHome.min.js?v=25"></script>
-    <script src="../Js/builderHome.min.js?v=56"></script>
+    <script src="../Js/builderHome.min.js?v=57"></script>
 </body>
 </html>

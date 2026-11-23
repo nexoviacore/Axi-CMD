@@ -29,11 +29,15 @@ if (callParentNew("nodeApi") || (typeof homepagews!="undefined" && homepagews=="
             setTimeout(function () {
                 $.ajax({
                     type: "POST",
-                    url: `${encodeURI(mainPageUrl = window.location.href.toLowerCase()) && (webUrl = mainPageUrl.substr(0, mainPageUrl.indexOf("/aspx")))}/WebService.asmx/GetSession`,
+                    url: `${encodeURI(mainPageUrl = window.location.href.toLowerCase()) && (webUrl = mainPageUrl.substr(0, mainPageUrl.indexOf("/aspx")))}/WebService.asmx/GetSessionNew`,
                     cache: false,
                     async: false,
                     contentType: "application/json;charset=utf-8",
-                    data: JSON.stringify({ key: 'appsessionkey' }),
+                    data: JSON.stringify({
+                        jsonData: JSON.stringify({
+                            key: 'appsessionkey'
+                        })
+                    }),
                     dataType: "json",
                     success: function (data) {
                         if (data.d != 'Session does not exist') {

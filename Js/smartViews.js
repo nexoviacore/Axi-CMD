@@ -5898,7 +5898,7 @@ onContentReadyRef = (task, showValuesOnOpen, isEditPill) => {
                     "/Js/thirdparty/jquery/3.1.1/jquery.min.js",
                     "/Js/noConflict.min.js",
                     "/ThirdParty/lodash.min.js",
-                    "/Js/common.min.js?v=166",
+                    "/Js/common.min.js?v=167",
                     "/ThirdParty/DataTables-1.10.13/media/js/jquery.dataTables.min.js",
                     "/ThirdParty/DataTables-1.10.13/media/js/dataTables.bootstrap.min.js",
                     "/ThirdParty/DataTables-1.10.13/extensions/FixedHeader/js/dataTables.fixedHeader.min.js",

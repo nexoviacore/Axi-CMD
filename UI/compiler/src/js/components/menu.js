@@ -930,7 +930,9 @@ KTMenu.initGlobalHandlers = function() {
         let backdrop = document.getElementsByClassName("popper-backdrop")?.[0];
         if(backdrop){
             backdrop.classList.add(..."d-none position-fixed start-0 top-0 vw-100 vh-100".split(" "));
-            backdrop.setAttribute("onclick", "this.classList.add('d-none');");
+            backdrop.addEventListener("click", function() {
+                this.classList.add("d-none");
+            });
         }
     }
     

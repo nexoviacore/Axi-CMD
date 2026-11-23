@@ -154,8 +154,8 @@
         var lastSelRecPerPage = "";
         var hasBuildAccess = <%=hasBuildAccess.ToString().ToLower()%>;
 
-        var requestProcess_logtime = '<%=requestProcess_logtime%>';
-        var serverprocesstime = '<%=serverprocesstime%>';
+        var requestProcess_logtime = '<%=HttpUtility.JavaScriptStringEncode(requestProcess_logtime ?? "")%>';
+        var serverprocesstime = '<%=HttpUtility.JavaScriptStringEncode(serverprocesstime ?? "")%>';
         var rsaPublicKey = `<%=rsaPublicKey%>`.replace(/\\n/g, '\n');
     </script>
 

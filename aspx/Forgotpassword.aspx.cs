@@ -118,7 +118,34 @@ public partial class aspx_Forgotpassword : System.Web.UI.Page
             }
             else
                 hdnAxProjs.Value = utilObj.CheckForAvailableProjects();
+
+            if (Request.QueryString["attempt"] != null && Request.QueryString["uname"] == null)
+            {
+                string token = Request.QueryString["attempt"];
+                Guid parsedToken;
+                string[] attempt = Guid.TryParseExact(token, "N", out parsedToken)
+                    ? Session["SigninAttempt-" + token] as string[] : null;
+                long expires;
+                if (attempt != null && attempt.Length == 4 && attempt[2] == "password" &&
+                    long.TryParse(attempt[3], out expires) && expires > DateTime.UtcNow.Ticks &&
+                    string.Equals(attempt[1], proj, StringComparison.OrdinalIgnoreCase))
+                {
+                    txtName.Value = attempt[0];
+                    ClientScript.RegisterStartupScript(this.GetType(), "PrefillForgotPassword",
+                        "$j(function(){ Username = $j('#txtName').val(); $j('#txtName').attr('readonly', 'false'); CallWebservice(); });", true);
+                }
+                else
+                {
+                    ClientScript.RegisterStartupScript(this.GetType(), "ExpiredForgotPasswordAttempt",
+                        "$j(function(){ showAlertDialog('error', 'Login attempt expired. Please enter your username.'); });", true);
+                }
+            }
             EnableCaptcha(proj);
+        }
+        else if (!IsPostBack || Session["captchaenabledFlagForgot"] == null || Session["captchaenabledFlagForgot"].ToString() == "false")
+        {
+            Session["captchaenabledFlagForgot"] = "false";
+            pnlCaptcha.Visible = false;
         }
 
         if (Session["projTitle"] != null)
@@ -236,7 +263,8 @@ public partial class aspx_Forgotpassword : System.Web.UI.Page
             if (!allowChange)
             {
                 errMsg = "Wrong Captcha, Please Try Again.";
-                Page.ClientScript.RegisterStartupScript(this.GetType(), "CallShowAlertDialog", "showAlertDialog(\"error\", \"" + errMsg + "\");", true);
+                //Page.ClientScript.RegisterStartupScript(this.GetType(), "CallShowAlertDialog", "showAlertDialog(\"error\", \"" + errMsg + "\");", true);
+                Page.ClientScript.RegisterStartupScript(this.GetType(), "CallShowAlertDialog", "SetForgorErrorMsg(\"" + errMsg + "\");", true);
                 return;
             }
         }
@@ -415,6 +443,7 @@ public partial class aspx_Forgotpassword : System.Web.UI.Page
     {
         try
         {
+            util.GetAxIniFileKeys(_proj);
             string captcha = util.GetAllSettings(_proj, Constants.AXPCAPTCHA_CONN_KEY);
             if (captcha != "" && captcha != "nooptions")
             {

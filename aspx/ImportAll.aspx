@@ -785,10 +785,13 @@
                         <button id="btnSaveTemplate" type="button" class="btn btn-light-primary shadow-sm d-none" onclick="saveTemplate();">
                             Save Template & Continue                       
                         </button>
-
+                        <button id="btnDataIngestion" type="button" class="btn btn-primary shadow-sm" onclick="parent.parent.DoUtilitiesEvent('AdvancedDataIngestion');">
+                            Advanced data ingestion
+                        </button>
                         <button id="btnContinue" type="button" class="btn btn-primary shadow-sm" data-kt-stepper-action="next">
                             Submit
                         </button>
+
                     </div>
                 </div>
             </div>
@@ -807,7 +810,7 @@
         <script type="text/javascript" src="../Js/alerts.min.js?v=33"></script>
         <script type="text/javascript" src="../Js/helper.min.js?v=158"></script>
         <%--<script type="text/javascript" src="../Js/jsclient.min.js?v=103"></script>--%>
-        <script type="text/javascript" src="../Js/common.min.js?v=166"></script>
+        <script type="text/javascript" src="../Js/common.min.js?v=167"></script>
         <%--        <script type="text/javascript" src="../Js/AxInterface.min.js?v=11"></script>
         <script type="text/javascript" src="../Js/multiselect.min.js"></script>--%>
         <script type="text/javascript" src="../Js/importall.min.js?v=21"></script>

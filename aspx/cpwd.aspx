@@ -29,21 +29,22 @@
     <asp:PlaceHolder runat="server">
         <%:Scripts.Render("~/UI/axpertUI/bundleJs") %>
     </asp:PlaceHolder>
-
-    <script src="../Js/jquery.browser.min.js" type="text/javascript"></script>
-    <script src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js?v=2" type="text/javascript"></script>
-    <script src="../Js/noConflict.min.js?v=1" type="text/javascript"></script>
+   
 
     <script src="../Js/alerts.min.js?v=33" type="text/javascript"></script>
     <asp:PlaceHolder runat="server">
         <%:Scripts.Render("~/UI/axpertUI/bundleJs") %>
     </asp:PlaceHolder>
+    <script src="../Js/noConflict.min.js?v=1" type="text/javascript"></script>
+    <script src="../Js/alerts.min.js?v=33" type="text/javascript"></script>
+    <script src="../Js/jsencrypt.min.js?v=1" type="text/javascript"></script>
+    <script src="../Js/crypto-js.min.js?v=1" type="text/javascript"></script>
     <script src="../Js/md5.min.js" type="text/javascript"></script>
-    <script src="../Js/user.min.js?v=20" type="text/javascript"></script>
+    <script src="../Js/user.min.js?v=21" type="text/javascript"></script>
     <script src="../Js/gen.min.js?v=14" type="text/javascript"></script>
-    <script src="../Js/helper.min.js?v=180" type="text/javascript"></script>
+    <script src="../Js/helper.min.js?v=181" type="text/javascript"></script>
     <script src="../Js/cpwd.min.js?v=24" type="text/javascript"></script>
-    <script src="../Js/common.min.js?v=166" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=167" type="text/javascript"></script>
     <script type="text/javascript" src="../Js/lang/content-<%=langType%>.js?v=64"></script>
     <script>
         (function () {
@@ -166,7 +167,7 @@
                                 <asp:ScriptManager ID="ScriptManager1" runat="server">
                                     <Scripts>
                                         <asp:ScriptReference Path="../Js/gen.min.js?v=14" />
-                                        <asp:ScriptReference Path="../Js/tstruct.min.js?v=706" />
+                                        <asp:ScriptReference Path="../Js/tstruct.min.js?v=707" />
                                     </Scripts>
                                     <Services>
                                         <asp:ServiceReference Path="../WebService.asmx" />
@@ -344,6 +345,7 @@
                                                                 <input runat="server" type="hidden" name="npwdHiddenMd5" id="npwdHiddenMd5" value="" />
                                                                 <input runat="server" type="hidden" name="alphanumeric" id="hdnalphanumeric" value="" />
                                                                 <input runat="server" type="hidden" name="encryptkey" id="hdnencryptkey" value="" />
+                                                                <input runat="server" type="hidden" name="encKey" id="hdnEncKey" value="" />
                                                                 <input runat="server" type="hidden" name="pwdPolicy" id="hdnpwdPolicy" value="" />
                                                                 <%-- <%If remark <> "chpwd" %>
                                                                 <div class="field-placeholder">

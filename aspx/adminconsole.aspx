@@ -357,8 +357,8 @@
         <%:Scripts.Render("~/UI/axpertUI/bundleJs") %>
     </asp:PlaceHolder>
 
-    <script src="../Js/common.min.js?v=166" type="text/javascript"></script>
-    <script src="../Js/helper.min.js?v=180" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=167" type="text/javascript"></script>
+    <script src="../Js/helper.min.js?v=181" type="text/javascript"></script>
     <script src="../Thirdparty/newMaterialUI/plugins/node-waves/waves.min.js"></script>
     <script src="../js/adminconsole.min.js?v=10" type="text/javascript"></script>
     <script type="text/javascript">

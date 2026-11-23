@@ -1,4 +1,4 @@
-<%@ Page Language="C#" AutoEventWireup="true" CodeFile="AxpertLogs.aspx.cs" Inherits="aspx_Logs" %>
+<%@ Page Language="C#" AutoEventWireup="true" CodeFile="AxpertLogs.aspx.cs" Inherits="aspx_Logs" EnableViewState="false" %>
 
 <!DOCTYPE html>
 
@@ -105,7 +105,7 @@
     <link href="../Css/Config_style.min.css?v=16" rel="stylesheet" type="text/css" />
     <link href="../App_Themes/Gray/Stylesheet.min.css?v=23" rel="stylesheet" />
 
-    <script src="../Js/common.min.js?v=166" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=167" type="text/javascript"></script>
     <script src="../Js/AxpertLogs.min.js?v=10" type="text/javascript"></script>
     <link href="../ThirdParty/Linearicons/Font/library/linearIcons.css" rel="stylesheet" />
 

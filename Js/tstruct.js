@@ -8400,8 +8400,27 @@ function FormSubmit() {
                 let _isLoadFromDraft = "false";
                 if (typeof isLoadFromDraft != "undefined")
                     _isLoadFromDraft = isLoadFromDraft;
-                if (!sumDisplay)
-                    ASB.WebService.SaveDataXML(ChangedFields, ChangedFieldDbRowNo, ChangedFieldValues, DeletedDCRows, DeletedFieldValue, files, rid, delRows, chngRows, tstDataId, axrulesFlds, AxPegApprovalSave, resTstHtmlLS, _isLoadFromDraft, SucceededCallback, OnException);
+                if (!sumDisplay){
+                    //ASB.WebService.SaveDataXML(ChangedFields, ChangedFieldDbRowNo, ChangedFieldValues, DeletedDCRows, DeletedFieldValue, files, rid, delRows, chngRows, tstDataId, axrulesFlds, AxPegApprovalSave, resTstHtmlLS, _isLoadFromDraft, SucceededCallback, OnException);
+                    const saveDataRequest = {
+                        fldArray: ChangedFields,
+                        fldDbRowNo: ChangedFieldDbRowNo,
+                        fldValueArray: ChangedFieldValues,
+                        fldDeletedArray: DeletedDCRows,
+                        deletedFldArrayValues: DeletedFieldValue,
+                        files: files,
+                        rid: rid,
+                        delRows: delRows,
+                        changedRows: chngRows,
+                        key: tstDataId,
+                        axRulesFlds: axrulesFlds,
+                        axPegApprovalSave: AxPegApprovalSave,
+                        resTstHtmlLS: resTstHtmlLS,
+                        isLoadFromDraft: _isLoadFromDraft
+                    };
+                    const encryptedRequest = encryptTstDetails(JSON.stringify(saveDataRequest));
+                    ASB.WebService.SaveDataXML(encryptedRequest, SucceededCallback, OnException);
+                }
             } else {
                 actionCallbackFlag = actionCallFlag;
                 $("#icons,#btnSaveTst,.BottomToolbarBar a,.wizardNextPrevWrapper").css({

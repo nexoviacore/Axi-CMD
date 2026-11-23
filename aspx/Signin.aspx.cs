@@ -98,6 +98,113 @@ public partial class Signin : System.Web.UI.Page
     //public string AxiInfoLogin = string.Empty;
     public string AxiLoginInfoKey = string.Empty;
     public Dictionary<string, string> _jsoncontents = new Dictionary<string, string>();
+    private const string LoginAttemptPrefix = "SigninAttempt-";
+    private const string OtpLoginAttemptPrefix = "SigninOtpAttempt-";
+
+    private void SetLoginAttempt(string userName, string project)
+    {
+        Guid previousToken;
+        if (Guid.TryParseExact(hdnLoginAttempt.Value, "N", out previousToken))
+            Session.Remove(LoginAttemptPrefix + hdnLoginAttempt.Value);
+        var expiredKeys = Session.Keys.Cast<string>()
+            .Where(key => key.StartsWith(LoginAttemptPrefix, StringComparison.Ordinal))
+            .Where(key =>
+            {
+                string[] value = Session[key] as string[];
+                long expires;
+                return value == null || value.Length != 4 ||
+                    !long.TryParse(value[3], out expires) || expires <= DateTime.UtcNow.Ticks;
+            }).ToList();
+        foreach (string key in expiredKeys)
+            Session.Remove(key);
+
+        string token = Guid.NewGuid().ToString("N");
+        Session[LoginAttemptPrefix + token] = new string[] {
+            userName, project, "password", DateTime.UtcNow.AddHours(2).Ticks.ToString()
+        };
+        hdnLoginAttempt.Value = token;
+    }
+
+    private void SetOtpLoginAttempt(string userName, string project, string sessionId)
+    {
+        string previousToken = hdnLoginAttempt.Value;
+        string token = Guid.NewGuid().ToString("N");
+        string key = OtpLoginAttemptPrefix + token;
+        string[] attempt = new string[] {
+            userName, project, "otp", DateTime.UtcNow.AddHours(2).Ticks.ToString(), sessionId
+        };
+        string value = JsonConvert.SerializeObject(attempt);
+        if (!new FDW(project).WriteKeyNoSchema(key, value, 120))
+            HttpContext.Current.Cache.Insert(key, value, null, DateTime.UtcNow.AddHours(2), Cache.NoSlidingExpiration);
+        hdnLoginAttempt.Value = token;
+        RemoveOtpLoginAttempt(previousToken, project);
+    }
+
+    private static void RemoveOtpLoginAttempt(string token, string project)
+    {
+        Guid parsed;
+        if (!string.IsNullOrEmpty(token) && Guid.TryParseExact(token, "N", out parsed))
+        {
+            string key = OtpLoginAttemptPrefix + token;
+            HttpContext.Current.Cache.Remove(key);
+            new FDW(project).DeleteKeys(new ArrayList { key });
+        }
+    }
+
+    private static string[] GetLoginAttempt(string token, bool otpPending, string project = null)
+    {
+        Guid parsed;
+        if (string.IsNullOrEmpty(token) || !Guid.TryParseExact(token, "N", out parsed))
+            return null;
+
+        if (otpPending)
+        {
+            if (string.IsNullOrEmpty(project))
+                return null;
+            string key = OtpLoginAttemptPrefix + token;
+            string value = new FDR(project).ReadKeyNoSchema(key);
+            if (string.IsNullOrEmpty(value))
+                value = HttpContext.Current.Cache[key] as string;
+            if (string.IsNullOrEmpty(value))
+                return null;
+            string[] attempt = JsonConvert.DeserializeObject<string[]>(value);
+            long expires;
+            if (attempt == null || attempt.Length != 5 || attempt[2] != "otp" ||
+                !string.Equals(attempt[1], project, StringComparison.OrdinalIgnoreCase) ||
+                !long.TryParse(attempt[3], out expires) || expires <= DateTime.UtcNow.Ticks ||
+                attempt[4] != HttpContext.Current.Session.SessionID)
+                return null;
+            return attempt;
+        }
+
+        string sessionKey = LoginAttemptPrefix + token;
+        string[] passwordAttempt = HttpContext.Current.Session[sessionKey] as string[];
+        long passwordExpires;
+        if (passwordAttempt == null || passwordAttempt.Length != 4 ||
+            !long.TryParse(passwordAttempt[3], out passwordExpires) || passwordExpires <= DateTime.UtcNow.Ticks)
+        {
+            HttpContext.Current.Session.Remove(sessionKey);
+            return null;
+        }
+        return passwordAttempt[2] == "password" ? passwordAttempt : null;
+    }
+
+    private bool RestoreSubmittedLogin()
+    {
+        if (string.IsNullOrEmpty(hdnLoginAttempt.Value))
+            return true;
+        string[] attempt = GetLoginAttempt(hdnLoginAttempt.Value, false);
+        if (attempt == null)
+        {
+            ClientScript.RegisterStartupScript(this.GetType(), "Javascript",
+                "javascript:SetLoginErrorMsg('Login attempt expired. Please start again.');", true);
+            return false;
+        }
+        axUserName.Value = attempt[0];
+        hdnProjName.Value = attempt[1];
+        return true;
+    }
+
     protected override void InitializeCulture()
     {
         if (ConfigurationManager.AppSettings["proj"] != null && ConfigurationManager.AppSettings["proj"].ToString() != string.Empty)
@@ -190,8 +297,8 @@ public partial class Signin : System.Web.UI.Page
                         // Decrypt AES data
                         byte[] aesBytes = Convert.FromBase64String(aesEncryptedData);
                         var decrypted = DecryptWithAesBase64(aesEncryptedData, keyBytes);
-                        hdnUserName.Value = decrypted;
                         axUserName.Value = decrypted;
+                        hdnUserName.Value = string.Empty;
                     }
                 }
                 if (hdnPuser.Value != "")
@@ -218,6 +325,7 @@ public partial class Signin : System.Web.UI.Page
             }
             catch (Exception)
             {
+                hdnUserName.Value = string.Empty;
                 ViewState["StopProcessing"] = true;
                 string msg = "Could not process the request. Please try again.";
                 ClientScript.RegisterStartupScript(this.GetType(), "Javascript", "javascript:SetLoginErrorMsg(\"" + msg + "\");", true);
@@ -1503,6 +1611,8 @@ public partial class Signin : System.Web.UI.Page
     {
         if (ViewState["StopProcessing"] != null && (bool)ViewState["StopProcessing"])
             return;
+        if (!RestoreSubmittedLogin())
+            return;
         isMobDevice = hdnMobDevice.Value;
         hybridGUID = hdnHybridGUID.Value;
         hybridDeviceId = hdnHybridDeviceId.Value;
@@ -1913,7 +2023,7 @@ public partial class Signin : System.Web.UI.Page
             login.IniInfo = iniInfo;
             foreach (var item in Session)
             {
-                if (item.ToString() != "FDR" && item.ToString() != "allUrls" && item.ToString() != "urlIndex" && item.ToString() != "kernelTime")
+                if (!item.ToString().StartsWith(LoginAttemptPrefix, StringComparison.Ordinal) && item.ToString() != "FDR" && item.ToString() != "allUrls" && item.ToString() != "urlIndex" && item.ToString() != "kernelTime")
                     login.sessions.Add(item.ToString(), Session[item.ToString()] != null ? Session[item.ToString()].ToString() : null);
                 else if (item.ToString() == "allUrls" || item.ToString() == "urlIndex")
                     login.sessions.Add(item.ToString(), null);
@@ -1929,7 +2039,7 @@ public partial class Signin : System.Web.UI.Page
                     HttpContext.Current.Cache.Insert(guidVal, Newtonsoft.Json.JsonConvert.SerializeObject(login));
             }
             catch (Exception) { }
-            hdnUserName.Value = login.user;
+            SetOtpLoginAttempt(login.user, project, login.sid);
             if (jsoncontents != string.Empty && jsoncontents != "noemailsettings")
             {
                 string _isotpNumeric = "true";
@@ -1943,8 +2053,8 @@ public partial class Signin : System.Web.UI.Page
                     panelUser.Visible = false;
                     StringBuilder sb = new StringBuilder();
                     sb.Append("<div class=\"control-group\">");
-                    sb.Append("<div class=\"fv-row mb-4 fv-plugins-icon-container\"><div class=\"input-icon left\"><div class=\"d-flex flex-stack mb-2\"><label ID=\"lblotp\" for=\"axOTPpwd\" class=\"form-label fw-boldest text-dark fs-6 mb-0\">Enter OTP</label></div><input id=\"axOTPpwd\" aria-describedby=\"lblotpexpiry\" runat=\"server\" class=\"m-wrap placeholder-no-fix form-control form-control-solid\" tabindex=\"0\" type=\"text\" autocomplete=\"off\" placeholder=\"\" maxlength=\"" + axOTPAuthCahrs + "\" name=\"axOTPpwd\" aria-describedby=\"lblotpexpiry\" title=\"Enter OTP\" required /></div></div>");
-                    sb.Append("<div class=\"fv-row mb-4 fv-plugins-icon-container\"><div class=\"input-icon left\"><div class=\"d-flex flex-stack mb-2\"><label ID=\"lblotpexpiry\" class=\"form-label fw-boldest text-dark fs-6 mb-0\" runat=\"server\"></label></div></div></div>");
+                    sb.Append("<div class=\"fv-row mb-4 fv-plugins-icon-container\"><div class=\"input-icon left\"><div class=\"d-flex flex-stack mb-2\"><label ID=\"lblotp\" for=\"axOTPpwd\" class=\"form-label fw-boldest text-dark fs-6 mb-0\" meta:resourcekey=\"lblotp\">Enter OTP</label></div><input id=\"axOTPpwd\" aria-describedby=\"lblotpexpiry\" runat=\"server\" class=\"m-wrap placeholder-no-fix form-control form-control-solid\" tabindex=\"0\" type=\"text\" autocomplete=\"off\" placeholder=\"\" maxlength=\"" + axOTPAuthCahrs + "\" name=\"axOTPpwd\" aria-describedby=\"lblotpexpiry\" title=\"Enter OTP\" required /></div></div>");
+                    sb.Append("<div class=\"fv-row mb-4 fv-plugins-icon-container\"><div class=\"input-icon left\"><div class=\"d-flex flex-stack mb-2\"><label ID=\"lblotpexpiry\" class=\"form-label fw-boldest text-dark fs-6 mb-0\"></label></div></div></div>");
 
                     if (staySignInOtp == "true")
                     {
@@ -2005,7 +2115,7 @@ public partial class Signin : System.Web.UI.Page
                 panelUser.Visible = false;
                 StringBuilder sb = new StringBuilder();
                 sb.Append("<div class=\"control-group\">");
-                sb.Append("<div class=\"fv-row mb-4 fv-plugins-icon-container\"><div class=\"input-icon left\"><div class=\"d-flex flex-stack mb-2\"><label ID=\"lblotp\" for=\"axOTPpwd\" class=\"form-label fw-boldest text-dark fs-6 mb-0\">Enter OTP</label></div><input id=\"axOTPpwd\" aria-describedby=\"lblotpexpiry\" runat=\"server\" class=\"m-wrap placeholder-no-fix form-control form-control-solid\" tabindex=\"0\" type=\"text\" autocomplete=\"off\" placeholder=\"\" maxlength=\"" + axOTPAuthCahrs + "\" name=\"axOTPpwd\" aria-describedby=\"lblotpexpiry\" title=\"Enter OTP\" required /></div></div>");
+                sb.Append("<div class=\"fv-row mb-4 fv-plugins-icon-container\"><div class=\"input-icon left\"><div class=\"d-flex flex-stack mb-2\"><label ID=\"lblotp\" for=\"axOTPpwd\" class=\"form-label fw-boldest text-dark fs-6 mb-0\" meta:resourcekey=\"lblotp\">Enter OTP</label></div><input id=\"axOTPpwd\" aria-describedby=\"lblotpexpiry\" runat=\"server\" class=\"m-wrap placeholder-no-fix form-control form-control-solid\" tabindex=\"0\" type=\"text\" autocomplete=\"off\" placeholder=\"\" maxlength=\"" + axOTPAuthCahrs + "\" name=\"axOTPpwd\" aria-describedby=\"lblotpexpiry\" title=\"Enter OTP\" required /></div></div>");
                 sb.Append("<div class=\"fv-row mb-4 fv-plugins-icon-container\"><div class=\"input-icon left\"><div class=\"d-flex flex-stack mb-2\"><label ID=\"lblotpexpiry\" class=\"form-label fw-boldest text-dark fs-6 mb-0\"></label></div></div></div>");
 
                 if (staySignInOtp == "true")
@@ -2041,7 +2151,7 @@ public partial class Signin : System.Web.UI.Page
             }
             foreach (var item in Session)
             {
-                if (item.ToString() != "FDR" && item.ToString() != "allUrls" && item.ToString() != "urlIndex" && item.ToString() != "kernelTime")
+                if (!item.ToString().StartsWith(LoginAttemptPrefix, StringComparison.Ordinal) && item.ToString() != "FDR" && item.ToString() != "allUrls" && item.ToString() != "urlIndex" && item.ToString() != "kernelTime")
                     login.sessions.Add(item.ToString(), Session[item.ToString()] != null ? Session[item.ToString()].ToString() : null);
                 else if (item.ToString() == "allUrls" || item.ToString() == "urlIndex")
                     login.sessions.Add(item.ToString(), null);
@@ -2440,6 +2550,8 @@ public partial class Signin : System.Web.UI.Page
     {
         if (ViewState["StopProcessing"] != null && (bool)ViewState["StopProcessing"])
             return;
+        if (!RestoreSubmittedLogin())
+            return;
         checkSecurityVal(hdnProjLang.Value);
         checkSecurityVal(hdnProjName.Value);
         if (ConfigurationManager.AppSettings["axThemeFolder"] != null && ConfigurationManager.AppSettings["axThemeFolder"].ToString() != "")
@@ -2486,7 +2598,9 @@ public partial class Signin : System.Web.UI.Page
                     if (staySignIn == "")
                         staySignIn = "false";
                     string thisProj = string.Empty;
-                    if (Session["Project"] != null)
+                    if (!string.IsNullOrEmpty(hdnLoginAttempt.Value))
+                        thisProj = hdnProjName.Value;
+                    else if (Session["Project"] != null)
                         thisProj = Session["Project"].ToString();
                     else
                         thisProj = hdnProjName.Value;
@@ -2660,49 +2774,39 @@ public partial class Signin : System.Web.UI.Page
     public static string KeepSigninWebDetailsNew(string jsonData)
     {
         string result = "";
-        string kaDetails = string.Empty;
         try
         {
-            SignInRequest request;
+            SignInRequest request = null;
             try
             {
-                var settings = new JsonSerializerSettings
-                {
-                    MissingMemberHandling = MissingMemberHandling.Error
-                };
+                JsonSerializerSettings settings = new JsonSerializerSettings();
+                settings.MissingMemberHandling = MissingMemberHandling.Error;
                 request = JsonConvert.DeserializeObject<SignInRequest>(jsonData, settings);
             }
-            catch (Exception)
+            catch
             {
-                throw new SecurityException("Invalid format.");
+                throw new HttpException(400, "Invalid request.");
             }
-            if (request == null || string.IsNullOrEmpty(request.hdnBwsrid) || string.IsNullOrEmpty(request.csrfToken))
+            if (request == null || string.IsNullOrWhiteSpace(request.hdnBwsrid) || string.IsNullOrWhiteSpace(request.csrfToken))
             {
-                throw new SecurityException("Invalid format.");
+                throw new HttpException(400, "Invalid request.");
             }
             if (HttpContext.Current.Session["AntiforgeryToken"] == null || request.csrfToken != HttpContext.Current.Session["AntiforgeryToken"].ToString())
             {
-                throw new SecurityException("CSRF Attack Detected!");
+                throw new HttpException(403, "CSRF validation failed.");
             }
 
-            if (request.hdnBwsrid == string.Empty || Util.Util.CheckCrossScriptingInString(request.hdnBwsrid) || Util.Util.ContainsXSS(request.hdnBwsrid))
-                throw new SecurityException("Invalid format.");
-
-            if (request.projVal == string.Empty || Util.Util.CheckCrossScriptingInString(request.projVal) || Util.Util.ContainsXSS(request.projVal))
-                throw new SecurityException("Invalid format.");
-
+            if (Util.Util.CheckCrossScriptingInString(request.hdnBwsrid) || Util.Util.ContainsXSS(request.hdnBwsrid))
+            {
+                throw new HttpException(400, "Invalid request.");
+            }
             Util.Util utilObj = new Util.Util();
-
-
             string ipad = utilObj.GetIpAddress();
             ipad = ipad.Replace(".", "1");
             string brOwner = request.hdnBwsrid;
-            string urlDomain = System.Web.HttpContext.Current.Request.Url.ToString();
+            string urlDomain = HttpContext.Current.Request.Url.ToString();
             urlDomain = urlDomain.Substring(0, urlDomain.ToLower().IndexOf("/aspx/"));
             ipad += "-" + brOwner + "-" + urlDomain;
-            LogFile.Log logobj = new LogFile.Log();
-            //logobj.CreateLog("Owner:" + brOwner, "BrowserInfo", "BrowserInfo", "", "true");
-
             FDR fObj = (FDR)HttpContext.Current.Session["FDR"];
             if (fObj == null)
             {
@@ -2710,7 +2814,7 @@ public partial class Signin : System.Web.UI.Page
             }
 
             string rsKey = fObj.MakeKeyName(Constants.REDISKEEPWEBINFO, ipad);
-            var KeysList = fObj.GetAllKeys(rsKey, false);//Not getting keys due to contains of project name
+            var KeysList = fObj.GetAllKeys(rsKey, false);
             if (KeysList.Count > 0)
             {
                 ArrayList lstNames = new ArrayList();
@@ -2718,11 +2822,19 @@ public partial class Signin : System.Web.UI.Page
                 {
                     lstNames.Add(nameList.ToString().Split(new[] { "keepaliveweb-" }, StringSplitOptions.None)[1]);
                 }
+
                 string strNames = string.Join(",", lstNames.ToArray());
                 result = "{\"userlist\":\"" + strNames + "\"}";
             }
         }
-        catch (Exception ex) { }
+        catch (HttpException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            throw new HttpException(500, ex.Message);
+        }
         return result;
     }
 
@@ -2807,6 +2919,13 @@ public partial class Signin : System.Web.UI.Page
                 string msg = "<error><msg>Please enter your username.</msg></error>";
                 ClientScript.RegisterStartupScript(this.GetType(), "Javascript", "javascript:SetLoginErrorMsg('" + msg + "');", true);
             }
+            else if (Util.Util.CheckCrossScriptingInString(hdnProjName.Value) || Util.Util.CheckCrossScriptingInString(axUserName.Value))
+                throw new SecurityException("Invalid format.");
+
+            else if (Util.Util.ContainsXSS(hdnProjName.Value) || Util.Util.ContainsXSS(axUserName.Value))
+                throw new SecurityException("Invalid format.");
+            else if (!Util.Util.IsValidUserName(axUserName.Value))
+                throw new SecurityException("Invalid format.");
             else
             {
                 string axInstance = util.CheckForAvailableProjects();
@@ -2819,6 +2938,7 @@ public partial class Signin : System.Web.UI.Page
                     }
                     else
                     {
+                        SetLoginAttempt(axUserName.Value, hdnProjName.Value);
                         Util.Util utils = new Util.Util();
                         utils.GetAxApps(hdnProjName.Value);
 
@@ -3186,20 +3306,28 @@ public partial class Signin : System.Web.UI.Page
     {
         if (ViewState["StopProcessing"] != null && (bool)ViewState["StopProcessing"])
             return;
+        string[] attempt = GetLoginAttempt(hdnLoginAttempt.Value, true, hdnProjName.Value);
+        if (attempt == null)
+        {
+            ClientScript.RegisterStartupScript(this.GetType(), "Javascript",
+                "javascript:SetLoginErrorMsg('Login attempt expired. Please start again.');", true);
+            return;
+        }
         if (hdnOtpauth.Value != string.Empty)
         {
             Util.Util utils = new Util.Util();
             if (Session["axApps"] == null || Session["axApps"].ToString() == "")
             {
-                utils.GetAxApps(hdnProjName.Value);
+                utils.GetAxApps(attempt[1]);
             }
-            string _otpAuth = utils.GetOTPAuth(hdnUserName.Value, hdnProjName.Value);
+            string _otpAuth = utils.GetOTPAuth(attempt[0], attempt[1]);
             if (_otpAuth != string.Empty)
             {
                 string[] _thisDetails = _otpAuth.Split('♣');
                 checkSecurityVal(hdnOtpauth.Value);
                 if (_thisDetails[0] == hdnOtpauth.Value)
                 {
+                    RemoveOtpLoginAttempt(hdnLoginAttempt.Value, attempt[1]);
                     strParams.Append("<input type=hidden name=\"hdnAxGKey\" value=\"" + _thisDetails[1] + "\">");
                     strParams.Append("<input type=hidden name=\"hdnLanguage\" value=\"" + _thisDetails[2] + "\">");
                     checkSecurityVal(hdnSrtforLogin.Value);
@@ -3242,33 +3370,47 @@ public partial class Signin : System.Web.UI.Page
         }
     }
 
+    [WebMethod(EnableSession = true)]
+    public static string chkPendingOtp(string stsotpauth, string loginAttempt, string project, string csrfToken)
+    {
+        if (HttpContext.Current.Session["AntiforgeryToken"] == null ||
+            csrfToken != HttpContext.Current.Session["AntiforgeryToken"].ToString())
+            throw new SecurityException("CSRF Attack Detected!");
+        if (Util.Util.CheckCrossScriptingInString(project) || Util.Util.ContainsXSS(project))
+            throw new SecurityException("Invalid format.");
+        string[] attempt = GetLoginAttempt(loginAttempt, true, project);
+        if (attempt == null)
+            return "LoginExpired";
+        return chkOtp(stsotpauth, attempt[1], attempt[0], csrfToken);
+    }
+
     [WebMethod]
     public static string chkOtp(string stsotpauth, string proj, string username, string csrfToken)
     {
         string res = string.Empty;
         try
         {
-            if (csrfToken == "" || Util.Util.CheckCrossScriptingInString(csrfToken) || Util.Util.CheckCrossScriptingInString(stsotpauth) || Util.Util.CheckCrossScriptingInString(proj) || Util.Util.CheckCrossScriptingInString(username))
-                throw new SecurityException("Invalid format.");
+        if (csrfToken == "" || Util.Util.CheckCrossScriptingInString(csrfToken) || Util.Util.CheckCrossScriptingInString(stsotpauth) || Util.Util.CheckCrossScriptingInString(proj) || Util.Util.CheckCrossScriptingInString(username))
+            throw new SecurityException("Invalid format.");
 
-            if (csrfToken == "" || Util.Util.ContainsXSS(csrfToken) || Util.Util.ContainsXSS(stsotpauth) || Util.Util.ContainsXSS(proj) || Util.Util.ContainsXSS(username))
-                throw new SecurityException("Invalid format.");
+        if (csrfToken == "" || Util.Util.ContainsXSS(csrfToken) || Util.Util.ContainsXSS(stsotpauth) || Util.Util.ContainsXSS(proj) || Util.Util.ContainsXSS(username))
+            throw new SecurityException("Invalid format.");
 
             if (stsotpauth != null && stsotpauth != string.Empty)
             {
-                Util.Util utils = new Util.Util();
-                if (HttpContext.Current.Session["axApps"] == null || HttpContext.Current.Session["axApps"].ToString() == "")
+        Util.Util utils = new Util.Util();
+        if (HttpContext.Current.Session["axApps"] == null || HttpContext.Current.Session["axApps"].ToString() == "")
                 {
-                    utils.GetAxApps(proj);
-                }
+            utils.GetAxApps(proj);
+    }
                 string _otpAuth = utils.GetOTPAuth(username, proj);
                 if (_otpAuth != string.Empty)
-                {
+    {
                     string[] _thisDetails = _otpAuth.Split('♣');
                     if (_thisDetails[0] == stsotpauth)
                     {
                         res = "success";
-                    }
+    }
                     else
                     {
                         res = "InvalidOTP";
@@ -3340,6 +3482,15 @@ public partial class Signin : System.Web.UI.Page
     {
         if (ViewState["StopProcessing"] != null && (bool)ViewState["StopProcessing"])
             return;
+        string[] attempt = GetLoginAttempt(hdnLoginAttempt.Value, true, hdnProjName.Value);
+        if (attempt == null)
+        {
+            ClientScript.RegisterStartupScript(this.GetType(), "Javascript",
+                "javascript:SetLoginErrorMsg('Login attempt expired. Please start again.');", true);
+            return;
+        }
+        string userName = attempt[0];
+        hdnProjName.Value = attempt[1];
         checkSecurityVal(hdnProjLang.Value);
         checkSecurityVal(hdnProjName.Value);
         if (ConfigurationManager.AppSettings["axThemeFolder"] != null && ConfigurationManager.AppSettings["axThemeFolder"].ToString() != "")
@@ -3347,10 +3498,10 @@ public partial class Signin : System.Web.UI.Page
         axOTPAuthCahrs = util.GetOTPSettings(hdnProjName.Value, "AxOTPAuthCahrs");
         axOTPAuthExpiry = util.GetOTPSettings(hdnProjName.Value, "AxOTPAuthExpiry");
         string _pwdAuth = "";
-        if (HttpContext.Current.Session != null && HttpContext.Current.Session["PwdAuthLang-" + hdnUserName.Value] != null)
-            _pwdAuth = HttpContext.Current.Session["PwdAuthLang-" + hdnUserName.Value].ToString();
+        if (HttpContext.Current.Session != null && HttpContext.Current.Session["PwdAuthLang-" + userName] != null)
+            _pwdAuth = HttpContext.Current.Session["PwdAuthLang-" + userName].ToString();
         else
-            _pwdAuth = GetPwdAuthLang(hdnUserName.Value, hdnProjName.Value);
+            _pwdAuth = GetPwdAuthLang(userName, hdnProjName.Value);
         if (_pwdAuth != "")
         {
             string _otpAuthflag = _pwdAuth.Split('♣')[2];
@@ -3359,7 +3510,7 @@ public partial class Signin : System.Web.UI.Page
                 axOTPAuthDbFlag = "true";
             if (_pwdAuthflag != string.Empty && _pwdAuthflag.ToLower() == "t")
                 axPwbAuthDbFlag = "true";
-            CallLoginService(false, hdnUserName.Value, hdnPuser.Value, hdnProjName.Value, hdnProjLang.Value, "", "true", axOTPAuthDbFlag, axPwbAuthDbFlag);
+            CallLoginService(false, userName, hdnPuser.Value, hdnProjName.Value, hdnProjLang.Value, "", "true", axOTPAuthDbFlag, axPwbAuthDbFlag);
         }
         else
         {

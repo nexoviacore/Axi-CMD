@@ -34,6 +34,105 @@ namespace ASBExt
         ExecTrace ObjExecTr = ExecTrace.Instance;
         bool attachDir = false;
 
+        private static readonly Dictionary<string, string> asbServiceSuffixes = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            { "ASBIView.ASBIViewservice", "ASBIView.dll/soap/ASBIView" },
+            { "ASBAction.ASBActionservice", "ASBAction.dll/soap/ASBAction" },
+            { "ASBDefine.ASBDefineservice", "ASBDefine.dll/soap/Asbdefine" },
+            { "ASBUtils.ASBUtilsservice", "ASBUtils.dll/soap/ASBUtils" },
+            { "ASBUser.ASBUserservice", "ASBUser.dll/soap/ASBUser" },
+            { "ASBTStruct.ASBTStructservice", "ASBTStruct.dll/soap/ASBTStruct" },
+            { "ASBRapidTStruct.ASBRapidTStructservice", "ASBRapidTStruct.dll/soap/ASBRapidTStruct" },
+            { "ASBScript.ASBScriptservice", "ASBScript.dll/soap/ASBScript" },
+            { "ASBMenu.ASBMenuservice", "ASBMenu.dll/soap/ASBMenu" }
+        };
+
+        public static string GetAsbServiceBaseUrl(string name, string value)
+        {
+            string suffix;
+            if (!asbServiceSuffixes.TryGetValue(name, out suffix))
+                throw new ArgumentException("Unrecognized ASB service: " + name);
+
+            value = value.Trim();
+            Uri url;
+            if (!Uri.TryCreate(value, UriKind.Absolute, out url) ||
+                (url.Scheme != Uri.UriSchemeHttp && url.Scheme != Uri.UriSchemeHttps))
+                throw new ArgumentException("ASB paths must use absolute HTTP or HTTPS URLs.");
+            if (!string.IsNullOrEmpty(url.Query) || !string.IsNullOrEmpty(url.Fragment))
+                throw new ArgumentException("An ASB URL cannot contain a query or fragment.");
+
+            if (value.EndsWith("/" + suffix, StringComparison.OrdinalIgnoreCase))
+                value = value.Substring(0, value.Length - suffix.Length);
+            else if (url.AbsolutePath.IndexOf(".dll/soap/", StringComparison.OrdinalIgnoreCase) >= 0)
+                throw new ArgumentException("The service URL does not match the selected ASB service.");
+
+            return value.TrimEnd('/') + "/";
+        }
+
+        public static string GetAsbServiceUrl(string name, string value)
+        {
+            string baseUrl = GetAsbServiceBaseUrl(name, value);
+            return baseUrl + asbServiceSuffixes[name];
+        }
+
+        public WebServiceExt()
+        {
+            ApplyAsbPaths();
+        }
+
+        /// <summary>
+        /// Overrides the ASB DLL service URLs (web.config defaults) with the ones saved for the
+        /// current connection in AppSettings.ini (appsettings.[project].ASBPath). Nothing configured = web.config is used.
+        /// </summary>
+        void ApplyAsbPaths()
+        {
+            try
+            {
+                HttpContext ctx = HttpContext.Current;
+                if (ctx == null || ctx.Session == null || ctx.Session["project"] == null)
+                    return;
+                string proj = ctx.Session["project"].ToString();
+                if (proj == string.Empty)
+                    return;
+                string settings = utilObj.GetAllSettings(proj, Constants.ASBPATH_CONN_KEY);
+                if (string.IsNullOrWhiteSpace(settings) || settings == "nooptions")
+                    return;
+
+                JObject configuredPaths = JObject.Parse(settings);
+                var paths = new Dictionary<string, string>(StringComparer.Ordinal);
+                foreach (JProperty property in configuredPaths.Properties())
+                {
+                    if (!asbServiceSuffixes.ContainsKey(property.Name))
+                        continue;
+                    try
+                    {
+                        if (property.Value.Type != JTokenType.String || string.IsNullOrWhiteSpace((string)property.Value))
+                            throw new ArgumentException("The ASB path must be a non-empty URL.");
+                        paths[property.Name] = GetAsbServiceUrl(property.Name, (string)property.Value);
+                    }
+                    catch (ArgumentException ex)
+                    {
+                        System.Diagnostics.Trace.TraceError("Invalid ASB path for {0}: {1}", property.Name, ex);
+                    }
+                }
+
+                string url;
+                if (paths.TryGetValue("ASBMenu.ASBMenuservice", out url)) asbMenu.Url = url;
+                if (paths.TryGetValue("ASBAction.ASBActionservice", out url)) asbAction.Url = url;
+                if (paths.TryGetValue("ASBTStruct.ASBTStructservice", out url)) asbTStruct.Url = url;
+                if (paths.TryGetValue("ASBRapidTStruct.ASBRapidTStructservice", out url)) asbRTstruct.Url = url;
+                if (paths.TryGetValue("ASBIView.ASBIViewservice", out url)) asbIview.Url = url;
+                if (paths.TryGetValue("ASBUser.ASBUserservice", out url)) asbUser.Url = url;
+                if (paths.TryGetValue("ASBDefine.ASBDefineservice", out url)) asbDefine.Url = url;
+                if (paths.TryGetValue("ASBUtils.ASBUtilsservice", out url)) asbUtils.Url = url;
+                if (paths.TryGetValue("ASBScript.ASBScriptservice", out url)) asbScript.Url = url;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Trace.TraceError("Unable to apply ASB paths; using web.config URLs: {0}", ex);
+            }
+        }
+
         /// <summary>Based on the input param get recordid and send back the result </summary>
         /// <param name="paramXml"> </param>
         /// return the record id in the xml format
