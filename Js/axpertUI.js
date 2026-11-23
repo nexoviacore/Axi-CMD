@@ -6,6 +6,57 @@
 ; (function ($, win) {
     //class axpertUI {
     $_this = this;
+    function axCspEncodeHtmlAttribute(value) {
+        return String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/"/g, "&quot;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+    }
+
+    function axCspProcessCardLinks(cardElement) {
+        if (!cardElement) return;
+
+        $(cardElement).find("[onclick]").addBack("[onclick]").each(function () {
+            var el = $(this);
+            var code = (el.attr("onclick") || "").trim();
+
+            if (!code) return;
+
+            // Remove optional javascript: prefix.
+            code = code.replace(/^\s*javascript\s*:\s*/i, "").trim();
+
+            // AxLoadUrl('url') / AxLoadUrl("url")
+            var axLoadMatch = code.match(/^\s*AxLoadUrl\s*\(\s*(['"])([\s\S]*?)\1\s*\)\s*;?\s*$/i);
+            if (axLoadMatch) {
+                el.attr("data-ax-action", "card-ax-load-url");
+                el.attr("data-ax-url", axLoadMatch[2]);
+                el.attr("href", "#");
+                el.removeAttr("onclick");
+                return;
+            }
+
+            // LoadIframe('url') / LoadIframe("url")
+            var loadIframeMatch = code.match(/^\s*LoadIframe\s*\(\s*(['"])([\s\S]*?)\1\s*\)\s*;?\s*$/i);
+            if (loadIframeMatch) {
+                el.attr("data-ax-action", "card-load-iframe");
+                el.attr("data-ax-url", loadIframeMatch[2]);
+                el.attr("href", "#");
+                el.removeAttr("onclick");
+                return;
+            }
+
+            // window.open('url', '_blank') / window.open("url", "_blank")
+            var windowOpenMatch = code.match(/^\s*window\.open\s*\(\s*(['"])([\s\S]*?)\1\s*,\s*(['"])([\s\S]*?)\3\s*\)\s*;?\s*$/i);
+            if (windowOpenMatch) {
+                el.attr("data-ax-action", "card-window-open");
+                el.attr("data-ax-url", windowOpenMatch[2]);
+                el.attr("data-ax-target", windowOpenMatch[4]);
+                el.attr("href", "#");
+                el.removeAttr("onclick");
+            }
+        });
+    }
     function axpertUI() {
         options = {
             leftSideBar: {
@@ -139,7 +190,7 @@
                                             iconText = "insert_drive_file";
                                         }
                                         return `
-                                        <a class="menu-link py-5 ps-5--- mt-1" href="javascript:void(0);" title="${childObj.name}" ${childObj.target != "" ? `onclick="LoadIframe('${childObj.target}')"` : ""} >
+                                        <a class="menu-link py-5 ps-5--- mt-1" href="#" title="${childObj.name}" ${childObj.target != "" ? `data-ax-click="LoadIframe(\'${childObj.target}\')"` : ""} >
                                             <span class="menu-icon">
                                                 <span class="${iconClass} ${iconClass.indexOf("material-icons") > -1 ? `material-icons-style material-icons-2` : ``}">
                                                     ${iconText}
@@ -154,7 +205,7 @@
                                         }
                                         else if (childObj.icon.indexOf("/") != -1) {
                                             return `
-                                            <a class="menu-link py-5 ps-5--- mt-1" href="javascript:void(0);" title="${childObj.name}" onclick="LoadIframe('${childObj.target}')">
+                                            <a class="menu-link py-5 ps-5--- mt-1" href="#" title="${childObj.name}" data-ax-click="LoadIframe(\'${childObj.target}\')">
                                                 <span class="menu-icon">
                                                     <img src="${childObj.icon}" class="mw-25px mh-25px" />
                                                 </span>
@@ -166,7 +217,7 @@
                                             iconText = childObj.icon;
                                         }
                                         return `
-                                        <a class="${childObj.target == 'loadhomepage' ? "d-flex me-auto" : "menu-link py-5 mt-1"}" href="javascript:void(0);" title="${childObj.name}" onclick="LoadIframe('${childObj.target}')">
+                                        <a class="${childObj.target == 'loadhomepage' ? "d-flex me-auto" : "menu-link py-5 mt-1"}" href="#" title="${childObj.name}" data-ax-click="LoadIframe(\'${childObj.target}\')">
                                             <span class="menu-icon">
                                                 <span class="${iconClass} ${iconClass.indexOf("material-icons") > -1 ? `material-icons-style material-icons-2` : ``}">
                                                     ${iconText}
@@ -177,7 +228,7 @@
                                     }
                                 }
                                 return `
-                                <a class="menu-link py-5 ps-5--- mt-1" href="javascript:void(0);" title="${childObj.name}" onclick="LoadIframe('${childObj.target}')">
+                                <a class="menu-link py-5 ps-5--- mt-1" href="#" title="${childObj.name}" data-ax-click="LoadIframe(\'${childObj.target}\')">
                                     <span class="menu-icon">
                                         <span class="material-icons material-icons-style material-icons-2">
                                             ${iconClass}
@@ -189,17 +240,17 @@
                         }, cardActiveListOption: {
                             opener: `<div class="d-flex">`,
                             closer: `</div>`,
-                            activeList: `<a class="menu-icon" href="javascript:void(0);" title="Active List" onclick="LoadIframe('processflow.aspx?activelist=t')">
+                            activeList: `<a class="menu-icon" href="#" title="Active List" data-ax-click="LoadIframe(\'processflow.aspx?activelist=t\')">
                                                 <span class="material-icons material-icons-style material-icons-2">
                                                    format_list_bulleted
                                                 </span>
                                         </a>`,
-                            dashBoard: `<a class="menu-icon d-none" href="javascript:void(0);" title="Dashboard">
+                            dashBoard: `<a class="menu-icon d-none" href="#" title="Dashboard">
                                                 <span class="material-icons material-icons-style material-icons-2">
                                                    dashboard
                                                 </span>
                                         </a>`,
-                            calendar: `<a class="menu-icon d-none" href="javascript:void(0);" title="Calendar">
+                            calendar: `<a class="menu-icon d-none" href="#" title="Calendar">
                                                 <span class="material-icons material-icons-style material-icons-3">
                                                    calendar_today
                                                 </span>
@@ -303,7 +354,7 @@
                                 <!--end::Card title-->
                                 <!--begin::Card toolbar-->
                                 <div class="card-toolbar d-none">
-                                    <a href="javascript:void(0);" class="btn btn-sm btn-flex btn-light-primary">
+                                    <a href="#" class="btn btn-sm btn-flex btn-light-primary">
                                         <statusContent></statusContent>
                                     </a>
                                 </div>
@@ -347,7 +398,7 @@
                                     </h4>
                                 </div>
                                 <div class="card-toolbar">
-                                    <a href="javascript:void(0);" class="d-none btn btn-sm btn-icon btn-icon-primary btn-active-light-primary me-n3" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-flip="top-end">
+                                    <a href="#" class="d-none btn btn-sm btn-icon btn-icon-primary btn-active-light-primary me-n3" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-flip="top-end">
                                         <span class="material-icons material-icons-style">
                                             more_vert
                                         </span>
@@ -358,7 +409,7 @@
                                         </div>
                                         <div class="separator mb-3 opacity-75"></div>
                                         <div class="menu-item px-3">
-                                            <a href="javascript:void(0);" class="menu-link px-3">New Ticket</a>
+                                            <a href="#" class="menu-link px-3">New Ticket</a>
                                         </div>
                                     </div>
                                 </div>
@@ -511,7 +562,7 @@
                                     </h4>
                                 </div>
                                 <div class="d-none card-toolbar">
-                                    <a href="javascript:void(0);" class="btn btn-sm btn-icon btn-icon-primary btn-active-light-primary me-n3" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-flip="top-end">
+                                    <a href="#" class="btn btn-sm btn-icon btn-icon-primary btn-active-light-primary me-n3" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-flip="top-end">
                                         <span class="material-icons material-icons-style">
                                             more_vert
                                         </span>
@@ -586,7 +637,7 @@
                                 <!--end::Card title-->
                                 <!--begin::Card toolbar-->
                                 <div class="card-toolbar d-none align-items-start pt-3 position-absolute top-0 end-0 me-7">
-                                    <a href="javascript:void(0);" class="d-none--- btn btn-sm btn-icon btn-icon-gray-600 btn-active-light-primary me-n3" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-flip="top-end">
+                                    <a href="#" class="d-none--- btn btn-sm btn-icon btn-icon-gray-600 btn-active-light-primary me-n3" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-flip="top-end">
                                         <span class="material-icons material-icons-style">
                                             more_vert
                                         </span>
@@ -610,7 +661,7 @@
                                         <div class="separator mb-3 opacity-75"></div>
                                         <div class="menu-item px-3">
                                             <div class="flex-wrap pt-0 pb-2">
-                                                <!--<a href="javascript:void(0);" onclick="alert();" class="btn btn-sm btn-light-primary btn-active-primary my-1 me-2">View Role</a>-->
+                                                <!--<a href="#" data-ax-click="alert();" class="btn btn-sm btn-light-primary btn-active-primary my-1 me-2">View Role</a>-->
                                                 <dropdownOptions></dropdownOptions>
                                             </div>
                                         </div>
@@ -1243,6 +1294,10 @@
                 cardElement.find(".mainHeading").attr("title", (card["cardname"] || "")).find("headerContent").replaceWith(card["cardname"] || "");
             },
             _addCardBackground(cardElement, card){ 
+                // Card SQL/HTML content can itself contain inline onclick attributes.
+                // Convert those handlers to CSP-safe data attributes before the card is displayed.
+                axCspProcessCardLinks(cardElement);
+
                 cardElement.find(".card-body a:not(.dropdown a)").addClass("border-bottom");
                 
                 if(card["axpfile_imgcard"] && card["cardtype"] == "image card") {
@@ -1431,7 +1486,7 @@
                     dropdownOptions.replaceWith($(`${
                         btnoption.map((btn, btnInd)=>`
                             ${btn?.Button ? `
-                            <a href="javascript:void(0);" onclick="$.axpertUI.cardsPage._callOptionsCardClick('${card.axp_cardsid}', '${btn.Button}', this);" class="btn btn-sm btn-light-primary btn-active-primary my-1 me-2">
+                            <a href="#" data-ax-action="card-option-click" data-ax-card-id="${axCspEncodeHtmlAttribute(card.axp_cardsid)}" data-ax-button="${axCspEncodeHtmlAttribute(btn.Button)}" class="btn btn-sm btn-light-primary btn-active-primary my-1 me-2">
                                 ${btn.Caption || `Button ${btnInd + 1}`}
                             </a>
                             ` : ``}
@@ -1531,7 +1586,7 @@
 
                     let footerHyperLink = `AxLoadUrl('${linkStr}');`;
                             
-                    cardElement.find("footerContent").replaceWith($("<a class='imgCardHyperlink' href='javascript:void(0);'>" + (card.hcaption || "Link") + "</a>").attr("onclick", `${footerHyperLink || ""}`) || "");
+                    cardElement.find("footerContent").replaceWith($("<a class='imgCardHyperlink' href='#'>" + (card.hcaption || "Link") + "</a>").attr("data-ax-click", `${footerHyperLink || ""}`) || "");
                 }else{
                     cardElement.find("footerContent").parents(".card-footer").addClass("d-none");
                 }
@@ -1599,7 +1654,7 @@
                     
                         return `
                         <li class="menu-item">
-                            <a href="javascript:void(0);" class="dropdown-item menu-link" title="${menu.name}" onclick="AxLoadUrl('${menu.target}')">
+                            <a href="#" class="dropdown-item menu-link" title="${menu.name}" data-ax-action="card-ax-load-url" data-ax-url="${axCspEncodeHtmlAttribute(menu.target)}">
                                 ${iconString}
                                 <span>${menu.name}</span>
                             </a>
@@ -1687,7 +1742,9 @@
 
                         tempMenu.find("iconContent").replaceWith($(`<div class="">${iconString}</div>`) || "");
 
-                        tempMenu.attr("onclick", `AxLoadUrl('${menu.target}')`);
+                        tempMenu.attr("data-ax-action", "card-ax-load-url");
+                        tempMenu.attr("data-ax-url", menu.target || "");
+                        tempMenu.removeAttr("data-ax-click");
 
                         return tempMenu.get(0).outerHTML;
                     }).join("");
@@ -1726,30 +1783,10 @@
                 } catch (ex) {}
 
                 let headerOptions = [
-                    {
-                        icon: "calendar_view_month",
-                        href: "javascript:void(0);",
-                        caption: "Month View",
-                        onclick: `$.axpertUI.cardsPage.options.cards[${cardElement.data("cardIndex")}].obj.changeView('dayGridMonth');`
-                    },
-                    {
-                        icon: "calendar_view_week",
-                        href: "javascript:void(0);",
-                        caption: "Week View",
-                        onclick: `$.axpertUI.cardsPage.options.cards[${cardElement.data("cardIndex")}].obj.changeView('dayGridWeek');`
-                    },
-                    {
-                        icon: "calendar_view_day",
-                        href: "javascript:void(0);",
-                        caption: "Day View",
-                        onclick: `$.axpertUI.cardsPage.options.cards[${cardElement.data("cardIndex")}].obj.changeView('timeGridDay');`
-                    },
-                    {
-                        icon: "add",
-                        href: "javascript:void(0);",
-                        caption: "Add Event",
-                        onclick: `$.axpertUI.cardsPage._calendarEventClick('', ${cardElement.data("cardIndex")});`
-                    }
+                    { icon: "calendar_view_month", href: "#", caption: "Month View", action: "card-calendar-month" },
+                    { icon: "calendar_view_week",  href: "#", caption: "Week View",  action: "card-calendar-week" },
+                    { icon: "calendar_view_day",   href: "#", caption: "Day View",   action: "card-calendar-day" },
+                    { icon: "add",                 href: "#", caption: "Add Event",  action: "card-calendar-add" }
                 ];
 
                 cardElement.find(".card-toolbar").removeClass("d-none");
@@ -1758,7 +1795,7 @@
                 headerOptions.forEach((opt)=>{
                     cardElement.find(".card-toolbar .menu.menu-sub.menu-sub-dropdown").append(`
                     <div class="menu-item px-3 dynamic-item">
-                        <a href="${opt.href}" onclick="${opt.onclick}" class="menu-link px-3">
+                        <a href="${opt.href}" data-ax-action="${opt.action}" data-ax-card-index="${cardElement.data("cardIndex")}" class="menu-link px-3">
                             <i class="menu-icon material-icons material-icons-style material-icons-2">${opt.icon}</i>
                             <span>${opt.caption}</span>
                         </a>
@@ -2127,7 +2164,7 @@
                                     }
                                 },
                                 display: "block",
-                                url: `javascript:void(0);`
+                                url: "#"
                             };
                         }) || [];
                     }    
@@ -2685,16 +2722,16 @@
                         else
                             var loadurl = searchLoadIframe(searchType, data.link.split('♦')[1], true);
                         if (loadurl != "") {
-                            if(loadurl.startsWith("help.aspx")){
-                                loadurl = `javascript:window.open(\"${loadurl}\", \"_blank\");`;
+                            if (loadurl.startsWith("help.aspx")) {
+                                loadurl = `window.open(${JSON.stringify(loadurl)}, "_blank");`;
                             }
                             else {
-                                loadurl = `javascript:LoadIframe(\"${loadurl}\");`;
+                                loadurl = `LoadIframe(${JSON.stringify(loadurl)});`;
                             }
                         }
 
                         $(searchObj.resultsElement).find("div:first").append(`
-                        <a href='javascript:void(0);' class="d-flex text-dark text-hover-primary align-items-center mb-5" title="${toolTip}" onclick='$.axpertUI.search.hideKTSearch();${loadurl}'>
+                        <a href='#' class="d-flex text-dark text-hover-primary align-items-center mb-5" title="${axCspEncodeHtmlAttribute(toolTip)}" data-ax-click="${axCspEncodeHtmlAttribute("$.axpertUI.search.hideKTSearch();" + loadurl)}">
                             <div class="symbol symbol-40px me-4">
                                 <span class="symbol-label bg-light">
                                     <span class="material-icons material-icons-style material-icons-2 material-icons-primary">${icon}</span>
@@ -2990,7 +3027,7 @@
                         $(_thisStag.LicInfo.div).removeClass("d-none");
                     }
                     
-                    $(_thisStag.LicInfo.div).find(_thisStag.LicInfo.divClick).attr("onclick", _this.LicInfo.onclick);
+                    $(_thisStag.LicInfo.div).find(_thisStag.LicInfo.divClick).attr("data-ax-click", _this.LicInfo.onclick);
                     $(_thisStag.LicInfo.div).find(_thisStag.LicInfo.divTitle).attr("title", _this.LicInfo.title);
                 }
             },
@@ -3022,8 +3059,8 @@
                 }
 
                 if (_this.axAppName) {
-                    $(_thisStag.AxAppLogo.web.divParent).attr("onclick", _this.axAppName.onclick).attr("title",_this.axAppName.appName);
-                    $(_thisStag.AxAppLogo.mobile.divParent).attr("onclick", _this.axAppName.onclick).attr("title",_this.axAppName.appName);
+                    $(_thisStag.AxAppLogo.web.divParent).attr("data-ax-click", _this.axAppName.onclick).attr("title",_this.axAppName.appName);
+                    $(_thisStag.AxAppLogo.mobile.divParent).attr("data-ax-click", _this.axAppName.onclick).attr("title",_this.axAppName.appName);
 
                     $(_thisStag.AxAppLogo.web.divParent).find(_thisStag.AxAppLogo.web.divTitle).text(_this.axAppName.appName).addClass(_thisStag.AxAppLogo.web.showTitle ? "" : "d-none");
                     $(_thisStag.AxAppLogo.mobile.divParent).find(_thisStag.AxAppLogo.mobile.divTitle).text(_this.axAppName.appName).addClass(_thisStag.AxAppLogo.mobile.showTitle ? "" : "d-none");
@@ -3052,24 +3089,24 @@
                     $(_thisStag.GlobalParams.div).find(_thisStag.GlobalParams.divTitle).html(gloParamsHTML);
                 }
                 if (_this.GlobalParamsonclick)
-                    $(_thisStag.GlobalParams.div).find(_thisStag.GlobalParams.divTitle).attr("onclick", _this.GlobalParamsonclick.onclick);
+                    $(_thisStag.GlobalParams.div).find(_thisStag.GlobalParams.divTitle).attr("data-ax-click", _this.GlobalParamsonclick.onclick);
                 //if(_this.Refresh){
-                //    $(_thisStag.refreshMenu.div).attr("onclick", _this.Refresh.onclick);
+                //    $(_thisStag.refreshMenu.div).attr("data-ax-click", _this.Refresh.onclick);
                 //    $(_thisStag.refreshMenu.div).find("a").attr("title", _thisStag.refreshMenu.title).text(_thisStag.refreshMenu.title);
                 //}
                 //if(_this.RefreshParams){
-                //    $(_thisStag.refreshVarParam.div).attr("onclick", _this.RefreshParams.onclick);
+                //    $(_thisStag.refreshVarParam.div).attr("data-ax-click", _this.RefreshParams.onclick);
                 //    $(_thisStag.refreshVarParam.div).find("a").attr("title", _thisStag.refreshVarParam.title).text(_thisStag.refreshVarParam.title);
                 //}
                 if (_this.Logout){
-                    $(_thisStag.Logout.div).find(_thisStag.Logout.divTitle).attr("onclick", _this.Logout.onclick).attr("title", _thisStag.Logout.title).text(_thisStag.Logout.title);
+                    $(_thisStag.Logout.div).find(_thisStag.Logout.divTitle).attr("data-ax-click", _this.Logout.onclick).attr("title", _thisStag.Logout.title).text(_thisStag.Logout.title);
                 }
             },
             initSettings: function () {
                 var _this = this.options.settings.axUserOptions;
                 var _thisStag = this.options.staging;
                 if (_this.About) {
-                    $(_thisStag.About.div).attr("onclick", _this.About.onclick);
+                    $(_thisStag.About.div).attr("data-ax-click", _this.About.onclick);
                     $(_thisStag.About.div).attr("title", _thisStag.About.title).find("a").text(_thisStag.About.title);
                 }
                 if(_this.Language){
@@ -3092,7 +3129,7 @@
 
                                 return `
                                 <div class="menu-item px-3">
-                                    <a href="javascript:void(0);" onclick="${_this.Language.onclick}" data-language="${opt}" class="menu-link d-flex px-5 ${isActive ? `active` : ``}">
+                                    <a href="#" data-ax-click="${_this.Language.onclick}" data-language="${opt}" class="menu-link d-flex px-5 ${isActive ? `active` : ``}">
                                         <span>
                                             ${opt}
                                         </span>
@@ -3107,7 +3144,7 @@
                 }
                 //if (_this.showLog) {
                 //    $(_thisStag.showLog.div).attr("style", "display:" + _this.showLog.display);
-                //    $(_thisStag.showLog.div).find(_thisStag.showLog.divClick).attr("onclick", _this.showLog.onclick);
+                //    $(_thisStag.showLog.div).find(_thisStag.showLog.divClick).attr("data-ax-click", _this.showLog.onclick);
                 //    $(_thisStag.showLog.div).attr("title", _thisStag.showLog.title).find("span:first").text(_thisStag.showLog.title);
                 //}
 
@@ -3120,7 +3157,7 @@
                         $(_thisStag.traceValue.div).find(_thisStag.traceValue.divControl).removeAttr("checked");
                         $(_thisStag.traceValue.div).find(_thisStag.traceValue.divspan).attr("title", _thisStag.traceValue.title.off);
                     }
-                    $(_thisStag.traceValue.div).find(_thisStag.traceValue.divClick).attr("onclick", _this.traceValue.onclick);
+                    $(_thisStag.traceValue.div).find(_thisStag.traceValue.divClick).attr("data-ax-click", _this.traceValue.onclick);
                 }
 
                 if (_this.exectraceValue) {
@@ -3138,18 +3175,18 @@
                         else
                             callParentNew("axExecTraceFlag=", 'false');
                     }
-                    $(_thisStag.exectraceValue.div).find(_thisStag.exectraceValue.divClick).attr("onclick", _this.exectraceValue.onclick);
+                    $(_thisStag.exectraceValue.div).find(_thisStag.exectraceValue.divClick).attr("data-ax-click", _this.exectraceValue.onclick);
                 }
 
                 //if (_this.executionLog) {
                 //    $(_thisStag.executionLog.div).attr("style", "display:" + _this.executionLog.display);
-                //    $(_thisStag.executionLog.div).find(_thisStag.executionLog.divClick).attr("onclick", _this.executionLog.onclick);
+                //    $(_thisStag.executionLog.div).find(_thisStag.executionLog.divClick).attr("data-ax-click", _this.executionLog.onclick);
                 //    $(_thisStag.executionLog.div).find(_thisStag.showLog.divClick).attr("title", _thisStag.executionLog.title).text(_thisStag.executionLog.title);
                 //}    
                 
                 if(_this.uiSelector){
                     $(_thisStag.uiSelector.div).attr("style", "display:" + _this.uiSelector.display);
-                    $(_thisStag.uiSelector.div).find(_thisStag.uiSelector.divClick).attr("onclick", _this.uiSelector.onclick);
+                    $(_thisStag.uiSelector.div).find(_thisStag.uiSelector.divClick).attr("data-ax-click", _this.uiSelector.onclick);
                     $(_thisStag.uiSelector.div).attr("title", _thisStag.uiSelector.title).find("span:first").text(_thisStag.uiSelector.title);
                 }
                 if (_this.modernUiValue) {
@@ -3179,13 +3216,13 @@
                 }
                 if (_this.globalsettings) {
                     $(_thisStag.globalsettings.div).attr("style", "display:" + _this.globalsettings.display);
-                    $(_thisStag.globalsettings.div).attr("onclick", _this.globalsettings.onclick);
+                    $(_thisStag.globalsettings.div).attr("data-ax-click", _this.globalsettings.onclick);
                     $(_thisStag.globalsettings.div).attr("title", _thisStag.globalsettings.title).find("span").text(_thisStag.globalsettings.title);
                 }
                 //if(_thisStag.Adminconsole)
                 //{
                 //    $(_thisStag.Adminconsole.div).attr("style", "display:" +_this.Adminconsole.display);
-                //    $(_thisStag.Adminconsole.div).attr("onclick", _this.Adminconsole.onclick);
+                //    $(_thisStag.Adminconsole.div).attr("data-ax-click", _this.Adminconsole.onclick);
 
                 //    $(_thisStag.Adminconsole.div).find(_thisStag.Adminconsole.title.div).attr("title", _thisStag.Adminconsole.title.title).text(_thisStag.Adminconsole.title.title);
 
@@ -3195,7 +3232,7 @@
                 if(_thisStag.ArrangeCards)
                 {
                     // $(_thisStag.ArrangeCards.div).attr("style", "display:" +_this.ArrangeCards.display);
-                    // $(_thisStag.ArrangeCards.div).attr("onclick", _this.ArrangeCards.onclick);
+                    // $(_thisStag.ArrangeCards.div).attr("data-ax-click", _this.ArrangeCards.onclick);
 
                     $(_thisStag.ArrangeCards.div).find(_thisStag.ArrangeCards.title.div).attr("title", _thisStag.ArrangeCards.title.title).text(_thisStag.ArrangeCards.title.title);
 
@@ -3205,45 +3242,33 @@
                 if(_thisStag.developerworkbench)
                 {
                     $(_thisStag.developerworkbench.div).attr("style", "display:" +_this.developerworkbench.display);
-                    $(_thisStag.developerworkbench.div).attr("onclick", _this.developerworkbench.onclick);
+                    $(_thisStag.developerworkbench.div).attr("data-ax-click", _this.developerworkbench.onclick);
 
                     $(_thisStag.developerworkbench.div).find(_thisStag.developerworkbench.title.div).attr("title", _thisStag.developerworkbench.title.title).text(_thisStag.developerworkbench.title.title);
 
                     $(_thisStag.developerworkbench.div).find(_thisStag.developerworkbench.subTitle.div).attr("title", _thisStag.developerworkbench.subTitle.title).text(_thisStag.developerworkbench.subTitle.title);
                 }
-
                 if(_thisStag.configurationStudio)
                 {
                     $(_thisStag.configurationStudio.div).attr("style", "display:" +_this.configurationStudio.display);
-                    $(_thisStag.configurationStudio.div).attr("onclick", _this.configurationStudio.onclick);
+                    $(_thisStag.configurationStudio.div).attr("data-ax-click", _this.configurationStudio.onclick);
 
                     $(_thisStag.configurationStudio.div).find(_thisStag.configurationStudio.title.div).attr("title", _thisStag.configurationStudio.title.title).text(_thisStag.configurationStudio.title.title);
 
                     $(_thisStag.configurationStudio.div).find(_thisStag.configurationStudio.subTitle.div).attr("title", _thisStag.configurationStudio.subTitle.title).text(_thisStag.configurationStudio.subTitle.title);
                 }
-
-                //if (_thisStag.pluginCustomCode) {
-                //    $(_thisStag.pluginCustomCode.div).attr("style", "display:" + _this.pluginCustomCode.display);
-                //    $(_thisStag.pluginCustomCode.div).attr("onclick", _this.pluginCustomCode.onclick);
-
-                //    $(_thisStag.pluginCustomCode.div).find(_thisStag.pluginCustomCode.title.div).attr("title", _thisStag.pluginCustomCode.title.title).text(_thisStag.pluginCustomCode.title.title);
-
-                //    $(_thisStag.pluginCustomCode.div).find(_thisStag.pluginCustomCode.subTitle.div).attr("title", _thisStag.pluginCustomCode.subTitle.title).text(_thisStag.pluginCustomCode.subTitle.title);
-                //}
-
-
                 if (_this.AppConfig) {
                     $(_thisStag.AppConfig.div).attr("style", "display:" + _this.AppConfig.display);
-                    $(_thisStag.AppConfig.div).attr("onclick", _this.AppConfig.onclick);
+                    $(_thisStag.AppConfig.div).attr("data-ax-click", _this.AppConfig.onclick);
                     $(_thisStag.AppConfig.div).attr("title", _thisStag.AppConfig.title).find("span").text(_thisStag.AppConfig.title);
                 }
                 if (_this.ChangePassword) {
                     $(_thisStag.ChangePassword.div).attr("style", "display:" + _this.ChangePassword.display);
-                    $(_thisStag.ChangePassword.div).find(_thisStag.ChangePassword.divTitle).attr("onclick", _this.ChangePassword.onclick).attr("title", _thisStag.ChangePassword.title).text(_thisStag.ChangePassword.title);
+                    $(_thisStag.ChangePassword.div).find(_thisStag.ChangePassword.divTitle).attr("data-ax-click", _this.ChangePassword.onclick).attr("title", _thisStag.ChangePassword.title).text(_thisStag.ChangePassword.title);
                 }
                 if (_this.userManual) {
                     $(_thisStag.userManual.div).attr("style", "display:" + _this.userManual.display);
-                    $(_thisStag.userManual.div).attr("onclick", _this.userManual.onclick);
+                    $(_thisStag.userManual.div).attr("data-ax-click", _this.userManual.onclick);
                     $(_thisStag.userManual.div).attr("title", _thisStag.userManual.title).find("span").text(_thisStag.userManual.title);
                 }
 
@@ -3276,71 +3301,71 @@
                 }
                 if (_this.WidgetBuilder) {
                     $(_thisStag.WidgetBuilder.div).attr("style", "display:" + _this.WidgetBuilder.display);
-                    $(_thisStag.WidgetBuilder.div).attr("onclick", _this.WidgetBuilder.onclick);
+                    $(_thisStag.WidgetBuilder.div).attr("data-ax-click", _this.WidgetBuilder.onclick);
                     $(_thisStag.WidgetBuilder.div).attr("title", _thisStag.WidgetBuilder.title).find("span").text(_thisStag.WidgetBuilder.title);
                 }
                 if (_this.pageBuilderBtn) {
                     $(_thisStag.pageBuilderBtn.div).attr("style", "display:" + _this.pageBuilderBtn.display);
-                    $(_thisStag.pageBuilderBtn.div).attr("onclick", _this.pageBuilderBtn.onclick);
+                    $(_thisStag.pageBuilderBtn.div).attr("data-ax-click", _this.pageBuilderBtn.onclick);
                     $(_thisStag.pageBuilderBtn.div).attr("title", _thisStag.pageBuilderBtn.title).find("span").text(_thisStag.pageBuilderBtn.title);
                 }
                 if (_this.Dashboard) {
                     $(_thisStag.Dashboard.div).attr("style", "display:" + _this.Dashboard.display);
-                    $(_thisStag.Dashboard.div).attr("onclick", _this.Dashboard.onclick);
+                    $(_thisStag.Dashboard.div).attr("data-ax-click", _this.Dashboard.onclick);
                     $(_thisStag.Dashboard.div).attr("title", _thisStag.Dashboard.title).find("span").text(_thisStag.Dashboard.title);
                 }
                 if (_this.Responsibilities) {
                     $(_thisStag.Responsibilities.div).attr("style", "display:" + _this.Responsibilities.display);
-                    $(_thisStag.Responsibilities.div).attr("onclick", _this.Responsibilities.onclick);
+                    $(_thisStag.Responsibilities.div).attr("data-ax-click", _this.Responsibilities.onclick);
                     $(_thisStag.Responsibilities.div).attr("title", _thisStag.Responsibilities.title).find("span").text(_thisStag.Responsibilities.title);
                 }
                 if (_this.ExportData) {
                     $(_thisStag.ExportData.div).attr("style", "display:" + _this.ExportData.display);
-                    $(_thisStag.ExportData.div).attr("onclick", _this.ExportData.onclick);
+                    $(_thisStag.ExportData.div).attr("data-ax-click", _this.ExportData.onclick);
                     $(_thisStag.ExportData.div).find(_thisStag.ExportData.title.div).attr("title", _thisStag.ExportData.title.title).text(_thisStag.ExportData.title.title);
 
                     $(_thisStag.ExportData.div).find(_thisStag.ExportData.subTitle.div).attr("title", _thisStag.ExportData.subTitle.title).text(_thisStag.ExportData.subTitle.title);
                 }
                 if (_this.ImportData) {
                     $(_thisStag.ImportData.div).attr("style", "display:" + _this.ImportData.display);
-                    $(_thisStag.ImportData.div).attr("onclick", _this.ImportData.onclick);
+                    $(_thisStag.ImportData.div).attr("data-ax-click", _this.ImportData.onclick);
                     $(_thisStag.ImportData.div).find(_thisStag.ImportData.title.div).attr("title", _thisStag.ImportData.title.title).text(_thisStag.ImportData.title.title);
 
                     $(_thisStag.ImportData.div).find(_thisStag.ImportData.subTitle.div).attr("title", _thisStag.ImportData.subTitle.title).text(_thisStag.ImportData.subTitle.title);
                 }
                 if (_this.ImportHistory) {
                     $(_thisStag.ImportHistory.div).attr("style", "display:" + _this.ImportHistory.display);
-                    $(_thisStag.ImportHistory.div).attr("onclick", _this.ImportHistory.onclick);
+                    $(_thisStag.ImportHistory.div).attr("data-ax-click", _this.ImportHistory.onclick);
                     $(_thisStag.ImportHistory.div).attr("title", _thisStag.ImportHistory.title).find("span").text(_thisStag.ImportHistory.title);
                 }
                 if (_this.WorkFlow) {
                     $(_thisStag.WorkFlow.div).attr("style", "display:" + _this.WorkFlow.display);
-                    $(_thisStag.WorkFlow.div).attr("onclick", _this.WorkFlow.onclick);
+                    $(_thisStag.WorkFlow.div).attr("data-ax-click", _this.WorkFlow.onclick);
                     $(_thisStag.WorkFlow.div).attr("title", _thisStag.WorkFlow.title).find("span").text(_thisStag.WorkFlow.title);
                 }
 
                 if (_this.RefreshParams) {
-                    $(_thisStag.refreshVarParam.div).attr("onclick", _this.RefreshParams.onclick);
+                    $(_thisStag.refreshVarParam.div).attr("data-ax-click", _this.RefreshParams.onclick);
                     $(_thisStag.refreshVarParam.div).find(_thisStag.refreshVarParam.title.div).attr("title", _thisStag.refreshVarParam.title.title).text(_thisStag.refreshVarParam.title.title);
                     $(_thisStag.refreshVarParam.div).find(_thisStag.refreshVarParam.subTitle.div).attr("title", _thisStag.refreshVarParam.subTitle.title).text(_thisStag.refreshVarParam.subTitle.title);
                 }
 
                 if (_this.Refresh) {
-                    $(_thisStag.refreshMenu.div).attr("onclick", _this.Refresh.onclick);
+                    $(_thisStag.refreshMenu.div).attr("data-ax-click", _this.Refresh.onclick);
                     $(_thisStag.refreshMenu.div).find(_thisStag.refreshMenu.title.div).attr("title", _thisStag.refreshMenu.title.title).text(_thisStag.refreshMenu.title.title);
                     $(_thisStag.refreshMenu.div).find(_thisStag.refreshMenu.subTitle.div).attr("title", _thisStag.refreshMenu.subTitle.title).text(_thisStag.refreshMenu.subTitle.title);
                 }
 
                 if (_this.executionLog) {
                     $(_thisStag.executionLog.div).attr("style", "display:" + _this.executionLog.display);
-                    $(_thisStag.executionLog.div).find(_thisStag.executionLog.divClick).attr("onclick", _this.executionLog.onclick);
+                    $(_thisStag.executionLog.div).find(_thisStag.executionLog.divClick).attr("data-ax-click", _this.executionLog.onclick);
                     $(_thisStag.executionLog.div).find(_thisStag.executionLog.title.div).attr("title", _thisStag.executionLog.title.title).text(_thisStag.executionLog.title.title);
                     $(_thisStag.executionLog.div).find(_thisStag.executionLog.subTitle.div).attr("title", _thisStag.executionLog.subTitle.title).text(_thisStag.executionLog.subTitle.title);
                 } 
 
                 if (_this.showLog) {
                     $(_thisStag.showLog.div).attr("style", "display:" + _this.showLog.display);
-                    $(_thisStag.showLog.div).find(_thisStag.showLog.divClick).attr("onclick", _this.showLog.onclick);
+                    $(_thisStag.showLog.div).find(_thisStag.showLog.divClick).attr("data-ax-click", _this.showLog.onclick);
                     //$(_thisStag.showLog.div).attr("title", _thisStag.showLog.title).find("span:first").text(_thisStag.showLog.title);
                     $(_thisStag.showLog.div).find(_thisStag.showLog.title.div).attr("title", _thisStag.showLog.title.title).text(_thisStag.showLog.title.title);
                     $(_thisStag.showLog.div).find(_thisStag.showLog.subTitle.div).attr("title", _thisStag.showLog.subTitle.title).text(_thisStag.showLog.subTitle.title);
@@ -3410,3 +3435,119 @@ $(function () {
         });
     }
 });
+
+
+/* CSP-safe delegated handling for Card actions.
+   Card clicks do not use new Function/eval. */
+(function () {
+    if (window.axCspCardActionHandlerRegistered) return;
+
+    document.addEventListener("click", function (e) {
+        var el = e.target.closest("[data-ax-action]");
+        if (!el) return;
+
+        var action = el.getAttribute("data-ax-action");
+        var handled = true;
+
+        switch (action) {
+            case "card-option-click":
+                if ($.axpertUI.cardsPage &&
+                    typeof $.axpertUI.cardsPage._callOptionsCardClick === "function") {
+                    $.axpertUI.cardsPage._callOptionsCardClick(
+                        el.getAttribute("data-ax-card-id") || "",
+                        el.getAttribute("data-ax-button") || "",
+                        el
+                    );
+                }
+                break;
+
+            case "card-ax-load-url":
+                var url = el.getAttribute("data-ax-url") || "";
+                if (url && typeof AxLoadUrl === "function") {
+                    AxLoadUrl(url);
+                }
+                break;
+
+            case "card-load-iframe":
+                var iframeUrl = el.getAttribute("data-ax-url") || "";
+                if (iframeUrl && typeof LoadIframe === "function") {
+                    LoadIframe(iframeUrl);
+                }
+                break;
+
+            case "card-window-open":
+                var windowUrl = el.getAttribute("data-ax-url") || "";
+                var windowTarget = el.getAttribute("data-ax-target") || "_blank";
+                if (windowUrl) {
+                    window.open(windowUrl, windowTarget);
+                }
+                break;
+
+            case "card-calendar-month":
+            case "card-calendar-week":
+            case "card-calendar-day":
+                var cardIndex = parseInt(el.getAttribute("data-ax-card-index"), 10);
+                var card = $.axpertUI.cardsPage &&
+                           $.axpertUI.cardsPage.options &&
+                           $.axpertUI.cardsPage.options.cards
+                           ? $.axpertUI.cardsPage.options.cards[cardIndex]
+                           : null;
+
+                if (card && card.obj && typeof card.obj.changeView === "function") {
+                    if (action === "card-calendar-month")
+                        card.obj.changeView("dayGridMonth");
+                    else if (action === "card-calendar-week")
+                        card.obj.changeView("dayGridWeek");
+                    else
+                        card.obj.changeView("timeGridDay");
+                }
+                break;
+
+            case "card-calendar-add":
+                var addCardIndex = parseInt(el.getAttribute("data-ax-card-index"), 10);
+                if ($.axpertUI.cardsPage &&
+                    typeof $.axpertUI.cardsPage._calendarEventClick === "function") {
+                    $.axpertUI.cardsPage._calendarEventClick("", addCardIndex);
+                }
+                break;
+
+            default:
+                handled = false;
+                break;
+        }
+
+        if (handled) {
+            e.preventDefault();
+        }
+    });
+
+    window.axCspCardActionHandlerRegistered = true;
+})();
+
+/* CSP compatibility: replace inline onclick handlers with delegated data-ax-click handling. */
+(function () {
+    if (window.axCspAxpertUIHandlerRegistered) return;
+
+    document.addEventListener("click", function (e) {
+        var el = e.target.closest("[data-ax-click]");
+        if (!el) return;
+
+        var code = el.getAttribute("data-ax-click");
+        if (!code) return;
+
+        e.preventDefault();
+
+        try {
+            var result = new Function("event", code).call(el, e);
+            if (result === false) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        } catch (ex) {
+            if (window.console && console.error)
+                console.error("CSP click handler error:", ex);
+        }
+    });
+
+    window.axCspAxpertUIHandlerRegistered = true;
+})();

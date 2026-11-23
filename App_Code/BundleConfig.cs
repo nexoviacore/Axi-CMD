@@ -153,9 +153,9 @@ public class BundleConfig
             "~/ThirdParty/jquery-confirm-master/jquery-confirm.min.css",
             //"~/UI/axpertUI/plugins.bundle.css",
             //"~/UI/axpertUI/style.bundle.css",
-            "~/ThirdParty/gridstack.js-0.3.0/dist/jquery-ui/jquery-ui.css",
-            "~/ThirdParty/gridstack.js-0.3.0/dist/jquery-ui/jquery-ui.structure.css",
-            "~/ThirdParty/gridstack.js-0.3.0/dist/gridstack.css",
+            "~/ThirdParty/gridstack.js/dist/jquery-ui/jquery-ui.css",
+            "~/ThirdParty/gridstack.js/dist/jquery-ui/jquery-ui.structure.css",
+            "~/ThirdParty/gridstack.js/dist/gridstack.css",
             "~/UI/axpertUI/datatables.bundle.css",
             "~/ThirdParty/codemirror/codemirror.css",
             "~/ThirdParty/Tribute/tribute.css",
@@ -183,9 +183,9 @@ public class BundleConfig
              "~/Js/ckRtf.js",
              "~/Js/JDate.min.js",
              "~/ThirdParty/lodash.min.js",
-             "~/ThirdParty/gridstack.js-0.3.0/dist/jquery-ui/jquery-ui.js",
-             "~/ThirdParty/gridstack.js-0.3.0/dist/gridstack.js",
-             "~/ThirdParty/gridstack.js-0.3.0/dist/gridstack.jQueryUI.js",
+             "~/ThirdParty/gridstack.js/dist/jquery-ui/jquery-ui.js",
+             "~/ThirdParty/gridstack.js/dist/gridstack.js",
+             "~/ThirdParty/gridstack.js/dist/gridstack.jQueryUI.js",
              "~/ThirdParty/Tribute/tribute.js",
              "~/Js/tstructvars.js",
              "~/Js/md5.min.js",
@@ -200,7 +200,9 @@ public class BundleConfig
              "~/Js/codemirror/mode/sql.js",
              "~/Js/codemirror/addon/hint/sql-hint.js",
              "~/Js/codemirror/mode/javascript.js",
-             "~/Js/codemirror/addon/hint/javascript-hint.js"
+             "~/Js/codemirror/addon/hint/javascript-hint.js",
+             "~/Js/jsencrypt.js",
+             "~/Js/crypto-js.js"
             );
         formBasic.EnableFileExtensionReplacements = true;
         formBasic.Transforms.Add(JsContentMimeType);

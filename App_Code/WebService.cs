@@ -31,6 +31,7 @@ using BotDetect;
 using System.Security.Cryptography;
 using System.Xml.Linq;
 using RabbitMQ.Client;
+using System.Security;
 
 namespace ASB
 {
@@ -99,14 +100,40 @@ namespace ASB
 
         }
 
+        //[WebMethod(EnableSession = true)]
+        //public string SaveDataXML(ArrayList fldArray, ArrayList fldDbRowNo, ArrayList fldValueArray, ArrayList fldDeletedArray, ArrayList deletedFldArrayValues, string files, string rid, string delRows, string changedRows, string key, string axRulesFlds = "", string axPegApprovalSave = "", string resTstHtmlLS = "", string isLoadFromDraft = "")
+        //{
         [WebMethod(EnableSession = true)]
-        public string SaveDataXML(ArrayList fldArray, ArrayList fldDbRowNo, ArrayList fldValueArray, ArrayList fldDeletedArray, ArrayList deletedFldArrayValues, string files, string rid, string delRows, string changedRows, string key, string axRulesFlds = "", string axPegApprovalSave = "", string resTstHtmlLS = "", string isLoadFromDraft = "")
+        public string SaveDataXML(string encryptedRequest)
         {
             string requestProcess_logtime = string.Empty;
             ObjExecTr.SetCurrentTime();
             DateTime sTime1 = DateTime.Now;
             if (HttpContext.Current.Session["project"] == null)
                 return utilObj.SESSTIMEOUT;
+
+            string json = utils.DecryptRSAValue("", encryptedRequest);
+            if (json == "")
+                return utilObj.SESSTIMEOUT;
+            var serializer = new JavaScriptSerializer();
+            SaveDataXMLRequest request = serializer.Deserialize<SaveDataXMLRequest>(json);
+
+            ArrayList fldArray = request.fldArray;
+            ArrayList fldDbRowNo = request.fldDbRowNo;
+            ArrayList fldValueArray = request.fldValueArray;
+            ArrayList fldDeletedArray = request.fldDeletedArray;
+            ArrayList deletedFldArrayValues = request.deletedFldArrayValues;
+
+            string files = request.files;
+            string rid = request.rid;
+            string delRows = request.delRows;
+            string changedRows = request.changedRows;
+            string key = request.key;
+            string axRulesFlds = request.axRulesFlds;
+            string axPegApprovalSave = request.axPegApprovalSave;
+            string resTstHtmlLS = request.resTstHtmlLS;
+            string isLoadFromDraft = request.isLoadFromDraft;
+
             string _tstKeyChanged = "";
             if (resTstHtmlLS != "")
             {
@@ -496,13 +523,42 @@ namespace ASB
             return result;
         }
 
+        //[WebMethod(EnableSession = true)]
+        //public string CallActionWS(ArrayList fldArray, ArrayList fldDbRowNo, ArrayList fldValueArray, ArrayList fldDeletedArray, ArrayList deletedFldArrayValues, string ArrActionLog, string visibleDcs, string s, string f, string source, string delRows, string changedRows, string key, string files = "", bool isScript = false, string axRulesFlds = "", bool axRulesScript = false, string resTstHtmlLS = "", string isLoadFromDraft = "")
+        //{
         [WebMethod(EnableSession = true)]
-        public string CallActionWS(ArrayList fldArray, ArrayList fldDbRowNo, ArrayList fldValueArray, ArrayList fldDeletedArray, ArrayList deletedFldArrayValues, string ArrActionLog, string visibleDcs, string s, string f, string source, string delRows, string changedRows, string key, string files = "", bool isScript = false, string axRulesFlds = "", bool axRulesScript = false, string resTstHtmlLS = "", string isLoadFromDraft = "")
+        public string CallActionWS(string encryptedRequest)
         {
             string requestProcess_logtime = string.Empty;
             ObjExecTr.SetCurrentTime();
             if (HttpContext.Current.Session["project"] == null)
                 return utilObj.SESSTIMEOUT;
+            string json = utils.DecryptRSAValue("", encryptedRequest);
+            if (json == "")
+                return utilObj.SESSTIMEOUT;
+            var serializer = new JavaScriptSerializer();
+            CallActionWSRequest request = serializer.Deserialize<CallActionWSRequest>(json);
+
+            ArrayList fldArray = request.fldArray;
+            ArrayList fldDbRowNo = request.fldDbRowNo;
+            ArrayList fldValueArray = request.fldValueArray;
+            ArrayList fldDeletedArray = request.fldDeletedArray;
+            ArrayList deletedFldArrayValues = request.deletedFldArrayValues;
+
+            string ArrActionLog = request.ArrActionLog;
+            string visibleDcs = request.visibleDcs;
+            string s = request.s;
+            string f = request.f;
+            string source = request.source;
+            string delRows = request.delRows;
+            string changedRows = request.changedRows;
+            string key = request.key;
+            string files = request.files;
+            bool isScript = request.isScript;
+            string axRulesFlds = request.axRulesFlds;
+            bool axRulesScript = request.axRulesScript;
+            string resTstHtmlLS = request.resTstHtmlLS;
+            string isLoadFromDraft = request.isLoadFromDraft;
             if (source != "tsect" && source != "ta__rp")
             {
                 if (Util.Util.CheckCrossScriptingInString(String.Join(",", fldValueArray.ToArray())))
@@ -5437,12 +5493,47 @@ namespace ASB
             }
             return string.Empty;
         }
+
         [WebMethod(EnableSession = true)]
-        public string AddSessionPair(string key, string val)
+        public object AddSessionPair(string jsonData)
         {
-            HttpContext.Current.Session[key] = val;
-            return "Session Added";
+            AddSessionPairRequest request = null;
+            try
+            {
+                JsonSerializerSettings settings = new JsonSerializerSettings
+                {
+                    MissingMemberHandling = MissingMemberHandling.Error
+                };
+                request = JsonConvert.DeserializeObject<AddSessionPairRequest>(jsonData, settings);
+            }
+            catch (Exception)
+            {
+                throw new HttpException(400, "Invalid request.");
+            }
+
+            if (request == null || string.IsNullOrWhiteSpace(request.key))
+                throw new HttpException(400, "Invalid session key.");
+            string key = request.key.Trim();
+            string val = request.val;
+            try
+            {
+                HttpContext context = HttpContext.Current;
+                if (context == null || context.Session == null)
+                    throw new HttpException(400, "Request could not be processed.");
+                context.Session[key] = val;
+                return "Session Added";
+            }
+            catch (HttpException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Trace.TraceError("AddSessionPair failed: {0}", ex);
+                throw new HttpException(500, "Request could not be processed.");
+            }
         }
+
         [WebMethod(EnableSession = true)]
         public string CompareLastUpdated()
         {
@@ -5497,6 +5588,9 @@ namespace ASB
                 return session["nsessionid"];
             else if (session != null && key == "nsessionid")
                 return "Session does not exist";
+            else if (session != null && key.ToLower() == "privateKey-ecnrypt")
+                return "Session does not exist";
+
 
             if (session != null && key == "appsessionkey" && session[key] != null)
             {
@@ -5509,6 +5603,60 @@ namespace ASB
             }
             else
                 return "Session does not exist";
+        }
+        [WebMethod(EnableSession = true)]
+        public object GetSessionNew(string jsonData)
+        {
+            Constants.GetSessionRequest request = null;
+            try
+            {
+                JsonSerializerSettings settings = new JsonSerializerSettings();
+                settings.MissingMemberHandling = MissingMemberHandling.Error;
+                request = JsonConvert.DeserializeObject<Constants.GetSessionRequest>(jsonData, settings);
+            }
+            catch (Exception)
+            {
+                throw new HttpException(400, "Invalid request.");
+            }
+
+            if (request == null || string.IsNullOrWhiteSpace(request.key))
+                throw new HttpException(400, "Invalid session key.");
+
+            string key = request.key.Trim();
+
+            if (key == "nsessionid")
+            {
+                if (HttpContext.Current.Session["nsessionid"] != null)
+                    return HttpContext.Current.Session["nsessionid"];
+                return "Session does not exist";
+            }
+
+            if (key == "appsessionkey")
+            {
+                if (HttpContext.Current.Session["appsessionkey"] != null)
+                {
+                    string appsessKey = string.Empty;
+
+                    if (HttpContext.Current.Session["lictype"] != null &&
+                        HttpContext.Current.Session["lictype"].ToString() == "limited")
+                        appsessKey = "l~";
+                    else
+                        appsessKey = "u~";
+
+                    return appsessKey + HttpContext.Current.Session["appsessionkey"];
+                }
+                return "Session does not exist";
+            }
+
+            if (key.ToLower() == "privateKey-ecnrypt")
+            {
+                return "Session does not exist";
+            }
+
+            if (HttpContext.Current.Session[key] != null)
+                return HttpContext.Current.Session[key];
+
+            return "Session does not exist";
         }
 
         //Method to Set a value to a session or append value to a existing session with a delimiter
@@ -7323,91 +7471,78 @@ namespace ASB
         }
 
         [WebMethod(EnableSession = true)]
-        public string GetProjectAppLogo(string projName)
+        public string GetProjectAppLogo(string jsonData, string isFromMainpage = "false")
         {
             JObject returnObject = new JObject();
-
             string logoPath = string.Empty;
             string webBgPath = string.Empty;
             string mobBgPath = string.Empty;
-
-            if (projName != string.Empty)
-            {
-                try
-                {
-                    string logoDir = "~/" + projName + "";
-
-                    var dirPath = HttpContext.Current.Server.MapPath(logoDir);
-
-                    DirectoryInfo dir = new DirectoryInfo(dirPath);
-
-
-                    var logos = dir.GetFiles("axAppLogo.*");
-                    if (logos.Count() > 0 && logos[0].Name != string.Empty)
-                    {
-                        logoPath = "../" + projName + "/" + logos[0].Name + "";
-                    }
-
-                    var webBgs = dir.GetFiles("axAppWebBG.*");
-                    if (webBgs.Count() > 0 && webBgs[0].Name != string.Empty)
-                    {
-                        webBgPath = "../" + projName + "/" + webBgs[0].Name + "";
-                    }
-
-                    var mobBgs = dir.GetFiles("axAppMobBG.*");
-                    if (mobBgs.Count() > 0 && mobBgs[0].Name != string.Empty)
-                    {
-                        mobBgPath = "../" + projName + "/" + mobBgs[0].Name + "";
-                    }
-                }
-                catch (Exception ex)
-                {
-                }
-            }
-
-            returnObject["logo"] = logoPath;
-            returnObject["webbg"] = webBgPath;
-            returnObject["mobbg"] = mobBgPath;
-
-            return returnObject.ToString();
-        }
-
-        [WebMethod(EnableSession = true)]
-        public string GetProjectCustomAssets(string projName)
-        {
-            string[] assetNames =
-            {
-                "customGlobalStyles.css",
-                "customIviewNewUi.css",
-                "customTstructNewUi.css",
-                "customCard.js",
-                "customAxpertUI.css",
-                "customCompressedTstructUI.css"
-            };
-            JObject assets = new JObject();
-
+            Constants.GetProjectAppLogoRequest request = null;
             try
             {
-                if (string.IsNullOrWhiteSpace(projName) || projName == "." || projName == ".." || Path.GetFileName(projName) != projName)
-                {
-                    return assets.ToString();
-                }
-
-                string projectPath = HttpContext.Current.Server.MapPath("~/" + projName);
-                foreach (string assetName in assetNames)
-                {
-                    assets[assetName] = File.Exists(Path.Combine(projectPath, assetName));
-                }
+                JsonSerializerSettings settings = new JsonSerializerSettings();
+                settings.MissingMemberHandling = MissingMemberHandling.Error;
+                request = JsonConvert.DeserializeObject<Constants.GetProjectAppLogoRequest>(jsonData, settings);
             }
             catch (Exception)
             {
-                foreach (string assetName in assetNames)
+                throw new SecurityException("Invalid request.");
+            }
+            if (request == null || string.IsNullOrWhiteSpace(request.projName))
+            {
+                throw new HttpException(400, "Project name is required.");
+            }
+            string projName = request.projName.Trim();
+            if (!Regex.IsMatch(projName, @"^[A-Za-z0-9_]+$"))
+            {
+                throw new HttpException(400, "Invalid project name.");
+            }
+            try
+            {
+                string logoDir = "~/" + projName;
+                string dirPath = HttpContext.Current.Server.MapPath(logoDir);
+                if (!Directory.Exists(dirPath))
                 {
-                    assets[assetName] = false;
+                    throw new HttpException(404, "Project not found.");
+                }
+                DirectoryInfo dir = new DirectoryInfo(dirPath);
+                FileInfo[] logos = dir.GetFiles("axAppLogo.*");
+                if (logos.Length > 0)
+                {
+                    logoPath = "../" + projName + "/" + logos[0].Name;
+                }
+                FileInfo[] webBgs = dir.GetFiles("axAppWebBG.*");
+                if (webBgs.Length > 0)
+                {
+                    webBgPath = "../" + projName + "/" + webBgs[0].Name;
+                }
+                FileInfo[] mobBgs = dir.GetFiles("axAppMobBG.*");
+                if (mobBgs.Length > 0)
+                {
+                    mobBgPath = "../" + projName + "/" + mobBgs[0].Name;
                 }
             }
-
-            return assets.ToString();
+            catch (HttpException)
+            {
+                if (isFromMainpage == "false")
+                    throw;
+            }
+            catch (Exception ex)
+            {
+                LogFile.Log logObj = new LogFile.Log();
+                string sessionId = string.Empty;
+                if (HttpContext.Current != null && HttpContext.Current.Session != null)
+                {
+                    sessionId = HttpContext.Current.Session.SessionID;
+                }
+                logObj.CreateLog(ex.ToString(), sessionId, "GetProjectAppLogo", "");
+                if (isFromMainpage == "false")
+                    throw new HttpException(500, "Internal Server Error.");
+            }
+            returnObject["logo"] = logoPath;
+            returnObject["webbg"] = webBgPath;
+            returnObject["mobbg"] = mobBgPath;
+            return returnObject.ToString();
         }
 
         [WebMethod(EnableSession = true)]
@@ -12305,4 +12440,50 @@ public enum QueueStatus
     QueueNotFound,
     NoConsumer,
     ConsumerActive
+}
+
+public class SaveDataXMLRequest
+{
+    public ArrayList fldArray { get; set; }
+    public ArrayList fldDbRowNo { get; set; }
+    public ArrayList fldValueArray { get; set; }
+    public ArrayList fldDeletedArray { get; set; }
+    public ArrayList deletedFldArrayValues { get; set; }
+    public string files { get; set; }
+    public string rid { get; set; }
+    public string delRows { get; set; }
+    public string changedRows { get; set; }
+    public string key { get; set; }
+    public string axRulesFlds { get; set; }
+    public string axPegApprovalSave { get; set; }
+    public string resTstHtmlLS { get; set; }
+    public string isLoadFromDraft { get; set; }
+}
+
+public class CallActionWSRequest
+{
+    public ArrayList fldArray { get; set; }
+    public ArrayList fldDbRowNo { get; set; }
+    public ArrayList fldValueArray { get; set; }
+    public ArrayList fldDeletedArray { get; set; }
+    public ArrayList deletedFldArrayValues { get; set; }
+    public string ArrActionLog { get; set; }
+    public string visibleDcs { get; set; }
+    public string s { get; set; }
+    public string f { get; set; }
+    public string source { get; set; }
+    public string delRows { get; set; }
+    public string changedRows { get; set; }
+    public string key { get; set; }
+    public string files { get; set; }
+    public bool isScript { get; set; }
+    public string axRulesFlds { get; set; }
+    public bool axRulesScript { get; set; }
+    public string resTstHtmlLS { get; set; }
+    public string isLoadFromDraft { get; set; }
+}
+public class AddSessionPairRequest
+{
+    public string key { get; set; }
+    public string val { get; set; }
 }

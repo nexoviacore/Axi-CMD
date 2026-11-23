@@ -57,7 +57,7 @@
             }
         } catch (ex) { }
     </script>--%>
-    <script>
+    <script nonce="<%=CspNonce%>">
         (function () {
             if (typeof localStorage !== "undefined") {
                 try {
@@ -85,14 +85,14 @@
     <title><%=appTitle%></title>
     <link rel="shortcut icon" href="../images/favicon.ico" />
     <script src="../Js/xmlToJson.js?v=2"></script>
-    <script src="../Js/helper.min.js?v=180"></script>
+    <script src="../Js/helper.min.js?v=181"></script>
     <script src="../assets/js/loadingoverlay.min.js?v=3" type="text/javascript"></script>
-    <script type="text/javascript" src="../Js/common.min.js?v=166"></script>
-    <script src="../Js/process.min.js?v=361"></script>
+    <script type="text/javascript" src="../Js/common.min.js?v=167"></script>
+    <script src="../Js/process.min.js?v=362"></script>
     <script type="text/javascript" src="../Js/lang/content-<%=langType%>.js?v=64"></script>
     <script src="../ThirdParty/QRcode/qrcode.js?v=1"></script>
 
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="<%=CspNonce%>">
         history.go(1); // disable the browser's back button
         var thmProj = "";
         var thmUser = "";
@@ -179,19 +179,20 @@
         var axpertDevOpt = '<%=axpertDevOpt%>';
         var axicmdEnabled = '<%=axicmdEnabled%>';
         <%--var isAxiPlugin = '<%=isAxiPlugin%>';--%>
+        var encPublicKey = '<%=encPublicKey%>';
     </script>
     <script type="text/javascript" src="../Js/util.min.js?v=2"></script>
     <script src="../Js/sso.min.js?v=2" type="text/javascript"></script>
     <script src="../Js/msal.min.js" type="text/javascript"></script>
     <script src="../Js/okta-auth-js.min.js" type="text/javascript"></script>
-    <script type="text/javascript" src="../js/main.min.js?v=347"></script>
+    <script type="text/javascript" src="../js/main.min.js?v=349"></script>
 </head>
 
-<body id="mainNewPageBody" onload="ChangeDir('<');"
-    class="btextDir-<%=direction%> header-fixed header-tablet-and-mobile-fixed toolbar-enabled aside-fixed aside-default-enabled" dir="<%=direction%>" data-kt-aside-minimize="off" onunload="ClosePopUps();">
+<body id="mainNewPageBody"
+    class="btextDir-<%=direction%> header-fixed header-tablet-and-mobile-fixed toolbar-enabled aside-fixed aside-default-enabled" dir="<%=direction%>" data-kt-aside-minimize="off">
     <asp:Literal ID="templateStage" runat="server" Text=""></asp:Literal>
-    <%--<form id="form1" runat="server" onclick="javascript:HideHelp();">--%>
-    <form id="form1" runat="server" onclick="javascript:HideHelp();">
+    <%--<form id="form1" runat="server" onclick="HideHelp();">--%>
+    <form id="form1" runat="server" onclick="HideHelp();">
 
         <asp:ScriptManager ID="ScriptManager1" runat="server">
             <Services>
@@ -210,7 +211,7 @@
         <div id="top-selectBox" class="right" style="width: 143px; display: none">
             <div>
                 &nbsp;&nbsp;&nbsp;<img alt="print docs" src="../AxpImages/icons/16x16/printer.png" /><a id="ankPrint"
-                    style="vertical-align: top;" class="handCur" onclick="javascript:DisplayPrintDocs();">
+                    style="vertical-align: top;" class="handCur" onclick="DisplayPrintDocs();">
                     <asp:Label ID="lbldocs" runat="server" meta:resourcekey="lbldocs">PrintDocs(0-0)</asp:Label>
                 </a>
             </div>
@@ -225,8 +226,8 @@
             <div style="display: none;">
                 <asp:HiddenField ID="hdParamsValues" runat="server" />
                 <asp:HiddenField ID="hdnDisplayTxt" runat="server" />
-                <asp:Button ID="btnSetParams" runat="server" OnClientClick="SetUnload('false');"
-                    OnClick="btnSetParams_Click" />
+                <asp:Button ID="btnSetParams" runat="server" data-ax-submit-unload="false"
+                    OnClick="btnSetParams_Click" UseSubmitBehavior="true" />
             </div>
 
             <asp:HiddenField ID="hdnTraceValue" runat="server" />
@@ -251,7 +252,7 @@
                     <tr>
                         <td>Your password will expire in
                             <%=pwdExpDays %>
-                            days. Click <a onclick="javascript:showChangePasswordDialog()" target="middle1">here</a> to
+                            days. Click <a onclick="showChangePasswordDialog()" target="middle1">here</a> to
                             change your password.
                         </td>
                         <td style="float: right">
@@ -328,7 +329,7 @@
 
                                     <%--  <span class="logout-main"><a id="li_Logout2" href="javascript:void(0);" class="link"
                                         data-toggle="tooltip" title="" data-original-title="Logout"
-                                        onclick="javascript:signout('../aspx/signout.aspx');return false;"><i
+                                        onclick="signout('../aspx/signout.aspx');return false;"><i
                                             class="fa fa-power-off"></i></a></span>--%>
                                     <div class="clearfix"></div>
                                     <div class="mobile-search-inner" style="display: none;">
@@ -453,7 +454,7 @@
                                                             </asp:Label>
                                                         </a></li>
                                                     <li id="li_WorkFlow1" title="WorkFlow"
-                                                        onclick="javascript:LoadIframe('workflownew.aspx')"
+                                                        onclick="LoadIframe('workflownew.aspx')"
                                                         runat="server" visible="true"><a href="javascript:void(0)"><i
                                                             class="icon-map-marker icon-basic-elaboration-browser-refresh"></i>
                                                             <asp:Label ID="lblWorkFlow" runat="server"
@@ -572,7 +573,7 @@
                                             </a>
                                             <ul class="dropdown-menu scale-up">
                                                 <ul class="head-list">
-                                                    <li onclick="javascript:showChangePasswordDialog()"
+                                                    <li onclick="showChangePasswordDialog()"
                                                         id="changepassword" runat="server">
                                                         <a href="javascript:void(0)" class="media add-tooltip"
                                                             data-title="Used space : 95%" data-container="body"
@@ -588,7 +589,7 @@
                                                         style="height: 30px;" title="Trace file">
                                                         <a href="javascript:void(0)"
                                                             class="modal-dialog-events-settings" style="height: 30px;"
-                                                            onclick="javascript:showTraceFileDialog();">
+                                                            onclick="showTraceFileDialog();">
                                                             <i class="icon-basic-geolocalize-01"></i>
                                                             <asp:Label ID="Label1" runat="server"
                                                                 meta:resourcekey="lblTracefile"> Trace file </asp:Label>
@@ -596,7 +597,7 @@
 
                                                         <%if (traceValue == true)
                                                             {%>
-                                                        <span onclick="javascript:ToggleTrace(true);">
+                                                        <span onclick="ToggleTrace(true);">
                                                             <label class="switchtoggel_cls">
                                                                 <input type="checkbox" checked><span id="imgTogTrace"
                                                                     class="slider round"
@@ -605,7 +606,7 @@
                                                         <%}
                                                             else
                                                             {%>
-                                                        <span onclick="javascript:ToggleTrace(true);">
+                                                        <span onclick="ToggleTrace(true);">
                                                             <label class="switchtoggel_cls">
                                                                 <input type="checkbox"><span id="imgTogTrace"
                                                                     class="slider round"
@@ -615,7 +616,7 @@
                                                         %>
                                                     </li>
                                                     <li id="li3" class="modal-dialog-events-settings"
-                                                        onclick="javascript:showAbout();" runat="server" title="About" tabindex="0" role="button" onkeydown="if(event.key==='Enter' || event.key===' '){event.preventDefault();showAbout();}">
+                                                        onclick="showAbout();" runat="server" title="About" tabindex="0" role="button" onkeydown="if(event.key==='Enter' || event.key===' '){event.preventDefault();showAbout();}">
                                                         <a href="javascript:void(0)"><i class="icon-arrows-info"></i>
                                                             <asp:Label ID="Label2" runat="server"
                                                                 meta:resourcekey="lblabout">About</asp:Label>
@@ -646,7 +647,7 @@
                                                         </a>
                                                     </li>
                                                     <li id="li_Logout"
-                                                        onclick="javascript:signout('<%=signOutPath %>');"
+                                                        onclick="signout('<%=signOutPath %>');"
                                                         title="Logout">
                                                         <a class="media" href="javascript:void(0)">
                                                             <i class="icon-basic-key"></i>
@@ -792,7 +793,7 @@
                 <!-- item-->
 
                 <!-- item-->
-                <%--<a href="" class="link" data-toggle="tooltip" title="" data-original-title="Logout" onclick="javascript:signout('../aspx/signout.aspx');"><i class="fa fa-power-off"></i></a>--%>
+                <%--<a href="" class="link" data-toggle="tooltip" title="" data-original-title="Logout" onclick="signout('../aspx/signout.aspx');"><i class="fa fa-power-off"></i></a>--%>
             </div>
             <footer class="main-footer">
                 Powered by Axpert

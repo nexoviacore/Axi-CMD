@@ -372,7 +372,6 @@ public class IviewDataExport
                         {
                             bool bracketNeg = raw.StartsWith("(") && raw.EndsWith(")");
                             bool hasComma = raw.Contains(",");
-                            bool hasDecimal = raw.Contains(".");
                             if (bracketNeg)
                                 raw = raw.Substring(1, raw.Length - 2);
                             decimal dec;
@@ -381,15 +380,11 @@ public class IviewDataExport
                                 if (bracketNeg)
                                     dec *= -1;
                                 cell.Value = dec;
-                                string format;
-                                if (hasComma)
-                                {
-                                    format = hasDecimal ? "#,##0.################" : "#,##0";
-                                }
-                                else
-                                {
-                                    format = hasDecimal ? "0.################" : "0";
-                                }
+                                int decimalIndex = raw.IndexOf('.');
+                                int decimalPlaces = decimalIndex < 0 ? 0 : raw.Length - decimalIndex - 1;
+                                string format = hasComma ? "#,##0" : "0";
+                                if (decimalPlaces > 0)
+                                    format += "." + new string('0', decimalPlaces);
                                 cell.Style.NumberFormat.Format = format;
                             }
                             else

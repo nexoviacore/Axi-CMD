@@ -9396,7 +9396,7 @@
 	 *  @type string
 	 *  @default Version number
 	 */
-	DataTable.version = "No Version";
+	DataTable.version = "";
 
 	/**
 	 * Private data store, containing all of the settings objects that are

@@ -156,7 +156,6 @@ class SignalrService {
 
             bodyAppend.appendChild(notificationfloat);
             setTimeout(function () {
-                var notificationfloat = document.querySelector('.floatnotification');
                 notificationfloat.remove();
             }, 5000);
 
@@ -265,13 +264,11 @@ class SignalrService {
                 var closebtnAppend = document.createElement("div");
                 closebtnAppend.classList.add('d-flex', 'justify-content-end', 'closebtnAppend', 'col-1');
                 var notificationcloseBtn = document.createElement('button');
-                notificationcloseBtn.innerHTML = `<span class='material-icons material-icons-style fs-3' onclick='deleteNotification("${notification.notificationId}")'>close</span>`;
+                notificationcloseBtn.innerHTML = "<span class='material-icons material-icons-style fs-3'>close</span>";
                 notificationcloseBtn.setAttribute('data-index', index);
+                notificationcloseBtn.setAttribute('data-notificationid', notification.notificationId);
                 notificationcloseBtn.classList.add('btn', 'btn-sm', 'btn-icon', 'btn-white', 'closeNotification');
                 notificationcloseBtn.title = 'Clear';
-                //notificationcloseBtn.onclick = function () {
-                //    clearOneNotification();
-                //}
                 closebtnAppend.appendChild(notificationcloseBtn)
 
                 var symbolDiv = document.createElement("div");
@@ -449,6 +446,7 @@ class SignalrService {
         closeButtons.forEach((closeButton) => {
             closeButton.addEventListener('click', (event) => {
                 // event.stopPropagation();
+                deleteNotification(closeButton.getAttribute('data-notificationid'));
                 const notificationDiv = closeButton.closest('.notificationList');
                 if (notificationDiv) {
                     let data_index = notificationDiv.getAttribute('data-index');

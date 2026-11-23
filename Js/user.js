@@ -89,6 +89,10 @@ function ValidatePassword(obj) {
     //On changing the pwd, if the main page has the pwd expiry div then hide it.
     if ($j("#dvMessage", window.parent.document).is(':visible'))
         $j("#dvMessage", window.parent.document).hide();
+    $("#swee000F0").val(encryptCpwdDetails($("#swee000F0").val()));
+    $("#swc000F0").val(encryptCpwdDetails($("#swc000F0").val()));
+    $("#npwdHidden").val(encryptCpwdDetails($("#npwdHidden").val()));
+    $("#npwdHiddenMd5").val(encryptCpwdDetails($("#npwdHiddenMd5").val()));
 
     return true;
 
@@ -565,3 +569,29 @@ $j(document).keypress(function (event) {
     }
 
 });
+
+function encryptCpwdDetails(thisVal) {
+    const aesKey = CryptoJS.lib.WordArray.random(16);
+    const iv = CryptoJS.lib.WordArray.random(16);
+    var encrypted = CryptoJS.AES.encrypt(thisVal, aesKey, {
+        iv: iv,
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.Pkcs7
+    });
+    const combined = iv.concat(encrypted.ciphertext);
+    const base64Cipher = CryptoJS.enc.Base64.stringify(combined);
+    const encryptor = new JSEncrypt();
+    let _pbKey = $("#hdnEncKey").val();
+    _pbKey = _pbKey.replace(/\\n/g, '\n');
+    encryptor.setPublicKey(_pbKey);
+    const encryptedAesKey = encryptor.encrypt(CryptoJS.enc.Base64.stringify(aesKey));
+    if (encryptedAesKey) {
+        const payload = JSON.stringify({
+            key: encryptedAesKey,
+            data: base64Cipher
+        });
+        return payload;
+    } else {
+        return thisVal;
+    }
+}

@@ -726,7 +726,7 @@
     <script type="text/javascript" src="../UI/axpertUI/plugins.bundle.js"></script>
     <script type="text/javascript" src="../UI/axpertUI/scripts.bundle.js"></script>
     <script type="text/javascript" src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js"></script>
-    <script type="text/javascript" src="../Js/common.min.js?v=166"></script>
+    <script type="text/javascript" src="../Js/common.min.js?v=167"></script>
     <script type="text/javascript" src="../Js/alerts.min.js"></script>
     <script type="text/javascript" src="../Js/xmlToJson.js"></script>
     <script type="text/javascript" src="../Js/handlebars.min.js"></script>

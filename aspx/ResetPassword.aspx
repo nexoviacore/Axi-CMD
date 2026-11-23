@@ -95,13 +95,13 @@
 
     <script src="../Js/gen.min.js?v=14" type="text/javascript"></script>
 
-    <script src="../Js/user.min.js?v=20" type="text/javascript"></script>
+    <script src="../Js/user.min.js?v=21" type="text/javascript"></script>
 
     <link href="../Css/generic.min.css?v=10" rel="stylesheet" type="text/css" id="generic" />
     <link id="themecss" type="text/css" rel="Stylesheet" href="" />
     <script src="../Js/Resetpassword.min.js?v=3" type="text/javascript"></script>
 
-    <script src="../Js/common.min.js?v=166" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=167" type="text/javascript"></script>
     <title>Reset Password</title>
 </head>
 <body class="dc" dir="<%=direction%>">

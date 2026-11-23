@@ -1,4 +1,4 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="AxCustomError.aspx.cs" Inherits="aspx_AxCustomError" %>
+﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="AxCustomError.aspx.cs" Inherits="aspx_AxCustomError" EnableViewState="false" %>
 
 <!DOCTYPE html>
 

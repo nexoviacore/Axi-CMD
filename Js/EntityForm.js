@@ -328,6 +328,7 @@ class EntityForm {
             } catch (ex) { }
 
             _this.constructEntityFormHTML();
+            _this.applyFormControlActions(entityFormPageData);
 
             document.querySelector("#EntityTitle").innerHTML = _this.entityName + (_this.keyValue ? " - " + _this.keyValue : "");
 
@@ -610,6 +611,26 @@ class EntityForm {
             container.innerHTML = jsonData.error[0].msg;
         }
 
+    }
+
+    applyFormControlActions(entityFormPageData) {
+        const formControlSegment = entityFormPageData.split("*$*").find(segment => segment.includes('"formcontrol"'));
+        if (!formControlSegment)
+            return;
+
+        const formControlData = JSON.parse(formControlSegment).formcontrol;
+        if (!Array.isArray(formControlData))
+            return;
+
+        formControlData.forEach(control => {
+            const dcAction = control.dcact?.toLowerCase();
+            if (control.dc && (dcAction === "hide" || dcAction === "show"))
+                ShowingDc(control.dc, dcAction);
+
+            const fieldAction = control.fldact?.toLowerCase();
+            if (control.fldname && (fieldAction === "hide" || fieldAction === "show"))
+                HideShowField(control.fldname, fieldAction);
+        });
     }
 
     parseFormMetaData(metaData) {
@@ -1408,7 +1429,7 @@ class EntityForm {
                         }
 
                         // Determine if the cell should be right aligned
-                        const isRightAligned = (field.customdatatype === 'Currency' || field.customdatatype === 'Numeric');
+                        const isRightAligned = (field.customdatatype === 'Currency' || field.customdatatype === 'Numeric' || field.customdatatype === 'Decimal Number' || field.customdatatype === 'Whole Number');
                         html += `<td${isRightAligned ? ' class="align-right"' : ''} id="${fieldId}" data-name="${field.fname}">${cellContent}</td>`;
                     });
                     html += `</tr>`;

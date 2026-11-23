@@ -95,7 +95,7 @@ Partial Class sessnew
                     util.SaveExecutionText()
                     util.DeleteUnwantedKeys()
                     util.TempAttaServerFiles()
-                    util.ClearUserIviewData()
+                    'util.ClearUserIviewData()
                     Dim res As String
                     'Dim objWebServiceExt As ASBExt.WebServiceExt = New ASBExt.WebServiceExt()
                     'Call service
@@ -174,31 +174,39 @@ Partial Class sessnew
 
     <System.Web.Services.WebMethod()>
     Public Shared Sub ClearSessExpiry(ByVal jsonData As String)
-        Dim userData As UserRequestNew
+        Dim userData As UserRequestNewSess = Nothing
         Try
             Dim settings As New JsonSerializerSettings With {
                 .MissingMemberHandling = MissingMemberHandling.Error
             }
-            userData = JsonConvert.DeserializeObject(Of UserRequestNew)(jsonData, settings)
-
+            userData = JsonConvert.DeserializeObject(Of UserRequestNewSess)(jsonData, settings)
         Catch ex As Exception
-            Throw New ArgumentException("Invalid JSON format.")
+            Throw New HttpException(400, "Invalid request.")
         End Try
-        If userData Is Nothing OrElse String.IsNullOrEmpty(userData.duplicateUser) Then
-            Throw New ArgumentException("Invalid JSON format.")
+        If userData Is Nothing OrElse
+           String.IsNullOrWhiteSpace(userData.duplicateUser) Then
+            Throw New HttpException(400, "Invalid request.")
         End If
         Dim parts As String() = userData.duplicateUser.Split("-"c)
-        If parts.Length <> 2 Then
-            Throw New ArgumentException("Invalid JSON format.")
+        If parts.Length <> 2 OrElse
+           String.IsNullOrWhiteSpace(parts(0)) OrElse
+           String.IsNullOrWhiteSpace(parts(1)) Then
+            Throw New HttpException(400, "Invalid request.")
         End If
-        Dim Proj As String = parts(0)
-        Dim Sid As String = parts(1)
-        Dim _util As New Util.Util()
-        Dim user As String
-        user = HttpContext.Current.Session("user")
-        _util.RemoveLoggedUserDetails(Proj, Sid, user)
+        Try
+            Dim Proj As String = parts(0)
+            Dim Sid As String = parts(1)
+            Dim _util As New Util.Util()
+            Dim user As String
+            user = HttpContext.Current.Session("user")
+            _util.RemoveLoggedUserDetails(Proj, Sid, user)
+
+        Catch ex As Exception
+            System.Diagnostics.Trace.TraceError("ClearSessExpiry failed: {0}", ex)
+            Throw New HttpException(500, "Request could not be processed.")
+        End Try
     End Sub
 End Class
-Public Class UserRequestNew
+Public Class UserRequestNewSess
     Public Property duplicateUser As String
 End Class

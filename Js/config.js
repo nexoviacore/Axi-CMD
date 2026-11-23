@@ -357,7 +357,7 @@ $j(document).ready(function () {
                     let projData = appSettingList.appsettings[_proj];
                     if (projData.AxpCaptcha.CaptchaEnabled == "true")
                         $("#chkbEnableCaptch").prop("checked", true);
-                    else 
+                    else
                         $("#chkbEnableCaptch").prop("checked", false);
                     document.getElementById("selCaptchLength").value = projData.AxpCaptcha.CaptchaLength || "";
                     document.getElementById("selCaptchStyle").value = projData.AxpCaptcha.CaptchaStyle || "";
@@ -589,9 +589,11 @@ $j(document).on("change", "#lstconnection", function (e) {
 
         $('#armExtResource').val(lvalue).trigger('change');
 
-        $('#axpDevOptions').val(lvalue).trigger('change');        
+        $('#asbConnection').val(lvalue).trigger('change');
 
-        $('#selCaptchaConn').val(lvalue).trigger('change');        
+        $('#axpDevOptions').val(lvalue).trigger('change');
+
+        $('#selCaptchaConn').val(lvalue).trigger('change');
     }
 });
 
@@ -2346,6 +2348,177 @@ function DelExternalResWs() {
     });
 }
 
+/* ASB paths are saved per connection in appsettings.[connection].ASBPath. */
+function asbPathProj() {
+    var proj = $j("#asbConnection").val() || "";
+    if (proj.indexOf("\\") != -1)
+        proj = proj.split("\\")[0];
+    return proj;
+}
+
+function asbPathInitConnections() {
+    var sel = $j("#asbConnection");
+    if (sel.find("option").length === 0) {
+        $j("#armExtResource option").each(function () {
+            var v = $j(this).val();
+            if (v)
+                sel.append($j("<option></option>").val(v).text($j(this).text()));
+        });
+    }
+    var cur = $j("#lstconnection").val();
+    if (cur && sel.find("option[value='" + cur.replace(/'/g, "\\'") + "']").length)
+        sel.val(cur);
+    else if (sel.find("option").length)
+        sel.val(sel.find("option:first").val());
+    sel.trigger("change.select2");
+    asbPathRender();
+}
+
+var asbDynamicNameVal = ["ASBIView.ASBIViewservice", "ASBAction.ASBActionservice",
+    "ASBDefine.ASBDefineservice", "ASBUtils.ASBUtilsservice", "ASBUser.ASBUserservice", "ASBTStruct.ASBTStructservice",
+    "ASBRapidTStruct.ASBRapidTStructservice", "ASBScript.ASBScriptservice", "ASBMenu.ASBMenuservice"];
+
+var asbDynamicNames = ["ASBIView", "ASBAction", "ASBDefine", "ASBUtils", "ASBUser", "ASBTStruct", "ASBRapidTStruct", "ASBScript", "ASBMenu"];
+
+function asbPathRow(name, value) {
+    var row = $j(
+        '<div class="row g-3 align-items-center mb-2 asb-path-row">' +
+        '<div class="col-md-4 col-sm-12"><select class="form-select asb-path-name" data-placeholder="Select Name"><option value=""></option></select></div>' +
+        '<div class="col-md-7 col-sm-12"><input type="text" class="m-wrap placeholder-no-fix form-control asb-path-value" placeholder="Path / URL" /></div>' +
+        '<div class="col-md-1 col-sm-12"><button type="button" class="btn btn-sm btn-light-danger deleteAsbPath"><span class="material-icons">delete</span></button></div>' +
+        '</div>');
+    var select = row.find("select.asb-path-name");
+    $j.each(asbDynamicNames, function (i, label) {
+        select.append($j("<option></option>").val(asbDynamicNameVal[i]).text(label));
+    });
+
+    var index = asbDynamicNames.indexOf(name);
+    var selectValue = index >= 0 ? asbDynamicNameVal[index] : name;
+    if (selectValue && asbDynamicNameVal.indexOf(selectValue) === -1)
+        select.append($j("<option></option>").val(selectValue).text(name));
+    select.val(selectValue || "");
+    row.find(".asb-path-value").val(value || "");
+    return row;
+}
+
+function asbPathInitSelect(row) {
+    row.find("select.asb-path-name").select2({ width: "100%", placeholder: "Select Name" });
+}
+
+function asbPathRender() {
+    var proj = asbPathProj();
+    $j("#asbPathContainer select.asb-path-name.select2-hidden-accessible").select2("destroy");
+    $j("#asbPathContainer").empty();
+    $j("#txtAsbScriptsPath").val("");
+    $j("#txtAsbScriptsUrlPath").val("");
+    try {
+        if (appSettingList && typeof appSettingList === "string")
+            appSettingList = JSON.parse(appSettingList);
+        var saved = appSettingList && appSettingList.appsettings && appSettingList.appsettings[proj] && appSettingList.appsettings[proj].ASBPath;
+        if (saved) {
+            $j("#txtAsbScriptsPath").val(saved.ScriptsPath || "");
+            $j("#txtAsbScriptsUrlPath").val(saved.scriptsUrlPath || "");
+            $j.each(saved, function (k, v) {
+                // Skip special properties that are not ASB path entries
+                if (k === "ScriptsPath" || k === "scriptsUrlPath") {
+                    return true; // continue
+                }
+                var row = asbPathRow(k, v);
+                $j("#asbPathContainer").append(row);
+                asbPathInitSelect(row);
+            });
+        }
+    } catch (ex) {
+        console.error("Unable to load ASB paths", ex);
+        showAlertDialog("error", "Unable to load ASB paths");
+    }
+}
+
+$j(document).on("change", "#asbConnection", function () {
+    asbPathRender();
+});
+
+$j(document).ready(function () {
+    setTimeout(asbPathInitConnections, 800);
+    var result = new URLSearchParams(window.location.search).get("asbResult");
+    if (result === "saved" || result === "deleted") {
+        showAlertDialog("success", "ASB paths " + result + " successfully");
+    } else if (result === "cachewarning") {
+        showAlertDialog("error", "ASB paths were updated, but the project cache could not be cleared. Check the server logs.");
+    }
+    if (result === "saved" || result === "deleted" || result === "cachewarning") {
+        var url = new URL(window.location.href);
+        url.searchParams.delete("asbResult");
+        window.history.replaceState(null, "", url.toString());
+    }
+});
+
+$j(document).on("click", "#btnAsbPathAdd", function () {
+    var row = asbPathRow("", "");
+    $j("#asbPathContainer").append(row);
+    asbPathInitSelect(row);
+});
+
+$j(document).on("click", ".deleteAsbPath", function () {
+    var row = $j(this).closest(".asb-path-row");
+    row.find("select.asb-path-name.select2-hidden-accessible").select2("destroy");
+    row.remove();
+});
+
+function validateAsbPathProject() {
+    if ($j.trim(asbPathProj()) === "") {
+        showAlertDialog("error", "Project cannot be left empty");
+        return false;
+    }
+    return true;
+}
+
+function prepareAsbPathsSave() {
+    if (!validateAsbPathProject())
+        return false;
+    var paths = [];
+    var seen = Object.create(null);
+    var error = "";
+    $j("#asbPathContainer .asb-path-row").each(function () {
+        var n = $j.trim($j(this).find("select.asb-path-name").val());
+        var v = $j.trim($j(this).find(".asb-path-value").val());
+        if (n === "" && v === "")
+            return;
+        if (n === "" || v === "") {
+            error = "Select a name and enter a URL for each ASB path";
+            return false;
+        }
+        if (asbDynamicNameVal.indexOf(n) === -1) {
+            error = "Select a supported ASB service for each path";
+            return false;
+        }
+        if (seen[n.toLowerCase()]) {
+            error = "Each ASB path name can only be selected once";
+            return false;
+        }
+        try {
+            var url = new URL(v);
+            if (url.protocol !== "http:" && url.protocol !== "https:")
+                throw new Error("Unsupported protocol");
+            if (url.search || url.hash) {
+                error = "An ASB URL cannot contain a query or fragment";
+                return false;
+            }
+        } catch (ex) {
+            error = "Enter an absolute HTTP or HTTPS URL for each ASB path";
+            return false;
+        }
+        seen[n.toLowerCase()] = true;
+        paths.push({ Name: n, Value: v });
+    });
+    if (error) {
+        showAlertDialog("error", error);
+        return false;
+    }
+    $j("#hdnAsbPaths").val(JSON.stringify(paths));
+    return true;
+}
+
 function renderNamedItems(container, dataObject, type) {
     let index = 1;
     for (let key in dataObject) {
@@ -2432,7 +2605,7 @@ function SaveAxpertDevOptions() {
         return showAlertDialog("error", "Project cannot be left empty");
     var selectedVals = $("#ddlAxpertdevOptions").val();
     if (!selectedVals || selectedVals.length === 0) {
-      /*  return showAlertDialog("error", "Options cannot be empty");*/
+        /*  return showAlertDialog("error", "Options cannot be empty");*/
         showAlertDialog("warning", "No Axpert Developer Options selected. All Axpert Developer Options will be hidden in runtime.");
     }
     var devOpt = "";
@@ -2544,7 +2717,7 @@ function SaveCaptchaSettings() {
         contentType: "application/json",
         success: function (data) {
             if (data.d != "") {
-                showAlertDialog("success", "Axpert Captchs settings saved successfully");
+                showAlertDialog("success", "Axpert Captcha settings saved successfully");
                 appSettingList = JSON.parse(data.d)
             }
         }, error: function (error) {

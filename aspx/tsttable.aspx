@@ -28,9 +28,9 @@
     <script src="../UI/axpertUI/datatables.bundle.js"></script>
     <script src="../Js/noConflict.min.js"></script>
     <script type="text/javascript" src="../Js/iFrameHandler.min.js"></script>
-    <script src="../Js/common.min.js?v=166"></script>
+    <script src="../Js/common.min.js?v=167"></script>
     <script src="../Js/tstructvars.min.js?v=98"></script>
-    <script src="../Js/tstruct.min.js?v=706"></script>
+    <script src="../Js/tstruct.min.js?v=707"></script>
     <script src="../Js/tstTable.min.js?v=44"></script>
 </head>
 <body dir="<%=direction%>">

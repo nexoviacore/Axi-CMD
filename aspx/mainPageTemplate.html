@@ -54,7 +54,7 @@ Main Page Templete
                     <div class="collapse navbar-collapse" id="navbar-collapse">
                         <ul class="nav navbar-nav navbar-right">
                             <li class="pull-right" id="optionsPanel">
-                                <a href="javascript:void(0);" class="js-right-sidebar" data-close="true">
+                                <a href="#" class="js-right-sidebar" data-close="true">
                                     <i class="material-icons" title="Options">more_vert</i>
                                 </a>
                             </li>
@@ -63,8 +63,8 @@ Main Page Templete
                 </div>
                 <div class="navbar-left-panel">
                     <div class="navbar-header">
-                        <a href="javascript:void(0);" class="bars"></a>
-                        <a class="navbar-brand" href="javascript:void(0)">
+                        <a href="#" class="bars"></a>
+                        <a class="navbar-brand" href="#">
                         </a>
                     </div>
                 </div>
@@ -94,7 +94,7 @@ Main Page Templete
                                 <ul class="setting-list">
 
                                     <li id="History" class="clickAutoClose">
-                                        <a href="javascript:void(0);">
+                                        <a href="#">
                                             <i class="material-icons setting-icon">history</i>
                                             <span class="setting-caption">History</span>
                                             <div class="clearfix"></div>
@@ -111,7 +111,7 @@ Main Page Templete
                                         <div class="switch">
                                             <span id="enableMobileNotifi">
                                                 <label>
-                                                    <input type="checkbox" checked="checked" onclick="ToggleMobileNotification(true)"><span id="spanMobileNotifi" class="lever" title="Mobile Notification off"></span>
+                                                    <input type="checkbox" checked="checked" data-ax-action="toggle-mobile-notification"><span id="spanMobileNotifi" class="lever" title="Mobile Notification off"></span>
                                                 </label>
                                             </span>
                                         </div>
@@ -144,7 +144,7 @@ Main Page Templete
                 <!--begin::Brand-->
                 <div class="aside-logo flex-column-auto pt-9 pb-5 d-none" id="webAxAppLogo" title="AxpertWeb">
                     <!--begin::Logo-->
-                    <a href="javascript:void(0);">
+                    <a href="#">
                         <div class="logo-default mh-50px">
                             <div class="d-flex">
                                 <img alt="Logo" src="../images/loginlogo.png" class="mh-50px ">
@@ -215,7 +215,7 @@ Main Page Templete
                             </div>
                             <!--end::Aside toggler-->
                             <!--begin::Logo-->
-                            <a href="javascript:void(0);" id="mobileAxAppLogo" class="d-lg-none---">
+                            <a href="#" id="mobileAxAppLogo" class="d-lg-none---">
                                 <div class="d-flex">
                                     <img alt="Logo" src="../images/loginlogo.png" class="mh-50px ">
                                     <h3 class="d-flex mh-50px m-2 text-dark fw-boldest fs-1 align-items-center text-break overflow-hidden divTitle">
@@ -364,7 +364,7 @@ Main Page Templete
                                             <div class="pb-4 border-bottom">
                                                 <label class="form-check form-switch form-switch-sm form-check-custom form-check-solid flex-stack">
                                                     <span class="divStartsWith" class="form-check-label text-gray-700 fs-6 fw-bold ms-0 me-2">Starts with...</span>
-                                                    <input class="form-check-input" type="checkbox" value="1" onchange="$.axpertUI.search.searchModeContains(!$(this).prop('checked'))">
+                                                    <input class="form-check-input" type="checkbox" value="1" data-ax-action="search-mode-contains">
                                                 </label>
                                             </div>
                                             <!--end::Input group-->
@@ -435,8 +435,7 @@ Main Page Templete
                                 <div id="signalRnotificationsPanel" class="d-flex align-items-center ms-1 ms-lg-2 col-xs-2z col-md-z2">
                                     <div class="btn btn-icon btn-active-light-primary w-30px h-30px w-md-40px h-md-40px notificationtrigger" id="notificationtrigger"
                                          data-kt-menu-trigger="click" data-kt-menu-overflow="true"
-                                         data-kt-menu-placement="bottom-end" data-kt-menu-backdrop="true" title="Notifications"
-                                         onclick="signalrServiceinit.init()">
+                                         data-kt-menu-placement="bottom-end" data-kt-menu-backdrop="true" title="Notifications" data-ax-action="signalr-notification-init">
                                         <span class="material-icons material-icons-style material-icons-1x" title="Notifications">
                                             notifications
                                         </span>
@@ -448,7 +447,7 @@ Main Page Templete
                                         <div class="d-flex justify-content-between MessageTItleStyle px-6 py-4">
                                             <span class="h3 my-auto">Notifications</span>
                                             <button type="button" class="btn btn-white btn-icon btn-sm closeAll" id="closeAll" data-toggle="tooltip"
-                                                    data-placement="bottom" title="Clear all" onclick="clearAll()">
+                                                    data-placement="bottom" title="Clear all" data-ax-action="clear-all-notifications">
                                                 <span class="material-icons material-icons-style material-icons-1">close</span>
                                             </button>
                                         </div>
@@ -476,7 +475,7 @@ Main Page Templete
                                         <div class="row g-0">
                                             <!--begin:Item-->
                                             <!--<div id="Adminconsole" class="col-md-4 col-sm-6 col-6">
-                                                <a href="javascript:void(0);" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-end border-bottom border-0">
+                                                <a href="#" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-end border-bottom border-0">
                                                     <span class="material-icons material-icons-style material-icons-3x material-icons-primary mb-2">
                                                         admin_panel_settings
                                                     </span>
@@ -486,7 +485,7 @@ Main Page Templete
                                             </div>-->
 
                                             <div id="developerworkbench" class="col-md-4 col-sm-6 col-6">
-                                                <a href="javascript:void(0);" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                <a href="#" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
                                                     <span class="material-icons material-icons-style material-icons-3x material-icons-primary mb-2">
                                                         developer_mode
                                                     </span>
@@ -496,7 +495,7 @@ Main Page Templete
                                             </div>
 
                                             <div id="configurationStudio" class="col-md-4 col-sm-6 col-6">
-                                                <a href="javascript:void(0);" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
+                                                <a href="#" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-bottom border-0">
                                                     <span class="material-icons material-icons-style material-icons-3x material-icons-primary mb-2">
                                                         toggle_on
                                                     </span>
@@ -508,7 +507,7 @@ Main Page Templete
                                             <!--end:Item-->
                                             <!--begin:Item-->
                                             <div id="ImportData" class="col-md-4 col-sm-6 col-6">
-                                                <a href="javascript:void(0);" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-end border-0">
+                                                <a href="#" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-end border-0">
                                                     <span class="material-icons material-icons-style material-icons-3x material-icons-primary mb-2">
                                                         file_download
                                                     </span>
@@ -519,7 +518,7 @@ Main Page Templete
                                             <!--end:Item-->
                                             <!--begin:Item-->
                                             <div id="ExportData" class="col-md-4 col-sm-6 col-6">
-                                                <a href="javascript:void(0);" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-0">
+                                                <a href="#" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-0">
                                                     <span class="material-icons material-icons-style material-icons-3x material-icons-primary mb-2">
                                                         file_upload
                                                     </span>
@@ -529,8 +528,8 @@ Main Page Templete
                                             </div>
                                             <!--end:Item-->
                                             <!--begin:Item-->
-                                            <div id="arrangeCards" class="col-md-4 col-sm-6 col-6" onclick="$.axpertUI.cardsPage.editSaveCardDesignToggle();" data-kt-menu-dismiss="true">
-                                                <a href="javascript:void(0);" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-0">
+                                            <div id="arrangeCards" class="col-md-4 col-sm-6 col-6" data-ax-action="edit-save-card-design-toggle" data-kt-menu-dismiss="true">
+                                                <a href="#" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-0">
                                                     <span class="material-icons material-icons-style material-icons-3x material-icons-primary mb-2">
                                                         grid_view
                                                     </span>
@@ -541,7 +540,7 @@ Main Page Templete
                                             <!--end:Item-->
                                             <!--begin:Item-->
                                             <div id="refreshMenu" class="col-md-4 col-sm-6 col-6" data-kt-menu-dismiss="true">
-                                                <a href="javascript:void(0);" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-0">
+                                                <a href="#" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-0">
                                                     <span class="material-icons material-icons-style material-icons-3x material-icons-primary mb-2">
                                                         refresh
                                                     </span>
@@ -552,7 +551,7 @@ Main Page Templete
                                             <!--end:Item-->
                                             <!--begin:Item-->
                                             <div id="refreshVarParam" class="col-md-4 col-sm-6 col-6" data-kt-menu-dismiss="true">
-                                                <a href="javascript:void(0);" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-0">
+                                                <a href="#" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-0">
                                                     <span class="material-icons material-icons-style material-icons-3x material-icons-primary mb-2">
                                                         published_with_changes
                                                     </span>
@@ -563,7 +562,7 @@ Main Page Templete
                                             <!--end:Item-->
                                             <!--begin:Item-->
                                             <div id="qrCodeBtnWrapper" class="col-md-4 col-sm-6 col-6" data-kt-menu-dismiss="true" data-kt-menu-trigger="hover" data-kt-menu-placement="left-start">
-                                                <a href="javascript:void(0);" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-0">
+                                                <a href="#" class="d-flex flex-column flex-center h-100 p-6 bg-hover-light border-0">
                                                     <span class="material-icons material-icons-style material-icons-3x material-icons-primary mb-2">
                                                         qr_code_2
                                                     </span>
@@ -583,7 +582,7 @@ Main Page Templete
                                             <!--begin:Item-->
                                             <div id="executionLog" class="col-md-4 col-sm-6 col-6" data-kt-menu-dismiss="true">
                                                 <div class="bg-hover-light">
-                                                    <a href="javascript:void(0);" class="d-flex flex-column flex-center h-10 0p-0 pt-6 border-0">
+                                                    <a href="#" class="d-flex flex-column flex-center h-10 0p-0 pt-6 border-0">
                                                         <span class="material-icons material-icons-style material-icons-3x material-icons-primary mb-2">
                                                             troubleshoot
                                                         </span>
@@ -603,7 +602,7 @@ Main Page Templete
                                             <!--begin:Item-->
                                             <div id="showLog" class="col-md-4 col-sm-6 col-6" data-kt-menu-dismiss="true">
                                                 <div class="bg-hover-light">
-                                                    <a href="javascript:void(0);" class="d-flex flex-column flex-center h-10 0p-0 pt-6 border-0">
+                                                    <a href="#" class="d-flex flex-column flex-center h-10 0p-0 pt-6 border-0">
                                                         <span class="material-icons material-icons-style material-icons-3x material-icons-primary mb-2">
                                                             data_exploration
                                                         </span>
@@ -651,7 +650,7 @@ Main Page Templete
                                                 <div id="userName" class="ppn d-flex flex-column">
                                                     <div id="AxNickName" class="fw-bolder d-flex align-items-center fs-5 text-break">
                                                     </div>
-                                                    <a id="AxUserEmail" href="javascript:void(0);" class="fw-bold text-muted text-hover-primary fs-7 text-break"></a>
+                                                    <a id="AxUserEmail" href="#" class="fw-bold text-muted text-hover-primary fs-7 text-break"></a>
                                                 </div>
                                                 <!--end::Username-->
                                             </div>
@@ -678,7 +677,7 @@ Main Page Templete
                                         <!--end::Menu separator-->
                                         <!--begin::Menu item-->
                                         <div id="GlobalParams" class="menu-item px-5" data-kt-menu-trigger="hover" data-kt-menu-placement="left-start">
-                                            <a href="javascript:void(0);" class="menu-link d-flex flex-stack p-5">
+                                            <a href="#" class="menu-link d-flex flex-stack p-5">
                                                 Application Parameters
                                             </a>
                                             <div class="menu-sub menu-sub-dropdown w-auto mw-300px py-4">
@@ -689,7 +688,7 @@ Main Page Templete
                                         <!--end::Menu item-->
                                         <!--begin::Menu item-->
                                         <!--<div class="menu-item px-5" data-kt-menu-trigger="hover" data-kt-menu-placement="left-start">
-                                        <a href="javascript:void(0);" class="menu-link p-5">
+                                        <a href="#" class="menu-link p-5">
                                             <span class="menu-title">Application Options</span>
                                             <span class="menu-arrow"></span>
                                         </a>-->
@@ -697,17 +696,17 @@ Main Page Templete
                                         <!--<div class="menu-sub menu-sub-dropdown w-200px py-4">-->
                                         <!--begin::Menu item-->
                                         <!--<div id="refreshMenu" class="menu-item px-3">
-                                            <a href="javascript:void(0);" class="menu-link p-5">Refresh Menu</a>
+                                            <a href="#" class="menu-link p-5">Refresh Menu</a>
                                         </div>-->
                                         <!--end::Menu item-->
                                         <!--begin::Menu item-->
                                         <!--<div id="refreshVarParam" class="menu-item px-3">
-                                            <a href="javascript:void(0);" class="menu-link p-5">Refresh App Variables</a>
+                                            <a href="#" class="menu-link p-5">Refresh App Variables</a>
                                         </div>-->
                                         <!--end::Menu item-->
                                         <!--begin::Menu item-->
                                         <!--<div id="executionLog" class="menu-item px-3">
-                                            <a href="javascript:void(0);" class="menu-link p-5">Show Execution Trace</a>
+                                            <a href="#" class="menu-link p-5">Show Execution Trace</a>
                                         </div>-->
                                         <!--end::Menu item-->
                                         <!--begin::Menu separator-->
@@ -721,7 +720,7 @@ Main Page Templete
                                                     <span id="imgTogTrace" class="form-check-label text-muted fs-7" title="Trace On">Show Logs</span>
                                                 </label>
                                             </div>
-                                            <a href="javascript:void(0);" class="menu-link fs-3 px-3 py-2 me-5 position-absolute translate-middle-y top-50 end-0 cursor-pointer text-gray-700 material-icons material-icons-style">
+                                            <a href="#" class="menu-link fs-3 px-3 py-2 me-5 position-absolute translate-middle-y top-50 end-0 cursor-pointer text-gray-700 material-icons material-icons-style">
                                                 launch
                                             </a>
                                         </div>-->
@@ -732,7 +731,7 @@ Main Page Templete
                                         <!--end::Menu item-->
                                         <!--begin::Menu item-->
                                         <!--<div id="qrCodeBtnWrapper" class="menu-item px-5" data-kt-menu-trigger="hover" data-kt-menu-placement="left-start">
-                                        <a href="javascript:void(0);" class="menu-link p-5">
+                                        <a href="#" class="menu-link p-5">
                                             <span class="menu-title">QR Code</span>
                                         </a>-->
                                         <!--begin::Menu sub-->
@@ -746,7 +745,7 @@ Main Page Templete
                                         <!--</div>-->
                                         <!--end::Menu item-->
                                         <div id="About" class="ppn menu-item px-5 my-1">
-                                            <a href="javascript:void(0);" class="menu-link p-5">About</a>
+                                            <a href="#" class="menu-link p-5">About</a>
                                         </div>
                                         <!--end::Menu item-->
                                         <!--begin::Menu separator-->
@@ -754,7 +753,7 @@ Main Page Templete
                                         <!--end::Menu separator-->
                                         <!--begin::Menu item-->
                                         <div id="Language" class="menu-item px-5" data-kt-menu-trigger="hover" data-kt-menu-placement="left-start">
-                                            <a href="javascript:void(0);" class="menu-link p-5">
+                                            <a href="#" class="menu-link p-5">
                                                 <span class="menu-title position-relative">
                                                     <span class="setting-caption">
                                                         Language
@@ -772,12 +771,12 @@ Main Page Templete
                                         <!--end::Menu item-->
                                         <!--begin::Menu item-->
                                         <div id="ChangePassword" class="menu-item px-5 my-1">
-                                            <a href="javascript:void(0);" class="menu-link p-5">Reset Password</a>
+                                            <a href="#" class="menu-link p-5">Reset Password</a>
                                         </div>
                                         <!--end::Menu item-->
                                         <!--begin::Menu item-->
                                         <div id="Logout" class="menu-item px-5">
-                                            <a href="javascript:void(0);" class="menu-link p-5">Sign Out</a>
+                                            <a href="#" class="menu-link p-5">Sign Out</a>
                                         </div>
                                         <!--end::Menu item-->
                                         <!--begin::Menu separator-->
@@ -808,12 +807,12 @@ Main Page Templete
                 <!--end::Header-->
                 <!--begin::Content-->
                 <div class="content fs-6 d-flex flex-column flex-column-fluid px-3 pt-5 pb-2" id="dvmainpagetemplate">
-                    <!-- <div class="btn btn-icon btn-sm position-absolute ms-n20 mt-2 fw-bolder z-index-2 transform-270 appBackBtn" onclick="prevbtn_click($(this))">
+                    <!-- <div class="btn btn-icon btn-sm position-absolute ms-n20 mt-2 fw-bolder z-index-2 transform-270 appBackBtn" data-ax-click="prevbtn_click($(this))">
                         <span class="btn btn-flex btn-white btn-active-light-primary h-30px shadow-sm fs-6 mt-7 pt-4 pb-3 px-4 rounded-top-0" title="" data-bs-toggle="tooltip-disable" data-bs-placement="left" data-bs-dismiss="click" data-bs-trigger="hover" data-bs-html="true" data-bs-sanitize="false" data-bs-original-title='<button type="button" class="btn btn-icon btn-sm btn-outline btn-outline-dashed btn-outline-primary btn-bg-white btn-active-primary"><i class="material-icons material-icons-style material-icons-2">arrow_back</i></button>'>
                             <span>back</span>
                         </span>
                     </div> -->
-                    <div class="btn btn-icon btn-sm position-absolute fw-bolder ms-4--- ms-n3 mt-n7 z-index-2 appBackBtn" onclick="prevbtn_click($(this))">
+                    <div class="btn btn-icon btn-sm position-absolute fw-bolder ms-4--- ms-n3 mt-n7 z-index-2 appBackBtn">
                         <button type="button" class="btn btn-icon btn-sm ">
                             <span class="material-icons material-icons-style material-icons-2">arrow_back</span>
                         </button>
@@ -858,7 +857,7 @@ Main Page Templete
                                 <!--end::Info-->
                                 <!--begin::Actions-->
                                 <div class="d-flex align-items-center flex-nowrap text-nowrap py-1">
-                                    <a href="javascript:void(0);" class="editSaveCardDesign btn btn-icon btn-white btn-active-primary me-4" onclick="$.axpertUI.cardsPage.editSaveCardDesignToggle();">
+                                    <a href="#" class="editSaveCardDesign btn btn-icon btn-white btn-active-primary me-4" data-ax-action="edit-save-card-design-toggle">
                                         <span class="material-icons material-icons-style">
                                             edit
                                         </span>
@@ -921,7 +920,7 @@ Main Page Templete
                                 <!--end::Info-->
                                 <!--begin::Actions-->
                                 <div class="d-flex align-items-center flex-nowrap text-nowrap py-1">
-                                    <a href="javascript:void(0);" class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary me-4" data-bs-toggle="modal" data-bs-target="#kt_modal_invite_friends">
+                                    <a href="#" class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary me-4" data-bs-toggle="modal" data-bs-target="#kt_modal_invite_friends">
                                         <span class="material-icons material-icons-style">
                                             edit
                                         </span>
@@ -976,10 +975,10 @@ Main Page Templete
         files.js.push("/ThirdParty/lodash.min.js?v=1");
         files.js.push("/ThirdParty/deepdash.min.js");
 
-        files.js.push("/Js/handlebars.min.js?v=2");
+        files.js.push("/Js/handlebars.min.js?v=3");
         files.js.push("/Js/handleBarsHelpers.min.js");
 
-        files.js.push("/Js/AxInterface.min.js?v=23");//min
+        files.js.push("/Js/AxInterface.min.js?v=24");//min
         files.js.push("/ThirdParty/Highcharts/highcharts.js");
         files.js.push("/ThirdParty/Highcharts/highcharts-3d.js");
         files.js.push("/ThirdParty/Highcharts/highcharts-more.js");
@@ -1024,8 +1023,8 @@ Main Page Templete
     }
     files.css.push("/Css/AxNotifications.min.css?v=2");
     files.js.push("/Js/signalr.min.js");
-    files.js.push("/Js/axpertUI.min.js?v=119");
-    files.js.push("/Js/AxNotifications.min.js?v=17");
+    files.js.push("/Js/axpertUI.min.js?v=120");
+    files.js.push("/Js/AxNotifications.min.js?v=19");
 
     var dirLeft = true;
 
@@ -1043,6 +1042,14 @@ Main Page Templete
 
             // }
             renderTemplete('template.templateContent');
+            var userOptionsMenu = document.querySelector("#AllUserOptions + [data-kt-menu='true']");
+            if (userOptionsMenu) {
+                userOptionsMenu.addEventListener("click", function (event) {
+                    var link = event.target.closest("a[href='#']");
+                    if (link && userOptionsMenu.contains(link))
+                        event.preventDefault();
+                }, true);
+            }
 
             $(function () {
 
@@ -1558,7 +1565,7 @@ Main Page Templete
             });
 
             setTimeout(function () {
-                $("[onclick=LoadIframe\\(\\'loadhomepage\\'\\)]").parents(".menu-item").addClass("hover");
+                $("[data-ax-click]").filter(function () { return $(this).attr("data-ax-click") === "LoadIframe('loadhomepage')"; }).parents(".menu-item").addClass("hover");
                 $('.aside .aside-menu .menu-item:not(.menu-accordion)').on("click", function () {
                     $(".menu-item.hover").removeClass("hover");
                     $(this).addClass("hover")
@@ -1567,4 +1574,56 @@ Main Page Templete
         }
     });
     //End HomePage Code
+</script>
+
+<script type="text/javascript">
+(function () {
+    if (window.axCspMainPageTemplateHandlersRegistered) return;
+
+    document.addEventListener("click", function (e) {
+        var el = e.target.closest("[data-ax-action]");
+        if (!el) return;
+
+        var action = el.getAttribute("data-ax-action");
+        if (action) {
+            switch (action) {
+                case "toggle-mobile-notification":
+                    ToggleMobileNotification(true);
+                    break;
+                case "signalr-notification-init":
+                    signalrServiceinit.init();
+                    break;
+                case "clear-all-notifications":
+                    clearAll();
+                    break;
+                case "edit-save-card-design-toggle":
+                    $.axpertUI.cardsPage.editSaveCardDesignToggle();
+                    break;
+                default:
+                    return;
+            }
+            e.preventDefault();
+            return;
+        }
+
+        var code = el.getAttribute("data-ax-click");
+        if (!code) return;
+
+        e.preventDefault();
+        try {
+            new Function("event", code).call(el, e);
+        } catch (ex) {
+            if (window.console && console.error)
+                console.error("CSP click handler error:", ex);
+        }
+    });
+
+    document.addEventListener("change", function (e) {
+        var el = e.target.closest("[data-ax-action='search-mode-contains']");
+        if (!el) return;
+        $.axpertUI.search.searchModeContains(!$(el).prop("checked"));
+    });
+
+    window.axCspMainPageTemplateHandlersRegistered = true;
+})();
 </script>

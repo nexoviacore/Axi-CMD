@@ -1158,11 +1158,15 @@ function updatedBackHistory() {
     function getSession(key, cb) {
         $.ajax({
             type: "POST",
-            url: "../WebService.asmx/GetSession",
+            url: "../WebService.asmx/GetSessionNew",
             cache: false,
             async: false,
             contentType: "application/json;charset=utf-8",
-            data: JSON.stringify({ key: key }),
+            data: JSON.stringify({
+                jsonData: JSON.stringify({
+                    key: key 
+                })
+            }),
             dataType: "json",
             success: function (data) {
                 if (typeof cb == "function") {
@@ -2131,7 +2135,12 @@ function getProjectAppLogo(proj, async = false, success=(data)=>{}, error=(err)=
         type: "POST",
         url: "../WebService.asmx/GetProjectAppLogo",
         cache: false,
-        data:  JSON.stringify({projName: proj}),
+       /* data:  JSON.stringify({projName: proj})*/
+        data: JSON.stringify({
+            jsonData: JSON.stringify({
+                projName: proj
+            })
+        }),
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         async,

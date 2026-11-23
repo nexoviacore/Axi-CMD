@@ -4648,3 +4648,29 @@ function CheckBtnReadOnly(thisFunVal) {
         return false;
     }
 }
+
+function encryptTstDetails(thisVal) {
+    const aesKey = CryptoJS.lib.WordArray.random(16);
+    const iv = CryptoJS.lib.WordArray.random(16);
+    var encrypted = CryptoJS.AES.encrypt(thisVal, aesKey, {
+        iv: iv,
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.Pkcs7
+    });
+    const combined = iv.concat(encrypted.ciphertext);
+    const base64Cipher = CryptoJS.enc.Base64.stringify(combined);
+    const encryptor = new JSEncrypt();
+    let _pbKey = callParentNew("encPublicKey");
+    _pbKey = _pbKey.replace(/\\n/g, '\n');
+    encryptor.setPublicKey(_pbKey);
+    const encryptedAesKey = encryptor.encrypt(CryptoJS.enc.Base64.stringify(aesKey));
+    if (encryptedAesKey) {
+        const payload = JSON.stringify({
+            key: encryptedAesKey,
+            data: base64Cipher
+        });
+        return payload;
+    } else {
+        return thisVal;
+    }
+}

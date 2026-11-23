@@ -1875,19 +1875,8 @@ button[aria-expanded="true"] .rotate-arrow {
     transform: translateY(-5px);
     transition: all ease 0.3s;
 }
-
-/* .welcome-card .card-body {
-    background-image: url(https://admin.pixelstrap.net/crocs/assets/images/dashboard/bg.png);
-    background-repeat: no-repeat;
-    background-position: right center;
-    background-size: cover;
-    display: block;
-    direction: ltr;
-    height: 320px;
-    border-radius: 15px;
-  } */
 .welcome-card {
-    background-image: url(https://admin.pixelstrap.net/crocs/assets/images/dashboard/bg.png);
+    background-image: url('../images/bg.png');
     background-repeat: no-repeat;
     background-position: right center;
     background-size: cover;

@@ -573,7 +573,7 @@ function AxAsyncGetApiData(apiNames = "", apiType = "axpert", cacheInfo = [], su
  * @references
  *      Following files are required to be referred in custom html along with AxInterface.js:
             <script src="../../Js/Jquery-2.2.2.min.js" type="text/javascript"></script>
-            <script src="../../Js/common.min.js?v=166" type="text/javascript"></script>
+            <script src="../../Js/common.min.js?v=167" type="text/javascript"></script>
             <script src="../../Js/AxInterface.min.js?v=15" type="text/javascript"></script>
             <script src="../../ThirdParty/Highcharts/highcharts.js"></script>
             <script src="../../ThirdParty/Highcharts/highcharts-3d.js"></script>
@@ -722,7 +722,77 @@ function getTheHyperLink(linkData, linkObj, cap, colIndex) {
         return cap;
     }
 }
+function getTheHyperLinkNew(linkData, linkObj, cap, colIndex) {
 
+    var linkDataObj = linkObj.data;
+    colIndex = colIndex + 1;
+
+    if (linkDataObj && linkDataObj["col" + colIndex]) {
+
+        var linkObjData = linkDataObj["col" + colIndex];
+        var params = linkObjData.isParams;
+        var paramStr = "";
+
+        if (params !== false) {
+
+            linkData = linkData.split("~");
+
+            var linkObjDataLth = linkData.length;
+
+            for (var i = 0; i < linkObjDataLth; i++) {
+
+                var presLink = linkData[i].trim();
+                var frstEqIndx = presLink.indexOf("=");
+
+                if (
+                    presLink.substr(0, frstEqIndx) === "h" + colIndex ||
+                    presLink.substr(0, frstEqIndx) === "p" + colIndex
+                ) {
+                    linkData = presLink;
+                }
+                else {
+                    continue;
+                }
+            }
+
+            paramStr = linkData.substring(
+                linkData.indexOf("(") + 1,
+                linkData.lastIndexOf(")")
+            );
+
+            paramStr = paramStr.replace(/\^/g, "&");
+        }
+
+        var url = linkObjData.url + paramStr;
+
+        if (linkObjData.isPop) {
+
+            return "<a class='whiteLink ax-hyperlink' href='#' " +
+                "data-ax-action='createPopup' " +
+                "data-ax-url=\"" + encodeHtmlAttribute(url) + "\">" +
+                cap +
+                "</a>";
+
+        } else {
+
+            return "<a class='whiteLink ax-hyperlink' href='#' " +
+                "data-ax-action='AxLoadUrl' " +
+                "data-ax-url=\"" + encodeHtmlAttribute(url) + "\">" +
+                cap +
+                "</a>";
+        }
+
+    } else {
+        return cap;
+    }
+}
+function encodeHtmlAttribute(value) {
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/"/g, "&quot;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+}
 function customizeData(plotName) {
     if (plotName && typeof plotName === "string") {
         plotName = plotName.replace(/__\^__/g, ":");
@@ -738,7 +808,7 @@ function customizeData(plotName) {
  * @Files
  *  Following files are required to be referred in custom html along with AxInterface.js:
  *      <script src="../../Js/Jquery-2.2.2.min.js" type="text/javascript"></script>
- *      <script src="../../Js/common.min.js?v=166" type="text/javascript"></script>
+ *      <script src="../../Js/common.min.js?v=167" type="text/javascript"></script>
  * 
  */
 function AxLoadUrl(url) {
@@ -763,7 +833,7 @@ function AxLoadUrl(url) {
  *  Following files are required to be referred in custom html along with AxInterface.js:
  *      <script src="../../ThirdParty/lodash.min.js" type="text/javascript"></script>
  *      <script src="../../ThirdParty/deepdash.min.js" type="text/javascript"></script>
- *      <script src="../../Js/common.min.js?v=166" type="text/javascript"></script>
+ *      <script src="../../Js/common.min.js?v=167" type="text/javascript"></script>
  * 
  */
 function AxGetMenus(pages) {

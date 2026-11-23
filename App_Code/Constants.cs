@@ -278,6 +278,7 @@ public class Constants
     public const string AXPMOBSETTING_CONN_KEY = "AxMobSetting";
     public const string AXPDEVOPTION_CONN_KEY = "AxDevOption";
     public const string AXPCAPTCHA_CONN_KEY = "AxCaptcha";
+    public const string ASBPATH_CONN_KEY = "ASBPath";
 
     public const string AX_COMMON_APPSETTING_KEY = "AxAccessCodeSettings";
 
@@ -374,4 +375,24 @@ public class Constants
 
     public const string SQL_GET_AXUSERPWDPOLICY = "select pwdminchar, pwdmaxchar, pwdalphanum, pwdcapchar, pwdsmallchar, pwdnumchar, pwdsplchar, pwdencrypt from AXPDEF_AXPERTPROPS";
     public const string SQL_GET_PWDCPWD = "select password from axusers where username='$USERNAME$'";
+    public class GetProjectAppLogoRequest
+    {
+        public string projName { get; set; }
+    }
+    public class GetSessionRequest
+    {
+        public string key { get; set; }
+    }
+    public class ExecutionTraceRequest
+    {
+        public string ExecutionLongText { get; set; }
+        public bool isSingout { get; set; }
+        public string keepAlivems { get; set; }
+        public string currPageUrl { get; set; }
+    }
+    public class ExecutionTraceRequestAxMain
+    {
+        public string ExecutionLongText { get; set; }
+        public bool isSingout { get; set; }
+    }
 }

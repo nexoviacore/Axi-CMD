@@ -439,7 +439,7 @@
         Exception ex = Server.GetLastError();
         errLogObj.LogException(ex, "Application_Error - Global.asax", sb.ToString());
 
-       // Response.Redirect("~/CusError/AxCustomError.aspx");
+        Response.Redirect("~/CusError/AxCustomError.aspx");
     }
 
 
@@ -500,5 +500,43 @@
         //Application["Inventory"] = "../aspx/iview.aspx?ivname=stockrpt";
     }
 
+    protected void Application_EndRequest(object sender, EventArgs e)
+    {
+        HttpContext context = HttpContext.Current;
+        if (context == null || context.Request == null || context.Response == null)
+            return;
+        string path = context.Request.Path;
+        string[] cspPages =
+        {
+        "/tstruct.aspx",
+        "/iview.aspx",
+        "/configurationStudio.aspx",
+        "/htmlPages.aspx",
+        "/ImportNew.aspx",
+        "/ExportNew.aspx",
+        "/ExecutionLogs.html",
+        "/ParamsTstruct.aspx",
+        "/cpwd.aspx",
+        "/signout.aspx",
+        "/aboutUs.aspx"
+    };
+        bool applyCsp = cspPages.Any(page => path.EndsWith(page, StringComparison.OrdinalIgnoreCase));
+        if (!applyCsp)
+            return;
+        string csp =
+            "default-src 'self'; " +
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+            "style-src 'self' 'unsafe-inline'; " +
+            "img-src 'self' data: blob:; " +
+            "font-src 'self' data:; " +
+            "connect-src 'self'; " +
+            "frame-src 'self'; " +
+            "form-action 'self'; " +
+            "object-src 'none'; " +
+            "base-uri 'self'; " +
+            "frame-ancestors 'self';";
+        context.Response.Headers.Remove("Content-Security-Policy");
+        context.Response.AppendHeader("Content-Security-Policy", csp);
+    }
 
 </script>

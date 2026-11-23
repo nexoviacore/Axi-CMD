@@ -1,4 +1,4 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="Reconnect.aspx.cs" Inherits="aspx_Reconnect" %>
+﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="Reconnect.aspx.cs" Inherits="aspx_Reconnect" EnableViewState="false" %>
 
 <!DOCTYPE html>
 <html>

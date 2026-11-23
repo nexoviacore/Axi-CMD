@@ -17,6 +17,8 @@ using System.Web.Services;
 using Newtonsoft.Json;
 using System.Data;
 using System.Security.Cryptography;
+using DocumentFormat.OpenXml.Wordprocessing;
+using System.Activities.Expressions;
 
 public partial class aspx_cpwd : System.Web.UI.Page
 {
@@ -187,6 +189,10 @@ public partial class aspx_cpwd : System.Web.UI.Page
         }
         else
         {
+            if (!IsPostBack)
+            {
+                hdnEncKey.Value = util.RSAPublicKey();
+            }
             if (Session["projTitle"] != null)
                 appName = Session["projTitle"].ToString();
             else
@@ -278,8 +284,14 @@ public partial class aspx_cpwd : System.Web.UI.Page
 
     protected void btnSubmit_Click(object sender, System.EventArgs e)
     {
-        string ePwd = util.CheckSpecialChars(swee000F0.Value);
-        checkSecurityVal(ePwd);
+        string swee000 = util.DecryptRSAValue("", swee000F0.Value);
+        string swc000 = util.DecryptRSAValue("", swc000F0.Value);
+        string ePwd = util.CheckSpecialChars(swee000);
+        string md5pwd = util.CheckSpecialChars(swc000);
+        string npwdHiddenVal = util.DecryptRSAValue("", npwdHidden.Value);
+        string npwdHiddenMd5Val = util.DecryptRSAValue("", npwdHiddenMd5.Value);
+        string npwdString = npwdHiddenVal;
+
         ASBExt.WebServiceExt objWebServiceExt = new ASBExt.WebServiceExt();
         if (Session["pwd"] != null && Session["pwd"] != "")
         {
@@ -313,14 +325,14 @@ public partial class aspx_cpwd : System.Web.UI.Page
                 }
             }
         }
-        string md5pwd = util.CheckSpecialChars(swc000F0.Value);
-        checkSecurityVal(md5pwd);
-        string npwdString = npwdHidden.Value;
-        checkSecurityVal(npwdString);
+        //string md5pwd = util.CheckSpecialChars(swc000F0.Value);
+        //checkSecurityVal(md5pwd);
+        //string npwdString = npwdHidden.Value;
+        //checkSecurityVal(npwdString);
         string aesPwd = string.Empty;
         if ((md5pwd == ""))
         {
-            md5pwd = npwdHiddenMd5.Value;
+            md5pwd = npwdHiddenMd5Val;
             checkSecurityVal(md5pwd);
         }
         try

@@ -24,6 +24,89 @@ using System.Globalization;
 using System.Net;
 using System.Threading;
 using System.Web.Script.Serialization;
+using System.Security;
+
+internal sealed class CspNonceResponseFilter : Stream
+{
+    private readonly Stream _inner;
+    private readonly string _nonce;
+    private readonly MemoryStream _buffer = new MemoryStream();
+
+    public CspNonceResponseFilter(Stream inner, string nonce)
+    {
+        _inner = inner;
+        _nonce = nonce ?? string.Empty;
+    }
+
+    public override bool CanRead { get { return false; } }
+    public override bool CanSeek { get { return false; } }
+    public override bool CanWrite { get { return true; } }
+    public override long Length { get { return _buffer.Length; } }
+    public override long Position
+    {
+        get { return _buffer.Position; }
+        set { throw new NotSupportedException(); }
+    }
+
+    public override void Flush()
+    {
+        // The response is transformed when the stream is closed.
+    }
+
+    public override int Read(byte[] buffer, int offset, int count)
+    {
+        throw new NotSupportedException();
+    }
+
+    public override long Seek(long offset, SeekOrigin origin)
+    {
+        throw new NotSupportedException();
+    }
+
+    public override void SetLength(long value)
+    {
+        throw new NotSupportedException();
+    }
+
+    public override void Write(byte[] buffer, int offset, int count)
+    {
+        _buffer.Write(buffer, offset, count);
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            try
+            {
+                byte[] responseBytes = _buffer.ToArray();
+                string response = Encoding.UTF8.GetString(responseBytes);
+
+                if (!string.IsNullOrEmpty(_nonce) && response.IndexOf("<script", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    response = Regex.Replace(
+                        response,
+                        @"<script\b(?![^>]*\bnonce\s*=)([^>]*)>",
+                        delegate (Match match)
+                        {
+                            return "<script nonce=\"" + HttpUtility.HtmlAttributeEncode(_nonce) + "\"" + match.Groups[1].Value + ">";
+                        },
+                        RegexOptions.IgnoreCase);
+                }
+
+                byte[] outputBytes = Encoding.UTF8.GetBytes(response);
+                _inner.Write(outputBytes, 0, outputBytes.Length);
+                _inner.Flush();
+            }
+            finally
+            {
+                _buffer.Dispose();
+            }
+        }
+
+        base.Dispose(disposing);
+    }
+}
 
 public partial class aspx_Mainnew : System.Web.UI.Page
 {
@@ -160,6 +243,9 @@ public partial class aspx_Mainnew : System.Web.UI.Page
     public string serverprocesstime = string.Empty;
     public string hdnSSTime = string.Empty;
 
+    // Per-request CSP nonce used by inline script blocks and startup scripts.
+    protected string CspNonce = string.Empty;
+
     public string homePageType = string.Empty;
     public bool cardsEnabled = false;
     public string cardsDataVal = (new JArray()).ToString();
@@ -182,6 +268,7 @@ public partial class aspx_Mainnew : System.Web.UI.Page
     public string pwdExpiryAlert = string.Empty;
     public string axpertDevOpt = string.Empty;
     public string axicmdEnabled = "false";
+    public string encPublicKey = string.Empty;
     JObject AxGeneralconfigs = new JObject();
     LoginHelper loginHelper = new LoginHelper();
     private string mobileAuthKey = string.Empty;
@@ -210,6 +297,15 @@ public partial class aspx_Mainnew : System.Web.UI.Page
 
     protected void Page_PreInit(object sender, EventArgs e)
     {
+        CspNonce = CreateCspNonce();
+        HttpContext.Current.Items["AxCspNonce"] = CspNonce;
+
+        // ASP.NET Web Forms / ScriptManager can emit inline <script> blocks at render time.
+        // Add the same per-request nonce to script tags that do not already have one.
+        Response.BufferOutput = true;
+        Stream responseStream = Response.Filter ?? Response.OutputStream;
+        Response.Filter = new CspNonceResponseFilter(responseStream, CspNonce);
+
         util = new Util.Util();
         util.IsValidSession();
         if (!IsPostBack)
@@ -312,6 +408,8 @@ public partial class aspx_Mainnew : System.Web.UI.Page
             try
             {
                 if (HttpContext.Current.Session["AxInternalRefresh"] == null || (HttpContext.Current.Session["AxInternalRefresh"] != null && HttpContext.Current.Session["AxInternalRefresh"].ToString() != "true"))
+                    AntiforgeryChecker.Check(this, _antiforgery);
+                else if (_antiforgery != null)
                     AntiforgeryChecker.Check(this, _antiforgery);
             }
             catch (Exception ex)
@@ -522,6 +620,7 @@ public partial class aspx_Mainnew : System.Web.UI.Page
         }
         else
         {
+            encPublicKey = util.RSAPublicKey();
             if (ConfigurationManager.AppSettings["ExecutionTrace"] != null && ConfigurationManager.AppSettings["ExecutionTrace"].ToString() != string.Empty && ConfigurationManager.AppSettings["ExecutionTrace"].ToString() == "true")
                 ExecTraceOn = "true";
             else
@@ -693,7 +792,7 @@ public partial class aspx_Mainnew : System.Web.UI.Page
                 {
                     disableSplit = Session["AxDisableSplit"].ToString();
                 }
-                Page.ClientScript.RegisterStartupScript(GetType(), "set global var to unlock tstruct records", "<script>" + dynamicScript + "var navigatePage='" + Navigationpage + "';" + "var isCloudApp = '" + isCloudApp.ToString() + "'; " + "var userResp = '" + Session["AxResponsibilities"] + "';" + "var sesslanguage='" + language + "';" + "var mainRestDllPath='" + RestDllPath + "';" + "var mainArmRestDllPath='" + ArmRestDllPath + "';" + "var mainProject='" + proj + "';" + "var mainSessionId='" + sid + "';" + "var mainUserName='" + Session["user"].ToString() + "';" + "var AxHelpIview='" + HelpIview + "';" + " var axUtlGlobalVars='" + axUtlGlobalVars + "'; var axUtlUserVars='" + axUtlUserVars + "'; var axUtlApps='" + axUtlApps + "';var alertsTimeout='" + alertsTimeout.ToString() + "';var errorTimeout='" + errorTimeout.ToString() + "';var errorEnable='" + errorEnable.ToString().ToLower() + "';var notifyTimeout ='" + notifyTimeout + "';var appDiableSplit ='" + disableSplit + "';" + "var armKey ='" + armKey + "';var armUrl = '" + armUrl + "';var isPEG ='" + isPEG + "';var isHomeConfigPage='" + isHomeConfigPage + "';" + "var genConfigurations=" + AxGeneralconfigs.ToString(Newtonsoft.Json.Formatting.None) + ";var signalRNotifications='" + signalRNotifications + "';" + pwdExpiryAlert + " </script>");
+                Page.ClientScript.RegisterStartupScript(GetType(), "set global var to unlock tstruct records", "<script nonce=\"" + CspNonce + "\">" + dynamicScript + "var navigatePage='" + Navigationpage + "';" + "var isCloudApp = '" + isCloudApp.ToString() + "'; " + "var userResp = '" + Session["AxResponsibilities"] + "';" + "var sesslanguage='" + language + "';" + "var mainRestDllPath='" + RestDllPath + "';" + "var mainArmRestDllPath='" + ArmRestDllPath + "';" + "var mainProject='" + proj + "';" + "var mainSessionId='" + sid + "';" + "var mainUserName='" + Session["user"].ToString() + "';" + "var AxHelpIview='" + HelpIview + "';" + " var axUtlGlobalVars='" + axUtlGlobalVars + "'; var axUtlUserVars='" + axUtlUserVars + "'; var axUtlApps='" + axUtlApps + "';var alertsTimeout='" + alertsTimeout.ToString() + "';var errorTimeout='" + errorTimeout.ToString() + "';var errorEnable='" + errorEnable.ToString().ToLower() + "';var notifyTimeout ='" + notifyTimeout + "';var appDiableSplit ='" + disableSplit + "';" + "var armKey ='" + armKey + "';var armUrl = '" + armUrl + "';var isPEG ='" + isPEG + "';var isHomeConfigPage='" + isHomeConfigPage + "';" + "var genConfigurations=" + AxGeneralconfigs.ToString(Newtonsoft.Json.Formatting.None) + ";var signalRNotifications='" + signalRNotifications + "';" + pwdExpiryAlert + " </script>");
 
                 if (!IsPostBack)
                 {
@@ -714,7 +813,7 @@ public partial class aspx_Mainnew : System.Web.UI.Page
                             }
                             Navigationpage = url;
                             //hdHomeUrl.Value = Navigationpage;
-                            Page.ClientScript.RegisterStartupScript(this.GetType(), "GlobalParams", "setTimeout(function() {setTimeout(function() {BootstrapDialogAppParamsShow('" + Navigationpage + "');}, 200);}, 0);", true);
+                            Page.ClientScript.RegisterStartupScript(this.GetType(), "GlobalParams", "<script nonce=\"" + CspNonce + "\">setTimeout(function() {setTimeout(function() {BootstrapDialogAppParamsShow('" + Navigationpage + "');}, 200);}, 0);</script>", false);
                         }
                     }
                     else
@@ -780,6 +879,161 @@ public partial class aspx_Mainnew : System.Web.UI.Page
         requestProcess_logtime += ObjExecTr.RequestProcessTime("Response");
         serverprocesstime = ObjExecTr.TotalServerElapsTime();
 
+        ApplyContentSecurityPolicy();
+    }
+    private string CreateCspNonce()
+    {
+        byte[] nonceBytes = new byte[32];
+        using (RandomNumberGenerator rng = RandomNumberGenerator.Create())
+        {
+            rng.GetBytes(nonceBytes);
+        }
+        return Convert.ToBase64String(nonceBytes);
+    }
+
+    private void ApplyContentSecurityPolicy()
+    {
+        var eventHashes = new HashSet<string>(StringComparer.Ordinal);
+
+        // Existing inline event handlers in Mainnew.aspx.
+        string[] staticHandlers = new string[]
+        {
+            "ChangeDir('<');",
+            "ClosePopUps();",
+            "HideHelp();",
+            "SetUnload('false');",
+            "DisplayPrintDocs();",
+            "showChangePasswordDialog()",
+            "HideInfoDiv();",
+            "LoadIframe('loadhomepage');",
+            "signout('../aspx/signout.aspx');return false;",
+            "resetLeftMenu();",
+            "LoadIframe('workflownew.aspx')",
+            "DoUtilitiesEvent('Responsibilities');",
+            "DoUtilitiesEvent('ImportData');",
+            "DoUtilitiesEvent('ExportData');",
+            "DoUtilitiesEvent('ImportHistory');",
+            "DoUtilitiesEvent('InMemoryDB');",
+            "DoUtilitiesEvent('WidgetBuilder');",
+            "ToogleLeftMenu('dashboardPanel', 'true','Dashboard','')",
+            "LoadIframe('PageDesigner.aspx')",
+            "LoadIframe('AppDownload.aspx')",
+            "DoUtilitiesEvent('AxpertLogs');",
+            "showTraceFileDialog();",
+            "ToggleTrace(true);",
+            "showAbout();",
+            "if(event.key==='Enter' || event.key===' '){event.preventDefault();showAbout();}",
+            "DoUtilitiesEvent('ConfigApp');",
+            "LoadIframe('tstruct.aspx?transid=axstc');",
+            "signout('../aspx/signout.aspx');",
+            "createMobileQRcode()",
+            "DoUtilitiesEvent('Complaint');",
+            "refreshMenu();",
+            "assocateIframe();splitvertical();",
+            "assocateIframe();splithorizantal();"
+        };
+
+        foreach (string handler in staticHandlers)
+            AddCspEventHandlerHash(eventHashes, handler);
+
+        // Runtime value used by the server-rendered sign-out link.
+        AddCspEventHandlerHash(eventHashes, "signout('" + signOutPath + "');");
+
+        // UserOptions/axUserOptions are also used to generate menu event handlers at runtime.
+        foreach (string option in UserOptions.Values)
+            AddCspEventHandlerHashesFromText(eventHashes, option);
+
+        AddCspEventHandlerHashesFromText(eventHashes, axUserOptions);
+
+        string scriptAttrPolicy = "'unsafe-hashes'";
+        foreach (string hash in eventHashes)
+            scriptAttrPolicy += " 'sha256-" + hash + "'";
+
+        string connectSrc = BuildConnectSrcPolicy();
+
+        string csp =
+            "default-src 'self'; " +
+            "script-src 'self' 'nonce-" + CspNonce + "' 'unsafe-eval'; " +
+            "script-src-attr " + scriptAttrPolicy + "; " +
+            "style-src 'self' 'unsafe-inline'; " +
+            "img-src 'self' data: blob:; " +
+            "font-src 'self' data:; " +
+            "connect-src " + connectSrc + "; " +
+            "frame-src 'self'; " +
+            "form-action 'self'; " +
+            "object-src 'none'; " +
+            "base-uri 'self'; " +
+            "frame-ancestors 'self';";
+
+        Response.Headers.Remove("Content-Security-Policy");
+        Response.Headers.Add("Content-Security-Policy", csp);
+        Response.AppendHeader("Permissions-Policy", "unload=(self)");
+    }
+
+    private void AddCspEventHandlerHashesFromText(HashSet<string> hashes, string text)
+    {
+        if (string.IsNullOrEmpty(text))
+            return;
+
+        text = text.Replace("\u2660", ",");
+
+        // UserOptions is stored as JSON-like text. Extract values of the onclick property.
+        MatchCollection matches = Regex.Matches(
+            text,
+            @"[""'""]onclick[""'""]\s*:\s*[""'""](.*?)[""'""](?=\s*(?:â |,|}))",
+            RegexOptions.Singleline | RegexOptions.IgnoreCase);
+
+        foreach (Match match in matches)
+        {
+            if (match.Groups.Count > 1)
+                AddCspEventHandlerHash(hashes, match.Groups[1].Value);
+        }
+    }
+
+    private void AddCspEventHandlerHash(HashSet<string> hashes, string handler)
+    {
+        if (string.IsNullOrWhiteSpace(handler))
+            return;
+
+        string normalized = handler.Trim();
+        using (SHA256 sha = SHA256.Create())
+        {
+            byte[] bytes = Encoding.UTF8.GetBytes(normalized);
+            hashes.Add(Convert.ToBase64String(sha.ComputeHash(bytes)));
+        }
+    }
+
+    private string BuildConnectSrcPolicy()
+    {
+        var origins = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "'self'"
+        };
+
+        AddOriginFromSetting(origins, "NodeAPI");
+        AddOriginFromSetting(origins, "ssoredirecturl");
+
+        // Preserve compatibility with deployments that expose Axpert APIs over HTTPS
+        // on a separate host/port. The configured origins above remain preferred.
+        return string.Join(" ", origins);
+    }
+
+    private void AddOriginFromSetting(HashSet<string> origins, string settingName)
+    {
+        try
+        {
+            string value = ConfigurationManager.AppSettings[settingName];
+            if (string.IsNullOrWhiteSpace(value))
+                return;
+
+            Uri uri;
+            if (Uri.TryCreate(value, UriKind.Absolute, out uri) &&
+                (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
+            {
+                origins.Add(uri.GetLeftPart(UriPartial.Authority));
+            }
+        }
+        catch (Exception) { }
     }
 
     protected void GetAxiLoginInfo(string axiQuery, string _thisPorj)
@@ -1302,8 +1556,11 @@ public partial class aspx_Mainnew : System.Web.UI.Page
         // FileInfo filcustom = new FileInfo(HttpContext.Current.Server.MapPath("~/images/Custom/logo.png"));
 
         string projName = HttpContext.Current.Session["Project"].ToString();
-
-        string customLogo = asbWebService.GetProjectAppLogo(projName);
+        string jsonData = JsonConvert.SerializeObject(new
+        {
+            projName = projName
+        });
+        string customLogo = asbWebService.GetProjectAppLogo(jsonData, "true");
 
         string logo = string.Empty;
         try
@@ -1775,7 +2032,7 @@ public partial class aspx_Mainnew : System.Web.UI.Page
                 Navigationpage = "../aspx/tstruct.aspx?transid=" + landingValue[1] + "&openerIV=" + landingValue[1] + "&isIV=false";
                 if (Session["AxCloudDB"] != null)
                 {
-                    Page.ClientScript.RegisterStartupScript(GetType(), "", "<script>displayBootstrapModalDialog('Company SetUp', 'lg', '510px', true, '" + Navigationpage + "', true, cloudSetupInit)</script>");
+                    Page.ClientScript.RegisterStartupScript(GetType(), "", "<script nonce=\"" + CspNonce + "\">displayBootstrapModalDialog('Company SetUp', 'lg', '510px', true, '" + Navigationpage + "', true, cloudSetupInit)</script>", false);
                     Navigationpage = "";
                 }
             }
@@ -1784,7 +2041,7 @@ public partial class aspx_Mainnew : System.Web.UI.Page
                 Navigationpage = "../aspx/iview.aspx?ivname=" + landingValue[1];
                 if (Session["AxCloudDB"] != null)
                 {
-                    Page.ClientScript.RegisterStartupScript(GetType(), "", "<script>displayBootstrapModalDialog('Company SetUp', 'lg', '510px', true, '" + Navigationpage + "', true, cloudSetupInit)</script>");
+                    Page.ClientScript.RegisterStartupScript(GetType(), "", "<script nonce=\"" + CspNonce + "\">displayBootstrapModalDialog('Company SetUp', 'lg', '510px', true, '" + Navigationpage + "', true, cloudSetupInit)</script>", false);
                     Navigationpage = "";
                 }
             }
@@ -1915,10 +2172,10 @@ public partial class aspx_Mainnew : System.Web.UI.Page
                     Session["KeepMeWebExpiry"] = "true";
                     util.SaveKeepAliveWebDetails("");
                 }
-                ClientScript.RegisterStartupScript(GetType(), "SessionAlert Var", "<script>var keepAlive = '" + keepAlive.ToString() + "';KeepSessionAlive(" + timeout + ");var ssologinType='" + ssotype + "';</script>");
+                ClientScript.RegisterStartupScript(GetType(), "SessionAlert Var", "<script nonce=\"" + CspNonce + "\">var keepAlive = '" + keepAlive.ToString() + "';KeepSessionAlive(" + timeout + ");var ssologinType='" + ssotype + "';</script>", false);
             }
             else
-                ClientScript.RegisterStartupScript(this.GetType(), "SessionAlert", "SessionExpireAlert(" + timeout + ");", true);
+                ClientScript.RegisterStartupScript(this.GetType(), "SessionAlert", "<script nonce=\"" + CspNonce + "\">SessionExpireAlert(" + timeout + ");</script>", false);
 
         }
         //Session Alert end
@@ -3182,7 +3439,7 @@ public partial class aspx_Mainnew : System.Web.UI.Page
     private static void SessExpiresStatic()
     {
         string url = Convert.ToString(HttpContext.Current.Application["SessExpiryPath"]);
-        HttpContext.Current.Response.Write("<script>" + Constants.vbCrLf);
+        HttpContext.Current.Response.Write("<script nonce=\"" + Convert.ToString(HttpContext.Current.Items["AxCspNonce"]) + "\">" + Constants.vbCrLf);
         HttpContext.Current.Response.Write("parent.parent.location.href='" + url + "';");
         HttpContext.Current.Response.Write(Constants.vbCrLf + "</script>");
     }
@@ -3870,7 +4127,7 @@ public partial class aspx_Mainnew : System.Web.UI.Page
     private void SessExpires()
     {
         string url = util.SESSEXPIRYPATH;
-        Response.Write("<script>" + Constants.vbCrLf);
+        Response.Write("<script nonce=\"" + CspNonce + "\">" + Constants.vbCrLf);
         Response.Write("parent.parent.location.href='" + url + "';");
         Response.Write(Constants.vbCrLf + "</script>");
     }
@@ -3936,7 +4193,7 @@ public partial class aspx_Mainnew : System.Web.UI.Page
             Session["Thmcolor"] = "Blue";
         themeColor = Session["themeColor"].ToString();
         //Themes are written as script for direct access in the javascript
-        regthmdata = "<script language=\"javascript\" type=\"text/javascript\" >";
+        regthmdata = "<script nonce=\"" + CspNonce + "\" language=\"javascript\" type=\"text/javascript\" >";
         regthmdata += "var thmProj = '" + proj + "';var thmUser = '" + user + "';var thmRole = '" + AxRole + "';var thmSid = '" + sid + "';var thmSelected = '" + Session["Thmcolor"].ToString() + "';var g_lang='" + Session["language"].ToString() + "';";
         regthmdata += "</script>";
     }
@@ -4108,7 +4365,7 @@ public partial class aspx_Mainnew : System.Web.UI.Page
             themeColor = themeres[0].ToString();
             Session["themeColor"] = themeres[0].ToString();
             //Themes are written as script for direct access in the javascript
-            regthmdata = "<script language=\"javascript\" type=\"text/javascript\" >";
+            regthmdata = "<script nonce=\"" + CspNonce + "\" language=\"javascript\" type=\"text/javascript\" >";
             regthmdata += "var thmProj = '" + proj + "';var thmUser = '" + user + "';var thmRole = '" + AxRole + "';var thmSid = '" + sid + "';var thmSelected = '" + themeres[0].ToString() + "';var g_lang='" + Session["language"].ToString() + "';";
             regthmdata += "</script>";
             result = themeres[1].ToString();
@@ -4117,7 +4374,7 @@ public partial class aspx_Mainnew : System.Web.UI.Page
         {
             Session["themeColor"] = "Gray";
             Session["themeColor"] = "Gray";
-            regthmdata = "<script language=\"javascript\" type=\"text/javascript\" >";
+            regthmdata = "<script nonce=\"" + CspNonce + "\" language=\"javascript\" type=\"text/javascript\" >";
             regthmdata += "var thmProj = '" + proj + "';var thmUser = '" + user + "';var thmRole = '" + AxRole + "';var thmSid = '" + sid + "';var thmSelected = '" + "Blue" + "';var g_lang='" + Session["language"].ToString() + "';";
             regthmdata += "</script>";
             result = themeres[0].ToString();
@@ -4808,7 +5065,7 @@ public partial class aspx_Mainnew : System.Web.UI.Page
         {
             themeColor = theme;
             Session["themeColor"] = theme;
-            regthmdata = "<script language=\"javascript\" type=\"text/javascript\" >";
+            regthmdata = "<script nonce=\"" + CspNonce + "\" language=\"javascript\" type=\"text/javascript\" >";
             regthmdata += "var thmProj = '" + proj + "';var thmUser = '" + user + "';var thmRole = '" + AxRole + "';var thmSid = '" + sid + "';var thmSelected = '" + theme + "';var g_lang='" + Session["language"].ToString() + "';";
             regthmdata += "</script>";
 
@@ -4817,7 +5074,7 @@ public partial class aspx_Mainnew : System.Web.UI.Page
         {
             themeColor = "Default";
             Session["themeColor"] = "Gray";
-            regthmdata = "<script language=\"javascript\" type=\"text/javascript\" >";
+            regthmdata = "<script nonce=\"" + CspNonce + "\" language=\"javascript\" type=\"text/javascript\" >";
             regthmdata += "var thmProj = '" + proj + "';var thmUser = '" + user + "';var thmRole = '" + AxRole + "';var thmSid = '" + sid + "';var thmSelected = '" + "Blue" + "';var g_lang='" + Session["language"].ToString() + "';";
             regthmdata += "</script>";
         }
@@ -4982,13 +5239,15 @@ public partial class aspx_Mainnew : System.Web.UI.Page
         if (import)
         {
             li_ImportData1.Visible = li_ImportHistory1.Visible = true;
-            UserOptions.Add("ImportData", "\"display\":\"block\"♠\"onclick\":\"DoUtilitiesEvent('ImportData')\"♠\"title\":\"Import Data\"");
+            //UserOptions.Add("ImportData", "\"display\":\"block\"♠\"onclick\":\"DoUtilitiesEvent('ImportData')\"♠\"title\":\"Import Data\"");
+            UserOptions.Add("ImportData", "\"display\":\"block\"♠\"onclick\":\"DoUtilitiesEvent('AdvancedDataIngestion')\"♠\"title\":\"Import Data\"");
             UserOptions.Add("ImportHistory", "\"display\":\"block\"♠\"onclick\":\"DoUtilitiesEvent('ImportHistory')\"♠\"title\":\"Import History\"");
         }
         else
         {
             li_ImportData1.Visible = li_ImportHistory1.Visible = false;
-            UserOptions.Add("ImportData", "\"display\":\"none\"♠\"onclick\":\"DoUtilitiesEvent('ImportData')\"♠\"title\":\"Import Data\"");
+            //UserOptions.Add("ImportData", "\"display\":\"none\"♠\"onclick\":\"DoUtilitiesEvent('ImportData')\"♠\"title\":\"Import Data\"");
+            UserOptions.Add("ImportData", "\"display\":\"none\"♠\"onclick\":\"DoUtilitiesEvent('AdvancedDataIngestion')\"♠\"title\":\"Import Data\"");
             UserOptions.Add("ImportHistory", "\"display\":\"none\"♠\"onclick\":\"DoUtilitiesEvent('ImportHistory')\"♠\"title\":\"Import History\"");
         }
     }
@@ -5086,7 +5345,43 @@ public partial class aspx_Mainnew : System.Web.UI.Page
         }
         string url = string.Empty;
         if (hdnAxGloRecId.Value != "")
+        {
+            if (Util.Util.CheckCrossScriptingInString(hdnAxGloRecId.Value))
+            {
+                try
+                {
+                    Response.Redirect(Constants.LOGINPAGE, true);
+                }
+                catch (ThreadAbortException ex)
+                {
+                    Thread.ResetAbort();
+                }
+            }
+            if (Util.Util.ContainsXSS(hdnAxGloRecId.Value))
+            {
+                try
+                {
+                    Response.Redirect(Constants.LOGINPAGE, true);
+                }
+                catch (ThreadAbortException ex)
+                {
+                    Thread.ResetAbort();
+                }
+            }
+            if (!Util.Util.IsValidUserName(hdnAxGloRecId.Value))
+            {
+                try
+                {
+                    Response.Redirect(Constants.LOGINPAGE, true);
+                }
+                catch (ThreadAbortException ex)
+                {
+                    Thread.ResetAbort();
+                }
+            }
+
             url = "../aspx/ParamsTstruct.aspx?transid=" + paramTransid + "&recordid=" + hdnAxGloRecId.Value + "";
+        }
         //if (AxGloRecId != string.Empty)
         editAxGlo2.Attributes.Add("onclick", "BootstrapDialogAppParamsShow('" + url + "');");
         var AxGlo = UserOptions.Where(x => x.Key == "GlobalParamsonclick").ToList();
@@ -5286,8 +5581,28 @@ public partial class aspx_Mainnew : System.Web.UI.Page
     }
 
     [WebMethod]
-    public static void ExecutionTraceInterval(string ExecutionLongText, bool isSingout, string keepAlivems, string currPageUrl)
+    public static void ExecutionTraceInterval(string jsonData)
     {
+        Constants.ExecutionTraceRequest request = null;
+        try
+        {
+            JsonSerializerSettings settings = new JsonSerializerSettings();
+            settings.MissingMemberHandling = MissingMemberHandling.Error;
+            request = JsonConvert.DeserializeObject<Constants.ExecutionTraceRequest>(jsonData, settings);
+        }
+        catch
+        {
+            throw new HttpException(400, "Invalid request.");
+        }
+
+        if (request == null)
+            throw new HttpException(400, "Invalid request.");
+
+        string ExecutionLongText = request.ExecutionLongText;
+        bool isSingout = request.isSingout;
+        string keepAlivems = request.keepAlivems;
+        string currPageUrl = request.currPageUrl;
+
         try
         {
             FDW fdwObj = new FDW();
@@ -5832,4 +6147,3 @@ public partial class aspx_Mainnew : System.Web.UI.Page
     }
     #endregion
 }
-

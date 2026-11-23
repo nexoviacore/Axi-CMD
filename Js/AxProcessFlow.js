@@ -938,7 +938,7 @@ class AxProcessFlow {
         files.js.push("/../ThirdParty/lodash.min.js?v=1");
         files.js.push("/../ThirdParty/deepdash.min.js");
 
-        files.js.push("/../Js/handlebars.min.js?v=2");
+        files.js.push("/../Js/handlebars.min.js?v=3");
         files.js.push("/../Js/handleBarsHelpers.min.js");
 
         files.js.push("/../ThirdParty/Highcharts/highcharts-3d.js");
@@ -946,7 +946,7 @@ class AxProcessFlow {
         files.js.push("/../ThirdParty/Highcharts/highcharts.js");
         files.js.push("/../ThirdParty/Highcharts/highcharts-exporting.js");
         files.js.push("/../Js/high-charts-functions.min.js?v=20");
-        files.js.push("/../Js/AxInterface.min.js?v=23");
+        files.js.push("/../Js/AxInterface.min.js?v=24");
 
         files.js.push("/../ThirdParty/DataTables-1.10.13/media/js/jquery.dataTables.js");
         files.js.push("/../ThirdParty/DataTables-1.10.13/media/js/dataTables.bootstrap.js");
