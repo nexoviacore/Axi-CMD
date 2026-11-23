@@ -1,12 +1,16 @@
 # Axi Commandline Release Notes – 23 Nov 2026
 
-## Fixes
+## Bug Fixes
 
 ### 1. Data source opens as a blank screen in Pop-Up mode
+
+**Status:** Fixed (needs the product patch release)
 
 When a data source was opened in normal mode and then opened in Pop-Up mode, a blank screen was displayed in Pop-Up mode.
 
 ### 2. Data sources are not opening
+
+**Status:** Fixed (needs the product patch release)
 
 Data sources showed a blank screen.
 
@@ -16,7 +20,11 @@ Data sources showed a blank screen.
 
 ### 3. Commands that start with "Error" did not work in AxiCMD
 
+**Status:** Fixed
+
 ### 4. Configure "Publish Config Studio" listed records differently in Pop-Up mode
+
+**Status:** Fixed
 
 In normal mode, Configure "Publish Config Studio" does not list the records until the Server parameter is selected. In Pop-Up mode, the same command displayed the records without the Server parameter. Pop-Up mode now also asks for the Server parameter first.
 
@@ -24,9 +32,13 @@ In normal mode, Configure "Publish Config Studio" does not list the records unti
 
 ### 5. Remove the With option from the Edit command
 
+**Status:** Done
+
 The `with` option is no longer available for the Edit command.
 
 ### 6. Use the configured PAT for authentication during installation
+
+**Status:** Done
 
 The Install command now handles these keys when it pushes to the queue:
 
@@ -59,6 +71,8 @@ Sample install payload in the queue message:
 
 ### 7. Change the terminology from Product to ProductVersion in the Install command
 
+**Status:** Done
+
 The Install command now uses ProductVersion instead of Product:
 
 ```
@@ -66,6 +80,8 @@ Install ProductVersion <Package> <Version>
 ```
 
 ### 8. Remove the separate Git Account, Repository and PAT configuration
+
+**Status:** Done
 
 Git Account, Repository and PAT can no longer be configured separately through the Axi Command Line. These commands have been removed:
 
