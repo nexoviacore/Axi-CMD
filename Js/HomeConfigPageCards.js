@@ -5,12 +5,20 @@ class HomePageCards {
 			<div class="mt-3 widgetWrapper htmlDomWrapper col-lg-3 col-md-6 col-sm-12 col-xs-12" id="HP_cards_list" data-cardname="{{caption}}">
                     <div class="Home-cards-list" style="background:{{colorcode}}">
                         <div class="Hp-card-icon attendicon">
-                            <img alt="" class="w-60px cardsIcons" src="../images/homepageicon/{{caption}}.png" onerror="this.onerror=null;this.src='../images/homepageicon/default.png';" onclick="navigateFromCard('{{caption}}', '{{stransid}}')">
+                            <img alt="" class="w-60px cardsIcons ax-card-nav"
+                         src="../images/homepageicon/{{caption}}.png"
+                         data-ax-action="navigate-card"
+                         data-caption="{{caption}}"
+                         data-stransid="{{stransid}}"
+                         data-fallback-src="../images/homepageicon/default.png">
                         </div>
-                        <span id="attendancetittle" class="Hp-card-title text-truncate" style="cursor:pointer" title="{{caption}}" onclick="LoadIframe('{{target}}')">{{caption}}</span><p title="{{carddesc}}" class="min-h-45px mh-45px multiline-ellipsis">{{carddesc}}</p>
-                        <!--<a href="javascript:void(0)" class="Hp-more-btn d-none1{{isMoreOption}}" data-fetching="rowcount-{{rowCount}}" id="Hp-more-btnid"
+                        <span id="attendancetittle" class="Hp-card-title text-truncate ax-card-load-iframe"
+                         style="cursor:pointer" title="{{caption}}"
+                         data-ax-action="load-iframe" data-target="{{target}}">{{caption}}</span><p title="{{carddesc}}" class="min-h-45px mh-45px multiline-ellipsis">{{carddesc}}</p>
+                        <!--<a href="#" class="Hp-more-btn d-none1{{isMoreOption}}" data-fetching="rowcount-{{rowCount}}" id="Hp-more-btnid"
                             data-kt-menu-trigger="{default:'click', lg: 'click'}" data-kt-menu-overflow="true"
-                            data-kt-menu-placement="bottom-end" title="{{caption}}" onclick="objHomePageCards.moreOptionsPopover('{{rowCount}}')">
+                            data-kt-menu-placement="bottom-end" title="{{caption}}"
+                            data-ax-action="more-options" data-row-count="{{rowCount}}">
                             <span class="material-icons material-icons-style">more_vert</span>
                         </a>-->
                         <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-title-gray-700 menu-icon-muted menu-active-bg menu-state-primary fw-bold py-4 fs-6 w-300px " id="rowcount-{{rowCount}}" data-cardname="{{caption}}" data-rowcount="{{id}}" 
@@ -24,12 +32,21 @@ class HomePageCards {
 			<div class="mt-3 widgetWrapper htmlDomWrapper col-lg-3 col-md-6 col-sm-12 col-xs-12" id="HP_cards_list" data-cardname="{{caption}}">
                     <div class="Home-cards-list" style="background:{{colorcode}}">
                         <div class="Hp-card-icon attendicon">
-                            <img alt="" class="w-60px cardsIcons" src="../images/homepageicon/{{caption}}.png" onerror="this.onerror=null;this.src='../images/homepageicon/default.png';" onclick="navigateFromCard('{{caption}}', '{{stransid}}')">
+                            <img alt="" class="w-60px cardsIcons ax-card-nav"
+                         src="../images/homepageicon/{{caption}}.png"
+                         data-ax-action="navigate-card"
+                         data-caption="{{caption}}"
+                         data-stransid="{{stransid}}"
+                         data-fallback-src="../images/homepageicon/default.png">
                         </div>
-                        <span id="attendancetittle" class="Hp-card-title text-truncate" style="cursor:pointer" title="{{caption}}" onclick="navigateFromCard('{{caption}}','{{stransid}}')">{{caption}}</span><p title="{{carddesc}}" class="min-h-45px mh-45px multiline-ellipsis">{{carddesc}}</p>
-                        <a href="javascript:void(0)" class="Hp-more-btn d-none1{{isMoreOption}}" data-fetching="rowcount-{{rowCount}}" id="Hp-more-btnid"
+                        <span id="attendancetittle" class="Hp-card-title text-truncate ax-card-nav"
+                         style="cursor:pointer" title="{{caption}}"
+                         data-ax-action="navigate-card"
+                         data-caption="{{caption}}" data-stransid="{{stransid}}">{{caption}}</span><p title="{{carddesc}}" class="min-h-45px mh-45px multiline-ellipsis">{{carddesc}}</p>
+                        <a href="#" class="Hp-more-btn d-none1{{isMoreOption}}" data-fetching="rowcount-{{rowCount}}" id="Hp-more-btnid"
                             data-kt-menu-trigger="{default:'click', lg: 'click'}" data-kt-menu-overflow="true"
-                            data-kt-menu-placement="bottom-end" title="{{caption}}" onclick="objHomePageCards.moreOptionsPopover('{{rowCount}}')">
+                            data-kt-menu-placement="bottom-end" title="{{caption}}"
+                            data-ax-action="more-options" data-row-count="{{rowCount}}">
                             <span class="material-icons material-icons-style">more_vert</span>
                         </a>
                         <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-title-gray-700 menu-icon-muted menu-active-bg menu-state-primary fw-bold py-4 fs-6 w-300px " id="rowcount-{{rowCount}}" data-cardname="{{caption}}" data-rowcount="{{id}}" 
@@ -292,7 +309,9 @@ class HomePageCards {
             const cardname = popoverShowing.getAttribute("data-cardname");
             var cardHeader = `<div class="card-header">
         <h3 class="card-title ">
-            <img alt="" class="w-60px cardsIcons" src="../images/homepageicon/${cardname}.png" onerror="this.onerror=null;this.src='../images/homepageicon/default.png';">	${cardname}
+            <img alt="" class="w-60px cardsIcons"
+                 src="../images/homepageicon/${cardname}.png"
+                 data-fallback-src="../images/homepageicon/default.png">	${cardname}
         </h3>
     </div>`;
 
@@ -308,12 +327,14 @@ class HomePageCards {
                 var btnHtmlOutput = "";
                 if (!this.inValid(this.arrMoreOptions[dataIndexValue])) {
                     var rowBtnTemplate = `<div class="Popover_Items Action_link ">
-                                                <a href="javascript:void(0);" id="{{btnid}}" onclick="navigateFromCard('{{title}}','{{open}}')"> <div class="Action_link_name">{{title}}</div> </a>
+                                                <a href="#" id="{{btnid}}" data-ax-action="navigate-card"
+                   data-caption="{{title}}" data-stransid="{{open}}"> <div class="Action_link_name">{{title}}</div> </a>
                                                 </div> `;
 
 
                     var rowJsBtnTemplate = `<div class="Popover_Items Action_link ">
-                                                <a href="javascript:void(0);" id="{{btnid}}" onclick="{{exejs}}"> <div class="Action_link_name">{{title}}</div> </a>
+                                                <a href="#" id="{{btnid}}" data-ax-action="legacy-action"
+                   data-exejs="{{exejs}}"> <div class="Action_link_name">{{title}}</div> </a>
                                                 </div> `;
 
 
@@ -352,7 +373,8 @@ class HomePageCards {
             }
 
             var rowTemplateWithoutIcon = `<div class="Popover_Items ">
-<a href="javascript:void(0);" onclick="navigateFromCard('{{caption}}','{{link}}')"> 
+<a href="#" data-ax-action="navigate-card"
+   data-caption="{{caption}}" data-stransid="{{link}}"> 
 <span class="Pop_Item_label">{{caption}}</span>
 <div class="Pop_items_value">{{text}}</div>
 </a>
@@ -365,17 +387,19 @@ class HomePageCards {
                 }
             });
 
-
+           
 
             var btnHtmlOutput = "";
             if (!this.inValid(this.arrMoreOptions[dataIndexValue])) {
                 var rowBtnTemplate = `<div class="Popover_Items Action_link ">
-                                                <a href="javascript:void(0);" id="{{btnid}}" onclick="navigateFromCard('{{title}}','{{open}}')"> <div class="Action_link_name">{{title}}</div> </a>
+                                                <a href="#" id="{{btnid}}" data-ax-action="navigate-card"
+                   data-caption="{{title}}" data-stransid="{{open}}"> <div class="Action_link_name">{{title}}</div> </a>
                                                 </div> `;
 
 
                 var rowJsBtnTemplate = `<div class="Popover_Items Action_link ">
-                                                <a href="javascript:void(0);" id="{{btnid}}" onclick="{{exejs}}"> <div class="Action_link_name">{{title}}</div> </a>
+                                                <a href="#" id="{{btnid}}" data-ax-action="legacy-action"
+                   data-exejs="{{exejs}}"> <div class="Action_link_name">{{title}}</div> </a>
                                                 </div> `;
 
 
@@ -666,6 +690,153 @@ function navigateFromCard(caption, id) {
         LoadIframe(`htmlPages.aspx?loadcaption=${form}`);
     }
 }
+
+/*
+ * CSP event bridge
+ * Inline onclick/onerror handlers are intentionally not used here.
+ * Dynamic card HTML is handled through event delegation so it also works
+ * for cards/popovers created after the initial page load.
+ */
+(function registerHomePageCardsCspHandlers() {
+    if (window._homePageCardsCspHandlersRegistered) {
+        return;
+    }
+
+    window._homePageCardsCspHandlersRegistered = true;
+
+    function executeLegacyAction(code, element) {
+        if (!code) {
+            return;
+        }
+
+        code = code.trim();
+
+        /*
+         * Compatibility bridge for existing "function(args)" entries.
+         * Keep this limited to direct function calls rather than executing
+         * arbitrary statements.
+         */
+        var match = code.match(/^([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\s*\(([\s\S]*)\)\s*;?$/);
+        if (!match) {
+            console.warn("Blocked unsupported card action:", code);
+            return;
+        }
+
+        var functionPath = match[1];
+        var argsText = match[2];
+        var context = window;
+        var parts = functionPath.split(".");
+        var fn = context;
+
+        for (var i = 0; i < parts.length; i++) {
+            if (fn == null || typeof fn[parts[i]] === "undefined") {
+                console.warn("Card action function not found:", functionPath);
+                return;
+            }
+            if (i === parts.length - 1) {
+                context = fn;
+                fn = fn[parts[i]];
+            } else {
+                fn = fn[parts[i]];
+            }
+        }
+
+        if (typeof fn !== "function") {
+            console.warn("Card action is not callable:", functionPath);
+            return;
+        }
+
+        /*
+         * Existing configuration stores JavaScript arguments as text.
+         * Parse JSON-like quoted/string/number arguments without eval().
+         * If the legacy configuration contains a more complex expression,
+         * it is intentionally not executed under CSP.
+         */
+        var args = [];
+        if (argsText.trim() !== "") {
+            var tokenRegex = /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`|true|false|null|-?\d+(?:\.\d+)?/g;
+            var tokens = argsText.match(tokenRegex);
+
+            if (!tokens) {
+                console.warn("Blocked unsupported card action arguments:", code);
+                return;
+            }
+
+            var normalized = argsText.replace(/\s+/g, "");
+            var rebuilt = tokens.join(",");
+            if (normalized !== rebuilt.replace(/\s+/g, "")) {
+                console.warn("Blocked unsupported card action arguments:", code);
+                return;
+            }
+
+            args = tokens.map(function (token) {
+                if (token === "true") return true;
+                if (token === "false") return false;
+                if (token === "null") return null;
+
+                var first = token.charAt(0);
+                if (first === '"' || first === "'" || first === "`") {
+                    return token.substring(1, token.length - 1)
+                        .replace(/\\(['"`\\])/g, "$1");
+                }
+
+                return Number(token);
+            });
+        }
+
+        fn.apply(context, args);
+    }
+
+    document.addEventListener("click", function (event) {
+        var element = event.target.closest("[data-ax-action]");
+        if (!element) {
+            return;
+        }
+
+        var action = element.getAttribute("data-ax-action");
+
+        if (action === "navigate-card") {
+            event.preventDefault();
+            navigateFromCard(
+                element.getAttribute("data-caption") || "",
+                element.getAttribute("data-stransid") || ""
+            );
+        }
+        else if (action === "load-iframe") {
+            event.preventDefault();
+            LoadIframe(element.getAttribute("data-target") || "");
+        }
+        else if (action === "more-options") {
+            event.preventDefault();
+            if (window.objHomePageCards) {
+                window.objHomePageCards.moreOptionsPopover(
+                    element.getAttribute("data-row-count")
+                );
+            }
+        }
+        else if (action === "legacy-action") {
+            event.preventDefault();
+            executeLegacyAction(
+                element.getAttribute("data-exejs") || "",
+                element
+            );
+        }
+    });
+
+    document.addEventListener("error", function (event) {
+        var element = event.target;
+
+        if (element && element.matches && element.matches("img[data-fallback-src]")) {
+            var fallback = element.getAttribute("data-fallback-src");
+
+            if (fallback && element.getAttribute("src") !== fallback) {
+                element.setAttribute("src", fallback);
+            }
+
+            element.removeAttribute("data-fallback-src");
+        }
+    }, true);
+})();
 
 var objHomePageCards = new HomePageCards();
 

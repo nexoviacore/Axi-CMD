@@ -587,6 +587,9 @@ if (typeof document !== "undefined") {
     let commands = null;
     let items = [];
     let activeIndex = -1;
+    // new code: what the last render showed, so a re-render of the same input keeps the row picked with the arrow keys
+    let lastRenderInputValue = null;
+    let lastRenderValidItems = [];
     let resolvedParams = {};
     let resolvedParamType = {};
     let lastTypedTokens = [];
@@ -2259,9 +2262,16 @@ if (typeof document !== "undefined") {
             return true;
         }
 
-        // Configure Product / Plugin / ChangeRequest: saves "<account> <repo>" through the CommandSettings API
+        // old code
+        // // Configure Product / Plugin / ChangeRequest: saves "<account> <repo>" through the CommandSettings API
+        // if (optType === "commandsetting") {
+        //     handleCommandSetting({ tokens, commandConfig, configRow });
+        //     return true;
+        // }
+        // new code: the Git account / repository of Product / Plugin / ChangeRequest can no longer be set from the palette;
+        // a database that still has the configure rows gets a message instead of a save
         if (optType === "commandsetting") {
-            handleCommandSetting({ tokens, commandConfig, configRow });
+            showToast("The Git account and repository can no longer be configured from AxiCMD.");
             return true;
         }
 
@@ -2354,7 +2364,17 @@ if (typeof document !== "undefined") {
                 redirectToTstruct(tstructId, caption, true, paramField, paramValue, resolvedExtra);
             } else {
                 setEditSessionState(iviewId);
-                redirectToIView(iviewId, caption);
+                // old code: a Pop-Up went through redirectToIView, which opens ivtoivload.aspx; that runs the report at once
+                // and skips its parameter form, so Configure "Publish Config Studio" showed every row in a Pop-Up while Go
+                // asked for the required Server first
+                // redirectToIView(iviewId, caption);
+                // new code: the Pop-Up opens iview.aspx like Go (only this command uses tstruct/iview; other report Pop-Ups
+                // still go through redirectToIView)
+                if (popUpOption) {
+                    openPopOption(`../aspx/iview.aspx?ivname=${iviewId}&tname=${encodeURIComponent(caption)}&AxIsPop=true&isDupTab=true`);
+                } else {
+                    redirectToIView(iviewId, caption);
+                }
             }
             return true;
         }
@@ -3164,7 +3184,8 @@ if (typeof document !== "undefined") {
             const isInitialCommandStage = initialTokens.length === 0 || (initialTokens.length === 1 && !input.value.endsWith(" "));
 
             if (isCommandsLoading && !isInitialCommandStage) {
-                items = ["Loading Commands...."];
+                // old code: items = ["Loading Commands...."];
+                items = [axiStatusMsg("Loading Commands....", "loading")];
                 setStatusText(hintDiv, "Please wait...");
                 render();
                 return;
@@ -3315,16 +3336,17 @@ if (typeof document !== "undefined") {
         }
         const grpKey = tokens[0]?.toLowerCase();
 
-        if (grpKey === "edit" && (text.toLowerCase().includes(" with") || tokens.some(t => cleanString(t).toLowerCase() === "with"))) {
-            const entityObj = getTargetEntityObj(tokens[1], "edit");
-            if (entityObj && (entityObj.keyfieldforedit === "F" || entityObj.keyfieldforedit === false)) {
-                showToast("Key field is not configured for this form. Please configure the key field using the Configure Key Field command.", 3000, false);
-                items = [];
-                render();
-                hide();
-                return;
-            }
-        }
+        // old code: "edit with" is removed, so there is no "with" to check the key field for
+        // if (grpKey === "edit" && (text.toLowerCase().includes(" with") || tokens.some(t => cleanString(t).toLowerCase() === "with"))) {
+        //     const entityObj = getTargetEntityObj(tokens[1], "edit");
+        //     if (entityObj && (entityObj.keyfieldforedit === "F" || entityObj.keyfieldforedit === false)) {
+        //         showToast("Key field is not configured for this form. Please configure the key field using the Configure Key Field command.", 3000, false);
+        //         items = [];
+        //         render();
+        //         hide();
+        //         return;
+        //     }
+        // }
 
         if (
             grpKey === "view" &&
@@ -4064,7 +4086,8 @@ if (typeof document !== "undefined") {
                         return [
                             goOption,
                             popOption,
-                            "Please Type the date"
+                            // old code: "Please Type the date"
+                            axiStatusMsg("Please Type the date")
                         ];
                         //return ["Please Type the date"];
                     }
@@ -4091,7 +4114,8 @@ if (typeof document !== "undefined") {
                             return [
                                 goOption,
                                 popOption,
-                                "Please type Valid date using / (ex: DD / MM / YYYY)"
+                                // old code: "Please type Valid date using / (ex: DD / MM / YYYY)"
+                                axiStatusMsg("Please type Valid date using / (ex: DD / MM / YYYY)")
                             ];
                             //return ["Please type Valid date using / (ex: DD / MM / YYYY)"];
                         }
@@ -4215,7 +4239,8 @@ if (typeof document !== "undefined") {
 
             if (!axDatasourceObj[sourceKey]) {
                 loadList(sourceName, adsName);
-                return ["Loading columns..."];
+                // old code: return ["Loading columns..."];
+                return [axiStatusMsg("Loading columns...", "loading")];
             }
 
             const list = axDatasourceObj[sourceKey];
@@ -4435,7 +4460,8 @@ if (typeof document !== "undefined") {
                             return [
                                 goOption,
                                 popOption,
-                                "Please type the value..."
+                                // old code: "Please type the value..."
+                                axiStatusMsg("Please type the value...")
                             ];
                             //return ["Please type the value..."];
                         }
@@ -4473,7 +4499,8 @@ if (typeof document !== "undefined") {
 
                         if (!axDatasourceObj[sourceKey]) {
                             loadList(sourceName, paramValue);
-                            return ["Loading values..."];
+                            // old code: return ["Loading values..."];
+                            return [axiStatusMsg("Loading values...", "loading")];
                         }
 
                         const list = axDatasourceObj[sourceKey];
@@ -5482,37 +5509,39 @@ if (typeof document !== "undefined") {
 
         ///KeyValue based edit handling.
 
-        if ((!promptInfo || tokens[3] === "with") && groupKey.toLowerCase() === "edit" && tokens.length >= 4) {
-
-            let viewSource;
-            if (tokens.length == 4) {
-                viewSource = commandConfig?.prompts?.[3]?.promptValues?.toLowerCase().split(',').map(v => v.trim());
-                //const partialTyped = cleanString(tokens[targetIndex]);
-                const result = viewSource.filter(val => val.toLowerCase());
-                filteredObjects = result.map(val => ({ name: val, displaydata: val }));
-
-                result.unshift(popOption);
-                result.unshift(goOption);
-                filteredObjects.unshift(popOption);
-                filteredObjects.unshift(goOption);
-
-                updateDynamicHintFromPrompt({ prompt: commandConfig?.prompts?.[3]?.prompt })
-                return result;
-
-
-            }
-            else if (tokens.length >= 5) {
-                viewSource = commandConfig?.prompts?.[4]?.promptSource?.toLowerCase()
-
-                let tokenCopy = [...tokens];
-
-                updateDynamicHintFromPrompt({ prompt: (targetIndex % 2 === 0) ? "fieldname" : "fieldValue" })
-                return editCommandHandling(tokenCopy, commandConfig, viewSource);
-
-
-            }
-
-        }
+        // old code: "edit <form> <record> with <field> <value> ..." offered "With" after the record and then field / value
+        // pairs with Save. The "edit with" option has been removed: edit only opens the record (Go / Pop-Up).
+        // if ((!promptInfo || tokens[3] === "with") && groupKey.toLowerCase() === "edit" && tokens.length >= 4) {
+        //
+        //     let viewSource;
+        //     if (tokens.length == 4) {
+        //         viewSource = commandConfig?.prompts?.[3]?.promptValues?.toLowerCase().split(',').map(v => v.trim());
+        //         //const partialTyped = cleanString(tokens[targetIndex]);
+        //         const result = viewSource.filter(val => val.toLowerCase());
+        //         filteredObjects = result.map(val => ({ name: val, displaydata: val }));
+        //
+        //         result.unshift(popOption);
+        //         result.unshift(goOption);
+        //         filteredObjects.unshift(popOption);
+        //         filteredObjects.unshift(goOption);
+        //
+        //         updateDynamicHintFromPrompt({ prompt: commandConfig?.prompts?.[3]?.prompt })
+        //         return result;
+        //
+        //
+        //     }
+        //     else if (tokens.length >= 5) {
+        //         viewSource = commandConfig?.prompts?.[4]?.promptSource?.toLowerCase()
+        //
+        //         let tokenCopy = [...tokens];
+        //
+        //         updateDynamicHintFromPrompt({ prompt: (targetIndex % 2 === 0) ? "fieldname" : "fieldValue" })
+        //         return editCommandHandling(tokenCopy, commandConfig, viewSource);
+        //
+        //
+        //     }
+        //
+        // }
 
         // if (promptInfo?.error) {
         //     showToast(promptInfo.error);
@@ -5536,6 +5565,14 @@ if (typeof document !== "undefined") {
                     filteredObjects = [goOption];
                     return [goOption];
                 }
+                filteredObjects = [goOption, popOption];
+                return [goOption, popOption];
+            }
+
+            // new code: "edit with" is removed. "edit <form> <record>" (and "edit <form> <field> <value>" once the
+            // field / value prompts are gone) only opens the record, so Go / Pop-Up is all that is offered.
+            else if (groupKey.toLowerCase() === "edit" && tokens.length >= 4) {
+                updateDynamicHintFromPrompt({ prompt: "Ready to Run" });
                 filteredObjects = [goOption, popOption];
                 return [goOption, popOption];
             }
@@ -5915,13 +5952,16 @@ if (typeof document !== "undefined") {
                     //     }
                     //     return [];
                     // }
-                    return [`Fetching Data...`];
+                    // old code: return [`Fetching Data...`];
+                    return [axiStatusMsg(`Fetching Data...`, "loading")];
                 }
                 // edit <form>: the form/field names are still being resolved against the structure list (or the
                 // list itself is loading), so paramStr is empty for a moment. Say "Fetching Data..." like view
                 // does instead of flashing "Waiting for input..."
-                if (isGetStructsData && tokens.length >= 2) return [`Fetching Data...`];
-                return ["Waiting for input..."];
+                // old code: if (isGetStructsData && tokens.length >= 2) return [`Fetching Data...`];
+                if (isGetStructsData && tokens.length >= 2) return [axiStatusMsg(`Fetching Data...`, "loading")];
+                // old code: return ["Waiting for input..."];
+                return [axiStatusMsg("Waiting for input...")];
             }
 
             // Filter Cache
@@ -5998,7 +6038,8 @@ if (typeof document !== "undefined") {
                                 loadList(apiSourceName, paramValue, cleanSearch, 1, getPageSize());
                             }, SEARCH_DEBOUNCE_MS);
                             filteredObjects = [];
-                            return ["Searching..."];
+                            // old code: return ["Searching..."];
+                            return [axiStatusMsg("Searching...", "loading")];
                         }
                     }
                 } else {
@@ -6036,9 +6077,11 @@ if (typeof document !== "undefined") {
                 if (isDynamicSource) {
                     filteredObjects = [];
                     if (cleanSearch.length < 3) {
-                        return ["Type at least 3 characters to search records..."];
+                        // old code: return ["Type at least 3 characters to search records..."];
+                        return [axiStatusMsg("Type at least 3 characters to search records...")];
                     } else {
-                        return ["No matching records found"];
+                        // old code: return ["No matching records found"];
+                        return [axiStatusMsg("No matching records found")];
                     }
                 }
 
@@ -6056,7 +6099,8 @@ if (typeof document !== "undefined") {
                 filtered = [...dataList];
             } else if (isDynamicSource && filtered.length === 0 && cleanSearch.length >= 3) {
                 filteredObjects = [];
-                return ["No matching records found"];
+                // old code: return ["No matching records found"];
+                return [axiStatusMsg("No matching records found")];
             }
 
 
@@ -7124,6 +7168,15 @@ if (typeof document !== "undefined") {
         // page ...) finish while the user is scrolling and trigger a re-render, which threw the user back to
         // the top. Remember the position so a re-render of the SAME list can put it back (see below).
         const scrollBeforeRender = { top: list.scrollTop, left: list.scrollLeft };
+        // new code: the row the user is on before this render. A background search or page finishing re-renders the
+        // list while the input is unchanged; without this the highlight went back to the first row (and the list
+        // scrolled up) right after the user had moved down with the arrow keys.
+        const suggestionKeyOf = (item) => typeof item === "string"
+            ? "s:" + item
+            : "o:" + (item?.name ?? "") + "|" + (item?.displaydata ?? "") + "|" + (item?.stype ?? "");
+        const keptActiveKey = (input.value === lastRenderInputValue && activeIndex >= 0 && lastRenderValidItems[activeIndex])
+            ? suggestionKeyOf(lastRenderValidItems[activeIndex])
+            : null;
         list.innerHTML = "";
         // No footer on screen until buildLoadMoreFooter draws one again in this render
         footerPagedContext = null;
@@ -7158,7 +7211,10 @@ if (typeof document !== "undefined") {
         const validItems = items.filter(item => {
             if (!item) return false;
             if (typeof item === "string") {
-                return (item !== "Loading options..." && !item.startsWith("Fetching") && !item.startsWith("Searching") && item.trim() !== "");
+                // old code
+                // return (item !== "Loading options..." && !item.startsWith("Fetching") && !item.startsWith("Searching") && item.trim() !== "");
+                // new code: only the palette's own loading rows are dropped, not data rows that start with these words
+                return (item !== "Loading options..." && !isPaletteMessage(item, { startsWith: ["Fetching", "Searching"] }) && item.trim() !== "");
             }
             if (typeof item === "object") {
                 return (typeof item.displaydata === "string" && item.displaydata.trim() !== "");
@@ -7206,17 +7262,28 @@ if (typeof document !== "undefined") {
                 activeIndex = 0;
             }
 
+            // new code: same input as the last render (only background data changed): stay on the row the user moved to
+            if (keptActiveKey !== null) {
+                const keptIndex = validItems.findIndex(item => suggestionKeyOf(item) === keptActiveKey);
+                if (keptIndex !== -1) activeIndex = keptIndex;
+            }
+
         }
+        lastRenderInputValue = input.value;
+        lastRenderValidItems = validItems;
 
         const metadataParams = getStructParam();
         const structKey = "axi_structmetalist_" + metadataParams.toLowerCase();
         const isCmdsLoading = isCommandsLoading || !commands;
         const isStructsLoading = activeFetches.has(structKey) || !axDatasourceObj[structKey];
 
-        const isAnyLoadingItem = items.some(item => {
-            const text = typeof item === "string" ? item : (item?.displaydata || "");
-            return typeof text === "string" && (text.startsWith("Loading") || text.startsWith("Searching") || text.startsWith("Fetching"));
-        });
+        // old code
+        // const isAnyLoadingItem = items.some(item => {
+        //     const text = typeof item === "string" ? item : (item?.displaydata || "");
+        //     return typeof text === "string" && (text.startsWith("Loading") || text.startsWith("Searching") || text.startsWith("Fetching"));
+        // });
+        // new code: a structure named "Loading ..." no longer counts as a loading row
+        const isAnyLoadingItem = items.some(item => isPaletteMessage(item, { kind: "loading" }));
         const isAnyFetchActive = activeFetches.size > 0 || isCmdsLoading || isStructsLoading || isAnyLoadingItem || isSearchPending();
 
         const showInitialWrapper = isInitialCommandStage && (validItems.length > 0 || isCmdsLoading || isStructsLoading) && !isSystemMessage(validItems[0]);
@@ -7246,7 +7313,9 @@ if (typeof document !== "undefined") {
                 // `;
                 // list.appendChild(li);
                 // new code: same row, built by the shared helper (also used by the configure product / plugin / changerequest save)
-                const loadingText = items.find(it => typeof it === "string" && (it.startsWith("Searching") || it.startsWith("Fetching"))) || (isSearchPending() ? "Searching..." : "Loading options...");
+                // const loadingText = items.find(it => typeof it === "string" && (it.startsWith("Searching") || it.startsWith("Fetching"))) || (isSearchPending() ? "Searching..." : "Loading options...");
+                // new code: only the palette's own loading rows
+                const loadingText = items.find(it => isPaletteMessage(it, { startsWith: ["Searching", "Fetching"] })) || (isSearchPending() ? "Searching..." : "Loading options...");
                 list.appendChild(createSuggestionLoadingRow(loadingText));
                 list.style.display = "block";
                 return;
@@ -7524,12 +7593,23 @@ if (typeof document !== "undefined") {
 
         const validItems = items.filter(item => {
             if (!item) return false;
+            // old code
+            // if (typeof item === "string") {
+            //     return (!item.startsWith("Loading") && !item.startsWith("Searching") && !item.startsWith("Fetching") && !item.startsWith("Type at least") && !item.startsWith("No matching") && item !== "No Data" && item.trim() !== "");
+            // }
+            // if (typeof item === "object") {
+            //     const text = item.displaydata || item.name || "";
+            //     return (typeof text === "string" && !text.startsWith("Loading") && !text.startsWith("Searching") && !text.startsWith("Fetching") && !text.startsWith("Type at least") && !text.startsWith("No matching") && text !== "No Data" && text.trim() !== "");
+            // }
+            // new code: the same message rows are skipped, but only when the palette made them (axiStatusMsg); a structure,
+            // field or record whose name starts with these words stays selectable
+            const skipWords = ["Loading", "Searching", "Fetching", "Type at least", "No matching"];
             if (typeof item === "string") {
-                return (!item.startsWith("Loading") && !item.startsWith("Searching") && !item.startsWith("Fetching") && !item.startsWith("Type at least") && !item.startsWith("No matching") && item !== "No Data" && item.trim() !== "");
+                return (!isPaletteMessage(item, { startsWith: skipWords }) && item !== "No Data" && item.trim() !== "");
             }
             if (typeof item === "object") {
                 const text = item.displaydata || item.name || "";
-                return (typeof text === "string" && !text.startsWith("Loading") && !text.startsWith("Searching") && !text.startsWith("Fetching") && !text.startsWith("Type at least") && !text.startsWith("No matching") && text !== "No Data" && text.trim() !== "");
+                return (typeof text === "string" && !isPaletteMessage(item) && text !== "No Data" && text.trim() !== "");
             }
             return false;
         });
@@ -7604,19 +7684,20 @@ if (typeof document !== "undefined") {
             resetSetCommandState();
             return;
         }
-        else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Save_ACTION" && saveGroupKeyCheck.toLowerCase() === "edit") {
-            // new code (issue #295): nothing is saved while a typed value does not fit its field's data type
-            const invalidEditValue = findInvalidEditFieldValue(checkTokens, setCommandTransid);
-            if (invalidEditValue) {
-                showToast(invalidEditValue, 5000);
-                return;
-            }
-            // console.log("Save Option Selected...Submitting Data...");
-            hide();
-            AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", false, checkTokens, saveCommandConfig);
-            resetSetCommandState();
-            return;
-        }
+        // old code: Save for "edit <form> <record> with <field> <value>"; "edit with" is removed, edit offers no Save
+        // else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Save_ACTION" && saveGroupKeyCheck.toLowerCase() === "edit") {
+        //     // new code (issue #295): nothing is saved while a typed value does not fit its field's data type
+        //     const invalidEditValue = findInvalidEditFieldValue(checkTokens, setCommandTransid);
+        //     if (invalidEditValue) {
+        //         showToast(invalidEditValue, 5000);
+        //         return;
+        //     }
+        //     // console.log("Save Option Selected...Submitting Data...");
+        //     hide();
+        //     AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", false, checkTokens, saveCommandConfig);
+        //     resetSetCommandState();
+        //     return;
+        // }
         else if (typeof selectedItem === 'object' && selectedItem.isExecutable && selectedItem.name === "Pop_ACTION") {
             // console.log("Pop Option Selected......");
             try {
@@ -7740,13 +7821,15 @@ if (typeof document !== "undefined") {
         if (commandGroup === "edit") {
             if (targetIndex === 3) {
                 isValueToken = true;
-            } else {
-                const withIndex = checkTokens.findIndex(t => cleanString(t).toLowerCase() === "with");
-
-                if (withIndex !== -1 && targetIndex > withIndex && (targetIndex - withIndex) % 2 === 0) {
-                    isValueToken = true;
-                }
             }
+            // old code: field values after "with"; "edit with" is removed
+            // else {
+            //     const withIndex = checkTokens.findIndex(t => cleanString(t).toLowerCase() === "with");
+            //
+            //     if (withIndex !== -1 && targetIndex > withIndex && (targetIndex - withIndex) % 2 === 0) {
+            //         isValueToken = true;
+            //     }
+            // }
         } else if (commandGroup === "view") {
             if (targetIndex === 3) isValueToken = true;
         }
@@ -7769,9 +7852,12 @@ if (typeof document !== "undefined") {
 
         const checkEditObj = (checkTokens[0]?.toLowerCase() === "edit" && checkTokens[1]) ? getTargetEntityObj(checkTokens[1], "edit") : null;
         if (checkEditObj && (checkEditObj.keyfieldforedit === "F" || checkEditObj.keyfieldforedit === false)) {
-            const suggText = (typeof selectedItem === "string" ? selectedItem : (selectedItem?.displaydata || selectedItem?.name || "")).toLowerCase().trim();
-            const hasWithInTokens = checkTokens.some(t => cleanString(t).toLowerCase() === "with") || currentInput.toLowerCase().includes(" with");
-            if (targetIndex === 1 || suggText === "with" || hasWithInTokens) {
+            // old code: also stopped on "with"; "edit with" is removed
+            // const suggText = (typeof selectedItem === "string" ? selectedItem : (selectedItem?.displaydata || selectedItem?.name || "")).toLowerCase().trim();
+            // const hasWithInTokens = checkTokens.some(t => cleanString(t).toLowerCase() === "with") || currentInput.toLowerCase().includes(" with");
+            // if (targetIndex === 1 || suggText === "with" || hasWithInTokens) {
+            // new code
+            if (targetIndex === 1) {
                 showToast("Key field is not configured for this form. Please configure the key field using the Configure Key Field command.", 3000, false);
                 hide();
                 return;
@@ -10167,20 +10253,28 @@ if (typeof document !== "undefined") {
                     }
                     return;
                 }
-                // new code (issue #295): Ctrl + S on edit saves nothing while a typed value does not fit its field's data type
-                if (grpKey && grpKey.toLowerCase() === "edit") {
-                    const invalidEditValue = findInvalidEditFieldValue(tokens, setCommandTransid);
-                    if (invalidEditValue) {
-                        showToast(invalidEditValue, 5000);
-                        return;
-                    }
-                }
-                // console.log("Save Option Selected...Submitting Data...");
+                // old code (issue #295): Ctrl + S on edit saved nothing while a typed value did not fit its field's data type.
+                // "edit with" is removed, edit has no field values to save.
+                // if (grpKey && grpKey.toLowerCase() === "edit") {
+                //     const invalidEditValue = findInvalidEditFieldValue(tokens, setCommandTransid);
+                //     if (invalidEditValue) {
+                //         showToast(invalidEditValue, 5000);
+                //         return;
+                //     }
+                // }
+                // old code: Ctrl + S also saved "edit <form> <record> with <field> <value>"; "edit with" is removed
+                // // console.log("Save Option Selected...Submitting Data...");
+                // hide();
+                // if (grpKey.toLowerCase() === "create")
+                //     AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", true, tokens, saveCommandConfig);
+                // else if (grpKey.toLowerCase() === "edit")
+                //     AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", false, tokens, saveCommandConfig);
+                // resetSetCommandState();
+                // return;
+                // new code: Ctrl + S saves create only
                 hide();
-                if (grpKey.toLowerCase() === "create")
+                if (grpKey && grpKey.toLowerCase() === "create")
                     AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", true, tokens, saveCommandConfig);
-                else if (grpKey.toLowerCase() === "edit")
-                    AxisaveDataFn(createfieldnamevaluesList, setCommandTransid, "axi_nongridfieldlist", false, tokens, saveCommandConfig);
                 resetSetCommandState();
                 return;
             }
@@ -10437,10 +10531,11 @@ if (typeof document !== "undefined") {
             }
         }
 
-        if (tokens[3]?.toLowerCase() === "with") {
-            showToast("Execution is Not Allowed while editing");
-            return;
-        }
+        // old code: "edit with" is removed, there is no "with" to refuse Go for
+        // if (tokens[3]?.toLowerCase() === "with") {
+        //     showToast("Execution is Not Allowed while editing");
+        //     return;
+        // }
 
         if (tokens.length === 0) return;
 
@@ -11079,7 +11174,8 @@ if (typeof document !== "undefined") {
 
             if (struct_hasParams) {
                 loadList(struct_source, struct_paramValue);
-                return [`Loading ${struct_source}...`];
+                // old code: return [`Loading ${struct_source}...`];
+                return [axiStatusMsg(`Loading ${struct_source}...`, "loading")];
             }
         }
 
@@ -12136,7 +12232,10 @@ if (typeof document !== "undefined") {
     // ---------------------------------------------------------------------------------------------------------
     // Configure Product / Plugin / ChangeRequest (prompt_option_type 'commandsetting')
     // ---------------------------------------------------------------------------------------------------------
-    const COMMAND_SETTING_LABELS = { product: "Product", plugin: "Plugin", changerequest: "Change Request" };
+    // old code
+    // const COMMAND_SETTING_LABELS = { product: "Product", plugin: "Plugin", changerequest: "Change Request" };
+    // new code: the product type is named "Product Version" in the palette (install); the stored type stays "product"
+    const COMMAND_SETTING_LABELS = { product: "Product Version", plugin: "Plugin", changerequest: "Change Request" };
     const commandSettingSavedCache = {};   // type -> { t, v } ; v = { accountname, reponame } or null when the GET failed
     const commandSettingPending = {};      // type -> true while a GET is running
     const COMMAND_SETTING_RETRY_MS = 30000;
@@ -12239,12 +12338,16 @@ if (typeof document !== "undefined") {
      * @returns {object|null} Configure row or null.
      */
     function getCommandSettingRow(tokenName) {
-        const opt = cleanCommandToken(tokenName || "");
-        if (!opt) return null;
-        const row = getCommandConfigRow("Configure", opt);
-        if (!row) return null;
-        const optType = (row.promptOptionType || row.prompt_option_type || row.PromptOptionType || "").toLowerCase();
-        return optType === "commandsetting" ? row : null;
+        // old code
+        // const opt = cleanCommandToken(tokenName || "");
+        // if (!opt) return null;
+        // const row = getCommandConfigRow("Configure", opt);
+        // if (!row) return null;
+        // const optType = (row.promptOptionType || row.prompt_option_type || row.PromptOptionType || "").toLowerCase();
+        // return optType === "commandsetting" ? row : null;
+        // new code: configure Product / Plugin / ChangeRequest was removed, so no typed option is a commandsetting one
+        // any more (the account / repo hints, Save and Ctrl + S of that flow never show)
+        return null;
     }
 
     /**
@@ -12363,9 +12466,9 @@ if (typeof document !== "undefined") {
     }
 
     /**
-     * Reads accountname / reponame from a response properties object, tolerating casing.
+     * Reads accountname / reponame / gittoken from a response properties object, tolerating casing.
      * @param {object} props - Properties object.
-     * @returns {{accountname: string, reponame: string}} Values ("" when missing).
+     * @returns {{accountname: string, reponame: string, gittoken: string}} Values ("" when missing).
      */
     function readCommandSettingProps(props) {
         const p = props || {};
@@ -12373,7 +12476,14 @@ if (typeof document !== "undefined") {
             for (const k of keys) { if (p[k] !== undefined && p[k] !== null) return String(p[k]); }
             return "";
         };
-        return { accountname: pick("accountname", "accountName", "AccountName", "Accountname"), reponame: pick("reponame", "repoName", "RepoName", "Reponame") };
+        // old code
+        // return { accountname: pick("accountname", "accountName", "AccountName", "Accountname"), reponame: pick("reponame", "repoName", "RepoName", "Reponame") };
+        // new code: gittoken is the PAT the AxiGit listdirectories call needs
+        return {
+            accountname: pick("accountname", "accountName", "AccountName", "Accountname"),
+            reponame: pick("reponame", "repoName", "RepoName", "Reponame"),
+            gittoken: pick("gittoken", "gitToken", "GitToken", "Gittoken").trim()
+        };
     }
 
     /**
@@ -12459,8 +12569,10 @@ if (typeof document !== "undefined") {
         }
         // new code: nothing to pick yet, so say what to type instead of "No Data"
         if (list.length === 0) {
-            if (wordNo === 3) list = ["Type GitHub account name"];
-            else if (wordNo === 4) list = ["Type GitHub repository name"];
+            // old code: if (wordNo === 3) list = ["Type GitHub account name"];
+            if (wordNo === 3) list = [axiStatusMsg("Type GitHub account name")];
+            // old code: else if (wordNo === 4) list = ["Type GitHub repository name"];
+            else if (wordNo === 4) list = [axiStatusMsg("Type GitHub repository name")];
         }
         return list;
     }
@@ -12587,7 +12699,8 @@ if (typeof document !== "undefined") {
     }
 
     // ---------------------------------------------------------------------------------------------------------
-    // Install Product / Plugin / ChangeRequest:  install <product|plugin|changerequest> <directory> [version]
+    // Install ProductVersion / Plugin / ChangeRequest:  install <productversion|plugin|changerequest> <directory> [version]
+    // The typed word is ProductVersion; the managerType / type sent to the APIs and the queue stays "product".
     // Account / repo come from the CommandSettings API (set with "configure <type> <account> <repo>"), the
     // directories and versions from the AxiGit listdirectories API, and Go pushes the request to the ARM queue.
     // axi_git_directories / axi_git_versions in the prompt rows are markers resolved here, never sent to the ADS.
@@ -12599,7 +12712,12 @@ if (typeof document !== "undefined") {
     const AXI_INSTALL_QUEUE_NAME = "axiinstallpackagesqueue";
     const AXI_INSTALL_QUEUE_OK = "QUEUEDATAINSERTEDSUCESSFULLY";
     const INSTALL_DEFAULT_VERSION = "Latest";   // sent when the command has no version
-    const INSTALL_TYPES = { product: "product", plugin: "plugin", changerequest: "changerequest" };
+    // old code
+    // const INSTALL_TYPES = { product: "product", plugin: "plugin", changerequest: "changerequest" };
+    // new code: "productversion" is the typed word; "product" is kept so saved favourites / history and the
+    // modal's re-check (which rebuilds the words from ctx.type) still resolve. Both map to managerType "product".
+    const INSTALL_TYPES = { productversion: "product", product: "product", plugin: "plugin", changerequest: "changerequest" };
+    const INSTALL_TYPES_TEXT = "productversion, plugin or changerequest";
     const INSTALL_CACHE_TTL_MS = 30 * 60 * 1000;
     const INSTALL_REQUEST_TIMEOUT_MS = 30000;
     const INSTALL_RETRY_MS = 30000;
@@ -12614,7 +12732,7 @@ if (typeof document !== "undefined") {
 
     /**
      * Splits an install command into words. A double-quoted text is one word and the quotes are removed,
-     * so  install product "My Dir" Latest  gives [install, product, My Dir, Latest]. Only the install command uses it.
+     * so  install productversion "My Dir" Latest  gives [install, productversion, My Dir, Latest]. Only the install command uses it.
      * @param {string} str - Raw command text.
      * @returns {string[]} Words without quotes.
      */
@@ -12645,7 +12763,7 @@ if (typeof document !== "undefined") {
 
     /**
      * Maps the typed type word to the managerType the AxiGit API expects.
-     * @param {string} typeWord - Typed word (Product, ChangeRequest, "change request" ...).
+     * @param {string} typeWord - Typed word (ProductVersion, "product version", ChangeRequest, "change request" ...).
      * @returns {string} product / plugin / changerequest, or "" when it is not a type.
      */
     function getInstallManagerType(typeWord) {
@@ -12663,7 +12781,10 @@ if (typeof document !== "undefined") {
     function validateInstallArgs(words, directories) {
         const fail = (message) => ({ ok: false, message, directory: "", version: "" });
         const list = Array.isArray(directories) ? directories : [];
-        if (!words || words.length < 2 || !getInstallManagerType(words[1])) return fail("Install expects product, plugin or changerequest");
+        // old code
+        // if (!words || words.length < 2 || !getInstallManagerType(words[1])) return fail("Install expects product, plugin or changerequest");
+        // new code
+        if (!words || words.length < 2 || !getInstallManagerType(words[1])) return fail(`Install expects ${INSTALL_TYPES_TEXT}`);
         const dirWord = words[2] === undefined || words[2] === null ? "" : String(words[2]).trim();
         if (!dirWord) return fail("Directory is required");
         const dir = list.find(d => String(d.name).toLowerCase() === dirWord.toLowerCase());
@@ -12741,7 +12862,36 @@ if (typeof document !== "undefined") {
      */
     function getInstallDirsErrorText(type, message, status) {
         const text = String(message || "Could not load the directories").trim();
-        return status === 404 ? `${text} Run configure ${type} <account> <repo> to change it.` : text;
+        // old code
+        // return status === 404 ? `${text} Run configure ${type} <account> <repo> to change it.` : text;
+        // new code: the repository is no longer set from the palette (configure product / plugin / changerequest was removed)
+        // return status === 404 ? `${text} Ask your administrator to check the ${getCommandSettingLabel(type)} repository.` : text;
+        // new code: 401 = GitHub rejected the PAT (gittoken) sent with the call
+        if (status === 401) return `GitHub rejected the Git token (PAT) for ${getCommandSettingLabel(type)}. Ask your administrator to update it.`;
+        return status === 404 ? `${text} Ask your administrator to check the ${getCommandSettingLabel(type)} repository.` : text;
+    }
+
+    /**
+     * Message shown by install when no Git token (PAT) is saved for the type; AxiGit listdirectories is not called without one.
+     * @param {string} type - product / plugin / changerequest.
+     * @returns {string} Message.
+     */
+    function getInstallTokenNotSetText(type) {
+        return `Git token (PAT) not set for ${getCommandSettingLabel(type)}. Ask your administrator to set it.`;
+    }
+
+    /**
+     * Message shown by install when no Git account / repository is saved for the type. It replaces
+     * "Run configure <type> <account> <repo> first" now that configure product / plugin / changerequest is removed.
+     * Marked with axiStatusMsg, so isSystemMessage treats it as an information row.
+     * @param {string} type - product / plugin / changerequest.
+     * @returns {string} Message.
+     */
+    function getInstallRepoNotSetText(type) {
+        // old code
+        // return `Repository not set for ${getCommandSettingLabel(type)}. Ask your administrator to set it.`;
+        // new code: marked as a palette message (see isSystemMessage)
+        return axiStatusMsg(`Repository not set for ${getCommandSettingLabel(type)}. Ask your administrator to set it.`);
     }
 
     /**
@@ -12802,13 +12952,51 @@ if (typeof document !== "undefined") {
         //     requestedOn: p.requestedOn || (p.now instanceof Date ? p.now : new Date()).toISOString()
         // };
         // new code: field names the install consumer reads (appName, packageName, packageVersion, requestedBy, requestId)
+        // return {
+        //     action: "install",
+        //     requestId: p.requestId || "",
+        //     type: p.type,
+        //     account: p.account,
+        //     repo: p.repo,
+        //     managerType: p.type,
+        //     packageName: p.directory,
+        //     packageVersion: p.version || "",
+        //     commitSha: p.commitSha || "",
+        //     appName: p.appname,
+        //     requestedBy: p.username,
+        //     requestedOn: p.requestedOn || (p.now instanceof Date ? p.now : new Date()).toISOString()
+        // };
+        // new code: the consumer reuses the caller's ARM session (ARMSessionId) and clones with the configured PAT,
+        // so account / repo are sent as gitaccountname / gitrepository together with gittoken
+        // old code: type / managerType went to the queue as the stored type ("product" for ProductVersion)
+        // return {
+        //     action: "install",
+        //     requestId: p.requestId || "",
+        //     ARMSessionId: p.armSessionId || "",
+        //     type: p.type,
+        //     gitaccountname: p.account,
+        //     gitrepository: p.repo,
+        //     gittoken: p.token || "",
+        //     managerType: p.type,
+        //     packageName: p.directory,
+        //     packageVersion: p.version || "",
+        //     commitSha: p.commitSha || "",
+        //     appName: p.appname,
+        //     requestedBy: p.username,
+        //     requestedOn: p.requestedOn || (p.now instanceof Date ? p.now : new Date()).toISOString()
+        // };
+        // new code: the queue gets the ProductVersion name, "productversion", in type and managerType. Only the queue
+        // payload is renamed: the settings lookup and AxiGit listdirectories still use the stored type "product".
+        const queueType = String(p.type || "").toLowerCase() === "product" ? "productversion" : p.type;
         return {
             action: "install",
             requestId: p.requestId || "",
-            type: p.type,
-            account: p.account,
-            repo: p.repo,
-            managerType: p.type,
+            ARMSessionId: p.armSessionId || "",
+            type: queueType,
+            gitaccountname: p.account,
+            gitrepository: p.repo,
+            gittoken: p.token || "",
+            managerType: queueType,
             packageName: p.directory,
             packageVersion: p.version || "",
             commitSha: p.commitSha || "",
@@ -12922,7 +13110,10 @@ if (typeof document !== "undefined") {
                 if (res.ok) {
                     const data = await res.json();
                     const props = readCommandSettingProps(data && (data.properties || data.Properties));
-                    if (props.accountname && props.reponame) value = { account: props.accountname, repo: props.reponame };
+                    // old code
+                    // if (props.accountname && props.reponame) value = { account: props.accountname, repo: props.reponame };
+                    // new code: the PAT is kept with the repo, in memory only (never in localStorage)
+                    if (props.accountname && props.reponame) value = { account: props.accountname, repo: props.reponame, token: props.gittoken };
                 }
             } catch (e) { value = null; }
             delete installRepoPending[type];
@@ -12957,6 +13148,10 @@ if (typeof document !== "undefined") {
             const abortCtrl = (typeof AbortController !== "undefined") ? new AbortController() : null;
             const abortTimer = abortCtrl ? setTimeout(() => abortCtrl.abort(), INSTALL_REQUEST_TIMEOUT_MS) : null;
             try {
+                // new code: AxiGit needs the PAT (gittoken) saved for the type; without one the call is not made
+                const repoInfo = await loadInstallRepo(type);
+                const token = (repoInfo && repoInfo.token) || "";
+                if (!token) throw new Error(getInstallTokenNotSetText(type));
                 // old code
                 // const res = await fetch(`${AxiArmUrl}/AxiGit/api/git/listdirectories`, {
                 // new code
@@ -12964,7 +13159,10 @@ if (typeof document !== "undefined") {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     signal: abortCtrl ? abortCtrl.signal : undefined,
-                    body: JSON.stringify({ account: account, repo: repo, managerType: type })
+                    // old code
+                    // body: JSON.stringify({ account: account, repo: repo, managerType: type })
+                    // new code
+                    body: JSON.stringify({ account: account, repo: repo, managerType: type, token: token })
                 });
                 const text = await res.text();
                 // old code
@@ -13073,15 +13271,22 @@ if (typeof document !== "undefined") {
         // new code: while the settings / AxiGit directories load, or when they could not be loaded, the hint must
         // not say "Ready to Run" (the null prompt above sets it): show "Loading..." while fetching, nothing otherwise
         const repoState = getInstallRepoState(type);
-        if (repoState.loading) { setInstallLoadingHint(); return ["Fetching repository settings..."]; }
-        if (!repoState.value) { hintDiv.textContent = ""; return [`Run configure ${type} <account> <repo> first`]; }
+        // old code: if (repoState.loading) { setInstallLoadingHint(); return ["Fetching repository settings..."]; }
+        if (repoState.loading) { setInstallLoadingHint(); return [axiStatusMsg("Fetching repository settings...", "loading")]; }
+        // old code
+        // if (!repoState.value) { hintDiv.textContent = ""; return [`Run configure ${type} <account> <repo> first`]; }
+        // new code: configure product / plugin / changerequest was removed, the repository is set outside the palette
+        if (!repoState.value) { hintDiv.textContent = ""; return [getInstallRepoNotSetText(type)]; }
         const { account, repo } = repoState.value;
 
         const dirsState = getInstallDirsState(type, account, repo);
-        if (dirsState.loading) { setInstallLoadingHint(); return ["Fetching directories..."]; }
-        if (dirsState.error) { hintDiv.textContent = ""; return [`Error: ${dirsState.error}`]; }
+        // old code: if (dirsState.loading) { setInstallLoadingHint(); return ["Fetching directories..."]; }
+        if (dirsState.loading) { setInstallLoadingHint(); return [axiStatusMsg("Fetching directories...", "loading")]; }
+        // old code: if (dirsState.error) { hintDiv.textContent = ""; return [`Error: ${dirsState.error}`]; }
+        if (dirsState.error) { hintDiv.textContent = ""; return [axiStatusMsg(`Error: ${dirsState.error}`)]; }
         const dirs = (dirsState.data && dirsState.data.directories) || [];
-        if (dirs.length === 0) { hintDiv.textContent = ""; return [`No directories found in ${account}/${repo}`]; }
+        // old code: if (dirs.length === 0) { hintDiv.textContent = ""; return [`No directories found in ${account}/${repo}`]; }
+        if (dirs.length === 0) { hintDiv.textContent = ""; return [axiStatusMsg(`No directories found in ${account}/${repo}`)]; }
 
         const asObjects = (names) => names.map(n => ({ name: n, displaydata: n }));
 
@@ -13152,7 +13357,10 @@ if (typeof document !== "undefined") {
             showToast(`User '${window.mainUserName}' has no access for command: ${text}`);
             return;
         }
-        if (!type) { showToast("Install expects product, plugin or changerequest"); reopenPaletteForCommandSetting(); return; }
+        // old code
+        // if (!type) { showToast("Install expects product, plugin or changerequest"); reopenPaletteForCommandSetting(); return; }
+        // new code
+        if (!type) { showToast(`Install expects ${INSTALL_TYPES_TEXT}`); reopenPaletteForCommandSetting(); return; }
 
         const appname = getProjectName() || "";
         const username = getCommandSettingUser();
@@ -13160,7 +13368,10 @@ if (typeof document !== "undefined") {
         if (!username) { showToast("User session is not available. Username is required."); return; }
 
         const repoInfo = await loadInstallRepo(type);
-        if (!repoInfo) { showToast(`Run configure ${type} <account> <repo> first`); reopenPaletteForCommandSetting(); return; }
+        // old code
+        // if (!repoInfo) { showToast(`Run configure ${type} <account> <repo> first`); reopenPaletteForCommandSetting(); return; }
+        // new code
+        if (!repoInfo) { showToast(getInstallRepoNotSetText(type)); reopenPaletteForCommandSetting(); return; }
 
         let data;
         try {
@@ -13581,7 +13792,7 @@ if (typeof document !== "undefined") {
         // addRow("Request", String(m.requestId).slice(0, 8), "axi-install-code");
         // new code: no Commit and Request rows (both are still sent in the payload)
         // addRow("Directory", ctx.directory);
-        // the row is named after the manager type (Product / Plugin / Change Request) instead of "Directory"
+        // the row is named after the manager type (Product Version / Plugin / Change Request) instead of "Directory"
         addRow(label, ctx.directory);
         addRow("Version", ctx.version || INSTALL_DEFAULT_VERSION, "axi-install-num");
         addRow("Repository", `${ctx.account}/${ctx.repo}`);
@@ -13801,8 +14012,23 @@ if (typeof document !== "undefined") {
             setStep(2, "pending");
             m.inflight = true;
             xBtn.disabled = true;
+            // new code: the ARM session (read fresh, it can be renewed) and the PAT saved for the type travel in the payload
+            const armAuth = await getArmAuth(true);
+            const repoInfo = await loadInstallRepo(ctx.type);
+            const armSessionId = (armAuth && armAuth.sessionId) || "";
+            const gitToken = (repoInfo && repoInfo.token) || "";
+            if (!armSessionId || !gitToken) {
+                m.inflight = false;
+                xBtn.disabled = false;
+                if (m.closed) return;
+                failStep(1, !armSessionId ? "The ARM session is not available. Sign in again and retry." : getInstallTokenNotSetText(ctx.type), 1);
+                return;
+            }
             const result = await waitAtLeast(pushInstallToQueue(buildInstallPayload({
                 requestId: m.requestId,
+                // new code
+                armSessionId: armSessionId,
+                token: gitToken,
                 type: ctx.type,
                 account: ctx.account,
                 repo: ctx.repo,
@@ -16049,31 +16275,80 @@ if (typeof document !== "undefined") {
      * @param {object} item - Message item to check.
      * @returns {boolean} True if system message.
      */
+    /**
+     * Marks a text as one of the palette's own status / information rows ("Searching...", "No matching records found",
+     * "Error: ..." ...) and returns it unchanged. isSystemMessage recognises a row by this mark, so a structure, field or
+     * record whose name merely starts like a message ("Error Form Test", "Loading Sheet", "Error: Test") is still a
+     * normal, clickable row. Declared as a function (hoisted) and keeps its store on itself, so it works from any line.
+     * @param {string} text - Message text.
+     * @param {string} [kind="info"] - "loading" for rows shown while something loads (spinner rows), else "info".
+     * @returns {string} The same text.
+     */
+    function axiStatusMsg(text, kind) {
+        const store = axiStatusMsg.texts || (axiStatusMsg.texts = new Map());
+        const value = String(text ?? "");
+        // the store only grows with distinct message texts; cap it so long sessions with many error texts stay small
+        if (!store.has(value) && store.size >= 500) store.clear();
+        store.set(value, kind === "loading" ? "loading" : "info");
+        return value;
+    }
+
+    /**
+     * True when a row is one of the palette's own messages (made by axiStatusMsg), optionally of one kind or starting
+     * with one of the given words. Data rows are never matched, whatever their text.
+     * @param {string|object} item - Suggestion row.
+     * @param {{kind?: string, startsWith?: string[]}} [opts] - Optional narrowing.
+     * @returns {boolean}
+     */
+    function isPaletteMessage(item, opts) {
+        if (!item) return false;
+        // a data row (object) is a message only when it says so itself
+        if (typeof item === "object") return item.isSystemMessage === true;
+        if (typeof item !== "string") return false;
+        const store = axiStatusMsg.texts;
+        if (!store || !store.has(item)) return false;
+        if (opts && opts.kind && store.get(item) !== opts.kind) return false;
+        if (opts && Array.isArray(opts.startsWith) && !opts.startsWith.some(w => item.startsWith(w))) return false;
+        return true;
+    }
+
     function isSystemMessage(item) {
         if (!item) return false;
 
-        const text = typeof item === 'string' ? item : (item.displaydata || "");
+        // new code: a row is a message only when the palette made it one (axiStatusMsg). The old prefix test below
+        // also caught structures, fields and records whose name starts like a message ("Error Form Test (erfrm) [form]",
+        // a caption "Error: ..." or "Loading ..."), which then could not be clicked.
+        return isPaletteMessage(item);
 
-        return text.startsWith("Loading") ||
-            text.startsWith("Waiting") ||
-            text.startsWith("Error") ||
-            text.startsWith("Fetching") ||
-            text.startsWith("Searching") ||
-            text.startsWith("Type at least") ||
-            // new code: "Type GitHub account name" / "Type GitHub repository name" (configure product / plugin / changerequest)
-            text.startsWith("Type GitHub") ||
-            text.startsWith("No matching") ||
-            text.startsWith("Run configure ") ||
-            text.startsWith("No directories") ||
-            text === "No Data" ||
-            text === "Please type the value..." ||
-            // new code (issue #295): edit command, value does not fit a number field
-            text.startsWith("Please type a valid number") ||
-            text === "Please type Valid date using / (ex: DD / MM / YYYY)" ||
-            // old code: text === "Please Type the date";
-            // new code: configure keyfield <form> on a form without a unique field (see getNoKeyFieldMessage)
-            text === "Please Type the date" ||
-            text.startsWith(noKeyFieldMessageStart());
+        // old code
+        // const text = typeof item === 'string' ? item : (item.displaydata || "");
+
+        // return text.startsWith("Loading") ||
+            // text.startsWith("Waiting") ||
+            // // old code: any row starting with "Error" was an information row, so a structure such as
+            // // "Error Form Test (erfrm) [form]" was greyed out and could not be clicked
+            // // text.startsWith("Error") ||
+            // // new code: only the palette's own error rows, which read "Error: <message>"
+            // text.startsWith("Error:") ||
+            // text.startsWith("Fetching") ||
+            // text.startsWith("Searching") ||
+            // text.startsWith("Type at least") ||
+            // // new code: "Type GitHub account name" / "Type GitHub repository name" (configure product / plugin / changerequest)
+            // text.startsWith("Type GitHub") ||
+            // text.startsWith("No matching") ||
+            // text.startsWith("Run configure ") ||
+            // // new code: install message when no repository is saved (replaces "Run configure ...")
+            // text.startsWith("Repository not set") ||
+            // text.startsWith("No directories") ||
+            // text === "No Data" ||
+            // text === "Please type the value..." ||
+            // // new code (issue #295): edit command, value does not fit a number field
+            // text.startsWith("Please type a valid number") ||
+            // text === "Please type Valid date using / (ex: DD / MM / YYYY)" ||
+            // // old code: text === "Please Type the date";
+            // // new code: configure keyfield <form> on a form without a unique field (see getNoKeyFieldMessage)
+            // text === "Please Type the date" ||
+            // text.startsWith(noKeyFieldMessageStart());
 
     }
 
@@ -16105,8 +16380,12 @@ if (typeof document !== "undefined") {
         //     `Open this Tstruct in the Developer Studio and configure an Autogenerate field, or a field with Allow Duplicate set to false.`;
         // new code: wording agreed with the team; names the tstruct instead of "this Tstruct"
         const tstructRef = formName ? `'${formName}' tstruct` : "this tstruct";
-        return `${noKeyFieldMessageStart()}${forForm}. ` +
-            `Open ${tstructRef} in the Developer Studio and configure an Autogenerate field, or a field with Allow Duplicate set to false.`;
+        // old code
+        // return `${noKeyFieldMessageStart()}${forForm}. ` +
+        //     `Open ${tstructRef} in the Developer Studio and configure an Autogenerate field, or a field with Allow Duplicate set to false.`;
+        // new code: marked as a palette message (see isSystemMessage)
+        return axiStatusMsg(`${noKeyFieldMessageStart()}${forForm}. ` +
+            `Open ${tstructRef} in the Developer Studio and configure an Autogenerate field, or a field with Allow Duplicate set to false.`);
     }
 
 
@@ -16273,7 +16552,8 @@ if (typeof document !== "undefined") {
 
                         showToast("Please Type the date", 5000, true);
                         updateDynamicHintFromPrompt({ prompt: "fieldValue" })
-                        return ["Please Type the date"];
+                        // old code: return ["Please Type the date"];
+                        return [axiStatusMsg("Please Type the date")];
                     }
                     else {
                         //const partialDate = tokens[tokens.length - 1]
@@ -16294,7 +16574,8 @@ if (typeof document !== "undefined") {
 
                         }
                         else
-                            return ["Please type Valid date using / (ex: DD / MM / YYYY)"];
+                            // old code: return ["Please type Valid date using / (ex: DD / MM / YYYY)"];
+                            return [axiStatusMsg("Please type Valid date using / (ex: DD / MM / YYYY)")];
                     }
                 }
             }
@@ -16404,7 +16685,8 @@ if (typeof document !== "undefined") {
 
             if (!axDatasourceObj[sourceKey]) {
                 loadList(sourceName, setCommandTransid);
-                return ["Loading Field list..."];
+                // old code: return ["Loading Field list..."];
+                return [axiStatusMsg("Loading Field list...", "loading")];
             }
 
             const list = axDatasourceObj[sourceKey];
@@ -16594,7 +16876,8 @@ if (typeof document !== "undefined") {
                             return [];
                         }
                         else {
-                            return ["Please type the value..."];
+                            // old code: return ["Please type the value..."];
+                            return [axiStatusMsg("Please type the value...")];
                         }
                         return [];
 
@@ -16623,7 +16906,8 @@ if (typeof document !== "undefined") {
 
                         if (!axDatasourceObj[sourceKey]) {
                             loadList(sourceName, paramValue);
-                            return ["Loading values..."];
+                            // old code: return ["Loading values..."];
+                            return [axiStatusMsg("Loading values...", "loading")];
                         }
 
                         const list = axDatasourceObj[sourceKey];
@@ -16706,6 +16990,8 @@ if (typeof document !== "undefined") {
         }
     }
 
+    // Note: "edit with" is removed. editCommandHandling, processEditCommand, findEditFieldMetadata,
+    // getEditFieldValueError and findInvalidEditFieldValue below are no longer called; they are kept for reference.
     /**
      * Prepares suggestions for 'Edit' command field updates.
      * @param {string[]} tokens - Command tokens.
@@ -16791,7 +17077,8 @@ if (typeof document !== "undefined") {
 
                         showToast("Please Type the date", 5000, true);
                         updateDynamicHintFromPrompt({ prompt: "fieldValue" })
-                        return ["Please Type the date"];
+                        // old code: return ["Please Type the date"];
+                        return [axiStatusMsg("Please Type the date")];
                     }
                     else {
                         //const partialDate = tokens[tokens.length - 1]
@@ -16812,7 +17099,8 @@ if (typeof document !== "undefined") {
 
                         }
                         else
-                            return ["Please type Valid date using / (ex: DD / MM / YYYY)"];
+                            // old code: return ["Please type Valid date using / (ex: DD / MM / YYYY)"];
+                            return [axiStatusMsg("Please type Valid date using / (ex: DD / MM / YYYY)")];
                     }
                 }
             }
@@ -16931,7 +17219,8 @@ if (typeof document !== "undefined") {
 
             if (!axDatasourceObj[sourceKey]) {
                 loadList(sourceName, setCommandTransid);
-                return ["Loading Field list..."];
+                // old code: return ["Loading Field list..."];
+                return [axiStatusMsg("Loading Field list...", "loading")];
             }
 
             const list = axDatasourceObj[sourceKey];
@@ -17146,7 +17435,8 @@ if (typeof document !== "undefined") {
                             return [];
                         }
                         else {
-                            return ["Please type the value..."];
+                            // old code: return ["Please type the value..."];
+                            return [axiStatusMsg("Please type the value...")];
                         }
 
                     }
@@ -17176,7 +17466,8 @@ if (typeof document !== "undefined") {
 
                         if (!axDatasourceObj[sourceKey]) {
                             loadList(sourceName, paramValue);
-                            return ["Loading values..."];
+                            // old code: return ["Loading values..."];
+                            return [axiStatusMsg("Loading values...", "loading")];
                         }
 
                         const list = axDatasourceObj[sourceKey];
@@ -17303,7 +17594,10 @@ if (typeof document !== "undefined") {
         if (!text) return "";
         if (String(fieldMeta.datatype || "").toLowerCase() === "n") {
             const ok = isTyping ? /^-?\d*\.?\d*$/.test(text) : /^-?(\d+(\.\d+)?|\.\d+)$/.test(text);
-            if (!ok) return `Please type a valid number for ${fieldMeta.caption || fieldMeta.name} (e.g. 125 or -12.50)`;
+            // old code
+            // if (!ok) return `Please type a valid number for ${fieldMeta.caption || fieldMeta.name} (e.g. 125 or -12.50)`;
+            // new code: marked as a palette message (see isSystemMessage)
+            if (!ok) return axiStatusMsg(`Please type a valid number for ${fieldMeta.caption || fieldMeta.name} (e.g. 125 or -12.50)`);
         }
         return "";
     }
@@ -18432,7 +18726,8 @@ if (typeof document !== "undefined") {
 
                 if (struct_hasParams) {
                     loadList(struct_source, struct_paramValue);
-                    return [`Loading ${struct_source}...`];
+                    // old code: return [`Loading ${struct_source}...`];
+                    return [axiStatusMsg(`Loading ${struct_source}...`, "loading")];
                 }
             }
 
@@ -19768,9 +20063,15 @@ if (typeof document !== "undefined") {
                     continue;
                 }
 
-                // Product / Plugin / ChangeRequest need both configure and build access
-                if (typeRow && (typeRow.promptOptionType || typeRow.prompt_option_type || typeRow.PromptOptionType || "").toLowerCase() === "commandsetting"
-                    && !(accessPermissions.appMgrAccess && accessPermissions.buildAccess)) {
+                // old code
+                // // Product / Plugin / ChangeRequest need both configure and build access
+                // if (typeRow && (typeRow.promptOptionType || typeRow.prompt_option_type || typeRow.PromptOptionType || "").toLowerCase() === "commandsetting"
+                //     && !(accessPermissions.appMgrAccess && accessPermissions.buildAccess)) {
+                //     continue;
+                // }
+                // new code: Product / Plugin / ChangeRequest (Git account / repository) are no longer configure options,
+                // hidden for everyone even when the database still lists them
+                if (typeRow && (typeRow.promptOptionType || typeRow.prompt_option_type || typeRow.PromptOptionType || "").toLowerCase() === "commandsetting") {
                     continue;
                 }
 

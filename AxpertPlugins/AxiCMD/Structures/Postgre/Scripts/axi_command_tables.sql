@@ -128,16 +128,23 @@ INSERT INTO axi_command_prompts
 VALUES('8faae04b-af25-4be7-b97c-de72815267f5'::uuid, 2, 4, 'object name', 'axi_getstructsdata', '', NULL, NULL, ':cmd,:username,:userrole,:transid,:selectedfield,:dimension,:permission,:keyfield,:primarytable,:globalvars', NULL)
 >>
 
-<<
-INSERT INTO axi_command_prompts
-(id, cmdtoken, wordpos, prompt, promptsource, promptparams, promptvalues, props, extraparams, requesturl)
-VALUES('7faae15b-af25-4be7-b86c-de73925267f5'::uuid, 2, 5, 'with values', '', '', 'With', NULL, '', NULL)
->>
+-- old code: the "edit with" option ("edit <form> <record> with <field> <value> ...") is removed, so its "with values" and
+-- "field name" prompts are no longer inserted
+-- <<
+-- INSERT INTO axi_command_prompts
+-- (id, cmdtoken, wordpos, prompt, promptsource, promptparams, promptvalues, props, extraparams, requesturl)
+-- VALUES('7faae15b-af25-4be7-b86c-de73925267f5'::uuid, 2, 5, 'with values', '', '', 'With', NULL, '', NULL)
+-- >>
+--
+-- <<
+-- INSERT INTO axi_command_prompts
+-- (id, cmdtoken, wordpos, prompt, promptsource, promptparams, promptvalues, props, extraparams, requesturl)
+-- VALUES('b878f939-6f7f-4d72-8a78-f912d5dc9669'::uuid, 2, 6, 'field name', 'axi_nongridfieldlist', '2', NULL, NULL, NULL, NULL)
+-- >>
 
+-- new code: axi_command_prompts is never dropped, so remove the "edit with" prompts from existing databases
 <<
-INSERT INTO axi_command_prompts
-(id, cmdtoken, wordpos, prompt, promptsource, promptparams, promptvalues, props, extraparams, requesturl)
-VALUES('b878f939-6f7f-4d72-8a78-f912d5dc9669'::uuid, 2, 6, 'field name', 'axi_nongridfieldlist', '2', NULL, NULL, NULL, NULL)
+DELETE FROM axi_command_prompts WHERE cmdtoken = 2 AND wordpos IN (5, 6)
 >>
 
 <<
@@ -241,15 +248,27 @@ UPDATE axi_command_prompts SET promptvalues = RTRIM(promptvalues, ',') || ',Trac
 
 -- new code: the names are added first (guarded on ChangeRequest, so a re-run changes nothing). The next statement then pads the source list
 -- with Axi_Dummy until it has as many entries as the names, which also repairs a database whose sources are already short.
-<<
-UPDATE axi_command_prompts SET promptvalues = RTRIM(promptvalues, ',') || ',Product,Plugin,ChangeRequest' WHERE cmdtoken = 4 AND wordpos = 2 AND promptvalues NOT LIKE '%ChangeRequest%'
->>
+-- old code: configure Product / Plugin / ChangeRequest was removed, so the options are no longer added
+-- <<
+-- UPDATE axi_command_prompts SET promptvalues = RTRIM(promptvalues, ',') || ',Product,Plugin,ChangeRequest' WHERE cmdtoken = 4 AND wordpos = 2 AND promptvalues NOT LIKE '%ChangeRequest%'
+-- >>
 
 <<
 UPDATE axi_command_prompts s SET promptsource = RTRIM(s.promptsource, ', ') || repeat(',Axi_Dummy', n.cnt - array_length(string_to_array(RTRIM(s.promptsource, ', '), ','), 1)) FROM (SELECT array_length(string_to_array(RTRIM(promptvalues, ', '), ','), 1) AS cnt FROM axi_command_prompts WHERE cmdtoken = 4 AND wordpos = 2) n WHERE s.cmdtoken = 4 AND s.wordpos = 3 AND n.cnt > array_length(string_to_array(RTRIM(s.promptsource, ', '), ','), 1)
 >>
 
--- Install: `install <product|plugin|changerequest> <directory> [version]` (build access only). Rows are added only when absent, so a re-run changes nothing.
+-- Configure: Product, Plugin and ChangeRequest (Git account / repository) are no longer set from AxiCMD. The two statements below take them
+-- out of a database that already has them. Sources go first (their guard reads the option list, which the next statement changes); each
+-- source is dropped at the same position as its option, so Custom Options keep their sources. A re-run changes nothing.
+<<
+UPDATE axi_command_prompts s SET promptsource = (SELECT string_agg(src.v, ',' ORDER BY src.i) FROM unnest(string_to_array(RTRIM(s.promptsource, ', '), ',')) WITH ORDINALITY AS src(v, i) LEFT JOIN unnest(string_to_array(RTRIM(n.promptvalues, ', '), ',')) WITH ORDINALITY AS val(v, i) ON val.i = src.i WHERE val.v IS NULL OR lower(trim(val.v)) NOT IN ('product', 'plugin', 'changerequest')) FROM axi_command_prompts n WHERE s.cmdtoken = 4 AND s.wordpos = 3 AND n.cmdtoken = 4 AND n.wordpos = 2 AND lower(n.promptvalues) LIKE '%changerequest%'
+>>
+
+<<
+UPDATE axi_command_prompts SET promptvalues = (SELECT string_agg(t.v, ',' ORDER BY t.i) FROM unnest(string_to_array(RTRIM(promptvalues, ', '), ',')) WITH ORDINALITY AS t(v, i) WHERE lower(trim(t.v)) NOT IN ('product', 'plugin', 'changerequest')) WHERE cmdtoken = 4 AND wordpos = 2 AND lower(promptvalues) LIKE '%changerequest%'
+>>
+
+-- Install: `install <productversion|plugin|changerequest> <directory> [version]` (build access only). Rows are added only when absent, so a re-run changes nothing.
 -- axi_git_directories and axi_git_versions are NOT axdirectsql rows: the palette resolves them from the AxiGit listdirectories API.
 <<
 INSERT INTO axi_commands
@@ -257,10 +276,21 @@ INSERT INTO axi_commands
 SELECT 10, 'Install', '', 'T' WHERE NOT EXISTS (SELECT 1 FROM axi_commands WHERE cmdtoken = 10)
 >>
 
+-- old code: block markers left out so the installer cannot pick it up
+-- INSERT INTO axi_command_prompts
+-- (id, cmdtoken, wordpos, prompt, promptsource, promptparams, promptvalues, props, extraparams, requesturl)
+-- SELECT '6474ef01-1554-4dd7-be1b-c41c8cdee0f4'::uuid, 10, 2, 'object type', NULL, NULL, 'Product,Plugin,ChangeRequest', NULL, NULL, NULL WHERE NOT EXISTS (SELECT 1 FROM axi_command_prompts WHERE cmdtoken = 10 AND wordpos = 2)
+
+-- new code: the product option is named ProductVersion (the type sent to the APIs and the queue stays "product")
 <<
 INSERT INTO axi_command_prompts
 (id, cmdtoken, wordpos, prompt, promptsource, promptparams, promptvalues, props, extraparams, requesturl)
-SELECT '6474ef01-1554-4dd7-be1b-c41c8cdee0f4'::uuid, 10, 2, 'object type', NULL, NULL, 'Product,Plugin,ChangeRequest', NULL, NULL, NULL WHERE NOT EXISTS (SELECT 1 FROM axi_command_prompts WHERE cmdtoken = 10 AND wordpos = 2)
+SELECT '6474ef01-1554-4dd7-be1b-c41c8cdee0f4'::uuid, 10, 2, 'object type', NULL, NULL, 'ProductVersion,Plugin,ChangeRequest', NULL, NULL, NULL WHERE NOT EXISTS (SELECT 1 FROM axi_command_prompts WHERE cmdtoken = 10 AND wordpos = 2)
+>>
+
+-- Install: renames the Product option to ProductVersion on databases that already have the install row. A re-run changes nothing.
+<<
+UPDATE axi_command_prompts SET promptvalues = regexp_replace(promptvalues, '(^|,) *Product *(,|$)', '\1ProductVersion\2', 'i') WHERE cmdtoken = 10 AND wordpos = 2 AND ',' || lower(replace(promptvalues, ' ', '')) || ',' LIKE '%,product,%'
 >>
 
 <<

@@ -1679,12 +1679,67 @@ function callActWithFile(aname, fileup, iName, confirm, appl) {
         AxWaitCursor(false);
     } else {
         var ivKey = $j("#hdnKey").val();
+        const encrypteddummyArray = encryptIvDetails(JSON.stringify(dummyArray));
         if (confirm != "") {
             if (confirm(confirm)) {
-                ASB.WebService.CallActionWS(dummyArray, dummyArray, dummyArray, dummyArray, dummyArray, "", "", txt, fup, "i", "", "", ivKey, "", isScript, "", false, "", "", CActSucceededCallback);
+                //ASB.WebService.CallActionWS(dummyArray, dummyArray, dummyArray, dummyArray, dummyArray, "", "", txt, fup, "i", "", "", ivKey, "", isScript, "", false, "", "", CActSucceededCallback);
+                const _callActionRequest = {
+                    fldArray: dummyArray,
+                    fldDbRowNo: dummyArray,
+                    fldValueArray: dummyArray,
+                    fldDeletedArray: dummyArray,
+                    deletedFldArrayValues: dummyArray,
+
+                    ArrActionLog: "",
+                    visibleDcs: "",
+                    s: txt,
+                    f: fup,
+                    source: "i",
+                    delRows: "",
+                    changedRows: "",
+                    key: ivKey,
+
+                    files: "",
+                    isScript: isScript,
+
+                    axRulesFlds: "",
+                    axRulesScript: false,
+
+                    resTstHtmlLS: "",
+                    isLoadFromDraft: ""
+                };
+                const _encryptedRequest = encryptIvDetails(JSON.stringify(_callActionRequest));
+                ASB.WebService.CallActionWS(_encryptedRequest, CActSucceededCallback);
             }
         } else {
-            ASB.WebService.CallActionWS(dummyArray, dummyArray, dummyArray, dummyArray, dummyArray, "", "", txt, fup, "i", "", "", ivKey, "", isScript, "", false, "", "", CActSucceededCallback);
+            //ASB.WebService.CallActionWS(dummyArray, dummyArray, dummyArray, dummyArray, dummyArray, "", "", txt, fup, "i", "", "", ivKey, "", isScript, "", false, "", "", CActSucceededCallback);
+            const _ivcallActionRequest = {
+                fldArray: dummyArray,
+                fldDbRowNo: dummyArray,
+                fldValueArray: dummyArray,
+                fldDeletedArray: dummyArray,
+                deletedFldArrayValues: dummyArray,
+
+                ArrActionLog: "",
+                visibleDcs: "",
+                s: txt,
+                f: fup,
+                source: "i",
+                delRows: "",
+                changedRows: "",
+                key: ivKey,
+
+                files: "",
+                isScript: isScript,
+
+                axRulesFlds: "",
+                axRulesScript: false,
+
+                resTstHtmlLS: "",
+                isLoadFromDraft: ""
+            };
+            const _ivencryptedRequest = encryptIvDetails(JSON.stringify(_ivcallActionRequest));
+            ASB.WebService.CallActionWS(_ivencryptedRequest, CActSucceededCallback);
         }
     }
     closeParentFrame();
@@ -1810,7 +1865,34 @@ function callAction(a, x, conf, appl) {
     var dummyArray = new Array();
     try {
         var ivKey = $j("#hdnKey").val();
-        ASB.WebService.CallActionWS(dummyArray, dummyArray, dummyArray, dummyArray, dummyArray, "", "", actXML, fup, "i", "", "", ivKey, "", isScript, "", false, "", "", CActSucceededCallback);
+        //ASB.WebService.CallActionWS(dummyArray, dummyArray, dummyArray, dummyArray, dummyArray, "", "", actXML, fup, "i", "", "", ivKey, "", isScript, "", false, "", "", CActSucceededCallback);
+        const _ivvcallActionRequest = {
+            fldArray: dummyArray,
+            fldDbRowNo: dummyArray,
+            fldValueArray: dummyArray,
+            fldDeletedArray: dummyArray,
+            deletedFldArrayValues: dummyArray,
+
+            ArrActionLog: "",
+            visibleDcs: "",
+            s: actXML,
+            f: fup,
+            source: "i",
+            delRows: "",
+            changedRows: "",
+            key: ivKey,
+
+            files: "",
+            isScript: isScript,
+
+            axRulesFlds: "",
+            axRulesScript: false,
+
+            resTstHtmlLS: "",
+            isLoadFromDraft: ""
+        };
+        const _ivvencryptedRequest = encryptIvDetails(JSON.stringify(_ivvcallActionRequest));
+        ASB.WebService.CallActionWS(_ivvencryptedRequest, CActSucceededCallback);
 
     } catch (ex) { showAlertDialog("error", ex.toString()); }
 
@@ -2320,7 +2402,34 @@ function callHLaction(a, x, name) {
         }
     } catch (ex) { }
     GetProcessTime();
-    ASB.WebService.CallActionWS(dummyArray, dummyArray, dummyArray, dummyArray, dummyArray, "", "", actXML, fup, "i", "", "", ivKey, "", isScript, "", false, "", "", CHlActSucceededCallback);
+    //ASB.WebService.CallActionWS(dummyArray, dummyArray, dummyArray, dummyArray, dummyArray, "", "", actXML, fup, "i", "", "", ivKey, "", isScript, "", false, "", "", CHlActSucceededCallback);
+    const callActionRequest = {
+        fldArray: dummyArray,
+        fldDbRowNo: dummyArray,
+        fldValueArray: dummyArray,
+        fldDeletedArray: dummyArray,
+        deletedFldArrayValues: dummyArray,
+
+        ArrActionLog: "",
+        visibleDcs: "",
+        s: actXML,
+        f: fup,
+        source: "i",
+        delRows: "",
+        changedRows: "",
+        key: ivKey,
+
+        files: "",
+        isScript: isScript,
+
+        axRulesFlds: "",
+        axRulesScript: false,
+
+        resTstHtmlLS: "",
+        isLoadFromDraft: ""
+    };
+    const encryptedRequest = encryptIvDetails(JSON.stringify(callActionRequest));
+    ASB.WebService.CallActionWS(encryptedRequest, CHlActSucceededCallback);
 }
 
 function ConstructFldDataNodes(selXML) {
@@ -13119,4 +13228,30 @@ function checkIsAxicmdPopup(_iVData) {
         }
     } catch (ex) { }
     return _iVData;
+}
+
+function encryptIvDetails(thisVal) {
+    const aesKey = CryptoJS.lib.WordArray.random(16);
+    const iv = CryptoJS.lib.WordArray.random(16);
+    var encrypted = CryptoJS.AES.encrypt(thisVal, aesKey, {
+        iv: iv,
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.Pkcs7
+    });
+    const combined = iv.concat(encrypted.ciphertext);
+    const base64Cipher = CryptoJS.enc.Base64.stringify(combined);
+    const encryptor = new JSEncrypt();
+    let _pbKey = callParentNew("encPublicKey");
+    _pbKey = _pbKey.replace(/\\n/g, '\n');
+    encryptor.setPublicKey(_pbKey);
+    const encryptedAesKey = encryptor.encrypt(CryptoJS.enc.Base64.stringify(aesKey));
+    if (encryptedAesKey) {
+        const payload = JSON.stringify({
+            key: encryptedAesKey,
+            data: base64Cipher
+        });
+        return payload;
+    } else {
+        return thisVal;
+    }
 }

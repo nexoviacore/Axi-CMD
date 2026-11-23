@@ -641,6 +641,52 @@
                                         </div>
                                     </div>
 
+                                    <div class="redicConnectionWrapper my-6" id="dvAsbPaths">
+                                        <div class="panel-body card login-inner w-lg-1000px m-auto" style="border: 1px solid rgba(210,215,221,0.8);">
+                                            <div class="card-header align-items-center">
+                                                <div class="configLeftForm card-title align-items-start flex-column">
+                                                    <div>
+                                                        <h3>ASB Paths</h3>
+                                                        <%--<span class="text-muted fs-7">Leave empty to use web.config.</span>--%>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="card-body row w-lg-1000px p-8 p-lg-12 mx-auto">
+                                                <div class="configRightFormFields row g-3 align-items-center mb-3">
+                                                    <div class="col-md-4 col-sm-12">
+                                                        <label class="form-label fw-boldest text-dark fs-6 mb-0">Connection Name</label>
+                                                    </div>
+                                                    <div class="configConList col-md-8 col-sm-12 d-flex flex-row">
+                                                        <select id="asbConnection" runat="server" data-control="select2" data-placeholder="Select Project" class="multiselect form-select" size="10"></select>
+                                                    </div>
+                                                </div>
+                                                <div class="configRightFormFields row g-3 align-items-center">
+                                                    <div class="col-md-4 col-sm-12">
+                                                        <label class="form-label fw-boldest text-dark fs-6 mb-0">ASB Paths:</label>
+                                                    </div>
+                                                    <div class="configConList col-md-8 col-sm-12 d-flex flex-row">
+                                                        <button type="button" class="btn btn-icon btn-white btn-color-gray-600 btn-active-primary shadow-sm" title="Add ASB path" id="btnAsbPathAdd" style="padding-top: 0px; width: 30px !important; height: 30px !important;">
+                                                            <span class="material-icons material-icons-style">add</span>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div id="asbPathContainer" class="col-md-12 col-sm-12"></div>
+                                            </div>
+                                            <div class="card-footer">
+                                                <div class="configRightFormFields">
+                                                    <div class="col-sm-12">
+                                                        <div class="configRightFormFooterButton pull-right">
+                                                            <asp:HiddenField ID="hdnAsbPaths" runat="server" />
+                                                            <asp:Button ID="btnAsbPathsSave" runat="server" CssClass="btn btn-active-primary shadow-sm me-2 mx-2" Text="Save" CausesValidation="false" UseSubmitBehavior="false" OnClientClick="if (!prepareAsbPathsSave()) return false;" OnClick="btnAsbPathsSave_Click" />
+                                                            <asp:Button ID="btnAsbPathsDelete" runat="server" CssClass="btn btn-active-primary shadow-sm me-2" Text="Delete" CausesValidation="false" UseSubmitBehavior="false" OnClientClick="if (!validateAsbPathProject()) return false;" OnClick="btnAsbPathsDelete_Click" />
+                                                        </div>
+                                                    </div>
+                                                    <div class="clearfix"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <div class="redicConnectionWrapper my-6" id="dvRMQueueSetup">
                                         <div class="panel-body card login-inner w-lg-1000px m-auto" style="border: 1px solid rgba(210,215,221,0.8);">
                                             <div class="card-header align-items-center">
@@ -1485,8 +1531,8 @@
     <script src="../ThirdParty/jquery-confirm-master/jquery-confirm.min.js?v=2" type="text/javascript"></script>
     <script src="../Js/alerts.min.js?v=33" type="text/javascript"></script>
     <script src="../Js/xmlToJson.min.js?v=2"></script>
-    <script src="../Js/config.min.js?v=32" type="text/javascript"></script>
+    <script src="../Js/config.min.js?v=36" type="text/javascript"></script>
     <script src="../Js/lang/content-<%=langType%>.js?v=64" type="text/javascript"></script>
-    <script src="../Js/common.min.js?v=166" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=167" type="text/javascript"></script>
 </body>
 </html>

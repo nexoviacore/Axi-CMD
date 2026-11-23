@@ -43,7 +43,7 @@ function shouldOfferCommandSettingGo(tokens) {
 }
 
 function getCommandSettingLabel(type) {
-    return ({ product: "Product", plugin: "Plugin", changerequest: "Change Request" })[(type || "").toLowerCase()] || type;
+    return ({ product: "Product Version", plugin: "Plugin", changerequest: "Change Request" })[(type || "").toLowerCase()] || type;
 }
 
 // ---- tests --------------------------------------------------------------------------------------------------
@@ -93,6 +93,6 @@ test('Go is offered only when account and repo names are both present and valid'
 
 test('labels are human readable', () => {
     assert.strictEqual(getCommandSettingLabel('changerequest'), 'Change Request');
-    assert.strictEqual(getCommandSettingLabel('product'), 'Product');
+    assert.strictEqual(getCommandSettingLabel('product'), 'Product Version');
     assert.strictEqual(getCommandSettingLabel('plugin'), 'Plugin');
 });

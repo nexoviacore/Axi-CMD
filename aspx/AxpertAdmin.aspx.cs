@@ -107,64 +107,74 @@ public partial class AxpertAdmin : System.Web.UI.Page
                     {
                         HttpContext.Current.Application["AppSettingsIni"] = _appsettings;
                     }
-                    Response.Redirect("AxpertAdmin.aspx?auth=" + Request.QueryString["auth"].ToString());
+                    Response.Redirect("AxpertAdmin.aspx?auth=" + Request.QueryString["auth"].ToString(), false);
+                    HttpContext.Current.ApplicationInstance.CompleteRequest();
+                    return;
                 }
             }
             catch (Exception ex)
             {
-                existingAppSettings = "{}";
+                throw new InvalidOperationException("Unable to load AppSettings.ini.", ex);
             }
 
-            jsonText = string.Empty;
             // SetAxpertLogo();
             if (Request.QueryString["proj"] != null)
             {
                 hdnselecproj.Value = Request.QueryString["proj"].ToString();
                 selProj = Request.QueryString["proj"].ToString();
             }
-            List<string> lst = new List<string>();
-            string ScriptsPath = HttpContext.Current.Application["ScriptsPath"].ToString();
-            FileInfo fi = new FileInfo(ScriptsPath + "\\axapps.xml");
-            if (fi.Exists)
+            JObject settings = JObject.Parse(existingAppSettings);
+            JToken connectionsToken = settings["appconnections"];
+            if (connectionsToken != null && connectionsToken.Type != JTokenType.Object)
+                throw new InvalidDataException("The appconnections node must be an object.");
+
+            var connections = (JObject)connectionsToken;
+            var lst = new List<string>();
+            var doc = new XmlDocument();
+            XmlElement root = doc.CreateElement("connections");
+            doc.AppendChild(root);
+            if (connections != null)
             {
-                XmlDocument doc = new XmlDocument();
-                doc.Load(ScriptsPath + "\\axapps.xml");
-                try
+                foreach (JProperty connection in connections.Properties())
                 {
-                    XmlNodeList pNode = doc.SelectSingleNode("/connections").ChildNodes;
-                    foreach (XmlNode nodename in pNode)
+                    if (connection.Value.Type != JTokenType.Object)
+                        throw new InvalidDataException("Connection settings must be an object: " + connection.Name);
+                    lst.Add(connection.Name);
+                    XmlElement connectionElement = doc.CreateElement(connection.Name);
+                    root.AppendChild(connectionElement);
+                    foreach (JProperty field in ((JObject)connection.Value).Properties())
                     {
-                        lst.Add(nodename.Name);
+                        if (field.Value.Type != JTokenType.String && field.Value.Type != JTokenType.Null)
+                            throw new InvalidDataException("Connection fields must be strings: " + field.Name);
+                        XmlElement fieldElement = doc.CreateElement(field.Name);
+                        fieldElement.InnerText = (string)field.Value ?? string.Empty;
+                        connectionElement.AppendChild(fieldElement);
                     }
                 }
-                catch (Exception ex)
-                { }
-                jsonText = doc.OuterXml;
-                jsonText = util.CheckSpecialChars(jsonText);
             }
+            jsonText = lst.Count == 0 ? string.Empty : util.CheckSpecialChars(doc.OuterXml);
+
             lstconnection.DataSource = lst;
             axSelectProj.DataSource = lst;
             armproj.DataSource = lst;
             fileproj.DataSource = lst;
-            //RMQueueproj.DataSource = lst;
             armExtResource.DataSource = lst;
+            asbConnection.DataSource = lst;
+            lstRconnection.DataSource = lst;
+            selLicDomain.DataSource = lst;
+            lstStudioRconnection.DataSource = lst;
+            axpDevOptions.DataSource = lst;
+            selCaptchaConn.DataSource = lst;
             lstconnection.DataBind();
             axSelectProj.DataBind();
             armproj.DataBind();
             fileproj.DataBind();
-            //RMQueueproj.DataBind();
             armExtResource.DataBind();
-            lstRconnection.DataSource = lst;
+            asbConnection.DataBind();
             lstRconnection.DataBind();
-            selLicDomain.DataSource = lst;
             selLicDomain.DataBind();
-            lstStudioRconnection.DataSource = lst;
             lstStudioRconnection.DataBind();
-
-            axpDevOptions.DataSource = lst;
             axpDevOptions.DataBind();
-
-            selCaptchaConn.DataSource = lst;
             selCaptchaConn.DataBind();
         }
     }
@@ -2320,6 +2330,124 @@ public partial class AxpertAdmin : System.Web.UI.Page
         }
         catch (Exception ex) { }
         return result;
+    }
+
+    protected void btnAsbPathsSave_Click(object sender, EventArgs e)
+    {
+        string project = ValidateAsbPathRequest();
+        JObject paths = BuildAsbPaths(JArray.Parse(hdnAsbPaths.Value));
+        UpdateAsbPaths(project, paths, "saved");
+    }
+
+    private static JObject BuildAsbPaths(JArray entries)
+    {
+        JObject paths = new JObject();
+        var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (JToken entry in entries)
+        {
+            if (entry.Type != JTokenType.Object || entry["Name"] == null || entry["Value"] == null ||
+                entry["Name"].Type != JTokenType.String || entry["Value"].Type != JTokenType.String)
+                throw new ArgumentException("Each ASB path must have a name and URL.");
+
+            string name = ((string)entry["Name"]).Trim();
+            string value = ((string)entry["Value"]).Trim();
+            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(value) ||
+                Util.Util.CheckCrossScriptingInString(name) || Util.Util.CheckCrossScriptingInString(value))
+                throw new ArgumentException("Each ASB path must have a valid name and URL.");
+            if (!names.Add(name))
+                throw new ArgumentException("Each ASB path name can only be selected once.");
+
+            Uri url;
+            if (!Uri.TryCreate(value, UriKind.Absolute, out url) ||
+                (url.Scheme != Uri.UriSchemeHttp && url.Scheme != Uri.UriSchemeHttps))
+                throw new ArgumentException("ASB paths must use absolute HTTP or HTTPS URLs.");
+            if (!string.IsNullOrEmpty(url.Query) || !string.IsNullOrEmpty(url.Fragment))
+                throw new ArgumentException("An ASB URL cannot contain a query or fragment.");
+
+            paths.Add(name, value);
+        }
+        return paths;
+    }
+
+    protected void btnAsbPathsDelete_Click(object sender, EventArgs e)
+    {
+        UpdateAsbPaths(ValidateAsbPathRequest(), null, "deleted");
+    }
+
+    private string ValidateAsbPathRequest()
+    {
+        if (Session == null || Session["AxpertAdUser"] == null)
+            throw new UnauthorizedAccessException("Session expired");
+        if (Session["AntiforgeryToken"] == null || _antiforgery.Value != Session["AntiforgeryToken"].ToString())
+            throw new SecurityException("CSRF Attack Detected!");
+        if (ConfigurationManager.AppSettings["EnableAxpertConfiguration"] != "true" ||
+            string.IsNullOrEmpty(Request.QueryString["auth"]) ||
+            util.encrtptDecryptAES(Request.QueryString["auth"], false) != Session.SessionID)
+            throw new UnauthorizedAccessException("Invalid admin session");
+
+        string project = asbConnection.Value;
+        if (string.IsNullOrWhiteSpace(project) || Util.Util.CheckCrossScriptingInString(project))
+            throw new ArgumentException("Select a valid project.");
+        if (project.IndexOf('\\') >= 0)
+            project = project.Split('\\')[0];
+        return project;
+    }
+
+    private void UpdateAsbPaths(string project, JObject paths, string result)
+    {
+        string scriptsPath = Convert.ToString(HttpContext.Current.Application["ScriptsPath"]);
+        if (string.IsNullOrEmpty(scriptsPath))
+            throw new InvalidOperationException("ScriptsPath is not configured.");
+        string filePath = Path.Combine(scriptsPath, "AppSettings.ini");
+        JObject settings = JObject.Parse(File.ReadAllText(filePath));
+        ApplyAsbPathSettings(settings, project, paths);
+        string json = settings.ToString(Newtonsoft.Json.Formatting.Indented);
+        File.WriteAllText(filePath, json);
+        HttpContext.Current.Application["AppSettingsIni"] = json;
+
+        try
+        {
+            new FDW(project).HashDeleteAllkey(Constants.AX_COMMON_APPSETTING_KEY, project);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Trace.TraceError("ASB paths were written, but the project cache could not be cleared: {0}", ex);
+            result = "cachewarning";
+        }
+        Session.Remove("AppAllSettingsKey-" + project);
+        string redirect = "AxpertAdmin.aspx?auth=" + HttpUtility.UrlEncode(Request.QueryString["auth"]) +
+            "&proj=" + HttpUtility.UrlEncode(project) + "&asbResult=" + result + "#dvAsbPaths";
+        Response.Redirect(redirect, false);
+        HttpContext.Current.ApplicationInstance.CompleteRequest();
+    }
+
+    private static void ApplyAsbPathSettings(JObject settings, string project, JObject paths)
+    {
+        JToken appSettingsToken = settings["appsettings"];
+        if (appSettingsToken != null && appSettingsToken.Type != JTokenType.Object)
+            throw new InvalidDataException("The appsettings node must be an object.");
+        JObject appSettings = (JObject)appSettingsToken;
+        if (appSettings == null && paths != null && paths.HasValues)
+            settings["appsettings"] = appSettings = new JObject();
+
+        JToken projectToken = appSettings == null ? null : appSettings[project];
+        if (projectToken != null && projectToken.Type != JTokenType.Object)
+            throw new InvalidDataException("The project settings must be an object.");
+        JObject projectSettings = (JObject)projectToken;
+        if (projectSettings == null && paths != null && paths.HasValues)
+            appSettings[project] = projectSettings = new JObject();
+
+        if (projectSettings != null)
+        {
+            if (paths == null || !paths.HasValues)
+            {
+                JProperty property = projectSettings.Property("ASBPath");
+                if (property != null)
+                    property.Remove();
+            }
+            else
+                projectSettings["ASBPath"] = paths;
+        }
     }
 
     [WebMethod(EnableSession = true)]

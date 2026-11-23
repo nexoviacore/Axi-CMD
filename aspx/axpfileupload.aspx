@@ -30,8 +30,8 @@
     <script src="../Js/alerts.min.js?v=33" type="text/javascript"></script>
     <%--custom alerts end--%>
     <script src="../Js/gen.min.js?v=14" type="text/javascript"></script>
-    <script src="../Js/common.min.js?v=166" type="text/javascript"></script>
-    <script src="../Js/tstruct.min.js?v=706" type="text/javascript"></script>
+    <script src="../Js/common.min.js?v=167" type="text/javascript"></script>
+    <script src="../Js/tstruct.min.js?v=707" type="text/javascript"></script>
 
     <script src="../Js/axpFileUpload.min.js?v=9" type="text/javascript"></script>
 

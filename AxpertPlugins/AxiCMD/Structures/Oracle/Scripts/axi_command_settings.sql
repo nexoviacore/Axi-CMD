@@ -1,4 +1,4 @@
--- app-wide settings written by AxiCMD (e.g. category 'axicmd', type 'product', names 'accountname'/'reponame'); username = who last changed it
+-- app-wide settings written by AxiCMD (e.g. category 'axicmd', type 'product', names 'accountname'/'reponame'/'gittoken'); username = who last changed it
 <<
 DECLARE
     v_exists NUMBER;
@@ -27,4 +27,27 @@ BEGIN
 )]';
     END IF;
 END;
+>>
+
+-- Golden Dump: Git account, repository and PAT (gittoken) of each install type (product = ProductVersion, plugin, changerequest).
+-- Rows are added only when absent, so values already set on a server are kept and a re-run changes nothing.
+-- gittoken is shipped empty (NULL in Oracle) on purpose: set the PAT on each server, never in this script.
+-- An empty accountname / reponame makes install show "Repository not set" for that type until it is filled in.
+<<
+MERGE INTO axi_command_settings s
+USING (
+    SELECT 'axicmd' AS propertycategory, 'product' AS propertytype, 'accountname' AS propertyname, 'Agileaxpert' AS propertyvalue FROM dual UNION ALL
+    SELECT 'axicmd', 'product', 'reponame', 'AxiProductVersions' FROM dual UNION ALL
+    SELECT 'axicmd', 'product', 'gittoken', NULL FROM dual UNION ALL
+    SELECT 'axicmd', 'plugin', 'accountname', 'Agileaxpert' FROM dual UNION ALL
+    SELECT 'axicmd', 'plugin', 'reponame', 'AxpertPlugins' FROM dual UNION ALL
+    SELECT 'axicmd', 'plugin', 'gittoken', NULL FROM dual UNION ALL
+    SELECT 'axicmd', 'changerequest', 'accountname', 'Agileaxpert' FROM dual UNION ALL
+    SELECT 'axicmd', 'changerequest', 'reponame', 'AxpertChangeRequest' FROM dual UNION ALL
+    SELECT 'axicmd', 'changerequest', 'gittoken', NULL FROM dual
+) v
+ON (s.propertycategory = v.propertycategory AND s.propertytype = v.propertytype AND s.propertyname = v.propertyname)
+WHEN NOT MATCHED THEN
+    INSERT (propertycategory, propertytype, propertyname, propertyvalue, username)
+    VALUES (v.propertycategory, v.propertytype, v.propertyname, v.propertyvalue, 'admin')
 >>

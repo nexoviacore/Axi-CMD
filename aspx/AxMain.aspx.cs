@@ -82,6 +82,7 @@ public partial class AxMain : System.Web.UI.Page
     string disableSplit = "false";
     public string axOldModelFlag = "false";
     public string axListViewAsDefault = string.Empty;
+    public string encPublicKey = string.Empty;
     ArrayList globalVariables = new ArrayList();
     ArrayList userVariables = new ArrayList();
     LogFile.Log logobj = new LogFile.Log();
@@ -229,6 +230,7 @@ public partial class AxMain : System.Web.UI.Page
             DoUtlEncode();
             SetLandingPage(pName, pParams);
             LoadARMSessionVariables();
+            encPublicKey = util.RSAPublicKey();
 
             InitSessExpiryAlert();
             Page.ClientScript.RegisterStartupScript(GetType(), "axmain vars", "<script>var navigatePage='" + Navigationpage + "';" + "var isCloudApp = '" + isCloudApp.ToString() + "'; " + "var userResp = '" + Session["AxResponsibilities"] + "';" + "var sesslanguage='" + language + "';" + "var mainRestDllPath='" + RestDllPath + "';" + "var mainArmRestDllPath='" + ArmRestDllPath + "';" + "var mainProject='" + proj + "';" + "var mainSessionId='" + sid + "';" + "var mainUserName='" + Session["user"].ToString() + "';" + "var AxHelpIview='';" + " var axUtlGlobalVars='" + axUtlGlobalVars + "'; var axUtlUserVars='" + axUtlUserVars + "'; var axUtlApps='" + axUtlApps + "';var alertsTimeout='" + alertsTimeout.ToString() + "';var errorTimeout='" + errorTimeout.ToString() + "';var errorEnable='" + errorEnable.ToString().ToLower() + "';var notifyTimeout ='" + notifyTimeout + "';var appDiableSplit ='" + disableSplit + "'" + "</script>");
@@ -1326,7 +1328,7 @@ public partial class AxMain : System.Web.UI.Page
                 util.SaveExecutionText();
                 util.DeleteUnwantedKeys();
                 util.TempAttaServerFiles();
-                util.ClearUserIviewData();
+                //util.ClearUserIviewData();
                 util.RemoveLoggedUserDetails(proj, sid, user);
                 //ASBExt.WebServiceExt objWebServiceExt = new ASBExt.WebServiceExt();
                 //string res = objWebServiceExt.CallLogoutWS("sess", sXml);

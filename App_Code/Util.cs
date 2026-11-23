@@ -27,6 +27,9 @@ using System.Threading;
 using System.Globalization;
 using System.Data.Odbc;
 using StackExchange.Redis;
+using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.Math;
+using Org.BouncyCastle.OpenSsl;
 using Microsoft.Win32;
 using System.Drawing;
 using Npgsql;
@@ -5962,6 +5965,24 @@ namespace Util
             }
             return false;
         }
+        public static bool IsValidUserName(string userName)
+        {
+            if (string.IsNullOrWhiteSpace(userName))
+                return false;
+
+            foreach (char ch in userName)
+            {
+                if (!(char.IsLetterOrDigit(ch) ||
+                      ch == '_' ||
+                      ch == '-' ||
+                      ch == '.' ||
+                      ch == '@'))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
         private static string MultiLevelDecode(string input)
         {
             string decoded = HttpUtility.UrlDecode(input);
@@ -8654,6 +8675,16 @@ namespace Util
                                 fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.AXPCAPTCHA_CONN_KEY, "nooptions", strProj);
                             }
 
+                            if (jsonARM != null && jsonARM["ASBPath"] != null)
+                            {
+                                jsoncontents = jsonARM["ASBPath"].ToString();
+                                fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.ASBPATH_CONN_KEY, jsoncontents, strProj);
+                            }
+                            else
+                            {
+                                fdwObj.HashSetKeyWithSchema(Constants.AX_COMMON_APPSETTING_KEY, Constants.ASBPATH_CONN_KEY, "nooptions", strProj);
+                            }
+
                             Dictionary<string, string> savedSettings = fdrObj.HashGetAllKey(Constants.AX_COMMON_APPSETTING_KEY, strProj);
                             //logobj.CreateLog("start before session - util.cs-" + savedSettings.Count(), HttpContext.Current.Session.SessionID, "GetAxARMConnection", "", "true");
                             if (HttpContext.Current != null && HttpContext.Current.Session != null)
@@ -8856,6 +8887,109 @@ namespace Util
             }
         }
 
+       public string RSAPublicKey()
+        {
+            string rsaPublicKey = string.Empty;
+            try
+            {
+                var rsa = new RSACryptoServiceProvider(4096);
+                string xmlPublicKey = rsa.ToXmlString(false);
+                HttpContext.Current.Session["PrivateKey-Ecnrypt"] = rsa.ToXmlString(true);
+                rsaPublicKey = ConvertXmlPublicKeyToPem(xmlPublicKey).Replace("\r", "").Replace("\n", "\\n");
+            }
+            catch (Exception) { }
+            return rsaPublicKey;
+        }
+        private string ConvertXmlPublicKeyToPem(string xml)
+        {
+            var rsa = new RSACryptoServiceProvider();
+            rsa.FromXmlString(xml);
+            var parameters = rsa.ExportParameters(false);
+
+            var keyParam = new RsaKeyParameters(
+                false, // isPrivate = false
+                new BigInteger(1, parameters.Modulus),
+                new BigInteger(1, parameters.Exponent)
+            );
+
+            using (var sw = new StringWriter())
+            {
+                var pemWriter = new PemWriter(sw);
+                pemWriter.WriteObject(keyParam); // <-- This gives PKCS#8
+                pemWriter.Writer.Flush();
+                return sw.ToString(); // This can be safely embedded in JS
+            }
+        }
+        private string DecryptWithAesBase64(string base64Cipher, byte[] keyBytes)
+        {
+            try
+            {
+                var cipherBytes = Convert.FromBase64String(base64Cipher);
+
+                using (var aes = Aes.Create())
+                {
+                    aes.Key = keyBytes;
+                    aes.Mode = CipherMode.CBC;
+                    aes.Padding = PaddingMode.PKCS7;
+
+                    byte[] iv = cipherBytes.Take(16).ToArray(); // First 16 bytes = IV
+                    byte[] actualCipher = cipherBytes.Skip(16).ToArray();
+
+                    aes.IV = iv;
+
+                    using (var decryptor = aes.CreateDecryptor())
+                    {
+                        var decryptedBytes = decryptor.TransformFinalBlock(actualCipher, 0, actualCipher.Length);
+                        return Encoding.UTF8.GetString(decryptedBytes);
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                throw new Exception("Could not process the request. Please try again.");
+            }
+        }
+        public string DecryptRSAValue(string privateKey, string encryptedVal)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(encryptedVal))
+                {
+                    return "";
+                }
+                if (string.IsNullOrEmpty(privateKey))
+                {
+                    object sessionPrivateKey = HttpContext.Current.Session["PrivateKey-Ecnrypt"];
+                    if (sessionPrivateKey != null && !string.IsNullOrEmpty(sessionPrivateKey.ToString()))
+                    {
+                        privateKey = sessionPrivateKey.ToString();
+                    }
+                    else
+                    {
+                        return "";
+                    }
+                }
+
+                // Deserialize encrypted payload
+                var payload = JsonConvert.DeserializeObject<dynamic>(encryptedVal);
+                string encryptedAesKey = payload.key;
+                string aesEncryptedData = payload.data;
+                using (RSA rsa = RSA.Create())
+                {
+                    rsa.FromXmlString(privateKey);
+                    byte[] encryptedKeyBytes = Convert.FromBase64String(encryptedAesKey);
+                    byte[] decryptedKeyBytes = rsa.Decrypt(encryptedKeyBytes, RSAEncryptionPadding.Pkcs1);
+                    string aesKeyBase64 = Encoding.UTF8.GetString(decryptedKeyBytes);
+                    byte[] keyBytes = Convert.FromBase64String(aesKeyBase64);
+                    encryptedVal = DecryptWithAesBase64(aesEncryptedData, keyBytes);
+                }
+            }
+            catch (Exception ex)
+            {
+                encryptedVal = "";
+            }
+            return encryptedVal;
+        }
     }
 
     /// <summary>

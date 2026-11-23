@@ -113,16 +113,24 @@ INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PR
 INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) VALUES('9BD6F43DE54A42B98E00C092141590BC', 2, 3, 'search value', 'axi_getstructsdata', NULL, NULL, NULL, ':cmd,:username,:userrole,:transid,:selectedfield,:dimension,:permission,:keyfield,:primarytable,:globalvars', NULL)
 >>
 
-<<
-INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) VALUES('E16A5ED4468C46D7BC63EA3815F49041', 2, 5, 'with values', NULL, NULL, 'With', NULL, NULL, NULL)
->>
+-- old code: the "edit with" option ("edit <form> <record> with <field> <value> ...") is removed, so its "with values"
+-- prompt is no longer inserted
+-- <<
+-- INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) VALUES('E16A5ED4468C46D7BC63EA3815F49041', 2, 5, 'with values', NULL, NULL, 'With', NULL, NULL, NULL)
+-- >>
 
 <<
 INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) VALUES('8D36BC3859474B27970AD3654F55A7CB', 2, 4, 'object name', 'axi_getstructsdata', NULL, NULL, NULL, ':cmd,:username,:userrole,:transid,:selectedfield,:dimension,:permission,:keyfield,:primarytable,:globalvars', NULL)
 >>
 
+-- old code: "field name" prompt of the removed "edit with" option
+-- <<
+-- INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) VALUES('CCFCFA109A0D4A528227E9A67365DE27', 2, 6, 'field name', 'axi_nongridfieldlist', '2', NULL, NULL, NULL, NULL)
+-- >>
+
+-- new code: AXI_COMMAND_PROMPTS is never dropped, so remove the "edit with" prompts from existing databases
 <<
-INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) VALUES('CCFCFA109A0D4A528227E9A67365DE27', 2, 6, 'field name', 'axi_nongridfieldlist', '2', NULL, NULL, NULL, NULL)
+DELETE FROM AXI_COMMAND_PROMPTS WHERE CMDTOKEN = 2 AND WORDPOS IN (5, 6)
 >>
 
 <<
@@ -201,15 +209,27 @@ UPDATE AXI_COMMAND_PROMPTS SET promptvalues = RTRIM(promptvalues, ',') || ',Trac
 
 -- new code: the names are added first (guarded on ChangeRequest, so a re-run changes nothing). The next statement then pads the source list
 -- with Axi_Dummy (10 characters each, RPAD repeats it) until it has as many entries as the names, which also repairs a database whose sources are already short.
-<<
-UPDATE AXI_COMMAND_PROMPTS SET promptvalues = RTRIM(promptvalues, ',') || ',Product,Plugin,ChangeRequest' WHERE cmdtoken = 4 AND wordpos = 2 AND promptvalues NOT LIKE '%ChangeRequest%'
->>
+-- old code: configure Product / Plugin / ChangeRequest was removed, so the options are no longer added
+-- <<
+-- UPDATE AXI_COMMAND_PROMPTS SET promptvalues = RTRIM(promptvalues, ',') || ',Product,Plugin,ChangeRequest' WHERE cmdtoken = 4 AND wordpos = 2 AND promptvalues NOT LIKE '%ChangeRequest%'
+-- >>
 
 <<
 UPDATE AXI_COMMAND_PROMPTS s SET promptsource = RTRIM(s.promptsource, ', ') || RPAD(',Axi_Dummy', 10 * ((SELECT REGEXP_COUNT(RTRIM(p2.promptvalues, ', '), ',') + 1 FROM AXI_COMMAND_PROMPTS p2 WHERE p2.cmdtoken = 4 AND p2.wordpos = 2) - (REGEXP_COUNT(RTRIM(s.promptsource, ', '), ',') + 1)), ',Axi_Dummy') WHERE s.cmdtoken = 4 AND s.wordpos = 3 AND (SELECT REGEXP_COUNT(RTRIM(p2.promptvalues, ', '), ',') + 1 FROM AXI_COMMAND_PROMPTS p2 WHERE p2.cmdtoken = 4 AND p2.wordpos = 2) > REGEXP_COUNT(RTRIM(s.promptsource, ', '), ',') + 1
 >>
 
--- Install: `install <product|plugin|changerequest> <directory> [version]` (build access only). Rows are added only when absent, so a re-run changes nothing.
+-- Configure: Product, Plugin and ChangeRequest (Git account / repository) are no longer set from AxiCMD. The two statements below take them
+-- out of a database that already has them. Sources go first (their guard reads the option list, which the next statement changes); each
+-- source is dropped at the same position as its option, so Custom Options keep their sources. A re-run changes nothing.
+<<
+UPDATE AXI_COMMAND_PROMPTS s SET promptsource = (SELECT LISTAGG(x.src, ',') WITHIN GROUP (ORDER BY x.lvl) FROM (SELECT LEVEL AS lvl, REGEXP_SUBSTR(ps.promptsource, '[^,]+', 1, LEVEL) AS src, REGEXP_SUBSTR(pv.promptvalues, '[^,]+', 1, LEVEL) AS val FROM (SELECT promptsource FROM AXI_COMMAND_PROMPTS WHERE cmdtoken = 4 AND wordpos = 3) ps CROSS JOIN (SELECT promptvalues FROM AXI_COMMAND_PROMPTS WHERE cmdtoken = 4 AND wordpos = 2) pv CONNECT BY LEVEL <= REGEXP_COUNT(RTRIM(ps.promptsource, ', '), ',') + 1) x WHERE x.val IS NULL OR LOWER(TRIM(x.val)) NOT IN ('product', 'plugin', 'changerequest')) WHERE s.cmdtoken = 4 AND s.wordpos = 3 AND EXISTS (SELECT 1 FROM AXI_COMMAND_PROMPTS p2 WHERE p2.cmdtoken = 4 AND p2.wordpos = 2 AND LOWER(p2.promptvalues) LIKE '%changerequest%')
+>>
+
+<<
+UPDATE AXI_COMMAND_PROMPTS SET promptvalues = (SELECT LISTAGG(x.val, ',') WITHIN GROUP (ORDER BY x.lvl) FROM (SELECT LEVEL AS lvl, REGEXP_SUBSTR(pv.promptvalues, '[^,]+', 1, LEVEL) AS val FROM (SELECT promptvalues FROM AXI_COMMAND_PROMPTS WHERE cmdtoken = 4 AND wordpos = 2) pv CONNECT BY LEVEL <= REGEXP_COUNT(RTRIM(pv.promptvalues, ', '), ',') + 1) x WHERE LOWER(TRIM(x.val)) NOT IN ('product', 'plugin', 'changerequest')) WHERE cmdtoken = 4 AND wordpos = 2 AND LOWER(promptvalues) LIKE '%changerequest%'
+>>
+
+-- Install: `install <productversion|plugin|changerequest> <directory> [version]` (build access only). Rows are added only when absent, so a re-run changes nothing.
 -- axi_git_directories and axi_git_versions are NOT axdirectsql rows: the palette resolves them from the AxiGit listdirectories API.
 <<
 INSERT INTO axi_commands
@@ -217,8 +237,17 @@ INSERT INTO axi_commands
 SELECT 10, 'Install', ' ', 'T' FROM dual WHERE NOT EXISTS (SELECT 1 FROM axi_commands WHERE cmdtoken = 10)
 >>
 
+-- old code: block markers left out so the installer cannot pick it up
+-- INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) SELECT HEXTORAW('6474EF0115544DD7BE1BC41C8CDEE0F4'), 10, 2, 'object type', NULL, NULL, 'Product,Plugin,ChangeRequest', NULL, NULL, NULL FROM dual WHERE NOT EXISTS (SELECT 1 FROM AXI_COMMAND_PROMPTS WHERE cmdtoken = 10 AND wordpos = 2)
+
+-- new code: the product option is named ProductVersion (the type sent to the APIs and the queue stays "product")
 <<
-INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) SELECT HEXTORAW('6474EF0115544DD7BE1BC41C8CDEE0F4'), 10, 2, 'object type', NULL, NULL, 'Product,Plugin,ChangeRequest', NULL, NULL, NULL FROM dual WHERE NOT EXISTS (SELECT 1 FROM AXI_COMMAND_PROMPTS WHERE cmdtoken = 10 AND wordpos = 2)
+INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PROMPTPARAMS, PROMPTVALUES, PROPS, EXTRAPARAMS, REQUESTURL) SELECT HEXTORAW('6474EF0115544DD7BE1BC41C8CDEE0F4'), 10, 2, 'object type', NULL, NULL, 'ProductVersion,Plugin,ChangeRequest', NULL, NULL, NULL FROM dual WHERE NOT EXISTS (SELECT 1 FROM AXI_COMMAND_PROMPTS WHERE cmdtoken = 10 AND wordpos = 2)
+>>
+
+-- Install: renames the Product option to ProductVersion on databases that already have the install row. A re-run changes nothing.
+<<
+UPDATE AXI_COMMAND_PROMPTS SET promptvalues = REGEXP_REPLACE(promptvalues, '(^|,) *Product *(,|$)', '\1ProductVersion\2', 1, 0, 'i') WHERE cmdtoken = 10 AND wordpos = 2 AND ',' || LOWER(REPLACE(promptvalues, ' ', '')) || ',' LIKE '%,product,%'
 >>
 
 <<

@@ -551,11 +551,15 @@ function getAppSessionKey() {
     var appSess = "";
     $.ajax({
         type: "POST",
-        url: "../WebService.asmx/GetSession",
+        url: "../WebService.asmx/GetSessionNew",
         cache: false,
         async: false,
         contentType: "application/json;charset=utf-8",
-        data: JSON.stringify({ key: 'appsessionkey' }),
+        data: JSON.stringify({
+            jsonData: JSON.stringify({
+                key: 'appsessionkey'
+            })
+        }),
         dataType: "json",
         success: function (data) {
             if (data.d != 'Session does not exist')
