@@ -1,12 +1,32 @@
-# Axi Commandline  Release Notes – 23 Nov 2026
+# Axi Commandline Release Notes – 23 Nov 2026
+
+## Fixes
+
+### 1. Data source opens as a blank screen in Pop-Up mode
+
+When a data source was opened in normal mode and then opened in Pop-Up mode, a blank screen was displayed in Pop-Up mode.
+
+### 2. Data sources are not opening
+
+Data sources showed a blank screen.
+
+#### Instructions to QA
+
+- Fixes 1 and 2 need the file `AxpertHtmlAuthModule.cs`, which will be released by Malakonda.
+
+### 3. Commands that start with "Error" did not work in AxiCMD
+
+### 4. Configure "Publish Config Studio" listed records differently in Pop-Up mode
+
+In normal mode, Configure "Publish Config Studio" does not list the records until the Server parameter is selected. In Pop-Up mode, the same command displayed the records without the Server parameter. Pop-Up mode now also asks for the Server parameter first.
 
 ## Changes
 
-### 1. Remove the With option from the Edit command
+### 5. Remove the With option from the Edit command
 
 The `with` option is no longer available for the Edit command.
 
-### 2. Use the configured PAT for authentication during installation
+### 6. Use the configured PAT for authentication during installation
 
 The Install command now handles these keys when it pushes to the queue:
 
@@ -37,31 +57,18 @@ Sample install payload in the queue message:
 }
 ```
 
-### 3. Change the terminology from Product to ProductVersion in the Install command
+### 7. Change the terminology from Product to ProductVersion in the Install command
 
-### 4. Remove the separate Git Account, Repository and PAT configuration
+The Install command now uses ProductVersion instead of Product:
 
-Git Account, Repository and PAT can no longer be configured separately through the Axi Command Line.
-1. Configure Product
-2. Configure Plugin
-3. Configure "Change Request" 
+```
+Install ProductVersion <Package> <Version>
+```
 
-The above commands has been removed. 
+### 8. Remove the separate Git Account, Repository and PAT configuration
 
-## Fixes
+Git Account, Repository and PAT can no longer be configured separately through the Axi Command Line. These commands have been removed:
 
-### 5. Commands that start with "Error" did not work in AxiCMD
-
-### 6. Configure "Publish Config Studio" listed records differently in Pop-Up mode
-
-In normal mode, Configure "Publish Config Studio" does not list the records until the Server parameter is selected. In Pop-Up mode, the same command displayed the records without the Server parameter. Pop-Up mode now also asks for the Server parameter first.
-
-## Needs discussion
-
-### 7. Data source opens as a blank screen in Pop-Up mode
-
-When a data source is opened in normal mode and then opened in Pop-Up mode, a blank screen is displayed in Pop-Up mode.
-
-### 8. Data sources are not opening
-
-Data sources show a blank screen.
+- `Configure Product`
+- `Configure Plugin`
+- `Configure "Change Request"`
