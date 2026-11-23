@@ -2364,7 +2364,17 @@ if (typeof document !== "undefined") {
                 redirectToTstruct(tstructId, caption, true, paramField, paramValue, resolvedExtra);
             } else {
                 setEditSessionState(iviewId);
-                redirectToIView(iviewId, caption);
+                // old code: a Pop-Up went through redirectToIView, which opens ivtoivload.aspx; that runs the report at once
+                // and skips its parameter form, so Configure "Publish Config Studio" showed every row in a Pop-Up while Go
+                // asked for the required Server first
+                // redirectToIView(iviewId, caption);
+                // new code: the Pop-Up opens iview.aspx like Go (only this command uses tstruct/iview; other report Pop-Ups
+                // still go through redirectToIView)
+                if (popUpOption) {
+                    openPopOption(`../aspx/iview.aspx?ivname=${iviewId}&tname=${encodeURIComponent(caption)}&AxIsPop=true&isDupTab=true`);
+                } else {
+                    redirectToIView(iviewId, caption);
+                }
             }
             return true;
         }
