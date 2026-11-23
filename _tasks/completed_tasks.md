@@ -300,7 +300,7 @@ Sample Install Payload in Queue Message:
 9. Configure "Publish Config Studio"  in normal mode does not list the records unless the Server param is selected,but the same Configure "Publish Config Studio" in pop up mode displays the records without the Server param selection.
 
 
-
+Tasks Planned for next release (23/11/2026): 
 1. The Git account and Git Repository should be configurable through tstruct. 
 2. Edit commmand Enhancement. search with fields Button
 
