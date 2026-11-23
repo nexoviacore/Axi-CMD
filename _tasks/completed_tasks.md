@@ -293,9 +293,11 @@ Sample Install Payload in Queue Message:
 
 6. Change the terminology from Product to ProductVersion in the Install command.
 
-7. Commands that starts as "Error" is not working in AxiCMD. 
+7. Remove the option to configure Git Account, Repository, and PAT separately through the Axi Command Line.
 
-8. Remove the option to configure Git Account, Repository, and PAT separately through the Axi Command Line.
+8. Commands that starts as "Error" is not working in AxiCMD. 
+
+
 
 
 
