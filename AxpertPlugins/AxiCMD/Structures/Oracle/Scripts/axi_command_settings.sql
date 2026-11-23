@@ -39,11 +39,11 @@ USING (
     SELECT 'axicmd' AS propertycategory, 'product' AS propertytype, 'accountname' AS propertyname, 'Agileaxpert' AS propertyvalue FROM dual UNION ALL
     SELECT 'axicmd', 'product', 'reponame', 'AxiProductVersions' FROM dual UNION ALL
     SELECT 'axicmd', 'product', 'gittoken', NULL FROM dual UNION ALL
-    SELECT 'axicmd', 'plugin', 'accountname', NULL FROM dual UNION ALL
-    SELECT 'axicmd', 'plugin', 'reponame', NULL FROM dual UNION ALL
+    SELECT 'axicmd', 'plugin', 'accountname', 'Agileaxpert' FROM dual UNION ALL
+    SELECT 'axicmd', 'plugin', 'reponame', 'AxpertPlugins' FROM dual UNION ALL
     SELECT 'axicmd', 'plugin', 'gittoken', NULL FROM dual UNION ALL
-    SELECT 'axicmd', 'changerequest', 'accountname', NULL FROM dual UNION ALL
-    SELECT 'axicmd', 'changerequest', 'reponame', NULL FROM dual UNION ALL
+    SELECT 'axicmd', 'changerequest', 'accountname', 'Agileaxpert' FROM dual UNION ALL
+    SELECT 'axicmd', 'changerequest', 'reponame', 'AxpertChangeRequest' FROM dual UNION ALL
     SELECT 'axicmd', 'changerequest', 'gittoken', NULL FROM dual
 ) v
 ON (s.propertycategory = v.propertycategory AND s.propertytype = v.propertytype AND s.propertyname = v.propertyname)
