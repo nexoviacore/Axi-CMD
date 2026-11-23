@@ -107,6 +107,15 @@ public class AxpertHtmlAuthModule : IHttpModule
                 return;
         }
 
+        // Keep IIS's static-file handler for iframe loads so templates and their assets load normally.
+        string destination = context.Request.Headers["Sec-Fetch-Dest"];
+        if (string.Equals(destination, "iframe", StringComparison.OrdinalIgnoreCase))
+        {
+            context.Response.Cache.SetCacheability(HttpCacheability.NoCache);
+            context.Response.Cache.SetNoStore();
+            return;
+        }
+
         // Replace IIS StaticFile handler with our handler.
         context.RemapHandler(new AxpertHtmlAuthHandler());
     }
