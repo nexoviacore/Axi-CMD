@@ -467,6 +467,16 @@ if (typeof document !== "undefined") {
     const saveOption = AxiCmdConfig.SHORTCUT_OPTIONS.SAVE;
     const popOption = AxiCmdConfig.SHORTCUT_OPTIONS.POPUP;
     const sourceOption = AxiCmdConfig.SHORTCUT_OPTIONS.SOURCE;
+    // new code: buttons pinned at the top of the "edit / view <form>" list (see buildEditViewTargetList). Picking one
+    // switches the list between the Key Field values and the form's other fields; it does not run anything.
+    // old code
+    // const otherFieldsOption = { displaydata: "Search with fields", name: "OTHER_FIELDS_ACTION", isEditViewModeButton: true, icon: "manage_search" };
+    // const keyFieldOption = { displaydata: "Search with key field value", name: "KEY_FIELD_ACTION", isEditViewModeButton: true, icon: "key" };
+    // new code: each button also carries a short hint, shown next to it
+    const otherFieldsOption = { displaydata: "Search with fields", name: "OTHER_FIELDS_ACTION", isEditViewModeButton: true, icon: "manage_search", hint: "Find the record by another field" };
+    const keyFieldOption = { displaydata: "Search with key field value", name: "KEY_FIELD_ACTION", isEditViewModeButton: true, icon: "key", hint: "Back to the key field values" };
+    // new code: "<cmd>|<form>" (lower case) while "Search with fields" is on for that form, null otherwise
+    let editViewFieldSearchKey = null;
 
 
 
@@ -3395,13 +3405,16 @@ if (typeof document !== "undefined") {
             const lastTokenClean = cleanString(lastTokenRaw);
 
             if (!text.endsWith(" ") && lastTokenClean.length > 0) {
-                const validItems = items.filter(i => !isSystemMessage(i) && !i.isExecutable);
+                // old code: const validItems = items.filter(i => !isSystemMessage(i) && !i.isExecutable);
+                // new code: the edit / view mode button is not a value either
+                const validItems = items.filter(i => !isSystemMessage(i) && !i.isExecutable && !i.isEditViewModeButton);
 
                 let indexToApply = -1;
 
                 if (validItems.length === 1 && lastTokenClean.length >= 2) {
                     indexToApply = items.findIndex(item => {
-                        if (isSystemMessage(item) || item.isExecutable) return false;
+                        // old code: if (isSystemMessage(item) || item.isExecutable) return false;
+                        if (isSystemMessage(item) || item.isExecutable || item.isEditViewModeButton) return false;
 
                         const itemStr = typeof item === "string" ? item : (item.displaydata || item.name);
 
@@ -5186,6 +5199,9 @@ if (typeof document !== "undefined") {
         const isUnclosedString = lastTokenRaw && lastTokenRaw.startsWith('"') && (!lastTokenRaw.endsWith('"') || lastTokenRaw === '"');
         if (endsWithSpace && !isUnclosedString) rawTokens.push("");
 
+        // new code: back before the record word of "edit / view <form>": "Search with fields" ends
+        if (rawTokens.length < 3) editViewFieldSearchKey = null;
+
         if (rawTokens.length === 0) {
             hintDiv.textContent = "";
             // The structure list under the commands is paged: scrolling to its end loads the next page
@@ -5392,6 +5408,9 @@ if (typeof document !== "undefined") {
         }
 
         const groupKey = cleanString(tokens[0]);
+
+        // new code: another command or form than the one "Search with fields" was picked for: back to key values
+        if (editViewFieldSearchKey && getEditViewModeKey(tokens) !== editViewFieldSearchKey) editViewFieldSearchKey = null;
 
         // Install <type> <directory> [version]: the directory and version lists come from the AxiGit API, not the ADS
         if (groupKey.toLowerCase() === "install" && getCommandConfig("install") && getInstallWords(inputText).length >= 3) {
@@ -5999,6 +6018,23 @@ if (typeof document !== "undefined") {
                 }
                 : null;
 
+            // new code: "edit / view <form> <record>": a form with a Key Field lists its key values (with "Search with
+            // other fields" on top), otherwise the form's fields. One helper for both commands, see buildEditViewTargetList.
+            const editViewTarget = (apiSourceName === "axi_getstructsdata" && tokens.length === 3)
+                ? buildEditViewTargetList(tokens, dataList, partialTyped, failedFetches.has(sourceKey))
+                : null;
+            if (editViewTarget && editViewTarget.fieldMode) {
+                // the field list is never paged or searched on the server
+                activePagedContext = null;
+                clearTimeout(dynamicSearchDebounceTimer);
+                dynamicSearchPending = false;
+                filteredObjects = editViewTarget.items;
+                return editViewTarget.items;
+            }
+            if (editViewTarget) dataList = editViewTarget.records;
+            // new code: in key mode the button stays on top of the "no match" messages (paging / searching ones excluded)
+            const withKeyButton = msgs => (editViewTarget ? [otherFieldsOption, ...msgs] : msgs);
+
             if (isDynamicSource) {
                 if (cleanSearch.length >= 3) {
                     const searchKey = `${sourceKey}_q_${cleanSearch}`;
@@ -6063,6 +6099,9 @@ if (typeof document !== "undefined") {
                 }
             }
 
+            // new code: a search result list holds the field rows too; key mode lists the key values only
+            if (editViewTarget) dataList = dataList.filter(item => !isEditViewFieldRow(item));
+
             const currentAccessPerms = getAccessPermissions();
             if (groupKey.toLowerCase() === "sdk" && currentAccessPerms?.buildAccess && tokens.length >= 2) {
                 const targetToken = cleanCommandToken(tokens[1])?.toLowerCase().trim();
@@ -6096,12 +6135,20 @@ if (typeof document !== "undefined") {
             if (dataList.length > 0 && filtered.length === 0) {
                 if (isDynamicSource) {
                     filteredObjects = [];
+                    // old code
+                    // if (cleanSearch.length < 3) {
+                    //     // old code: return ["Type at least 3 characters to search records..."];
+                    //     return [axiStatusMsg("Type at least 3 characters to search records...")];
+                    // } else {
+                    //     // old code: return ["No matching records found"];
+                    //     return [axiStatusMsg("No matching records found")];
+                    // }
+                    // new code: same messages, under the "Search with fields" button in edit / view key mode
+                    filteredObjects = withKeyButton([]);
                     if (cleanSearch.length < 3) {
-                        // old code: return ["Type at least 3 characters to search records..."];
-                        return [axiStatusMsg("Type at least 3 characters to search records...")];
+                        return withKeyButton([axiStatusMsg("Type at least 3 characters to search records...")]);
                     } else {
-                        // old code: return ["No matching records found"];
-                        return [axiStatusMsg("No matching records found")];
+                        return withKeyButton([axiStatusMsg("No matching records found")]);
                     }
                 }
 
@@ -6120,7 +6167,10 @@ if (typeof document !== "undefined") {
             } else if (isDynamicSource && filtered.length === 0 && cleanSearch.length >= 3) {
                 filteredObjects = [];
                 // old code: return ["No matching records found"];
-                return [axiStatusMsg("No matching records found")];
+                // old code: return [axiStatusMsg("No matching records found")];
+                // new code: under the "Search with fields" button in edit / view key mode
+                filteredObjects = withKeyButton([]);
+                return withKeyButton([axiStatusMsg("No matching records found")]);
             }
 
 
@@ -6232,6 +6282,12 @@ if (typeof document !== "undefined") {
             //    filteredObjects.unshift(goOption);
             //}
 
+
+            // new code: edit / view key mode: "Search with fields" goes on top, above Go / Pop-Up of view
+            if (editViewTarget) {
+                resultList.unshift(otherFieldsOption);
+                filteredObjects.unshift(otherFieldsOption);
+            }
 
             ///added this for sinlge fieldname and fieldvalue(T)
             if (groupKey.toLowerCase() === "edit" && tokens.length > 4) {
@@ -6378,6 +6434,90 @@ if (typeof document !== "undefined") {
         const values = [commandConfig.commandGroup, mainUserName, AxUserRoles, row.name || transid, "0",
             row.dimension, row.permission, row.keyfield, row.primarytable, "NA"];
         return values.map(v => (v === null || v === undefined || String(v).trim() === "") ? "NA" : v).join("$#$");
+    }
+
+    /**
+     * Tells whether a row of axi_getstructsdata is a field row ("Caption (fname) [field]", isfield 't') and not a record.
+     * @param {object} item - A row of the list.
+     * @returns {boolean} True for a field row.
+     */
+    function isEditViewFieldRow(item) {
+        // old code: return String(item?.isfield ?? item?.ISFIELD ?? "").toLowerCase() === "t";
+        // new code: isfield can also come back as true / "true" (as handleEditData already allows)
+        return ["t", "true"].includes(String(item?.isfield ?? item?.ISFIELD ?? "").toLowerCase());
+    }
+
+    /**
+     * Key of "Search with fields": the command and the form as typed, in lower case.
+     * @param {string[]} tokens - Command tokens, command first (already swapped).
+     * @returns {string} "<cmd>|<form>".
+     */
+    function getEditViewModeKey(tokens) {
+        return `${cleanString(tokens[0] || "").toLowerCase()}|${cleanString(tokens[1] || "").toLowerCase()}`;
+    }
+
+    /**
+     * The list after "edit <form>" and "view <form>". Both commands use this one helper so they cannot drift apart.
+     * - The form has a Key Field (keyfieldforedit "T"): its key values (the record rows). The caller pins
+     *   "Search with fields" on top and keeps paging and server search of the records as before.
+     * - "Search with fields" was picked, or the form has no Key Field: the form's fields (the field rows; the data
+     *   source limits them to non-duplicate fields), every row with isfield 't' (the key field too), without repeats. A form with a
+     *   Key Field gets "Search with key field value" on top to go back; a form without one gets no button.
+     * @param {string[]} tokens - Command tokens, command first (already swapped); tokens[2] is the word being typed.
+     * @param {object[]} dataList - Rows of axi_getstructsdata for the form (fields and records).
+     * @param {string} partialTyped - The word typed so far.
+     * @param {boolean} loadFailed - True when the list could not be loaded.
+     * @returns {null|{fieldMode: false, records: object[]}|{fieldMode: true, items: Array}} null when the form is not
+     *   a known tstruct: the list is then built as before.
+     */
+    function buildEditViewTargetList(tokens, dataList, partialTyped, loadFailed) {
+        const cmd = cleanString(tokens[0] || "").toLowerCase();
+        if (cmd !== "edit" && cmd !== "view") return null;
+        const form = getTargetEntityObj(tokens[1], cmd);
+        const stype = String(form?.stype ?? form?.STYPE ?? "").toLowerCase();
+        if (!form || (stype !== "t" && stype !== "tstruct")) return null;
+
+        // old code: const hasKeyField = form.keyfieldforedit === "T" || form.keyfieldforedit === true;
+        // new code: 'T' / 't' / true, whatever case the data source returns
+        const hasKeyField = ["t", "true"].includes(String(form.keyfieldforedit ?? form.KEYFIELDFOREDIT ?? "").toLowerCase());
+        const rows = Array.isArray(dataList) ? dataList : [];
+        if (hasKeyField && editViewFieldSearchKey !== getEditViewModeKey(tokens)) {
+            return { fieldMode: false, records: rows.filter(item => !isEditViewFieldRow(item)) };
+        }
+
+        // old code: const pinned = hasKeyField ? [keyFieldOption] : [];
+        // new code: view keeps Go / Pop-Up (open the form's list) under the button, as it does in key mode
+        const pinned = [...(hasKeyField ? [keyFieldOption] : []), ...(cmd === "view" ? [goOption, popOption] : [])];
+        // the list could not be loaded: nothing to pick (the existing retry applies)
+        if (loadFailed) return { fieldMode: true, items: pinned };
+
+        // old code: the key field itself was left out of the field list
+        // const keyField = hasKeyField ? String(form.keyfield || "").trim().toLowerCase() : "";
+        // new code: every field row (isfield 't') is listed, the key field too; only repeated rows are dropped
+        const seen = new Set();
+        const fields = rows.filter(item => {
+            if (!isEditViewFieldRow(item)) return false;
+            const text = String(item.displaydata || "").trim();
+            const textKey = text.toLowerCase();
+            if (!textKey || seen.has(textKey)) return false;
+            seen.add(textKey);
+            // old code
+            // const fnameMatch = /\(([^()]+)\)\s*\[field\]\s*$/i.exec(text);
+            // return !(keyField && fnameMatch && fnameMatch[1].trim().toLowerCase() === keyField);
+            return true;
+        });
+        if (fields.length === 0) {
+            // old code: return { fieldMode: true, items: hasKeyField ? [...pinned, axiStatusMsg("No other searchable fields")] : [getNoKeyFieldMessage(tokens[1])] };
+            // new code: Go / Pop-Up of view stay above the message
+            return { fieldMode: true, items: hasKeyField ? [...pinned, axiStatusMsg("No other searchable fields")] : [...pinned, getNoKeyFieldMessage(tokens[1])] };
+        }
+
+        const typed = String(partialTyped || "").trim().toLowerCase();
+        const matches = typed ? fields.filter(item => String(item.displaydata).toLowerCase().includes(typed)) : fields;
+        if (matches.length === 0) {
+            return { fieldMode: true, items: [...pinned, axiStatusMsg("Select a field to search by")] };
+        }
+        return { fieldMode: true, items: [...pinned, ...matches] };
     }
 
     function processParamforEditndView(tokens, commandConfig, paramValue, position) {
@@ -7384,6 +7524,13 @@ if (typeof document !== "undefined") {
                 activeIndex = 0;
             }
 
+            // new code: the edit / view mode button is never highlighted by default, so Enter does not switch the list
+            // by accident; the first row under it is (unless that is a message). Arrow keys still reach the button.
+            if (validItems[activeIndex]?.isEditViewModeButton && validItems.length > activeIndex + 1
+                && !isSystemMessage(validItems[activeIndex + 1])) {
+                activeIndex++;
+            }
+
             // new code: same input as the last render (only background data changed): stay on the row the user moved to
             if (keptActiveKey !== null) {
                 const keptIndex = validItems.findIndex(item => suggestionKeyOf(item) === keptActiveKey);
@@ -7484,6 +7631,29 @@ if (typeof document !== "undefined") {
             } else if (isCreateNewItem) {
                 li.classList.add("axi-create-new-item");
                 li.textContent = displayText;
+            } else if (typeof item === 'object' && item.isEditViewModeButton) {
+                // new code: "Search with fields" / "Search with key field value" of edit / view, drawn as a button
+                li.classList.add("axi-mode-button-item");
+                const btn = document.createElement("span");
+                btn.className = "axi-mode-button";
+                const icon = document.createElement("span");
+                icon.className = "material-icons material-icons-style";
+                icon.textContent = item.icon || "search";
+                const label = document.createElement("span");
+                label.textContent = item.displaydata;
+                btn.append(icon, label);
+                li.appendChild(btn);
+                // new code: what the button does, and the Enter key while it is the keyboard selection
+                if (item.hint) {
+                    const hint = document.createElement("span");
+                    hint.className = "axi-mode-button-hint";
+                    hint.textContent = item.hint;
+                    li.appendChild(hint);
+                }
+                const kbd = document.createElement("kbd");
+                kbd.className = "axi-mode-button-kbd";
+                kbd.textContent = "Enter";
+                li.appendChild(kbd);
             } else if (typeof item === 'object' && item.isExecutable) {
                 li.style.fontWeight = "bold";
                 li.style.color = "#22c55e";
@@ -7741,6 +7911,25 @@ if (typeof document !== "undefined") {
 
         if (!selectedItem || isSystemMessage(selectedItem)) return;
 
+        // new code: "Search with fields" / "Search with key field value" of "edit / view <form>": switch the list, run nothing.
+        // A word typed for the other list is dropped, the form and the command stay.
+        if (typeof selectedItem === "object" && selectedItem.isEditViewModeButton) {
+            const modeText = input.value;
+            const modeRawTokens = getTokens(modeText, false);
+            const modeTokens = [...modeRawTokens];
+            if (modeTokens.length >= 2 && isTargetEntity(cleanString(modeTokens[0]).toLowerCase())
+                && isValidActionForTarget(cleanString(modeTokens[0]).toLowerCase(), cleanString(modeTokens[1]).toLowerCase())) {
+                [modeTokens[0], modeTokens[1]] = [modeTokens[1], modeTokens[0]];
+            }
+            editViewFieldSearchKey = selectedItem.name === otherFieldsOption.name ? getEditViewModeKey(modeTokens) : null;
+            if (!modeText.endsWith(" ") && modeRawTokens.length >= 3) {
+                input.value = modeRawTokens.slice(0, -1).join(" ") + " ";
+            }
+            input.focus();
+            handleInput();
+            return;
+        }
+
 
         const currentInput = input.value;
         let tokens = getTokens(currentInput, false);
@@ -7972,19 +8161,21 @@ if (typeof document !== "undefined") {
             });
         }
 
-        const checkEditObj = (checkTokens[0]?.toLowerCase() === "edit" && checkTokens[1]) ? getTargetEntityObj(checkTokens[1], "edit") : null;
-        if (checkEditObj && (checkEditObj.keyfieldforedit === "F" || checkEditObj.keyfieldforedit === false)) {
-            // old code: also stopped on "with"; "edit with" is removed
-            // const suggText = (typeof selectedItem === "string" ? selectedItem : (selectedItem?.displaydata || selectedItem?.name || "")).toLowerCase().trim();
-            // const hasWithInTokens = checkTokens.some(t => cleanString(t).toLowerCase() === "with") || currentInput.toLowerCase().includes(" with");
-            // if (targetIndex === 1 || suggText === "with" || hasWithInTokens) {
-            // new code
-            if (targetIndex === 1) {
-                showToast("Key field is not configured for this form. Please configure the key field using the Configure Key Field command.", 3000, false);
-                hide();
-                return;
-            }
-        }
+        // old code: edit stopped on a form without a Key Field. Such a form now lists its fields to search by instead
+        // (see buildEditViewTargetList).
+        // const checkEditObj = (checkTokens[0]?.toLowerCase() === "edit" && checkTokens[1]) ? getTargetEntityObj(checkTokens[1], "edit") : null;
+        // if (checkEditObj && (checkEditObj.keyfieldforedit === "F" || checkEditObj.keyfieldforedit === false)) {
+        //     // old code: also stopped on "with"; "edit with" is removed
+        //     // const suggText = (typeof selectedItem === "string" ? selectedItem : (selectedItem?.displaydata || selectedItem?.name || "")).toLowerCase().trim();
+        //     // const hasWithInTokens = checkTokens.some(t => cleanString(t).toLowerCase() === "with") || currentInput.toLowerCase().includes(" with");
+        //     // if (targetIndex === 1 || suggText === "with" || hasWithInTokens) {
+        //     // new code
+        //     if (targetIndex === 1) {
+        //         showToast("Key field is not configured for this form. Please configure the key field using the Configure Key Field command.", 3000, false);
+        //         hide();
+        //         return;
+        //     }
+        // }
 
         if (foundObj && isViewCommand) {
             const caption = foundObj?.caption ? foundObj?.caption : foundObj?.displaydata;
@@ -9654,6 +9845,8 @@ if (typeof document !== "undefined") {
                     axSearchKeyOrder.length = 0;
                     structSearchAsked.clear();
                     emptyStructListRetried.clear();
+                    // new code: Refresh starts edit / view lists on the key values again
+                    editViewFieldSearchKey = null;
                     structSearchPendingTerm = null;
                     // new code: drop searches still waiting to be sent; they belong to the discarded lists
                     Object.keys(structSearchByList).forEach(k => { clearTimeout(structSearchByList[k].timer); delete structSearchByList[k]; });
@@ -10694,6 +10887,19 @@ if (typeof document !== "undefined") {
                     if (!isActionAllowed(entityObj, groupNameNormalized)) {
                         showToast("You do not have permission to execute this command.", 3000, false);
                         return;
+                    }
+                    // new code: a form without a Key Field is searched by a field only ("edit <form> <field> <value>"),
+                    // a key value typed alone does not run (same rule for edit and view, see buildEditViewTargetList)
+                    const entityType = String(entityObj.stype || entityObj.STYPE || "").toLowerCase();
+                    const noKeyField = ["f", "false"].includes(String(entityObj.keyfieldforedit ?? entityObj.KEYFIELDFOREDIT ?? "").toLowerCase());
+                    if ((groupNameNormalized === "edit" || groupNameNormalized === "view") && noKeyField
+                        && (entityType === "t" || entityType === "tstruct") && tokens.length === 3) {
+                        const typedField = getMatchedField(cleanCommandToken(tokens[2]), entityObj.name);
+                        if (!typedField || !["t", "true"].includes(String(typedField.isfield || "").toLowerCase())) {
+                            showToast("Select a field to search by.", 3000, false);
+                            input.focus();
+                            return;
+                        }
                     }
                 }
             }
