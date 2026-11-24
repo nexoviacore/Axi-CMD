@@ -1686,6 +1686,16 @@ if (typeof document !== "undefined") {
                     if (u !== null) incoming.add(u);
                     if (u === null || !seen.has(u)) current.push(item);
                 });
+                // new code: fn_axi_getstructs_obj returns the field rows after all the records, so on a form with more
+                // records than one page they come with the last page, not page 1. They were dropped here, so the field
+                // (e.g. "Message ID (msgid) [field]") never showed. Add the ones the list does not hold yet.
+                if (fieldItems.length > 0) {
+                    const heldText = new Set(current.filter(isFieldItem).map(r => String(r.displaydata || "").toLowerCase()));
+                    fieldItems.forEach(item => {
+                        const text = String(item.displaydata || "").toLowerCase();
+                        if (!heldText.has(text)) { heldText.add(text); current.push(item); }
+                    });
+                }
                 // Rows that were only merged from a search and have now arrived as a real page are plain rows again
                 if (!cleanTerm) {
                     current.forEach(item => { if (item && item.__fromSearch && incoming.has(uidOf(item))) delete item.__fromSearch; });
@@ -5827,6 +5837,11 @@ if (typeof document !== "undefined") {
             else if (realSource.toLowerCase() === "axi_structlist") {
                 paramValue = processExtraParams(tokens, commandConfig);
             }
+            // new code: configure keyfield <form>: axi_primaryfieldlist now runs fn_axi_getstructs_obj, so it takes the
+            // same 10 params as axi_getstructsdata instead of the transid alone
+            else if (realSource.toLowerCase() === "axi_primaryfieldlist") {
+                paramValue = buildPrimaryFieldListParams(tokens, commandConfig, paramValue);
+            }
 
             else if (realSource.toLowerCase() === "axi_structmetalist") {
                 paramValue = processExtraParams(tokens, commandConfig);
@@ -6059,6 +6074,11 @@ if (typeof document !== "undefined") {
             // new code: configure keyfield <form>: the form has no field that can be its key field (axi_primaryfieldlist
             // lists only first-section fields that are auto-generated, or visible with Allow Duplicate off), so explain
             // how to add one instead of showing an empty list
+            // new code: fn_axi_getstructs_obj returns the form's records (isfield 'f') along with its fields; configure
+            // keyfield offers the fields only
+            if (apiSourceName === "axi_primaryfieldlist") {
+                dataList = dataList.filter(item => String(item?.isfield ?? item?.ISFIELD ?? "").toLowerCase() === "t");
+            }
             if (apiSourceName === "axi_primaryfieldlist" && dataList.length === 0) {
                 filteredObjects = [];
                 return [getNoKeyFieldMessage(tokens[2])];
@@ -6335,6 +6355,31 @@ if (typeof document !== "undefined") {
         return hits.length === 1 ? hits[0] : undefined;
     }
 
+    /**
+     * Params of axi_primaryfieldlist for "configure keyfield <form>". The data source runs fn_axi_getstructs_obj, so it
+     * takes the same 10 params as axi_getstructsdata (cmd, user, role, transid, selectedfield, dimension, permission,
+     * keyfield, primarytable, globalvars), read from the form's row in the structure list. No field is picked ("0")
+     * and no view filter is sent ("NA"); empty values are sent as "NA" like processParamforEditndView does.
+     * @param {string[]} tokens - Command tokens; tokens[2] is the form as typed.
+     * @param {object} commandConfig - Command configuration.
+     * @param {string} transid - The form's resolved transid.
+     * @returns {string} Params joined by "$#$", or "" while the form's row is not loaded yet.
+     */
+    function buildPrimaryFieldListParams(tokens, commandConfig, transid) {
+        if (!transid || !commandConfig) return "";
+        const typed = cleanString(tokens[2] || "");
+        let row;
+        for (const key in axDatasourceObj) {
+            if (!key.startsWith("axi_structmetalist") || !Array.isArray(axDatasourceObj[key])) continue;
+            row = findStructRow(axDatasourceObj[key], transid, "t", typed);
+            if (row) break;
+        }
+        if (!row) return "";
+        const values = [commandConfig.commandGroup, mainUserName, AxUserRoles, row.name || transid, "0",
+            row.dimension, row.permission, row.keyfield, row.primarytable, "NA"];
+        return values.map(v => (v === null || v === undefined || String(v).trim() === "") ? "NA" : v).join("$#$");
+    }
+
     function processParamforEditndView(tokens, commandConfig, paramValue, position) {
         if (!commandConfig || !commandConfig.prompts || !commandConfig.prompts[0]) {
             return "";
@@ -6512,13 +6557,22 @@ if (typeof document !== "undefined") {
                 value = struct_row?.primarytable || "";
             }
             else if (param === ":globalvars") {
-                // Dimension part stays "NA" (as before). For "view" / "edit" the session variables that the form's
-                // <transid>_filter application variable may use (e.g. :branch) follow the marker, see buildFilterVarsString.
+                // old code
+                // // Dimension part stays "NA" (as before). For "view" / "edit" the session variables that the form's
+                // // <transid>_filter application variable may use (e.g. :branch) follow the marker, see buildFilterVarsString.
+                // value = "NA";
+                // const cmdForVars = String(commandConfig.commandGroup || "").toLowerCase();
+                // if (cmdForVars === "view" || cmdForVars === "edit") {
+                //     const filterVars = buildFilterVarsString(allGloblVars);
+                //     if (filterVars) value = "NA" + FILTER_VARS_MARK + filterVars;
+                // }
+                // new code: for "view" / "edit" param10 carries the form's <transid>_filter with its placeholders
+                // filled in from globalvars (fn_axi_getstructs_obj adds it to the WHERE clause as it is); "NA" otherwise.
                 value = "NA";
                 const cmdForVars = String(commandConfig.commandGroup || "").toLowerCase();
                 if (cmdForVars === "view" || cmdForVars === "edit") {
-                    const filterVars = buildFilterVarsString(allGloblVars);
-                    if (filterVars) value = "NA" + FILTER_VARS_MARK + filterVars;
+                    const transidFilter = buildTransidFilter(struct_row?.name);
+                    if (transidFilter) value = transidFilter;
                 }
             }
 
@@ -6574,6 +6628,65 @@ if (typeof document !== "undefined") {
             if (plainValue.test(value)) pairs.push(name.toLowerCase() + "=" + value);
         });
         return pairs.join("~~");
+    }
+
+    /**
+     * Builds the view/edit filter of a form for param10 of axi_getstructsdata: reads the "<transid>_filter" globalvar
+     * (e.g. "and transid1.createdby = :username") and replaces every :name placeholder with the quoted value of the
+     * globalvar "name" (single quotes doubled). Names are matched without case (Oracle returns them in upper case).
+     * Text inside '...' literals and "::" casts is left alone. The value is sent as stored (no "and" is added).
+     * @param {string} transid - Transid of the form.
+     * @returns {string} The filter, or "" when there is no filter, it is empty, or a placeholder has no globalvar
+     *                   (then the filter is skipped).
+     */
+    function buildTransidFilter(transid) {
+        if (!transid || !allGloblVars || !Array.isArray(allGloblVars.globalVars)) return "";
+        const readVar = name => {
+            const lower = String(name).toLowerCase();
+            for (const o of allGloblVars.globalVars) {
+                if (!o || typeof o !== "object") continue;
+                const k = Object.keys(o).find(n => n.toLowerCase() === lower);
+                if (k !== undefined) return o[k];
+            }
+            return undefined;
+        };
+        const raw = readVar(transid + "_filter");
+        const filter = (raw === null || raw === undefined) ? "" : String(raw);
+        if (!filter.trim()) return "";
+
+        let out = "";
+        let i = 0;
+        while (i < filter.length) {
+            const ch = filter[i];
+            if (ch === "'") {
+                // copy a quoted literal as it is ('' inside it is an escaped quote)
+                let j = i + 1;
+                while (j < filter.length) {
+                    if (filter[j] === "'") {
+                        if (filter[j + 1] === "'") { j += 2; continue; }
+                        break;
+                    }
+                    j++;
+                }
+                out += filter.slice(i, j + 1);
+                i = j + 1;
+                continue;
+            }
+            if (ch === ":") {
+                if (filter[i + 1] === ":") { out += "::"; i += 2; continue; } // cast, e.g. x::text
+                const m = /^:([A-Za-z_][A-Za-z0-9_]*)/.exec(filter.slice(i));
+                if (m && !/[A-Za-z0-9_]/.test(filter[i - 1] || "")) {
+                    const v = readVar(m[1]);
+                    if (v === null || v === undefined) return ""; // no globalvar for this placeholder: skip the filter
+                    out += "'" + String(v).replace(/'/g, "''") + "'";
+                    i += m[0].length;
+                    continue;
+                }
+            }
+            out += ch;
+            i++;
+        }
+        return out;
     }
 
     /**
@@ -6990,6 +7103,10 @@ if (typeof document !== "undefined") {
             else if (realSource.toLowerCase() === "axi_structlist") {
                 paramValue = processExtraParams(currentTokens, commandConfig);
             }
+            // new code: configure keyfield <form> <field>: same 10 params as the suggestion list (see buildPrimaryFieldListParams)
+            else if (realSource.toLowerCase() === "axi_primaryfieldlist") {
+                paramValue = buildPrimaryFieldListParams(currentTokens, commandConfig, paramValue);
+            }
 
             else if (realSource.toLowerCase() === "axi_structmetalist") {
                 paramValue = processExtraParams(currentTokens, commandConfig);
@@ -7049,6 +7166,11 @@ if (typeof document !== "undefined") {
                         }
                     }
                 }
+            }
+            // new code: configure keyfield: only the field rows of axi_primaryfieldlist are key field candidates, a record
+            // value typed in their place must not resolve to a record row
+            if (cachedList && apiName.toLowerCase() === "axi_primaryfieldlist") {
+                cachedList = cachedList.filter(item => String(item?.isfield ?? item?.ISFIELD ?? "").toLowerCase() === "t");
             }
             if (cachedList) {
                 // Find matching items
@@ -7879,6 +8001,13 @@ if (typeof document !== "undefined") {
 
         realValue = foundObj ? (foundObj.name || foundObj.sqlname || foundObj.displaydata) : suggestion;
         realType = foundObj?.stype ?? "";
+        // new code: a field row of fn_axi_getstructs_obj ("Caption (fname) [field]", isfield 't') has no name column, so
+        // its whole display text was kept as the value. "configure keyfield" then saved "Message ID (msgid) [field]" as
+        // the key field (axi_primaryfieldlist now returns these rows). Keep the field's internal name (fname).
+        if (foundObj && typeof foundObj === "object" && !foundObj.name && String(foundObj.isfield ?? "").toLowerCase() === "t") {
+            const fieldNameMatch = /\(([^()]+)\)\s*\[field\]\s*$/i.exec(String(foundObj.displaydata || ""));
+            if (fieldNameMatch) realValue = fieldNameMatch[1].trim();
+        }
 
         // A record row (isfield "f") is always a value, also in "edit <form> <record>" where it sits at index 2.
         // Without this "Test (issue)" was cut to "Test" below, and the next suggestions then read that word as a
