@@ -1471,6 +1471,21 @@ body.axi-cmd-disabled #axiFavDeleteModalOverlay {
   display: inline-block;
 }
 
+/* "Click here" in the "No key field available" message: opens the form in the Developer Studio */
+.axi-suggestions li.axi-suggestion-system-message .axi-msg-link {
+  color: #1d2547 !important;
+  font-style: normal;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.axi-suggestions li.axi-suggestion-system-message .axi-msg-link:hover,
+.axi-suggestions li.axi-suggestion-system-message .axi-msg-link:focus-visible {
+  color: #3f51c2 !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .axi-suggestions li.axi-mode-button-item .axi-mode-button,
   .axi-suggestions li.axi-mode-button-item .axi-mode-button .material-icons {

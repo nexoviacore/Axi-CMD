@@ -7628,6 +7628,23 @@ if (typeof document !== "undefined") {
                 li.style.color = "#6c757d";
                 li.style.fontStyle = "italic";
                 setStatusText(li, displayText);
+                // new code: "No key field available ...": a "Click here" link that opens the form in the Developer Studio
+                const studioTransid = getNoKeyFieldStudioTarget(text);
+                if (studioTransid) {
+                    const link = document.createElement("a");
+                    link.href = "#";
+                    link.className = "axi-msg-link";
+                    link.textContent = "Click here";
+                    link.title = `Open ${studioTransid} in the Developer Studio`;
+                    // its own mousedown, so the list's handler (which would try to apply the message row) never sees it
+                    link.addEventListener("mousedown", ev => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        safeOpenDeveloperStudio("tstreact", studioTransid, true);
+                    });
+                    link.addEventListener("click", ev => ev.preventDefault());
+                    li.append(" ", link, " to open it.");
+                }
             } else if (isCreateNewItem) {
                 li.classList.add("axi-create-new-item");
                 li.textContent = displayText;
@@ -16718,9 +16735,35 @@ if (typeof document !== "undefined") {
         // old code
         // return `${noKeyFieldMessageStart()}${forForm}. ` +
         //     `Open ${tstructRef} in the Developer Studio and configure an Autogenerate field, or a field with Allow Duplicate set to false.`;
-        // new code: marked as a palette message (see isSystemMessage)
-        return axiStatusMsg(`${noKeyFieldMessageStart()}${forForm}. ` +
+        // old code
+        // // new code: marked as a palette message (see isSystemMessage)
+        // return axiStatusMsg(`${noKeyFieldMessageStart()}${forForm}. ` +
+        //     `Open ${tstructRef} in the Developer Studio and configure an Autogenerate field, or a field with Allow Duplicate set to false.`);
+        // new code: same message; render() adds a "Click here" link after it that opens the form in the Developer Studio,
+        // for a user with build access when the form resolves to a tstruct (see getNoKeyFieldStudioTarget)
+        const message = axiStatusMsg(`${noKeyFieldMessageStart()}${forForm}. ` +
             `Open ${tstructRef} in the Developer Studio and configure an Autogenerate field, or a field with Allow Duplicate set to false.`);
+        const form = formToken ? getTargetEntityObj(formToken, "edit") : null;
+        const formType = String(form?.stype ?? form?.STYPE ?? "").toLowerCase();
+        const transid = (formType === "t" || formType === "tstruct") ? (form.name || form.NAME || "") : "";
+        const store = getNoKeyFieldMessage.studioTargets || (getNoKeyFieldMessage.studioTargets = new Map());
+        if (transid) store.set(message, transid);
+        return message;
+    }
+
+    /**
+     * The tstruct a "No key field available" message is about, when the user may open it in the Developer Studio.
+     * @param {string} message - Text of a suggestion row.
+     * @returns {string} The transid, or "" when the row is not such a message, the form is unknown, or the user has no
+     *                   build access to tstructs.
+     */
+    function getNoKeyFieldStudioTarget(message) {
+        const store = getNoKeyFieldMessage.studioTargets;
+        const transid = (store && typeof message === "string") ? (store.get(message) || "") : "";
+        if (!transid) return "";
+        const access = getAccessPermissions();
+        if (!access?.buildAccess || !isDevOptionAllowed("tstruct")) return "";
+        return transid;
     }
 
 
