@@ -303,6 +303,7 @@ Sample Install Payload in Queue Message:
 Tasks Planned for next release (23/11/2026): 
 1. The Git account and Git Repository should be configurable through tstruct. 
 2. Edit and View command commmand Enhancement. search with fields Button
+3. Fields should be Allow Duplicate false. 
 
 
 
