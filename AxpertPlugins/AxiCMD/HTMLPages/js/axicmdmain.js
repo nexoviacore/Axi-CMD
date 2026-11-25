@@ -473,7 +473,10 @@ if (typeof document !== "undefined") {
     // const otherFieldsOption = { displaydata: "Search with fields", name: "OTHER_FIELDS_ACTION", isEditViewModeButton: true, icon: "manage_search" };
     // const keyFieldOption = { displaydata: "Search with key field value", name: "KEY_FIELD_ACTION", isEditViewModeButton: true, icon: "key" };
     // new code: each button also carries a short hint, shown next to it
-    const otherFieldsOption = { displaydata: "Search with fields", name: "OTHER_FIELDS_ACTION", isEditViewModeButton: true, icon: "manage_search", hint: "Find the record by another field" };
+    // old code
+    // const otherFieldsOption = { displaydata: "Search with fields", name: "OTHER_FIELDS_ACTION", isEditViewModeButton: true, icon: "manage_search", hint: "Find the record by another field" };
+    // new code: hint reads "Find the record by fields"
+    const otherFieldsOption = { displaydata: "Search with fields", name: "OTHER_FIELDS_ACTION", isEditViewModeButton: true, icon: "manage_search", hint: "Find the record by fields" };
     const keyFieldOption = { displaydata: "Search with key field value", name: "KEY_FIELD_ACTION", isEditViewModeButton: true, icon: "key", hint: "Back to the key field values" };
     // new code: "<cmd>|<form>" (lower case) while "Search with fields" is on for that form, null otherwise
     let editViewFieldSearchKey = null;
