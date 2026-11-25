@@ -13364,7 +13364,10 @@ if (typeof document !== "undefined") {
      * @returns {object} Request body.
      */
     function buildInstallQueueBody(payload) {
-        return { queuename: AXI_INSTALL_QUEUE_NAME, queuedata: JSON.stringify(payload), queuejson: payload, trace: false };
+        // old code
+        // return { queuename: AXI_INSTALL_QUEUE_NAME, queuedata: JSON.stringify(payload), queuejson: payload, trace: false };
+        // new code: queuejson is dropped; the payload goes only as the queuedata string
+        return { queuename: AXI_INSTALL_QUEUE_NAME, queuedata: JSON.stringify(payload), trace: false };
     }
 
     /**
