@@ -13,23 +13,3 @@ CREATE TABLE IF NOT EXISTS axi_command_settings (
 )
 >>
 
--- Golden Dump: Git account, repository and PAT (gittoken) of each install type (product = ProductVersion, plugin, changerequest).
--- Rows are added only when absent, so values already set on a server are kept and a re-run changes nothing.
--- gittoken is shipped empty on purpose: set the PAT on each server, never in this script.
--- An empty accountname / reponame makes install show "Repository not set" for that type until it is filled in.
-<<
-INSERT INTO axi_command_settings (propertycategory, propertytype, propertyname, propertyvalue, username)
-SELECT v.propertycategory, v.propertytype, v.propertyname, v.propertyvalue, 'admin'
-FROM (VALUES
-    ('axicmd', 'product', 'accountname', 'Agileaxpert'),
-    ('axicmd', 'product', 'reponame', 'AxiProductVersions'),
-    ('axicmd', 'product', 'gittoken', ''),
-    ('axicmd', 'plugin', 'accountname', 'Agileaxpert'),
-    ('axicmd', 'plugin', 'reponame', 'AxpertPlugins'),
-    ('axicmd', 'plugin', 'gittoken', ''),
-    ('axicmd', 'changerequest', 'accountname', 'Agileaxpert'),
-    ('axicmd', 'changerequest', 'reponame', 'AxpertChangeRequest'),
-    ('axicmd', 'changerequest', 'gittoken', '')
-) AS v(propertycategory, propertytype, propertyname, propertyvalue)
-WHERE NOT EXISTS (SELECT 1 FROM axi_command_settings s WHERE s.propertycategory = v.propertycategory AND s.propertytype = v.propertytype AND s.propertyname = v.propertyname)
->>
