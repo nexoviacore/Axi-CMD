@@ -301,9 +301,25 @@ Sample Install Payload in Queue Message:
 
 
 Tasks Planned for next release (23/11/2026): 
-1. The Git account and Git Repository should be configurable through tstruct. 
-2. Edit and View command commmand Enhancement. search with fields Button
-3. Fields should be Allow Duplicate false. 
+### 1. Configurable Git Account and Repository (via TStruct)
+- Provide a TStruct form where users can configure the Git account and the Git repository.
+- Fields: Git account/username, repository URL, branch (default: main/Dev), and access token.
+
+
+
+### 2. Enhance the Edit and View Commands
+- Add a search option to the Edit and View commands.
+- Add a **Search with fields** button next to the search fields; clicking it filters the results.
+- Allow searching by the relevant fields (for example, name, type, status).
+.
+
+### 3. No Duplicate Values in Fields
+- Set **Allow Duplicate = false** on the required fields (for example, the command name, repository name).
+- Show a clear validation message when a user enters an existing value, e.g. "<Field> already exists."
+- Enforce this on the backend as well (a unique constraint), not only in the UI.
+
+
+### 4. Remove the queuejson from the install command payload. 
 
 
 
