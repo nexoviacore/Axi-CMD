@@ -303,7 +303,7 @@ Sample Install Payload in Queue Message:
 Tasks Planned for next release (23/11/2026): 
 ### 1. Configurable Git Account and Repository (via TStruct)
 - Provide a TStruct form where users can configure the Git account and the Git repository.
-- Fields: Git account/username, repository URL, branch (default: main/Dev), and access token.
+- Fields: Git account/username, repository  and access token.
 
 
 
@@ -314,9 +314,7 @@ Tasks Planned for next release (23/11/2026):
 .
 
 ### 3. No Duplicate Values in Fields
-- Set **Allow Duplicate = false** on the required fields (for example, the command name, repository name).
-- Show a clear validation message when a user enters an existing value, e.g. "<Field> already exists."
-- Enforce this on the backend as well (a unique constraint), not only in the UI.
+
 
 
 ### 4. Remove the queuejson from the install command payload. 
