@@ -145,7 +145,10 @@ function buildInstallPayload(p) {
 }
 
 function buildInstallQueueBody(payload) {
-    return { queuename: AXI_INSTALL_QUEUE_NAME, queuedata: JSON.stringify(payload), queuejson: payload, trace: false };
+    // old code
+    // return { queuename: AXI_INSTALL_QUEUE_NAME, queuedata: JSON.stringify(payload), queuejson: payload, trace: false };
+    // new code: queuejson is no longer sent
+    return { queuename: AXI_INSTALL_QUEUE_NAME, queuedata: JSON.stringify(payload), trace: false };
 }
 
 function parseInstallQueueResult(ok, status, text) {
@@ -272,7 +275,10 @@ test('queue payload and body', () => {
     const body = buildInstallQueueBody(payload);
     assert.strictEqual(body.queuename, 'axiinstallpackagesqueue');
     assert.strictEqual(body.trace, false);
-    assert.strictEqual(body.queuejson, payload);
+    // old code
+    // assert.strictEqual(body.queuejson, payload);
+    // new code: the body has no queuejson key
+    assert.strictEqual('queuejson' in body, false);
     assert.deepStrictEqual(JSON.parse(body.queuedata), payload);
 });
 
