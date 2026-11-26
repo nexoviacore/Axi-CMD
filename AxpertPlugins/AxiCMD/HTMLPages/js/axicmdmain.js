@@ -15815,10 +15815,22 @@ if (typeof document !== "undefined") {
         if (buttons.length === 0) {
             buttons = Array.from(doc.querySelectorAll(".BottomToolbarBar a, .BottomToolbarBar button, .tstructMainBottomFooter a, .tstructMainBottomFooter button, #icons a, #icons button, [id^='dvRefresh'] button, .card-toolbar a, .card-toolbar button, .toolbar a, .toolbar button, input[type='button'], input[type='submit']"));
         }
+        // old code
+        // if (buttons.length === 0) return {};
+        //
+        // const result = {};
+        // const structType = getStructType();
+        // new code: querySelector above returns only the first match, which on a form is the top ".toolbar" strip, so the
+        // footer (Submit, New, Discard, Previous, Next) was never read and "run" could not list it. On a form the
+        // footer bars are read as well; other pages keep reading only the first toolbar.
+        const structType = getStructType();
+        if (structType === "t") {
+            const footerButtons = Array.from(doc.querySelectorAll(".BottomToolbarBar a, .BottomToolbarBar button, .tstructBottomLeftButton a, .tstructBottomLeftButton button"));
+            buttons = Array.from(new Set([...buttons, ...footerButtons]));
+        }
         if (buttons.length === 0) return {};
 
         const result = {};
-        const structType = getStructType();
 
         buttons.forEach((btn) => {
             const dropDownItem = btn.closest(".dropDownButton__item, .dropDownButton__list");
