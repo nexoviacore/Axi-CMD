@@ -3669,8 +3669,18 @@ if (typeof document !== "undefined") {
         if (matches.length === 1) return matches[0];
 
         // Structures sharing a caption: the internal name already picked wins over a type-only match (#289)
-        const pickedNames = Object.values(resolvedParams).filter(v => v).map(v => String(v).toLowerCase());
-        const pickedMatch = matches.find(d => pickedNames.includes((d.name || d.NAME || d.sqlname || "").toLowerCase()));
+        // old code
+        // const pickedNames = Object.values(resolvedParams).filter(v => v).map(v => String(v).toLowerCase());
+        // const pickedMatch = matches.find(d => pickedNames.includes((d.name || d.NAME || d.sqlname || "").toLowerCase()));
+        // new code: a form and a report can share caption AND internal name ("Duplicate Name Tstruct vs Iview" (dupTN)).
+        // Matching the picked name alone returned the form for the picked report, so it listed Create / Edit. The type
+        // picked with the name tells them apart.
+        const pickedMatch = matches.find(d => {
+            const n = (d.name || d.NAME || d.sqlname || "").toLowerCase();
+            return Object.keys(resolvedParams).some(k => resolvedParams[k]
+                && String(resolvedParams[k]).toLowerCase() === n
+                && (!resolvedParamType[k] || areTypesMatching(d.stype || d.STYPE, resolvedParamType[k])));
+        });
         if (pickedMatch) return pickedMatch;
 
         let matched = null;
@@ -7121,7 +7131,10 @@ if (typeof document !== "undefined") {
                 if (badgeMatch) {
                     const badgeStr = badgeMatch[1].toLowerCase().trim();
                     if (["form", "tstruct", "t"].includes(badgeStr)) preferredType = "t";
-                    else if (["iview", "i"].includes(badgeStr)) preferredType = "i";
+                    // old code
+                    // else if (["iview", "i"].includes(badgeStr)) preferredType = "i";
+                    // new code: the suggestion list shows reports with the badge [report]
+                    else if (["report", "iview", "i"].includes(badgeStr)) preferredType = "i";
                     else if (["ads", "a", "v"].includes(badgeStr)) preferredType = "ads";
                     else if (["page", "p"].includes(badgeStr)) preferredType = "p";
                 }

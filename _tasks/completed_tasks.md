@@ -322,4 +322,14 @@ Tasks Planned for next release (23/11/2026):
 
 
 
+26/11/2026
+
+1. Open any form in normal mode and open different form create page in pop up mode using View action.Click on Clear Cache and Reload form option in pop up mode.Observed that the form in normal mode is changed to the form opened in pop up mode.And it keeps on loading in pop up.
+
+2. When Tstruct and Iview have same transid/caption,then selecting iview is displaying View,Create,Edit,Source options.
+Tstruct/iview name: Duplicate Name Tstruct vs Iview in pgbase114
+
+
+
+
 
