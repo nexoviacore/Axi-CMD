@@ -1,0 +1,31 @@
+-- Basic Git Setup SQL Queries
+<< 
+INSERT INTO devpgbase114.axi_command_settings (axi_command_settingsid,cancel,sourceid,mapname,username,modifiedon,createdby,createdon,wkid,app_level,app_desc,app_slevel,cancelremarks,wfroles,propertycategory,propertytype,propertyname,propertyvalue,id,dupchk) VALUES
+	 (1059110000003,'F',0,NULL,'admin','2026-11-25 10:06:56','admin','2026-11-25 10:06:56',NULL,1,1,NULL,NULL,NULL,'axicmd','product','accountname','salmanagilelabs','37464dfe-c04f-4c0c-9ee8-c3462d51914c'::uuid,'axicmdproductaccountname'),
+	 (1059220000000,'F',0,NULL,'admin','2026-11-25 10:12:50','admin','2026-11-25 10:12:50',NULL,1,1,NULL,NULL,NULL,'axicmd','product','reponame','AxiProduct','02f6b407-7179-4c15-a33a-bdea9ba6f496'::uuid,'axicmdproductreponame'),
+	 (1059330000000,'F',0,NULL,'admin','2026-11-25 10:13:32','admin','2026-11-25 10:13:32',NULL,1,1,NULL,NULL,NULL,'axicmd','product','gittoken','','8e3e888e-e73b-4201-9798-6cb3c07f28b8'::uuid,'axicmdproductgittoken'),
+	 (1061440000007,'F',0,NULL,'admin','2026-11-25 15:51:18','admin','2026-11-25 15:51:18',NULL,1,1,NULL,NULL,NULL,'axicmd','plugin','accountname','salmanagilelabs','0e156ace-ab17-4f55-ad17-1e1bb6b52d08'::uuid,'axicmdpluginaccountname'),
+	 (1061550000019,'F',0,NULL,'admin','2026-11-25 15:51:52','admin','2026-11-25 15:51:52',NULL,1,1,NULL,NULL,NULL,'axicmd','plugin','reponame','AxiPlugin','6fce2ec5-d512-4abb-b46e-7410fb13e81a'::uuid,'axicmdpluginreponame'),
+	 (1061660000000,'F',0,NULL,'admin','2026-11-25 15:52:43','admin','2026-11-25 15:52:43',NULL,1,1,NULL,NULL,NULL,'axicmd','plugin','gittoken','','53c96360-b8ef-4468-9cea-0a1b55e3a6dd'::uuid,'axicmdplugingittoken'),
+	 (1061770000001,'F',0,NULL,'admin','2026-11-25 15:52:56','admin','2026-11-25 15:52:56',NULL,1,1,NULL,NULL,NULL,'axicmd','changerequest','gittoken','','62c95ae8-7d35-468d-8695-49d493104f0d'::uuid,'axicmdchangerequestgittoken'),
+	 (1061880000001,'F',0,NULL,'admin','2026-11-25 15:53:18','admin','2026-11-25 15:53:18',NULL,1,1,NULL,NULL,NULL,'axicmd','changerequest','reponame','AxiChangeRequest','24973e62-26fc-4700-8368-da6587d33a5d'::uuid,'axicmdchangerequestreponame'),
+	 (1061990000002,'F',0,NULL,'admin','2026-11-25 15:53:33','admin','2026-11-25 15:53:33',NULL,1,1,NULL,NULL,NULL,'axicmd','changerequest','accountname','salmanagilelabs','239952d5-deeb-4e6c-ab94-6e2dccef2dd8'::uuid,'axicmdchangerequestaccountname');
+>>
+
+
+-- Configure Product, Plugin and Change Request Delete Sql Queries
+<<
+DELETE FROM axi_command_config WHERE config_id IN ('cfg_configure_product', 'cfg_configure_plugin', 'cfg_configure_changerequest')
+>>
+
+
+-- Configure: Product, Plugin and ChangeRequest (Git account / repository) are no longer set from AxiCMD. The two statements below take them
+-- out of a database that already has them. Sources go first (their guard reads the option list, which the next statement changes); each
+-- source is dropped at the same position as its option, so Custom Options keep their sources. A re-run changes nothing.
+<<
+UPDATE axi_command_prompts s SET promptsource = (SELECT string_agg(src.v, ',' ORDER BY src.i) FROM unnest(string_to_array(RTRIM(s.promptsource, ', '), ',')) WITH ORDINALITY AS src(v, i) LEFT JOIN unnest(string_to_array(RTRIM(n.promptvalues, ', '), ',')) WITH ORDINALITY AS val(v, i) ON val.i = src.i WHERE val.v IS NULL OR lower(trim(val.v)) NOT IN ('product', 'plugin', 'changerequest')) FROM axi_command_prompts n WHERE s.cmdtoken = 4 AND s.wordpos = 3 AND n.cmdtoken = 4 AND n.wordpos = 2 AND lower(n.promptvalues) LIKE '%changerequest%'
+>>
+
+<<
+UPDATE axi_command_prompts SET promptvalues = (SELECT string_agg(t.v, ',' ORDER BY t.i) FROM unnest(string_to_array(RTRIM(promptvalues, ', '), ',')) WITH ORDINALITY AS t(v, i) WHERE lower(trim(t.v)) NOT IN ('product', 'plugin', 'changerequest')) WHERE cmdtoken = 4 AND wordpos = 2 AND lower(promptvalues) LIKE '%changerequest%'
+>>

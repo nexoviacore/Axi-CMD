@@ -1,0 +1,5 @@
+alter table axi_command_settings add id UUID DEFAULT gen_random_uuid();
+
+ALTER TABLE axi_command_settings ADD CONSTRAINT uq_axi_command_settings UNIQUE (propertycategory,propertytype,propertyname);
+
+ALTER TABLE axi_command_settings ADD CONSTRAINT uq_id_uuid UNIQUE (id);
