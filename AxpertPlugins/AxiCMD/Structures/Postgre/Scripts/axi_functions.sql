@@ -1778,7 +1778,10 @@ if pselectedfield!='0' then
 end if;
 
 if pselectedfield='0' then
-v_sql := concat(' select * from(',v_keyfield_sql,')a',' union all',v_fieldlist_sql);
+-- old code
+-- v_sql := concat(' select * from(',v_keyfield_sql,')a',' union all',v_fieldlist_sql);
+-- new code: field rows first, so they always come back in page 1 of the paged list (AxList pages the whole result)
+v_sql := concat(' select * from(',v_fieldlist_sql,')f',' union all select * from(',v_keyfield_sql,')a');
 else
 v_sql := v_selectedfld_sql;
 end if;

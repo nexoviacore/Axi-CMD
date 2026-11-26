@@ -929,11 +929,19 @@ BEGIN
 
     IF pselectedfield = '0' THEN
 
+        -- old code
+        -- v_sql :=
+        --        'SELECT * FROM ('
+        --     || v_keyfield_sql
+        --     || ') UNION ALL '
+        --     || v_fieldlist_sql;
+        -- new code: field rows first, so they always come back in page 1 of the paged list (AxList pages the whole result)
         v_sql :=
                'SELECT * FROM ('
+            || v_fieldlist_sql
+            || ') UNION ALL SELECT * FROM ('
             || v_keyfield_sql
-            || ') UNION ALL '
-            || v_fieldlist_sql;
+            || ')';
 
     ELSE
 
