@@ -633,6 +633,8 @@ if (incomingId && tabTransId && incomingId.toLowerCase() === tabTransId.toLowerC
                     try {
                         if (typeof window.ShowDimmer === "function") window.ShowDimmer(false);
                     } catch (e) { }
+                    // new code: "Clear Cache and Reload" must reload this pop-up tab, not the shell's main form
+                    this.hookClearCacheReload(ifr);
                 };
                 ifr.onerror = () => {
                     try {
@@ -657,6 +659,54 @@ if (incomingId && tabTransId && incomingId.toLowerCase() === tabTransId.toLowerC
 
                 this.updateGlobalTransidList();
                 this.activateTab(title);
+            }
+
+            /**
+             * new code: makes the form menu's "Clear Cache and Reload" work inside a pop-up tab.
+             * Pop-up tab frames are named axMultiiframe_*, so tstruct keeps that menu option visible, and its
+             * clearCacheReloadForm (Js/tstruct.js) ends with callParentNew("LoadIframe(...)"). That loaded the pop-up's
+             * form into the shell's main frame and left the pop-up's loader on. The product's cache clearing still runs;
+             * only that final LoadIframe call is redirected to reload this tab's own frame.
+             * @param {HTMLIFrameElement} ifr - The pop-up tab frame.
+             * @returns {void}
+             */
+            hookClearCacheReload(ifr) {
+                try {
+                    const cw = ifr.contentWindow;
+                    if (!cw || typeof cw.clearCacheReloadForm !== "function" || cw.clearCacheReloadForm.axiPopupHooked) return;
+
+                    const originalClear = cw.clearCacheReloadForm;
+                    const hooked = function () {
+                        const originalCallParent = cw.callParentNew;
+                        cw.callParentNew = function (name, type) {
+                            const call = String(name || "");
+                            if (type === "function" && /^LoadIframe\(/i.test(call)) {
+                                let uri = call.replace(/^LoadIframe\(/i, "").replace(/\)$/, "").trim();
+                                uri = uri.replace(/^(\.{1,2}\/)+/, "").replace(/^aspx\//i, "");
+
+                                let current = new URLSearchParams();
+                                try { current = new URLSearchParams(cw.location.search); } catch (e) { }
+                                let dupTab = current.get("isDupTab") || "";
+                                if (!/^true-/i.test(dupTab)) dupTab = `true-${Date.now()}`;
+
+                                const appBase = top.window.location.href.substring(0, top.window.location.href.toLowerCase().indexOf("/aspx/"));
+                                let url = `${appBase}/aspx/${uri}${uri.includes("?") ? "&" : "?"}isDupTab=${dupTab}&dummyload=false`;
+                                if (current.get("AxIsPop")) url += `&AxIsPop=${current.get("AxIsPop")}`;
+                                ifr.src = url;
+                                return;
+                            }
+                            return originalCallParent.apply(this, arguments);
+                        };
+                        try {
+                            // the cache-clear request in clearCacheReloadForm is synchronous, so its LoadIframe call happens before this returns
+                            return originalClear.apply(this, arguments);
+                        } finally {
+                            cw.callParentNew = originalCallParent;
+                        }
+                    };
+                    hooked.axiPopupHooked = true;
+                    cw.clearCacheReloadForm = hooked;
+                } catch (e) { }
             }
 
             async activateTab(title) {

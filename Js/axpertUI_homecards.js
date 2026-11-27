@@ -2414,13 +2414,24 @@
                 let _this = this;
 
                 if (objCardHTML.data("shadowDom") === false || objCardHTML.data("shadowdom") === false) {
-                    $(shadowDomEle).append(cardHTML);
+                    // old code
+                    // $(shadowDomEle).append(cardHTML);
+                    // new code: the page CSP (mainnew.aspx) only runs scripts that carry its nonce, so the card's own <script> tags get it
+                    $(shadowDomEle).append(_this._addCspNonce(cardHTML));
                 } else {
                     var shadowAtt = shadowDomEle.attachShadow({ mode: 'open' });
                     card.shadow = shadowAtt;
 
                     shadowAtt.innerHTML = cardHTML;
                 }
+            },
+            // new code: adds the page's CSP nonce to every <script> tag of a card's HTML that has none, so the card's
+            // inline script is allowed to run. Without a nonce on the page the HTML is returned as it is.
+            _addCspNonce(html) {
+                var nonce = (document.querySelector("script[nonce]") || {}).nonce || "";
+                if (!nonce || typeof html != "string")
+                    return html;
+                return html.replace(/<script(?![^>]*\snonce=)/gi, '<script nonce="' + nonce + '"');
             },
             _getDateAndFormatBasedOnCulture(dateStr) {
                 if (dateStr != "") {

@@ -207,6 +207,12 @@ INSERT INTO AXI_COMMAND_PROMPTS (ID, CMDTOKEN, WORDPOS, PROMPT, PROMPTSOURCE, PR
 UPDATE AXI_COMMAND_PROMPTS SET promptvalues = RTRIM(promptvalues, ',') || ',Trace On,Trace Off,Trace Files' WHERE cmdtoken = 4 AND wordpos = 2 AND (',' || promptvalues || ',') NOT LIKE '%,Trace Files,%'
 >>
 
+-- new code: Configure: Command Settings (opens the a__ax tstruct, see axi_command_config). Added only when it is not in the list yet, so a
+-- re-run changes nothing. Its Axi_Dummy source is added by the padding UPDATE below.
+<<
+UPDATE AXI_COMMAND_PROMPTS SET promptvalues = RTRIM(promptvalues, ',') || ',Command Settings' WHERE cmdtoken = 4 AND wordpos = 2 AND LOWER(',' || promptvalues || ',') NOT LIKE '%,command settings,%'
+>>
+
 -- new code: the names are added first (guarded on ChangeRequest, so a re-run changes nothing). The next statement then pads the source list
 -- with Axi_Dummy (10 characters each, RPAD repeats it) until it has as many entries as the names, which also repairs a database whose sources are already short.
 -- old code: configure Product / Plugin / ChangeRequest was removed, so the options are no longer added

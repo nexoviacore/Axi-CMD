@@ -24,3 +24,6 @@
 - **Built-in Option**: A `configure` or `sdk` prompt option shipped with AxiCMD. Its route cannot be edited by users; it can only be switched active or inactive.
 - **Custom Option**: A `configure` or `sdk` prompt option added by a user with Config Page Access. Fully editable, and removed by deactivating it rather than deleting it.
 - **Search In-Memory Cache**: The in-session JavaScript cache (`axDatasourceObj`) storing dynamic keyword results by term key (`_q_<term>`), invalidated upon explicit refresh (`#btnRefresh`) or record save/update actions.
+- **Key Field**: The field whose value identifies a record of a form, used by `edit` and `view` to pick the record. It is either set explicitly (Configure Key Field) or derived from the form; a form "has a key field" only when that key can be used for editing.
+- **Unique Field**: A visible character field in a form's first section whose value cannot repeat across records (it does not allow duplicates), or one whose value is auto-generated. Called "non-duplicate field" in requirements.
+- **Field Search**: Finding a record for `edit` or `view` by the value of a Unique Field other than the Key Field, e.g. `Item Master (itmst) Edit "Item Name *" "External Hard Disk"`. It is the only way to pick a record on a form without a Key Field.

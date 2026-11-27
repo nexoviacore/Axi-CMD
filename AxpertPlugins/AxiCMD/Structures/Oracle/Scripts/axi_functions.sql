@@ -62,6 +62,556 @@ CREATE OR REPLACE TYPE AXI_GETSTRUCTURES_META AS OBJECT (
 CREATE OR REPLACE TYPE AXI_GETSTRUCTURES_META_tbl AS TABLE OF AXI_GETSTRUCTURES_META
 >>
 
+-- old code: block markers commented out so the installer cannot pick it up
+-- <<
+-- CREATE OR REPLACE FUNCTION fn_axi_getstructs_obj (
+--     pcmd            VARCHAR2,
+--     pusername       VARCHAR2,
+--     puserrole       VARCHAR2,
+--     ptransid        VARCHAR2,
+--     pselectedfield  VARCHAR2,
+--     pdimension      VARCHAR2,
+--     ppermission     VARCHAR2,
+--     pkeyfield       VARCHAR2,
+--     pprimarytable   VARCHAR2,
+--     pglobalvars     VARCHAR2
+-- )
+-- RETURN AXI_GETSTRUCTS_OBJ_TBL
+-- PIPELINED
+--
+-- is
+--
+--     v_sql                       CLOB;
+--
+--     v_keyfield_normalized       VARCHAR2(10);
+--     v_keyfield_srctbl           VARCHAR2(200);
+--     v_keyfield_srcfld           VARCHAR2(200);
+--
+--     v_selectedfld_normalized    VARCHAR2(10);
+--     v_selectedfld_srctbl        VARCHAR2(200); 
+--     v_selectedfld_srcfld        VARCHAR2(200);
+--
+--     v_dimension_filter          CLOB;
+--
+--     v_globalvars_dim            VARCHAR2(4000);
+--     v_vars_part                 VARCHAR2(4000);
+--     v_rest                      VARCHAR2(4000);
+--     v_pair                      VARCHAR2(4000);
+--     v_pos                       NUMBER;
+--     v_eq                        NUMBER;
+--     v_varname                   VARCHAR2(200);
+--     v_varvalue                  VARCHAR2(4000);
+--     v_view_filter               CLOB;
+--     v_view_check                CLOB;
+--
+--     v_includedcomps             CLOB;
+--     v_excludedcomps             CLOB;
+--
+--     v_viewctrl                  VARCHAR2(10);
+--     v_editctrl                  VARCHAR2(10);
+--     v_fullcontrol               VARCHAR2(10);
+--
+--     v_fieldlist_sql             CLOB;
+--     v_keyfield_sql              CLOB;
+--     v_selectedfld_sql           CLOB;
+--
+--     TYPE refcur IS REF CURSOR;
+--
+--     rc refcur;
+--
+--     r_displaydata   CLOB;
+--     r_id            CLOB;
+--     r_caption       CLOB;
+--     r_isfield       CLOB;
+--     r_transrecordid NUMBER; 
+--
+-- BEGIN
+--
+--     -- pglobalvars = <dimension part>[@@VARS@@name=value~~name=value]; the second part carries the session variables
+--     -- used by the form's view filter (axvarcore <transid>_filter, e.g. ':branch'). The dimension part is used as before.
+--     IF INSTR(NVL(pglobalvars,'-'),'@@VARS@@') > 0 THEN
+--         v_globalvars_dim := SUBSTR(pglobalvars,1,INSTR(pglobalvars,'@@VARS@@') - 1);
+--         v_vars_part      := SUBSTR(pglobalvars,INSTR(pglobalvars,'@@VARS@@') + 8);
+--     ELSE
+--         v_globalvars_dim := pglobalvars;
+--         v_vars_part      := NULL;
+--     END IF;
+--
+--     IF v_globalvars_dim IS NULL THEN
+--         v_globalvars_dim := 'NA';
+--     END IF;
+--
+--     SELECT srckey,
+--            LOWER(srctf),
+--            LOWER(srcfld)
+--     INTO v_keyfield_normalized,
+--          v_keyfield_srctbl,
+--          v_keyfield_srcfld
+--     FROM axpflds
+--     WHERE tstruct = ptransid
+--       AND LOWER(fname) = LOWER(pkeyfield);
+--
+--     BEGIN
+--
+--         SELECT srckey,
+--                LOWER(srctf),
+--                LOWER(srcfld)
+--         INTO v_selectedfld_normalized,
+--              v_selectedfld_srctbl,
+--              v_selectedfld_srcfld
+--         FROM axpflds
+--         WHERE tstruct = ptransid
+--           AND LOWER(fname) = LOWER(pselectedfield);
+--
+--     EXCEPTION
+--         WHEN NO_DATA_FOUND THEN
+--             v_selectedfld_normalized := 'F';
+--             v_selectedfld_srctbl := NULL;
+--             v_selectedfld_srcfld := NULL;
+--     END;
+--
+--     IF pdimension = 'T' THEN
+--
+--         BEGIN
+--
+--             SELECT filtercnd
+--             INTO v_dimension_filter
+--             FROM TABLE(
+--                 fn_permissions_getpermission(
+--                     'axi',
+--                     ptransid,
+--                     pusername,
+--                     puserrole,
+--                     v_globalvars_dim
+--                 )
+--             )
+--             WHERE ROWNUM = 1;
+--
+--             IF LENGTH(v_dimension_filter) > 2 THEN
+--
+--                 v_dimension_filter :=
+--                     ' AND ' ||
+--                     REPLACE(
+--                         v_dimension_filter,
+--                         '{primarytable.}',
+--                         'p.'
+--                     );
+--
+--             END IF;
+--
+--         EXCEPTION
+--             WHEN NO_DATA_FOUND THEN
+--                 v_dimension_filter := NULL;
+--         END;
+--
+--     END IF;
+--
+--     -- The form's view filter (record lists of 'view' / 'edit' only; the field rows are not filtered).
+--     -- axvarcore.vpname = '<transid>_filter', vpvalue = e.g. 'and Form11.branch=:branch'. No row = list as it is.
+--     IF LOWER(pcmd) IN ('view','edit') THEN
+--
+--         BEGIN
+--
+--             SELECT vpvalue
+--             INTO v_view_filter
+--             FROM axvarcore
+--             WHERE LOWER(vpname) = LOWER(ptransid || '_filter')
+--               AND NVL(cancel,'F') = 'F'
+--               AND ROWNUM = 1;
+--
+--         EXCEPTION
+--             WHEN NO_DATA_FOUND THEN
+--                 v_view_filter := NULL;
+--         END;
+--
+--         IF v_view_filter IS NOT NULL AND LENGTH(TRIM(v_view_filter)) > 0 THEN
+--
+--             -- the primary table is aliased 'p' in the queries below
+--             v_view_filter := REPLACE(v_view_filter,'{primarytable.}','p.');
+--             v_view_filter := REGEXP_REPLACE(
+--                                  v_view_filter,
+--                                  '(^|[^A-Za-z0-9_])' || REGEXP_REPLACE(NVL(pprimarytable,'-'),'[^A-Za-z0-9_]','') || '[.]',
+--                                  '\1p.',
+--                                  1, 0, 'i');
+--
+--             -- The same text with every placeholder that has a value removed: what is left in it has no value. Checked on
+--             -- this copy so that a ':x' inside a substituted value (for example a user name with a colon) is not taken for one.
+--             v_view_check := v_view_filter;
+--             FOR i IN 1..2 LOOP
+--                 v_view_check := REGEXP_REPLACE(v_view_check,'(^|[^:A-Za-z0-9_]):username([^A-Za-z0-9_]|$)','\1\2',1,0,'i');
+--                 v_view_check := REGEXP_REPLACE(v_view_check,'(^|[^:A-Za-z0-9_]):userrole([^A-Za-z0-9_]|$)','\1\2',1,0,'i');
+--             END LOOP;
+--
+--             -- :username and :userrole (run twice so that two neighbouring placeholders are both replaced)
+--             FOR i IN 1..2 LOOP
+--                 v_view_filter := REGEXP_REPLACE(
+--                                      v_view_filter,
+--                                      '(^|[^:A-Za-z0-9_]):username([^A-Za-z0-9_]|$)',
+--                                      '\1''' || REPLACE(REPLACE(NVL(pusername,''),'''',''''''),'\','\\') || '''\2',
+--                                      1, 0, 'i');
+--                 v_view_filter := REGEXP_REPLACE(
+--                                      v_view_filter,
+--                                      '(^|[^:A-Za-z0-9_]):userrole([^A-Za-z0-9_]|$)',
+--                                      '\1''' || REPLACE(REPLACE(NVL(puserrole,''),'''',''''''),'\','\\') || '''\2',
+--                                      1, 0, 'i');
+--             END LOOP;
+--
+--             -- session variables, e.g. ':branch' (only plain values are accepted)
+--             v_rest := v_vars_part;
+--
+--             WHILE v_rest IS NOT NULL LOOP
+--
+--                 v_pos := INSTR(v_rest,'~~');
+--
+--                 IF v_pos > 0 THEN
+--                     v_pair := SUBSTR(v_rest,1,v_pos - 1);
+--                     v_rest := SUBSTR(v_rest,v_pos + 2);
+--                 ELSE
+--                     v_pair := v_rest;
+--                     v_rest := NULL;
+--                 END IF;
+--
+--                 v_eq := INSTR(v_pair,'=');
+--
+--                 IF v_eq > 1 THEN
+--
+--                     v_varname  := LOWER(REGEXP_REPLACE(SUBSTR(v_pair,1,v_eq - 1),'[^A-Za-z0-9_]',''));
+--                     v_varvalue := REGEXP_REPLACE(SUBSTR(v_pair,v_eq + 1),'[^A-Za-z0-9_. -]','');
+--
+--                     IF v_varname IS NOT NULL THEN
+--                         FOR i IN 1..2 LOOP
+--                             v_view_filter := REGEXP_REPLACE(
+--                                                  v_view_filter,
+--                                                  '(^|[^:A-Za-z0-9_]):' || v_varname || '([^A-Za-z0-9_]|$)',
+--                                                  '\1''' || v_varvalue || '''\2',
+--                                                  1, 0, 'i');
+--                             v_view_check := REGEXP_REPLACE(
+--                                                  v_view_check,
+--                                                  '(^|[^:A-Za-z0-9_]):' || v_varname || '([^A-Za-z0-9_]|$)',
+--                                                  '\1\2',
+--                                                  1, 0, 'i');
+--                         END LOOP;
+--                     END IF;
+--
+--                 END IF;
+--
+--             END LOOP;
+--
+--             -- a placeholder without a value cannot be resolved. The filter exists to hide records, so it must not be
+--             -- dropped (that would list every record): list no records at all until the variable is available.
+--             IF REGEXP_LIKE(v_view_check,'(^|[^:]):[A-Za-z_]') THEN
+--                 v_view_filter := ' AND 1=0';
+--             ELSE
+--                 v_view_filter := ' AND (' || REGEXP_REPLACE(TRIM(v_view_filter),'^and[[:space:]]+','',1,1,'i') || ')';
+--             END IF;
+--
+--         ELSE
+--             v_view_filter := NULL;
+--         END IF;
+--
+--         v_dimension_filter := v_dimension_filter || v_view_filter;
+--
+--     END IF;
+--
+--     IF ppermission = 'T' THEN
+--
+--         BEGIN
+--
+--             -- old code: the dc list and the field list were joined without a comma ('dc1,dc2' + 'fld1,fld2' =
+--             -- 'dc1,dc2fld1,fld2'), so the first included / excluded field never matched
+--             -- SELECT LOWER(view_includedc || view_includeflds),
+--             --        LOWER(view_excludedc || view_excludeflds),
+--             -- new code: a comma between them, only when both lists have a value (a leading empty item would put
+--             -- NULL into the NOT IN list below and hide every field)
+--             SELECT LOWER(view_includedc
+--                          || CASE WHEN view_includedc IS NOT NULL AND view_includeflds IS NOT NULL THEN ',' END
+--                          || view_includeflds),
+--                    LOWER(view_excludedc
+--                          || CASE WHEN view_excludedc IS NOT NULL AND view_excludeflds IS NOT NULL THEN ',' END
+--                          || view_excludeflds),
+--                    viewctrl,
+--                    editctrl,
+--                    fullcontrol
+--             INTO v_includedcomps,
+--                  v_excludedcomps,
+--                  v_viewctrl,
+--                  v_editctrl,
+--                  v_fullcontrol
+--             FROM TABLE(
+--                 fn_permissions_getpermission(
+--                     'axi',
+--                     ptransid,
+--                     pusername,
+--                     puserrole,
+--                     v_globalvars_dim
+--                 )
+--             )
+--             WHERE ROWNUM = 1;
+--
+--         EXCEPTION
+--             WHEN NO_DATA_FOUND THEN
+--                 v_viewctrl := '0';
+--                 v_fullcontrol := 'T';
+--         END;
+--
+--         IF v_fullcontrol = 'T'
+--            OR v_viewctrl = '0' THEN
+--
+--             v_fieldlist_sql :=
+--                    'SELECT '
+--                 || '(caption || '' ('' || fname || '') [field]'') displaydata, '
+--                 || '''0'' id, '
+--                 || 'caption, '
+--                 || '''t'' isfield,0 transrecordid '
+--                 || ' FROM axpflds '
+--                 || 'WHERE tstruct = '''
+--                 || ptransid || ''' '
+--                 || 'AND dcname = ''dc1'' '
+--                 || 'AND hidden = ''F'' '
+--                 || 'AND savevalue = ''T'''
+--                 || 'AND datatype not in(''t'',''i'')'
+--     || 'AND (lower(fname) not like ''%axpfile_%'' or lower(fname) not like ''%dc__image%'')';               
+--         ELSIF NVL(v_fullcontrol,'F') = 'F'
+--               AND v_viewctrl = '1' THEN
+--
+--             v_fieldlist_sql :=
+--                    'SELECT '
+--                 || '(caption || '' ('' || fname || '') [field]'') displaydata, '
+--                 || '''0'' id, '
+--                 || 'caption, '
+--                 || '''t'' isfield,0 transrecordid '
+--                 || 'FROM axpflds '
+--                 || 'WHERE tstruct = '''
+--                 || ptransid || ''' '
+--                 || 'AND dcname = ''dc1'' '
+--                 || 'AND hidden = ''F'' '
+--                 || 'AND savevalue = ''T'' '
+--                 || 'AND LOWER(fname) IN ('''
+--                 || REPLACE(v_includedcomps, ',', ''',''')|| ''')'
+--                 || 'AND datatype not in(''t'',''i'')'
+--     || 'AND (lower(fname) not like ''%axpfile_%'' or lower(fname) not like ''%dc__image%'')';               
+--         ELSIF NVL(v_fullcontrol,'F') = 'F'
+--               AND v_viewctrl = '2' THEN
+--
+--             v_fieldlist_sql :=
+--                    'SELECT '
+--                 || '(caption || '' ('' || fname || '') [field]'') displaydata, '
+--                 || '''0'' id, '
+--                 || 'caption, '
+--                 || '''t'' isfield,0 transrecordid  '
+--                 || 'FROM axpflds '
+--                 || 'WHERE tstruct = '''
+--                 || ptransid || ''' '
+--                 || 'AND dcname = ''dc1'' '
+--                 || 'AND hidden = ''F'' '
+--                 || 'AND savevalue = ''T'' '
+--                 || 'AND LOWER(fname) NOT IN ('''
+--                 || REPLACE(v_excludedcomps, ',', ''',''')|| ''')'
+--                 || 'AND datatype not in(''t'',''i'')'
+--     || 'AND (lower(fname) not like ''%axpfile_%'' or lower(fname) not like ''%dc__image%'')';               
+--         END IF;
+--
+--     ELSE
+--
+--         v_fieldlist_sql :=
+--                'SELECT '
+--             || '(caption || '' ('' || fname || '') [field]'') displaydata, '
+--             || '''0'' id, '
+--             || 'caption, '
+--             || '''t'' isfield,0 transrecordid  '
+--             || 'FROM axpflds '
+--             || 'WHERE tstruct = '''||ptransid||''''
+--             || 'AND dcname = ''dc1'' '
+--             || 'AND hidden = ''F'' '
+--             || 'AND savevalue = ''T'''
+--    || 'AND datatype not in(''t'',''i'')'
+--    || 'AND (lower(fname) not like ''%axpfile_%'' or lower(fname) not like ''%dc__image%'')';               
+--
+--     END IF;
+--
+--     IF v_keyfield_normalized = 'T' THEN
+--
+--         v_keyfield_sql :=
+--                'SELECT '
+--             || 's.' || v_keyfield_srcfld || ' displaydata, '
+--             || '''0'' id, '
+--             || 's.' || v_keyfield_srcfld || ' caption, '
+--             || '''f'' isfield ,'||LOWER(pprimarytable)||'id transrecordid ' 
+--             || 'FROM ' || LOWER(pprimarytable) || ' p '
+--             || 'JOIN ' || v_keyfield_srctbl || ' s '
+--             || 'ON p.' || LOWER(pkeyfield)
+--             || ' = s.' || v_keyfield_srctbl || 'id '
+--             || 'WHERE p.' || LOWER(pkeyfield)
+--             || ' IS NOT NULL and p.cancel is not null '
+--             || NVL(v_dimension_filter,'')
+--             || ' ORDER BY p.modifiedon DESC';
+--
+--     ELSE
+--
+--         v_keyfield_sql :=
+--                'SELECT '
+--             || 'p.' || LOWER(pkeyfield) || ' displaydata, '
+--             || '''0'' id, '
+--             || 'p.' || LOWER(pkeyfield) || ' caption, '
+--             || '''f'' isfield ,'||LOWER(pprimarytable)||'id transrecordid '
+--             || 'FROM ' || LOWER(pprimarytable) || ' p '
+--             || 'WHERE p.' || LOWER(pkeyfield)
+--             || ' IS NOT NULL  and p.cancel is not null '
+--             || NVL(v_dimension_filter,'')
+--             || ' ORDER BY p.modifiedon DESC';
+--
+--     END IF;
+--
+--     IF pselectedfield <> '0' THEN
+--         IF v_selectedfld_normalized = 'T' THEN
+--             IF v_keyfield_normalized = 'F' THEN
+--
+--                 v_selectedfld_sql :=
+--                        'SELECT '
+--                     || '(s.' || v_selectedfld_srcfld
+--                     || ' || ''['' || p.' || LOWER(pkeyfield)
+--                     || ' || '']'') displaydata, '
+--                     || '''0'' id, '
+--                     || 's.' || v_selectedfld_srcfld || ' caption, '
+--                     || '''f'' isfield ,'||LOWER(pprimarytable)||'id transrecordid '
+--                     || 'FROM ' || LOWER(pprimarytable) || ' p '
+--                     || 'JOIN ' || v_selectedfld_srctbl || ' s '
+--                     || 'ON p.' || LOWER(pselectedfield)
+--                     || ' = s.' || v_selectedfld_srctbl || 'id '
+--                     || 'WHERE p.' || LOWER(pselectedfield)
+--                     || ' IS NOT NULL '
+--                     || NVL(v_dimension_filter,'')
+--                     || ' ORDER BY p.modifiedon DESC';
+--
+--             ELSIF v_keyfield_normalized = 'T' THEN
+--
+--                 v_selectedfld_sql :=
+--                        'SELECT '
+--                     || '(s.' || v_selectedfld_srcfld
+--                     || ' || ''['' || k.' || v_keyfield_srcfld
+--                     || ' || '']'') displaydata, '
+--                     || '''0'' id, '
+--                     || 's.' || v_selectedfld_srcfld || ' caption, '
+--                     || '''f'' isfield ,'||LOWER(pprimarytable)||'id transrecordid '
+--                     || 'FROM ' || LOWER(pprimarytable) || ' p '
+--                     || 'JOIN ' || v_selectedfld_srctbl || ' s '
+--                     || 'ON p.' || LOWER(pselectedfield)
+--                     || ' = s.' || v_selectedfld_srctbl || 'id '
+--                     || 'JOIN ' || v_keyfield_srctbl || ' k '
+--                     || 'ON p.' || LOWER(pkeyfield)
+--                     || ' = k.' || v_keyfield_srctbl || 'id '
+--                     || 'WHERE p.' || LOWER(pselectedfield)
+--                     || ' IS NOT NULL '
+--                     || NVL(v_dimension_filter,'')
+--                     || ' ORDER BY p.modifiedon DESC';
+--
+--             END IF;
+--
+--         ELSE
+--
+--             IF v_keyfield_normalized = 'F' THEN
+--
+--                 v_selectedfld_sql :=
+--                        'SELECT '
+--                     || '(p.' || LOWER(pselectedfield)
+--                     || ' || ''['' || p.' || LOWER(pkeyfield)
+--                     || ' || '']'') displaydata, '
+--                     || '''0'' id, '
+--                     || 'p.' || LOWER(pselectedfield) || ' caption, '
+--                     || '''f'' isfield ,'||LOWER(pprimarytable)||'id transrecordid '
+--                     || 'FROM ' || LOWER(pprimarytable) || ' p '
+--                     || 'WHERE p.' || LOWER(pselectedfield)
+--                     || ' IS NOT NULL '
+--                     || NVL(v_dimension_filter,'')
+--                     || ' ORDER BY p.modifiedon DESC, '
+--                     || 'p.' || LOWER(pselectedfield);
+--
+--
+--             ELSIF v_keyfield_normalized = 'T' THEN
+--
+--                 v_selectedfld_sql :=
+--                        'SELECT '
+--                     || '(p.' || LOWER(pselectedfield)
+--                     || ' || ''['' || s.' || v_keyfield_srcfld
+--                     || ' || '']'') displaydata, '
+--                     || '''0'' id, '
+--                     || 'p.' || LOWER(pselectedfield) || ' caption, '
+--                     || '''f'' isfield ,'||LOWER(pprimarytable)||'id transrecordid '
+--                     || 'FROM ' || LOWER(pprimarytable) || ' p '
+--                     || 'JOIN ' || v_keyfield_srctbl || ' s '
+--                     || 'ON p.' || LOWER(pkeyfield)
+--                     || ' = s.' || v_keyfield_srctbl || 'id '
+--                     || 'WHERE p.' || LOWER(pselectedfield)
+--                     || ' IS NOT NULL '
+--                     || NVL(v_dimension_filter,'')
+--                     || ' ORDER BY p.modifiedon DESC';
+--
+--             END IF;
+--
+--         END IF;
+--
+--     END IF;
+--
+--     -- new code: no field list means the permission gives this user no view access (e.g. viewctrl '4'): list nothing.
+--     -- Before, the SQL built below had an empty part and failed with a syntax error.
+--     IF pselectedfield = '0' AND v_fieldlist_sql IS NULL THEN
+--         RETURN;
+--     END IF;
+--
+--     IF pselectedfield = '0' THEN
+--
+--         -- old code: records first, field rows last. AxList pages the whole result, so a form with more records than
+--         -- one page never had its field rows on page 1 (view / edit showed no fields)
+--         -- v_sql :=
+--         --        'SELECT * FROM ('
+--         --     || v_keyfield_sql
+--         --     || ') UNION ALL '
+--         --     || v_fieldlist_sql;
+--         -- new code: field rows first, then the records (newest first, as before)
+--         v_sql :=
+--                'SELECT displaydata, id, caption, isfield, transrecordid FROM ('
+--             || 'SELECT f.*, 1 axi_grp, ROWNUM axi_rn FROM ('
+--             || v_fieldlist_sql
+--             || ') f UNION ALL '
+--             || 'SELECT a.*, 2 axi_grp, ROWNUM axi_rn FROM ('
+--             || v_keyfield_sql
+--             || ') a) ORDER BY axi_grp, axi_rn';
+--
+--     ELSE
+--
+--         v_sql := v_selectedfld_sql;
+--
+--     END IF;
+--
+--     OPEN rc FOR v_sql;
+--
+--     LOOP
+--
+--         FETCH rc
+--         INTO r_displaydata,
+--              r_id,
+--              r_caption,
+--              r_isfield,r_transrecordid;
+--
+--         EXIT WHEN rc%NOTFOUND;
+--
+--         PIPE ROW (
+--             AXI_GETSTRUCTS_OBJ(
+--                 r_displaydata,
+--                 r_id,
+--                 r_caption,
+--                 r_isfield,r_transrecordid
+--             )
+--         );
+--
+--     END LOOP;
+--
+--     CLOSE rc;
+--     
+-- END;
+-- >>
+
+-- new code
 <<
 CREATE OR REPLACE FUNCTION fn_axi_getstructs_obj (
     pcmd            VARCHAR2,
@@ -87,21 +637,10 @@ is
     v_keyfield_srcfld           VARCHAR2(200);
 
     v_selectedfld_normalized    VARCHAR2(10);
-    v_selectedfld_srctbl        VARCHAR2(200); 
+    v_selectedfld_srctbl        VARCHAR2(200);
     v_selectedfld_srcfld        VARCHAR2(200);
 
     v_dimension_filter          CLOB;
-
-    v_globalvars_dim            VARCHAR2(4000);
-    v_vars_part                 VARCHAR2(4000);
-    v_rest                      VARCHAR2(4000);
-    v_pair                      VARCHAR2(4000);
-    v_pos                       NUMBER;
-    v_eq                        NUMBER;
-    v_varname                   VARCHAR2(200);
-    v_varvalue                  VARCHAR2(4000);
-    v_view_filter               CLOB;
-    v_view_check                CLOB;
 
     v_includedcomps             CLOB;
     v_excludedcomps             CLOB;
@@ -113,6 +652,8 @@ is
     v_fieldlist_sql             CLOB;
     v_keyfield_sql              CLOB;
     v_selectedfld_sql           CLOB;
+    v_global_filters    CLOB;
+ v_ptransid_primarytable  varchar2(100);
 
     TYPE refcur IS REF CURSOR;
 
@@ -122,23 +663,13 @@ is
     r_id            CLOB;
     r_caption       CLOB;
     r_isfield       CLOB;
-    r_transrecordid NUMBER; 
+    r_transrecordid NUMBER;
 
 BEGIN
 
-    -- pglobalvars = <dimension part>[@@VARS@@name=value~~name=value]; the second part carries the session variables
-    -- used by the form's view filter (axvarcore <transid>_filter, e.g. ':branch'). The dimension part is used as before.
-    IF INSTR(NVL(pglobalvars,'-'),'@@VARS@@') > 0 THEN
-        v_globalvars_dim := SUBSTR(pglobalvars,1,INSTR(pglobalvars,'@@VARS@@') - 1);
-        v_vars_part      := SUBSTR(pglobalvars,INSTR(pglobalvars,'@@VARS@@') + 8);
-    ELSE
-        v_globalvars_dim := pglobalvars;
-        v_vars_part      := NULL;
-    END IF;
+ -------Get dc1 table for global filter
+ select tablename into v_ptransid_primarytable from axpdc where tstruct=ptransid and dname='dc1';
 
-    IF v_globalvars_dim IS NULL THEN
-        v_globalvars_dim := 'NA';
-    END IF;
 
     SELECT srckey,
            LOWER(srctf),
@@ -169,6 +700,13 @@ BEGIN
             v_selectedfld_srcfld := NULL;
     END;
 
+    if pglobalvars!='NA' then
+
+ v_global_filters:= replace(pglobalvars,v_ptransid_primarytable,'p');
+
+ end if;
+
+
     IF pdimension = 'T' THEN
 
         BEGIN
@@ -181,7 +719,7 @@ BEGIN
                     ptransid,
                     pusername,
                     puserrole,
-                    v_globalvars_dim
+                    'NA'
                 )
             )
             WHERE ROWNUM = 1;
@@ -205,129 +743,12 @@ BEGIN
 
     END IF;
 
-    -- The form's view filter (record lists of 'view' / 'edit' only; the field rows are not filtered).
-    -- axvarcore.vpname = '<transid>_filter', vpvalue = e.g. 'and Form11.branch=:branch'. No row = list as it is.
-    IF LOWER(pcmd) IN ('view','edit') THEN
-
-        BEGIN
-
-            SELECT vpvalue
-            INTO v_view_filter
-            FROM axvarcore
-            WHERE LOWER(vpname) = LOWER(ptransid || '_filter')
-              AND NVL(cancel,'F') = 'F'
-              AND ROWNUM = 1;
-
-        EXCEPTION
-            WHEN NO_DATA_FOUND THEN
-                v_view_filter := NULL;
-        END;
-
-        IF v_view_filter IS NOT NULL AND LENGTH(TRIM(v_view_filter)) > 0 THEN
-
-            -- the primary table is aliased 'p' in the queries below
-            v_view_filter := REPLACE(v_view_filter,'{primarytable.}','p.');
-            v_view_filter := REGEXP_REPLACE(
-                                 v_view_filter,
-                                 '(^|[^A-Za-z0-9_])' || REGEXP_REPLACE(NVL(pprimarytable,'-'),'[^A-Za-z0-9_]','') || '[.]',
-                                 '\1p.',
-                                 1, 0, 'i');
-
-            -- The same text with every placeholder that has a value removed: what is left in it has no value. Checked on
-            -- this copy so that a ':x' inside a substituted value (for example a user name with a colon) is not taken for one.
-            v_view_check := v_view_filter;
-            FOR i IN 1..2 LOOP
-                v_view_check := REGEXP_REPLACE(v_view_check,'(^|[^:A-Za-z0-9_]):username([^A-Za-z0-9_]|$)','\1\2',1,0,'i');
-                v_view_check := REGEXP_REPLACE(v_view_check,'(^|[^:A-Za-z0-9_]):userrole([^A-Za-z0-9_]|$)','\1\2',1,0,'i');
-            END LOOP;
-
-            -- :username and :userrole (run twice so that two neighbouring placeholders are both replaced)
-            FOR i IN 1..2 LOOP
-                v_view_filter := REGEXP_REPLACE(
-                                     v_view_filter,
-                                     '(^|[^:A-Za-z0-9_]):username([^A-Za-z0-9_]|$)',
-                                     '\1''' || REPLACE(REPLACE(NVL(pusername,''),'''',''''''),'\','\\') || '''\2',
-                                     1, 0, 'i');
-                v_view_filter := REGEXP_REPLACE(
-                                     v_view_filter,
-                                     '(^|[^:A-Za-z0-9_]):userrole([^A-Za-z0-9_]|$)',
-                                     '\1''' || REPLACE(REPLACE(NVL(puserrole,''),'''',''''''),'\','\\') || '''\2',
-                                     1, 0, 'i');
-            END LOOP;
-
-            -- session variables, e.g. ':branch' (only plain values are accepted)
-            v_rest := v_vars_part;
-
-            WHILE v_rest IS NOT NULL LOOP
-
-                v_pos := INSTR(v_rest,'~~');
-
-                IF v_pos > 0 THEN
-                    v_pair := SUBSTR(v_rest,1,v_pos - 1);
-                    v_rest := SUBSTR(v_rest,v_pos + 2);
-                ELSE
-                    v_pair := v_rest;
-                    v_rest := NULL;
-                END IF;
-
-                v_eq := INSTR(v_pair,'=');
-
-                IF v_eq > 1 THEN
-
-                    v_varname  := LOWER(REGEXP_REPLACE(SUBSTR(v_pair,1,v_eq - 1),'[^A-Za-z0-9_]',''));
-                    v_varvalue := REGEXP_REPLACE(SUBSTR(v_pair,v_eq + 1),'[^A-Za-z0-9_. -]','');
-
-                    IF v_varname IS NOT NULL THEN
-                        FOR i IN 1..2 LOOP
-                            v_view_filter := REGEXP_REPLACE(
-                                                 v_view_filter,
-                                                 '(^|[^:A-Za-z0-9_]):' || v_varname || '([^A-Za-z0-9_]|$)',
-                                                 '\1''' || v_varvalue || '''\2',
-                                                 1, 0, 'i');
-                            v_view_check := REGEXP_REPLACE(
-                                                 v_view_check,
-                                                 '(^|[^:A-Za-z0-9_]):' || v_varname || '([^A-Za-z0-9_]|$)',
-                                                 '\1\2',
-                                                 1, 0, 'i');
-                        END LOOP;
-                    END IF;
-
-                END IF;
-
-            END LOOP;
-
-            -- a placeholder without a value cannot be resolved. The filter exists to hide records, so it must not be
-            -- dropped (that would list every record): list no records at all until the variable is available.
-            IF REGEXP_LIKE(v_view_check,'(^|[^:]):[A-Za-z_]') THEN
-                v_view_filter := ' AND 1=0';
-            ELSE
-                v_view_filter := ' AND (' || REGEXP_REPLACE(TRIM(v_view_filter),'^and[[:space:]]+','',1,1,'i') || ')';
-            END IF;
-
-        ELSE
-            v_view_filter := NULL;
-        END IF;
-
-        v_dimension_filter := v_dimension_filter || v_view_filter;
-
-    END IF;
-
     IF ppermission = 'T' THEN
 
         BEGIN
 
-            -- old code: the dc list and the field list were joined without a comma ('dc1,dc2' + 'fld1,fld2' =
-            -- 'dc1,dc2fld1,fld2'), so the first included / excluded field never matched
-            -- SELECT LOWER(view_includedc || view_includeflds),
-            --        LOWER(view_excludedc || view_excludeflds),
-            -- new code: a comma between them, only when both lists have a value (a leading empty item would put
-            -- NULL into the NOT IN list below and hide every field)
-            SELECT LOWER(view_includedc
-                         || CASE WHEN view_includedc IS NOT NULL AND view_includeflds IS NOT NULL THEN ',' END
-                         || view_includeflds),
-                   LOWER(view_excludedc
-                         || CASE WHEN view_excludedc IS NOT NULL AND view_excludeflds IS NOT NULL THEN ',' END
-                         || view_excludeflds),
+            SELECT LOWER(view_includedc || view_includeflds),
+                   LOWER(view_excludedc || view_excludeflds),
                    viewctrl,
                    editctrl,
                    fullcontrol
@@ -342,7 +763,7 @@ BEGIN
                     ptransid,
                     pusername,
                     puserrole,
-                    v_globalvars_dim
+                    'NA'
                 )
             )
             WHERE ROWNUM = 1;
@@ -369,7 +790,8 @@ BEGIN
                 || 'AND hidden = ''F'' '
                 || 'AND savevalue = ''T'''
                 || 'AND datatype not in(''t'',''i'')'
-    || 'AND (lower(fname) not like ''%axpfile_%'' or lower(fname) not like ''%dc__image%'')';               
+    || 'AND (lower(fname) not like ''%axpfile_%'' or lower(fname) not like ''%dc__image%'')'
+            ||'AND (modeofentry = ''autogenerate'' OR (LOWER(allowduplicate) = ''f'' and datatype = ''c''))';
         ELSIF NVL(v_fullcontrol,'F') = 'F'
               AND v_viewctrl = '1' THEN
 
@@ -388,7 +810,8 @@ BEGIN
                 || 'AND LOWER(fname) IN ('''
                 || REPLACE(v_includedcomps, ',', ''',''')|| ''')'
                 || 'AND datatype not in(''t'',''i'')'
-    || 'AND (lower(fname) not like ''%axpfile_%'' or lower(fname) not like ''%dc__image%'')';               
+    || 'AND (lower(fname) not like ''%axpfile_%'' or lower(fname) not like ''%dc__image%'')'
+                ||'AND (modeofentry = ''autogenerate'' OR (LOWER(allowduplicate) = ''f'' and datatype = ''c''))';
         ELSIF NVL(v_fullcontrol,'F') = 'F'
               AND v_viewctrl = '2' THEN
 
@@ -407,7 +830,8 @@ BEGIN
                 || 'AND LOWER(fname) NOT IN ('''
                 || REPLACE(v_excludedcomps, ',', ''',''')|| ''')'
                 || 'AND datatype not in(''t'',''i'')'
-    || 'AND (lower(fname) not like ''%axpfile_%'' or lower(fname) not like ''%dc__image%'')';               
+    || 'AND (lower(fname) not like ''%axpfile_%'' or lower(fname) not like ''%dc__image%'')'
+                || 'AND (modeofentry = ''autogenerate'' OR (LOWER(allowduplicate) = ''f'' and datatype = ''c''))';
         END IF;
 
     ELSE
@@ -424,7 +848,8 @@ BEGIN
             || 'AND hidden = ''F'' '
             || 'AND savevalue = ''T'''
    || 'AND datatype not in(''t'',''i'')'
-   || 'AND (lower(fname) not like ''%axpfile_%'' or lower(fname) not like ''%dc__image%'')';               
+   || 'AND (lower(fname) not like ''%axpfile_%'' or lower(fname) not like ''%dc__image%'')'
+            ||'AND (modeofentry = ''autogenerate'' OR (LOWER(allowduplicate) = ''f'' and datatype = ''c''))';
 
     END IF;
 
@@ -435,7 +860,7 @@ BEGIN
             || 's.' || v_keyfield_srcfld || ' displaydata, '
             || '''0'' id, '
             || 's.' || v_keyfield_srcfld || ' caption, '
-            || '''f'' isfield ,'||LOWER(pprimarytable)||'id transrecordid ' 
+            || '''f'' isfield ,'||LOWER(pprimarytable)||'id transrecordid '
             || 'FROM ' || LOWER(pprimarytable) || ' p '
             || 'JOIN ' || v_keyfield_srctbl || ' s '
             || 'ON p.' || LOWER(pkeyfield)
@@ -443,6 +868,7 @@ BEGIN
             || 'WHERE p.' || LOWER(pkeyfield)
             || ' IS NOT NULL and p.cancel is not null '
             || NVL(v_dimension_filter,'')
+            || NVL(v_global_filters,'')
             || ' ORDER BY p.modifiedon DESC';
 
     ELSE
@@ -455,21 +881,18 @@ BEGIN
             || '''f'' isfield ,'||LOWER(pprimarytable)||'id transrecordid '
             || 'FROM ' || LOWER(pprimarytable) || ' p '
             || 'WHERE p.' || LOWER(pkeyfield)
-            || ' IS NOT NULL  and p.cancel is not null '
+            || ' IS NOT NULL and p.cancel is not null '
             || NVL(v_dimension_filter,'')
+            || NVL(v_global_filters,'')
             || ' ORDER BY p.modifiedon DESC';
 
     END IF;
 
     IF pselectedfield <> '0' THEN
         IF v_selectedfld_normalized = 'T' THEN
-            IF v_keyfield_normalized = 'F' THEN
-
                 v_selectedfld_sql :=
                        'SELECT '
-                    || '(s.' || v_selectedfld_srcfld
-                    || ' || ''['' || p.' || LOWER(pkeyfield)
-                    || ' || '']'') displaydata, '
+                    || 's.' || v_selectedfld_srcfld|| ' displaydata, '
                     || '''0'' id, '
                     || 's.' || v_selectedfld_srcfld || ' caption, '
                     || '''f'' isfield ,'||LOWER(pprimarytable)||'id transrecordid '
@@ -480,41 +903,16 @@ BEGIN
                     || 'WHERE p.' || LOWER(pselectedfield)
                     || ' IS NOT NULL '
                     || NVL(v_dimension_filter,'')
+              || NVL(v_global_filters,'')
                     || ' ORDER BY p.modifiedon DESC';
 
-            ELSIF v_keyfield_normalized = 'T' THEN
 
-                v_selectedfld_sql :=
-                       'SELECT '
-                    || '(s.' || v_selectedfld_srcfld
-                    || ' || ''['' || k.' || v_keyfield_srcfld
-                    || ' || '']'') displaydata, '
-                    || '''0'' id, '
-                    || 's.' || v_selectedfld_srcfld || ' caption, '
-                    || '''f'' isfield ,'||LOWER(pprimarytable)||'id transrecordid '
-                    || 'FROM ' || LOWER(pprimarytable) || ' p '
-                    || 'JOIN ' || v_selectedfld_srctbl || ' s '
-                    || 'ON p.' || LOWER(pselectedfield)
-                    || ' = s.' || v_selectedfld_srctbl || 'id '
-                    || 'JOIN ' || v_keyfield_srctbl || ' k '
-                    || 'ON p.' || LOWER(pkeyfield)
-                    || ' = k.' || v_keyfield_srctbl || 'id '
-                    || 'WHERE p.' || LOWER(pselectedfield)
-                    || ' IS NOT NULL '
-                    || NVL(v_dimension_filter,'')
-                    || ' ORDER BY p.modifiedon DESC';
-
-            END IF;
 
         ELSE
 
-            IF v_keyfield_normalized = 'F' THEN
-
                 v_selectedfld_sql :=
                        'SELECT '
-                    || '(p.' || LOWER(pselectedfield)
-                    || ' || ''['' || p.' || LOWER(pkeyfield)
-                    || ' || '']'') displaydata, '
+                    || 'p.' || LOWER(pselectedfield)|| ' displaydata, '
                     || '''0'' id, '
                     || 'p.' || LOWER(pselectedfield) || ' caption, '
                     || '''f'' isfield ,'||LOWER(pprimarytable)||'id transrecordid '
@@ -522,59 +920,28 @@ BEGIN
                     || 'WHERE p.' || LOWER(pselectedfield)
                     || ' IS NOT NULL '
                     || NVL(v_dimension_filter,'')
-                    || ' ORDER BY p.modifiedon DESC, '
-                    || 'p.' || LOWER(pselectedfield);
-
-
-            ELSIF v_keyfield_normalized = 'T' THEN
-
-                v_selectedfld_sql :=
-                       'SELECT '
-                    || '(p.' || LOWER(pselectedfield)
-                    || ' || ''['' || s.' || v_keyfield_srcfld
-                    || ' || '']'') displaydata, '
-                    || '''0'' id, '
-                    || 'p.' || LOWER(pselectedfield) || ' caption, '
-                    || '''f'' isfield ,'||LOWER(pprimarytable)||'id transrecordid '
-                    || 'FROM ' || LOWER(pprimarytable) || ' p '
-                    || 'JOIN ' || v_keyfield_srctbl || ' s '
-                    || 'ON p.' || LOWER(pkeyfield)
-                    || ' = s.' || v_keyfield_srctbl || 'id '
-                    || 'WHERE p.' || LOWER(pselectedfield)
-                    || ' IS NOT NULL '
-                    || NVL(v_dimension_filter,'')
+                    || NVL(v_global_filters,'')
                     || ' ORDER BY p.modifiedon DESC';
-
-            END IF;
 
         END IF;
 
     END IF;
 
-    -- new code: no field list means the permission gives this user no view access (e.g. viewctrl '4'): list nothing.
-    -- Before, the SQL built below had an empty part and failed with a syntax error.
-    IF pselectedfield = '0' AND v_fieldlist_sql IS NULL THEN
-        RETURN;
-    END IF;
-
     IF pselectedfield = '0' THEN
 
-        -- old code: records first, field rows last. AxList pages the whole result, so a form with more records than
-        -- one page never had its field rows on page 1 (view / edit showed no fields)
+        -- old code
         -- v_sql :=
         --        'SELECT * FROM ('
         --     || v_keyfield_sql
         --     || ') UNION ALL '
         --     || v_fieldlist_sql;
-        -- new code: field rows first, then the records (newest first, as before)
+        -- new code: field rows first, so they always come back in page 1 of the paged list (AxList pages the whole result)
         v_sql :=
-               'SELECT displaydata, id, caption, isfield, transrecordid FROM ('
-            || 'SELECT f.*, 1 axi_grp, ROWNUM axi_rn FROM ('
+               'SELECT * FROM ('
             || v_fieldlist_sql
-            || ') f UNION ALL '
-            || 'SELECT a.*, 2 axi_grp, ROWNUM axi_rn FROM ('
+            || ') UNION ALL SELECT * FROM ('
             || v_keyfield_sql
-            || ') a) ORDER BY axi_grp, axi_rn';
+            || ')';
 
     ELSE
 
@@ -606,7 +973,7 @@ BEGIN
     END LOOP;
 
     CLOSE rc;
-    
+
 END;
 >>
 

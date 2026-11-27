@@ -301,8 +301,44 @@ Sample Install Payload in Queue Message:
 
 
 Tasks Planned for next release (23/11/2026): 
-1. The Git account and Git Repository should be configurable through tstruct. 
-2. Edit commmand Enhancement. search with fields Button
+### 1. Configurable Git Account and Repository (via TStruct)
+- Provide a TStruct form where users can configure the Git account and the Git repository.
+- Fields: Git account/username, repository  and access token.
+
+
+
+### 2. Enhance the Edit and View Commands
+- Add a search option to the Edit and View commands.
+- Add a **Search with fields** button next to the search fields; clicking it filters the results.
+- Allow searching by the relevant fields (for example, name, type, status).
+.
+
+### 3. No Duplicate Values in Fields
+
+
+
+### 4. Remove the queuejson from the install command payload. 
+
+
+
+
+26/11/2026
+
+1. Open any form in normal mode and open different form create page in pop up mode using View action.Click on Clear Cache and Reload form option in pop up mode.Observed that the form in normal mode is changed to the form opened in pop up mode.And it keeps on loading in pop up.
+
+2. When Tstruct and Iview have same transid/caption,then selecting iview is displaying View,Create,Edit,Source options.
+Tstruct/iview name: Duplicate Name Tstruct vs Iview in pgbase114
+
+
+Axpert: AW_11.4.0.0 (release60)
+AxiCMD: v1.1.2
+
+
+27/11/2026
+
+1. Add Before scripts for a__ax tstruct. 
+2. Axi_installed_products should be the part of AxiCMD Structures. 
+
 
 
 

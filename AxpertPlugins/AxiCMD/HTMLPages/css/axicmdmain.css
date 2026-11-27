@@ -1364,6 +1364,135 @@ body.axi-cmd-disabled #axiFavDeleteModalOverlay {
   background: rgba(16, 185, 129, 0.1) !important;
 }
 
+/* old code: blue pill buttons (pill shapes and blue fills are outside the AxiCMD design system, see DESIGN.md)
+.axi-suggestions li.axi-mode-button-item {
+  background: transparent !important;
+}
+
+.axi-suggestions li.axi-mode-button-item .axi-mode-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border: 1px solid #3b82f6;
+  border-radius: 14px;
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.axi-suggestions li.axi-mode-button-item .axi-mode-button .material-icons {
+  font-size: 16px;
+}
+
+.axi-suggestions li.axi-mode-button-item.active .axi-mode-button,
+.axi-suggestions li.axi-mode-button-item:hover .axi-mode-button {
+  background: #2563eb;
+  color: #fff;
+}
+*/
+
+/* new code: "Search with fields" / "Search with key field value", pinned on top of the edit / view list.
+   A quiet toolbar strip (header wash, 1px rule) holding one small secondary button and a hint of what it does.
+   Indigo appears only while the row is the keyboard selection, with the Enter key shown next to the hint. */
+.axi-suggestions li.axi-mode-button-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 15px !important;
+  background: #f8f9fc !important;
+  border-bottom: 1px solid #dde1eb;
+  font-weight: 400;
+}
+
+.axi-suggestions li.axi-mode-button-item .axi-mode-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  height: 30px;
+  padding-inline: 10px 12px;
+  background: #ffffff;
+  border: 1px solid #c9cedb;
+  border-radius: 6px;
+  color: #1d2547;
+  font-family: "Segoe UI", system-ui, -apple-system, "Noto Sans Arabic", sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  transition: background-color 120ms ease-out, border-color 120ms ease-out, box-shadow 120ms ease-out;
+}
+
+.axi-suggestions li.axi-mode-button-item .axi-mode-button .material-icons {
+  font-size: 17px;
+  color: #5b6482;
+  transition: color 120ms ease-out;
+}
+
+.axi-suggestions li.axi-mode-button-item .axi-mode-button-hint {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #5b6482;
+  font-size: 12.5px;
+  font-weight: 400;
+}
+
+.axi-suggestions li.axi-mode-button-item .axi-mode-button-kbd {
+  display: none;
+  flex-shrink: 0;
+  margin-inline-start: auto;
+  padding: 1px 6px;
+  background: #ffffff;
+  border: 1px solid #dde1eb;
+  border-radius: 4px;
+  color: #5b6482;
+  font-family: Bahnschrift, "DIN Alternate", "Segoe UI", system-ui, sans-serif;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.axi-suggestions li.axi-mode-button-item:hover .axi-mode-button {
+  background: #f4f5f9;
+}
+
+.axi-suggestions li.axi-mode-button-item.active .axi-mode-button {
+  border-color: #3f51c2;
+  box-shadow: 0 0 0 3px #eceffb;
+}
+
+.axi-suggestions li.axi-mode-button-item.active .axi-mode-button .material-icons {
+  color: #3f51c2;
+}
+
+.axi-suggestions li.axi-mode-button-item.active .axi-mode-button-kbd {
+  display: inline-block;
+}
+
+/* "Click here" in the "No key field available" message: opens the form in the Developer Studio */
+.axi-suggestions li.axi-suggestion-system-message .axi-msg-link {
+  color: #1d2547 !important;
+  font-style: normal;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.axi-suggestions li.axi-suggestion-system-message .axi-msg-link:hover,
+.axi-suggestions li.axi-suggestion-system-message .axi-msg-link:focus-visible {
+  color: #3f51c2 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .axi-suggestions li.axi-mode-button-item .axi-mode-button,
+  .axi-suggestions li.axi-mode-button-item .axi-mode-button .material-icons {
+    transition: none;
+  }
+}
+
 
 
 /*Vj logo resize*/

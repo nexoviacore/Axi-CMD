@@ -181,6 +181,11 @@ MERGE INTO AXI_COMMAND_CONFIG t USING (SELECT 'cfg_configure_trace_off' AS CONFI
 MERGE INTO AXI_COMMAND_CONFIG t USING (SELECT 'cfg_configure_trace_files' AS CONFIG_ID FROM dual) s ON (t.CONFIG_ID = s.CONFIG_ID) WHEN MATCHED THEN UPDATE SET t.IS_SYSTEM = 'T' WHEN NOT MATCHED THEN INSERT (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE, IS_SYSTEM) VALUES ('cfg_configure_trace_files', 'Configure', 'trace files', 'trace_files', 'shellaction', NULL, NULL, NULL, 'T', 'T')
 >>
 
+-- new code: configure command settings opens the a__ax tstruct (axi_command_settings)
+<<
+MERGE INTO AXI_COMMAND_CONFIG t USING (SELECT 'cfg_configure_command_settings' AS CONFIG_ID FROM dual) s ON (t.CONFIG_ID = s.CONFIG_ID) WHEN MATCHED THEN UPDATE SET t.IS_SYSTEM = 'T' WHEN NOT MATCHED THEN INSERT (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE, IS_SYSTEM) VALUES ('cfg_configure_command_settings', 'Configure', 'command settings', 'a__ax', 'tstruct', NULL, NULL, NULL, 'T', 'T')
+>>
+
 -- old code: configure Product / Plugin / ChangeRequest (Git account / repository) was removed from AxiCMD
 -- <<
 -- MERGE INTO AXI_COMMAND_CONFIG t USING (SELECT 'cfg_configure_product' AS CONFIG_ID FROM dual) s ON (t.CONFIG_ID = s.CONFIG_ID) WHEN MATCHED THEN UPDATE SET t.IS_SYSTEM = 'T' WHEN NOT MATCHED THEN INSERT (CONFIG_ID, COMMAND, PROMPT_OPTIONS, PROMPT_ID, PROMPT_OPTION_TYPE, PARAM_FIELD, TARGET_URL, EXTRA_PARAMS, ACTIVE, IS_SYSTEM) VALUES ('cfg_configure_product', 'Configure', 'product', 'product', 'commandsetting', NULL, NULL, NULL, 'T', 'T')
