@@ -330,6 +330,16 @@ Tasks Planned for next release (23/11/2026):
 Tstruct/iview name: Duplicate Name Tstruct vs Iview in pgbase114
 
 
+Axpert: AW_11.4.0.0 (release60)
+AxiCMD: v1.1.2
+
+
+27/11/2026
+
+1. Add Before scripts for a__ax tstruct. 
+2. Axi_installed_products should be the part of AxiCMD Structures. 
+
+
 
 
 
